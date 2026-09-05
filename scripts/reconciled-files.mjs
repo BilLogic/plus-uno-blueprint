@@ -287,4 +287,30 @@ export const RECONCILED_FILES = [
   'src/lib/phaseRowPanelHeight.ts',
   'src/lib/phaseRowPanelHeight.test.ts',
   'src/hooks/useAlignedPhaseRowPanelHeight.ts',
+
+  // asb 1.5.0 adopt (#323, #325 S1; badge size #149, vocabulary #160): the
+  // sweep the pin bump made possible. Not one of these was edited — each was
+  // already byte-identical at the new pin and merely unenrolled, so this group
+  // is enrolment alone, the way S5a's four paths were. The three badge
+  // wrappers are NOT here because they were already enrolled: what the `size`
+  // variant did was put them back to identical. `ui/badge.tsx` itself stays
+  // forked — uno took the size block and kept its own variant table, which
+  // carries no hover state (#182).
+  //
+  // `scripts/erd-value-sets.mjs` is the first path enrolled outside `src/`.
+  // Nothing in the gate ever restricted it to `src/`; this is simply the first
+  // script both repos hold identical — a pure ERD parser over a catalog either
+  // repo supplies.
+  'src/components/blueprint/ScenarioPanel.tsx',
+  'src/components/editor/AdminSessionFields.tsx',
+  'src/components/editor/AgentProviderFields.tsx',
+  'src/components/editor/CanvasSelectionProvider.tsx',
+  'src/components/editor/EditorSequenceNav.tsx',
+  'src/components/editor/PhaseSectionFlowArrow.tsx',
+  'src/components/editor/ToolFamilyMenu.tsx',
+  'src/contexts/canvasRevealContext.ts',
+  'src/lib/applyBlueprintDisplayFilters.ts',
+  'src/lib/compareMergedGrid.test.ts',
+  'src/types/integratedBlueprint.ts',
+  'scripts/erd-value-sets.mjs',
 ]

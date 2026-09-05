@@ -2,16 +2,19 @@
 /**
  * A badge's size is decided in `ui/badge.tsx`, or at every call site at once.
  *
- * The badge variant defines one geometry — `h-5 px-2 py-0.5 text-xs` — and has
- * no size variant at all. Every deviation found on 2026-09-01 was a call-site
- * override, and four of them carried an `!` prefix. That prefix is the tell:
- * it exists only to beat the base variant's specificity, so each was written
- * in isolation against a shape someone else had already chosen. The result was
- * three badge sizes on one panel with no rule a reader could infer.
+ * Every deviation found on 2026-09-01 was a call-site override, and four of
+ * them carried an `!` prefix. That prefix is the tell: it exists only to beat
+ * the base variant's specificity, so each was written in isolation against a
+ * shape someone else had already chosen. The result was three badge sizes on
+ * one panel with no rule a reader could infer.
  *
- * No `size` variant is added, deliberately (#236). A variant would give the
- * sprawl a nicer spelling and let it come straight back, so the check is on
- * the override itself.
+ * `ui/badge.tsx` now offers a `size` variant with four closed values — the
+ * template added it (asb #149) and this deployment adopted it. That does not
+ * soften this check, it sharpens it: the sizes have a NAME to ask for, so a
+ * class string written at a call site is no longer even the short way to a
+ * shape. What #236 forbade — a size CHOSEN where a badge is used rather than
+ * where badges are defined — is exactly what is still forbidden, and a fifth
+ * shape is a decision made in `ui/badge.tsx` beside the other four.
  *
  * THE SUBJECT IS WHAT A CALL SITE PASSES TO A BADGE, NOT A SWEEP FOR SIZE
  * UTILITIES. `text-2xs` is legal on any of the hundred spans that are not
@@ -40,34 +43,12 @@ import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { RECONCILED_FILES } from '../reconciled-files.mjs'
 
 const REPO_ROOT = process.cwd()
 const SOURCE_ROOT = 'src'
 
 /** Where the geometry is allowed to be written down. */
 const BADGE_COMPONENT = 'src/components/ui/badge.tsx'
-
-/**
- * The badge wrappers whose geometry this repo does not author (#323 slice S4).
- *
- * These three are held BYTE-IDENTICAL to `agentic-service-blueprinting`, so
- * their `<Badge>` class list is the template's, not a call site's — and it is
- * not sprawl: each writes exactly two sizes, picked by a `compact` boolean the
- * wrapper owns, so the reader still gets one rule rather than three shapes on
- * a panel. What #236 was written to stop was a size CHOSEN at a call site, and
- * that is still caught here: the wrappers stay in the discovered component
- * list, so `<PathLabelBadge className="text-sm">` anywhere is a finding.
- *
- * The exemption is only valid while the file really is reconciled — the
- * assertion below checks membership, so un-enrolling one of these from the
- * drift gate hands its geometry back to this contract on the same commit.
- */
-const UPSTREAM_BADGE_GEOMETRY = [
-  'src/components/blueprint/PathKindBadge.tsx',
-  'src/components/blueprint/PathLabelBadge.tsx',
-  'src/components/blueprint/ScenarioTitleBadge.tsx',
-]
 
 /**
  * Tailwind utilities that set a badge's size: text size, padding, height.
@@ -214,21 +195,8 @@ test('no call site passes a badge its size', () => {
     }
   }
 
-  // The exemption is not a name on a list, it is a fact about the file: a
-  // path only escapes this contract while the drift gate is holding it equal
-  // to the template's copy.
-  for (const path of UPSTREAM_BADGE_GEOMETRY) {
-    assert.ok(
-      RECONCILED_FILES.includes(path),
-      `${path} is exempt from #236 only because asb authors it. It is no ` +
-        `longer in the reconciled set, so drop it from ` +
-        `UPSTREAM_BADGE_GEOMETRY and take its sizes out.`,
-    )
-  }
-
   const found = []
   for (const [path, source] of sources) {
-    if (UPSTREAM_BADGE_GEOMETRY.includes(path)) continue
     for (const finding of sizeOverrides(source, components)) {
       found.push(`${path}:${finding.line}  ${finding.text}`)
     }
@@ -238,7 +206,8 @@ test('no call site passes a badge its size', () => {
     found,
     [],
     `A badge's size belongs to ${BADGE_COMPONENT} and nowhere else. Remove ` +
-      `these; no size variant is coming to migrate them to (#236):\n` +
+      `these, or ask for the shape by name — \`size=\"default\"\`, ` +
+      `\`\"fitted\"\`, \`\"roomy\"\`, \`\"comfortable\"\` (#236, asb #149):\n` +
       found.join('\n'),
   )
 })
