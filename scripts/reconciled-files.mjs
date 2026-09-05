@@ -361,4 +361,13 @@ export const RECONCILED_FILES = [
   // code does not cross into the template; uno drops the prop and takes the
   // template's file, comment citations included.
   'src/components/blueprint/BlueprintCellButton.tsx',
+
+  // asb 1.6.0 adopt (#163 part A). The template took the deployment's
+  // service identity — `services.slug`, the scope module, the scope field on
+  // agent settings — so the field and its test arrived identical and are
+  // enrolment alone. `serviceScope.ts` itself stays apart by a few sentences
+  // (the template has no `search_blueprint` and says its catalog carries no
+  // `service_id` rather than dropped it — Q21) and is not here.
+  'src/components/editor/AgentScopeField.tsx',
+  'src/components/editor/agentScopeField.test.tsx',
 ]

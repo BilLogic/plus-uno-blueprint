@@ -343,20 +343,23 @@ test('the override is the file the app serves, and the package copy still differ
   // The anchor was `add_step` — a phantom write tool the package adapter named
   // and this app lacked (#115). asb v1.0.0 retired it, converged the package
   // adapter's structure onto this one, and moved its served references to
-  // `leads_to` / `enables` (which emptied the supersession list). What still
-  // diverges, and why the override stays, is the surface rows: this app's write
-  // surface carries stakeholder and evidence tools the template's does not. So
-  // the anchor moves to one of those — it trips when the package write surface
-  // grows to include them, the real signal to recheck whether the override
-  // still earns its keep.
+  // `leads_to` / `enables` (which emptied the supersession list), then the
+  // stakeholder and evidence tools (asb 1.6.0 took all thirteen — #325 S3).
+  // What still diverges, and why the override stays, is two read rows:
+  // `search_blueprint`, which needs pgvector the portable core cannot carry
+  // (asb #163 part B), and `list_blueprint`, whose name is the open Q24
+  // against the template's `list_scenarios`. So the anchor is the one row
+  // that has a schema reason to stay apart — it trips when the package read
+  // surface grows to include it, the signal that the override's last reason
+  // is gone and #325 S4 (delete the override, import the package's) is due.
   const ours = read(ADAPTER)
   const theirs = read(join(PACKAGE, 'references/canvas-adapter.md'))
   assert.notEqual(ours, theirs)
   assert.match(ours, /OVERRIDES a pinned package document/)
   assert.doesNotMatch(
     theirs,
-    /`create_stakeholder`/,
-    'the package adapter now lists create_stakeholder — the #115 surface divergence is closing; recheck whether the override still earns its keep',
+    /`search_blueprint`/,
+    'the package adapter now lists search_blueprint — the last schema reason for the override is gone; do #325 S4 and delete it',
   )
 })
 
