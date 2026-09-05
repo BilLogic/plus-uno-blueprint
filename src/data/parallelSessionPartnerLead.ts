@@ -79,13 +79,13 @@ export function isParallelSessionLeadBottomWrapDependency(
   return isParallelSessionLeadWrapDependency(sourceCellId, targetCellId)
 }
 
-type PartnerLeadLayerSuffix = '01' | '02'
+type PartnerLeadLaneSuffix = '01' | '02'
 
 type BuildPartnerLeadOptions = {
-  cellId: (stepSlot: string, layerSuffix: PartnerLeadLayerSuffix) => string
+  cellId: (stepSlot: string, laneSuffix: PartnerLeadLaneSuffix) => string
   dependencyId: (slot: string) => string
-  partnerLayerId: string
-  leadLayerId: string
+  partnerLaneId: string
+  leadLaneId: string
   stepIdForColumn: (column: number) => string
   partnerStepPictures?: readonly (string | undefined)[]
   leadStepPictures?: readonly (string | undefined)[]
@@ -119,7 +119,7 @@ export function buildParallelSessionPartnerLeadCells(
     cells.push(
       cell(
         options.cellId(stepSlot, '01'),
-        options.partnerLayerId,
+        options.partnerLaneId,
         stepId,
         PARALLEL_SESSION_PARTNER_CONTENT[column - 1]!,
         options.partnerStepPictures?.[column - 1],
@@ -133,7 +133,7 @@ export function buildParallelSessionPartnerLeadCells(
     cells.push(
       cell(
         options.cellId(stepSlot, '02'),
-        options.leadLayerId,
+        options.leadLaneId,
         stepId,
         PARALLEL_SESSION_LEAD_CONTENT[column - 1]!,
         options.leadStepPictures?.[column - 1],
@@ -148,20 +148,20 @@ function dependency(
   options: BuildPartnerLeadOptions,
   slot: string,
   fromStep: string,
-  fromLayer: PartnerLeadLayerSuffix,
+  fromLane: PartnerLeadLaneSuffix,
   toStep: string,
-  toLayer: PartnerLeadLayerSuffix,
+  toLane: PartnerLeadLaneSuffix,
 ): BlueprintCellDependency {
   return {
     id: options.dependencyId(slot),
-    source_cell_id: options.cellId(fromStep, fromLayer),
-    target_cell_id: options.cellId(toStep, toLayer),
+    source_cell_id: options.cellId(fromStep, fromLane),
+    target_cell_id: options.cellId(toStep, toLane),
   }
 }
 
 function rowDependencies(
   options: BuildPartnerLeadOptions,
-  lane: PartnerLeadLayerSuffix,
+  lane: PartnerLeadLaneSuffix,
   idStart: number,
   count: number,
 ): BlueprintCellDependency[] {

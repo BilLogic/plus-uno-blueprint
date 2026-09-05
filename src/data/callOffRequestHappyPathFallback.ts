@@ -32,10 +32,10 @@ export const CALL_OFF_REQUEST_SCENARIO_ID =
 export const CALL_OFF_REQUEST_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000000808'
 
-const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000971'
+const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000971'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000972',
     name: 'Regular Tutor',
@@ -102,7 +102,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LAYER_ID,
+  visual: STEP_VISUAL_LANE_ID,
   regular: 'a0000000-0000-4000-8000-000000000972',
   frontStage: 'a0000000-0000-4000-8000-000000000973',
   frontStageTech: 'a0000000-0000-4000-8000-000000000974',
@@ -134,8 +134,8 @@ function cell(
   }
 }
 
-function callOffCell(stepSlot: string, layerSuffix: string): string {
-  return `a0000000-0000-4000-8000-00000017${stepSlot}${layerSuffix}`
+function callOffCell(stepSlot: string, laneSuffix: string): string {
+  return `a0000000-0000-4000-8000-00000017${stepSlot}${laneSuffix}`
 }
 
 function callOffDependency(dependencySlot: string): string {
@@ -145,14 +145,14 @@ function callOffDependency(dependencySlot: string): string {
 function dependency(
   slot: string,
   fromStep: string,
-  fromLayer: string,
+  fromLane: string,
   toStep: string,
-  toLayer: string,
+  toLane: string,
 ): BlueprintCellDependency {
   return {
     id: callOffDependency(slot),
-    source_cell_id: callOffCell(fromStep, fromLayer),
-    target_cell_id: callOffCell(toStep, toLayer),
+    source_cell_id: callOffCell(fromStep, fromLane),
+    target_cell_id: callOffCell(toStep, toLane),
   }
 }
 
@@ -312,7 +312,7 @@ export const CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
     kind: 'happy',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: CALL_OFF_REQUEST_CELLS,
   dependencies: CALL_OFF_REQUEST_TRIGGERS,

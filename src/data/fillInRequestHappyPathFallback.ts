@@ -33,10 +33,10 @@ export const FILL_IN_REQUEST_SCENARIO_ID =
 export const FILL_IN_REQUEST_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000000807'
 
-const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000903'
+const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000903'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000904',
     name: 'Regular Tutor',
@@ -93,7 +93,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LAYER_ID,
+  visual: STEP_VISUAL_LANE_ID,
   regular: 'a0000000-0000-4000-8000-000000000904',
   frontStage: 'a0000000-0000-4000-8000-000000000905',
   frontStageTech: 'a0000000-0000-4000-8000-000000000906',
@@ -119,8 +119,8 @@ function cell(
   }
 }
 
-function fillCell(stepSlot: string, layerSuffix: string): string {
-  return `a0000000-0000-4000-8000-00000015${stepSlot}${layerSuffix}`
+function fillCell(stepSlot: string, laneSuffix: string): string {
+  return `a0000000-0000-4000-8000-00000015${stepSlot}${laneSuffix}`
 }
 
 function fillDependency(dependencySlot: string): string {
@@ -130,14 +130,14 @@ function fillDependency(dependencySlot: string): string {
 function dependency(
   slot: string,
   fromStep: string,
-  fromLayer: string,
+  fromLane: string,
   toStep: string,
-  toLayer: string,
+  toLane: string,
 ): BlueprintCellDependency {
   return {
     id: fillDependency(slot),
-    source_cell_id: fillCell(fromStep, fromLayer),
-    target_cell_id: fillCell(toStep, toLayer),
+    source_cell_id: fillCell(fromStep, fromLane),
+    target_cell_id: fillCell(toStep, toLane),
   }
 }
 
@@ -285,7 +285,7 @@ export const FILL_IN_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
     kind: 'happy',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: FILL_IN_REQUEST_CELLS,
   dependencies: FILL_IN_REQUEST_TRIGGERS,

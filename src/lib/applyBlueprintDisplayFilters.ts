@@ -1,29 +1,29 @@
-import { isBlueprintVisualLayerEnabled } from '@/lib/blueprintDisplayFlags'
+import { isBlueprintVisualLaneEnabled } from '@/lib/blueprintDisplayFlags'
 import { shouldUseStoryboardContent } from '@/lib/blueprintLayout'
 import type { BlueprintData } from '@/types/blueprint'
 
-function filterHiddenVisualLayers(
+function filterHiddenVisualLanes(
   data: BlueprintData,
   scenarioId?: string,
 ): BlueprintData {
-  if (isBlueprintVisualLayerEnabled(scenarioId)) {
+  if (isBlueprintVisualLaneEnabled(scenarioId)) {
     return data
   }
 
-  const hiddenLayerIds = new Set(
+  const hiddenLaneIds = new Set(
     data.lanes
       .filter((lane) => shouldUseStoryboardContent(lane))
       .map((lane) => lane.id),
   )
 
-  if (hiddenLayerIds.size === 0) {
+  if (hiddenLaneIds.size === 0) {
     return data
   }
 
-  const cells = data.cells.filter((cell) => !hiddenLayerIds.has(cell.lane_id))
+  const cells = data.cells.filter((cell) => !hiddenLaneIds.has(cell.lane_id))
   const hiddenCellIds = new Set(
     data.cells
-      .filter((cell) => hiddenLayerIds.has(cell.lane_id))
+      .filter((cell) => hiddenLaneIds.has(cell.lane_id))
       .map((cell) => cell.id),
   )
   const dependencies = data.dependencies.filter(
@@ -34,7 +34,7 @@ function filterHiddenVisualLayers(
 
   return {
     ...data,
-    lanes: data.lanes.filter((lane) => !hiddenLayerIds.has(lane.id)),
+    lanes: data.lanes.filter((lane) => !hiddenLaneIds.has(lane.id)),
     cells,
     dependencies,
   }
@@ -45,5 +45,5 @@ export function applyBlueprintDisplayFilters(
   scenarioId?: string,
   _pathId?: string,
 ): BlueprintData {
-  return filterHiddenVisualLayers(data, scenarioId)
+  return filterHiddenVisualLanes(data, scenarioId)
 }

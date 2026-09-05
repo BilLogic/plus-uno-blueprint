@@ -73,7 +73,7 @@ const CELL_FIELDS = [
   'owner',
   'perceived_owner',
 ]
-const LAYER_FIELDS = ['owner_team', 'kpis', 'tools']
+const LANE_FIELDS = ['owner_team', 'kpis', 'tools']
 const PHASE_FIELDS = ['business_impact', 'operational_requirements']
 
 const url = process.env.SUPABASE_URL?.trim()
@@ -164,7 +164,7 @@ async function runExport() {
     `cells?select=${CELL_FIELDS.join(',')},step:steps(name),lane:lanes(name),${PATH_CONTEXT}`,
   )
   const lanes = await rest(
-    `lanes?select=name,${LAYER_FIELDS.join(',')},${PATH_CONTEXT}`,
+    `lanes?select=name,${LANE_FIELDS.join(',')},${PATH_CONTEXT}`,
   )
   const phases = await rest(`phases?select=name,${PHASE_FIELDS.join(',')}`)
 
@@ -188,8 +188,8 @@ async function runExport() {
         ),
       ),
     lanes: lanes
-      .filter((row) => !isEmpty(row, LAYER_FIELDS))
-      .map((row) => ({ ...contextOf(row), lane: row.name, ...pick(row, LAYER_FIELDS) }))
+      .filter((row) => !isEmpty(row, LANE_FIELDS))
+      .map((row) => ({ ...contextOf(row), lane: row.name, ...pick(row, LANE_FIELDS) }))
       .sort((a, b) =>
         sortKey(a, 'phase', 'scenario', 'path', 'lane').localeCompare(
           sortKey(b, 'phase', 'scenario', 'path', 'lane'),
@@ -224,7 +224,7 @@ async function runRestore(dryRun) {
     const ctx = contextOf(row)
     return keyOf(ctx.phase, ctx.scenario, ctx.path, row.lane?.name, row.step?.name)
   })
-  const layerIndex = indexBy(lanes, (row) => {
+  const laneIndex = indexBy(lanes, (row) => {
     const ctx = contextOf(row)
     return keyOf(ctx.phase, ctx.scenario, ctx.path, row.name)
   })
@@ -265,11 +265,11 @@ async function runRestore(dryRun) {
       .filter(Boolean)
       .join(' / ')}`
     const id = resolve(
-      layerIndex,
+      laneIndex,
       keyOf(entry.phase, entry.scenario, entry.path, entry.lane),
       label,
     )
-    if (id) writes.push({ table: 'lanes', id, values: pick(entry, LAYER_FIELDS) })
+    if (id) writes.push({ table: 'lanes', id, values: pick(entry, LANE_FIELDS) })
   }
   for (const entry of payload.phases ?? []) {
     const id = resolve(phaseIndex, keyOf(entry.phase), `phase ${entry.phase}`)

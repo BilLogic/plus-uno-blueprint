@@ -47,10 +47,10 @@ export { ONBOARDING_MODULES_SCENARIO_ID }
 export const ONBOARDING_MODULES_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000007201'
 
-const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000828'
+const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000828'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000841',
     name: 'Regular Tutor',
@@ -122,7 +122,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LAYER_ID,
+  visual: STEP_VISUAL_LANE_ID,
   regular: 'a0000000-0000-4000-8000-000000000841',
   frontStage: 'a0000000-0000-4000-8000-000000000842',
   frontStageTech: 'a0000000-0000-4000-8000-000000000843',
@@ -148,8 +148,8 @@ function cell(
   }
 }
 
-function omCell(stepSlot: string, layerSuffix: string): string {
-  return `a0000000-0000-4000-8000-00000011${stepSlot}${layerSuffix}`
+function omCell(stepSlot: string, laneSuffix: string): string {
+  return `a0000000-0000-4000-8000-00000011${stepSlot}${laneSuffix}`
 }
 
 function omDependency(dependencySlot: string): string {
@@ -159,14 +159,14 @@ function omDependency(dependencySlot: string): string {
 function dependency(
   slot: string,
   fromStep: string,
-  fromLayer: string,
+  fromLane: string,
   toStep: string,
-  toLayer: string,
+  toLane: string,
 ): BlueprintCellDependency {
   return {
     id: omDependency(slot),
-    source_cell_id: omCell(fromStep, fromLayer),
-    target_cell_id: omCell(toStep, toLayer),
+    source_cell_id: omCell(fromStep, fromLane),
+    target_cell_id: omCell(toStep, toLane),
   }
 }
 
@@ -456,7 +456,7 @@ export const ONBOARDING_MODULES_HAPPY_PATH_FALLBACK: BlueprintData = {
     kind: 'happy',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: ONBOARDING_MODULES_CELLS,
   dependencies: ONBOARDING_MODULES_TRIGGERS,

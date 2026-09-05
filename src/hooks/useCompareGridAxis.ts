@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useCollapsedBlueprintLayers } from '@/hooks/useCollapsedBlueprintLayers'
+import { useCollapsedBlueprintLanes } from '@/hooks/useCollapsedBlueprintLanes'
 import { STEP_COLUMN_WIDTH } from '@/lib/blueprintLayout'
 import {
   buildCompareGridTracks,
@@ -9,7 +9,7 @@ import type { CompareModel } from '@/lib/compareSlots'
 import {
   COMPARE_LABEL_TRACK_WIDTH,
   buildSideBySideLabelRowSpecs,
-  getCanonicalLayers,
+  getCanonicalLanes,
   type BlueprintLabelRowSpec,
 } from '@/lib/sideBySideCompareLayout'
 import type { BlueprintData, BlueprintLane } from '@/types/blueprint'
@@ -19,7 +19,7 @@ export type CompareGridAxis = {
   lanes: BlueprintLane[]
   /** Lane row specs (one set — both canvases share the lane axis). */
   rows: BlueprintLabelRowSpec[]
-  toggleLayer: (laneId: string) => void
+  toggleLane: (laneId: string) => void
   tracks: CompareGridTrack[]
   gridTemplateColumns: string
 }
@@ -35,13 +35,13 @@ export function useCompareGridAxis(
   blueprints: BlueprintData[],
   compact = false,
 ): CompareGridAxis {
-  const { collapsedLayerIds, toggleLayer } = useCollapsedBlueprintLayers()
+  const { collapsedLaneIds, toggleLane } = useCollapsedBlueprintLanes()
 
-  const lanes = useMemo(() => getCanonicalLayers(blueprints), [blueprints])
+  const lanes = useMemo(() => getCanonicalLanes(blueprints), [blueprints])
 
   const rows = useMemo(
-    () => buildSideBySideLabelRowSpecs(blueprints, compact, collapsedLayerIds),
-    [blueprints, collapsedLayerIds, compact],
+    () => buildSideBySideLabelRowSpecs(blueprints, compact, collapsedLaneIds),
+    [blueprints, collapsedLaneIds, compact],
   )
 
   const tracks = useMemo(
@@ -60,5 +60,5 @@ export function useCompareGridAxis(
       .join(' ')}`
   }, [tracks])
 
-  return { lanes, rows, toggleLayer, tracks, gridTemplateColumns }
+  return { lanes, rows, toggleLane, tracks, gridTemplateColumns }
 }

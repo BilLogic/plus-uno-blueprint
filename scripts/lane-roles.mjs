@@ -1,7 +1,7 @@
 /**
  * The lane-role vocabulary, read from the two places that declare it.
  *
- * Three lists disagreed before this existed. `CANONICAL_LAYER_ROLES` named
+ * Three lists disagreed before this existed. `CANONICAL_LANE_ROLES` named
  * eight roles, two of which (`support_systems`, `step_visual`) no row has
  * ever used, and omitted `partner_actions`, which three rows do use.
  * `LANE_ROLE_DESCRIPTIONS` named nine. `ROLE_STYLES` named eleven, including
@@ -39,7 +39,7 @@ export const CONSTRAINT_MIGRATION =
   '20260830270000_a_frame_a_strip_and_a_slide.sql'
 
 /**
- * The roles `CANONICAL_LAYER_ROLES` lists, resolved through the `*_ROLE`
+ * The roles `CANONICAL_LANE_ROLES` lists, resolved through the `*_ROLE`
  * constants it is built from.
  *
  * The array holds identifiers, not literals, so reading it means reading the
@@ -63,10 +63,10 @@ export function rolesInCode(root = REPO_ROOT) {
     )
   }
 
-  const block = /export const CANONICAL_LAYER_ROLES = \[([^\]]*)\]/.exec(source)
+  const block = /export const CANONICAL_LANE_ROLES = \[([^\]]*)\]/.exec(source)
   if (!block) {
     throw new Error(
-      `${ROLES_PATH} no longer declares CANONICAL_LAYER_ROLES as an array ` +
+      `${ROLES_PATH} no longer declares CANONICAL_LANE_ROLES as an array ` +
         `literal. See scripts/lane-roles.mjs.`,
     )
   }
@@ -80,7 +80,7 @@ export function rolesInCode(root = REPO_ROOT) {
     const value = literals.get(name)
     if (value === undefined) {
       throw new Error(
-        `CANONICAL_LAYER_ROLES names ${name}, which ${ROLES_PATH} does not ` +
+        `CANONICAL_LANE_ROLES names ${name}, which ${ROLES_PATH} does not ` +
           `define as a role constant.`,
       )
     }

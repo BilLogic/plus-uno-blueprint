@@ -132,54 +132,54 @@ function flattenDependenciesFromCells(cells: RawCell[]): BlueprintCellDependency
 }
 
 /** Collapse duplicate swim lanes that share a name (e.g. legacy + fallback lane IDs). */
-export function deduplicateBlueprintLayers(data: BlueprintData): BlueprintData {
-  const layersByName = new Map<string, BlueprintLane[]>()
+export function deduplicateBlueprintLanes(data: BlueprintData): BlueprintData {
+  const lanesByName = new Map<string, BlueprintLane[]>()
   for (const lane of data.lanes) {
-    const group = layersByName.get(lane.name) ?? []
+    const group = lanesByName.get(lane.name) ?? []
     group.push(lane)
-    layersByName.set(lane.name, group)
+    lanesByName.set(lane.name, group)
   }
 
-  const duplicateGroups = [...layersByName.values()].filter(
+  const duplicateGroups = [...lanesByName.values()].filter(
     (group) => group.length > 1,
   )
   if (duplicateGroups.length === 0) {
     return data
   }
 
-  const cellCountByLayerId = new Map<string, number>()
+  const cellCountByLaneId = new Map<string, number>()
   for (const cell of data.cells) {
-    cellCountByLayerId.set(
+    cellCountByLaneId.set(
       cell.lane_id,
-      (cellCountByLayerId.get(cell.lane_id) ?? 0) + 1,
+      (cellCountByLaneId.get(cell.lane_id) ?? 0) + 1,
     )
   }
 
-  const layerIdRemap = new Map<string, string>()
-  const keptLayers: BlueprintLane[] = []
+  const laneIdRemap = new Map<string, string>()
+  const keptLanes: BlueprintLane[] = []
 
-  for (const group of layersByName.values()) {
+  for (const group of lanesByName.values()) {
     if (group.length === 1) {
-      keptLayers.push(group[0])
+      keptLanes.push(group[0])
       continue
     }
 
     const canonical = [...group].sort((a, b) => {
       const cellDiff =
-        (cellCountByLayerId.get(b.id) ?? 0) -
-        (cellCountByLayerId.get(a.id) ?? 0)
+        (cellCountByLaneId.get(b.id) ?? 0) -
+        (cellCountByLaneId.get(a.id) ?? 0)
       if (cellDiff !== 0) return cellDiff
       return a.position - b.position
     })[0]
 
-    keptLayers.push({
+    keptLanes.push({
       ...canonical,
       position: Math.min(...group.map((lane) => lane.position)),
     })
 
     for (const lane of group) {
       if (lane.id !== canonical.id) {
-        layerIdRemap.set(lane.id, canonical.id)
+        laneIdRemap.set(lane.id, canonical.id)
       }
     }
   }
@@ -200,7 +200,7 @@ export function deduplicateBlueprintLayers(data: BlueprintData): BlueprintData {
   // says.
   const cellBySlot = new Map<string, BlueprintCell>()
   for (const cell of data.cells) {
-    const laneId = layerIdRemap.get(cell.lane_id) ?? cell.lane_id
+    const laneId = laneIdRemap.get(cell.lane_id) ?? cell.lane_id
     const key = `${laneId}:${cell.step_id}:${cell.position}`
     const existing = cellBySlot.get(key)
     const nextCell = { ...cell, lane_id: laneId }
@@ -223,12 +223,12 @@ export function deduplicateBlueprintLayers(data: BlueprintData): BlueprintData {
       cellIds.has(dependency.target_cell_id),
   )
 
-  keptLayers.sort((a, b) => a.position - b.position)
+  keptLanes.sort((a, b) => a.position - b.position)
 
-  return { ...data, lanes: keptLayers, cells, dependencies }
+  return { ...data, lanes: keptLanes, cells, dependencies }
 }
 
-export function sortBlueprintLayers(data: BlueprintData): BlueprintData {
+export function sortBlueprintLanes(data: BlueprintData): BlueprintData {
   const lanes = [...data.lanes].sort(
     (a, b) => a.position - b.position,
   )
@@ -298,7 +298,7 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
         }))
       : flattenDependenciesFromCells(rawCells)
 
-  return sortBlueprintLayers({
+  return sortBlueprintLanes({
     path: {
       id: raw.id,
       name: raw.name,

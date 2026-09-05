@@ -10,7 +10,7 @@ import {
   X,
 } from 'lucide-react'
 import { ArrowLeft } from 'lucide-react'
-import { describeLaneRole, getLayerRole } from '@/lib/laneRoles'
+import { describeLaneRole, getLaneRole } from '@/lib/laneRoles'
 import { CellDependencyEditor } from '@/components/blueprint/CellDependencyEditor'
 import { CompareDifferencesSurface } from '@/components/blueprint/CompareDifferencesSurface'
 import { CellDependencySections } from '@/components/blueprint/CellDependencySections'
@@ -69,7 +69,7 @@ import {
   getBlueprintCellConnections,
   getBlueprintForPath,
   getLinkedTechFromConnections,
-  getSelectedCellLayerRowPosition,
+  getSelectedCellLaneRowPosition,
   scrollBlueprintCellIntoView,
 } from '@/lib/blueprintCellConnections'
 import {
@@ -94,8 +94,8 @@ import {
 import { shouldUseTouchpointCellContent, shouldUseStoryboardContent } from '@/lib/blueprintLayout'
 import { resolveCellDetailImages } from '@/lib/blueprintTechPictures'
 import {
-  getBlueprintLayerStyle,
-  getBlueprintLayerZone,
+  getBlueprintLaneStyle,
+  getBlueprintLaneZone,
 } from '@/lib/blueprintTheme'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import { cellResourcesFromLinks } from '@/lib/cellResources'
@@ -509,28 +509,28 @@ function BlueprintCellDetailPanelBody() {
 
     const pathId = pathEntry?.pathId ?? draft?.pathId
     const blueprint = pathId ? getBlueprintForPath(blueprints, pathId) : null
-    const layerRecord =
+    const laneRecord =
       blueprint?.lanes.find((lane) => lane.name === laneName) ?? null
     const zone =
-      layerRecord && blueprint
-        ? getBlueprintLayerZone(layerRecord, blueprint.lanes)
+      laneRecord && blueprint
+        ? getBlueprintLaneZone(laneRecord, blueprint.lanes)
         : 'frontstage'
     return {
       laneName,
       /** The row record, or a name-only stand-in when the lane is unknown. */
-      layer: layerRecord ?? { name: laneName },
+      lane: laneRecord ?? { name: laneName },
       // Keyed by lane_role — the name argument is only the legacy fallback.
-      style: getBlueprintLayerStyle(laneName, zone, layerRecord?.role),
+      style: getBlueprintLaneStyle(laneName, zone, laneRecord?.role),
       /* What the badge MEANS, for its hover. Resolved the way the canvas
          resolves it: the explicit role if the row carries one, else the
          legacy name map. */
       description: describeLaneRole(
-        getLayerRole({ name: laneName, role: layerRecord?.role ?? null }),
+        getLaneRole({ name: laneName, role: laneRecord?.role ?? null }),
       ),
     }
   }, [blueprints, draft?.laneName, draft?.pathId, pathEntry?.pathId, selection?.laneName])
 
-  const selectedLayer = selection ? (laneResolution?.layer ?? null) : null
+  const selectedLane = selection ? (laneResolution?.lane ?? null) : null
 
   /*
     The lane badge, tinted with that lane's own cell colour. Defined here
@@ -555,10 +555,10 @@ function BlueprintCellDetailPanelBody() {
   ) : null
 
   const otherTechEntries = useMemo(() => {
-    const layerNameByCellId = new Map<string, string>()
+    const laneNameByCellId = new Map<string, string>()
     const stepIndexByCellId = new Map<string, number>()
     for (const entry of [...connections.incoming, ...connections.outgoing]) {
-      layerNameByCellId.set(entry.cellId, entry.laneName)
+      laneNameByCellId.set(entry.cellId, entry.laneName)
       stepIndexByCellId.set(entry.cellId, entry.stepIndex)
     }
 
@@ -588,7 +588,7 @@ function BlueprintCellDetailPanelBody() {
         id: entry.id,
         cellId: entry.cellId,
         item: entry.item,
-        laneName: layerNameByCellId.get(entry.cellId),
+        laneName: laneNameByCellId.get(entry.cellId),
         stepIndex: stepIndexByCellId.get(entry.cellId),
       })
     }
@@ -661,12 +661,12 @@ function BlueprintCellDetailPanelBody() {
 
   // Lane row position of the selected cell — orients up/down direction
   // glyphs on same-step dependency rows.
-  const selectedLayerRowPosition = useMemo(() => {
+  const selectedLaneRowPosition = useMemo(() => {
     const pathId = pathEntry?.pathId
     if (!resolvedCellId || !pathId) return -1
     const blueprint = getBlueprintForPath(blueprints, pathId)
     if (!blueprint) return -1
-    return getSelectedCellLayerRowPosition(blueprint, resolvedCellId)
+    return getSelectedCellLaneRowPosition(blueprint, resolvedCellId)
   }, [blueprints, pathEntry?.pathId, resolvedCellId])
 
   /**
@@ -688,7 +688,7 @@ function BlueprintCellDetailPanelBody() {
     const blueprint = getBlueprintForPath(blueprints, pathId)
     if (!blueprint) return []
 
-    const layerNames = new Map(
+    const laneNames = new Map(
       blueprint.lanes.map((lane) => [lane.id, lane.name]),
     )
     const stepOrder = new Map(
@@ -706,7 +706,7 @@ function BlueprintCellDetailPanelBody() {
           label: cellPositionLabel(
             step?.index ?? -1,
             step?.name ?? 'Unknown step',
-            layerNames.get(cell.lane_id) ?? 'Unknown lane',
+            laneNames.get(cell.lane_id) ?? 'Unknown lane',
           ),
         }
       })
@@ -977,20 +977,20 @@ function BlueprintCellDetailPanelBody() {
   }
 
   const isStoryboardLane = Boolean(
-    selectedLayer && shouldUseStoryboardContent(selectedLayer),
+    selectedLane && shouldUseStoryboardContent(selectedLane),
   )
   const cellContent =
     selection.paths[0]?.content.trim() ||
     selection.techItem ||
     ''
   const detailBodyText = touchpointDetail?.text ?? cellContent
-  const isTechLayer = Boolean(
-    selectedLayer && shouldUseTouchpointCellContent(selectedLayer),
+  const isTechLane = Boolean(
+    selectedLane && shouldUseTouchpointCellContent(selectedLane),
   )
   /*
     The touchpoint's name, where there IS one to name.
 
-    `isTechLayer` alone was the test, and it is right for the general case: on
+    `isTechLane` alone was the test, and it is right for the general case: on
     an actor lane a cell's content is a sentence, and `resolveTouchpointDetail`
     naming it "the touchpoint" would be the label join this whole change
     unwound. But it is wrong for a cell that carries a real placement on a
@@ -1007,7 +1007,7 @@ function BlueprintCellDetailPanelBody() {
   */
   const hasRealPlacement = Boolean(selectedPlacement?.id)
   const techDetailLabel =
-    isTechLayer || hasRealPlacement ? (touchpointDetail?.name ?? null) : null
+    isTechLane || hasRealPlacement ? (touchpointDetail?.name ?? null) : null
   const detailDescriptionText =
     techDetailLabel && detailBodyText.trim() === techDetailLabel
       ? ''
@@ -1442,7 +1442,7 @@ function BlueprintCellDetailPanelBody() {
                       <CellDependencySections
                         connections={connections}
                         otherTech={otherTechEntries}
-                        selectedLayerRowPosition={selectedLayerRowPosition}
+                        selectedLaneRowPosition={selectedLaneRowPosition}
                         onCellSelect={handleConnectionSelect}
                         onTechSelect={handleTechSelect}
                       />

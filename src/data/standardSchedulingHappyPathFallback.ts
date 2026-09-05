@@ -20,10 +20,10 @@ export const STANDARD_SCHEDULING_SCENARIO_ID =
 export const STANDARD_SCHEDULING_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000000806'
 
-const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000885'
+const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000885'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000886',
     name: 'Regular Tutor',
@@ -70,7 +70,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LAYER_ID,
+  visual: STEP_VISUAL_LANE_ID,
   regular: 'a0000000-0000-4000-8000-000000000886',
   frontStage: 'a0000000-0000-4000-8000-000000000887',
   frontStageTech: 'a0000000-0000-4000-8000-000000000888',
@@ -96,8 +96,8 @@ function cell(
   }
 }
 
-function schedCell(stepSlot: string, layerSuffix: string): string {
-  return `a0000000-0000-4000-8000-00000014${stepSlot}${layerSuffix}`
+function schedCell(stepSlot: string, laneSuffix: string): string {
+  return `a0000000-0000-4000-8000-00000014${stepSlot}${laneSuffix}`
 }
 
 function schedDependency(dependencySlot: string): string {
@@ -107,14 +107,14 @@ function schedDependency(dependencySlot: string): string {
 function dependency(
   slot: string,
   fromStep: string,
-  fromLayer: string,
+  fromLane: string,
   toStep: string,
-  toLayer: string,
+  toLane: string,
 ): BlueprintCellDependency {
   return {
     id: schedDependency(slot),
-    source_cell_id: schedCell(fromStep, fromLayer),
-    target_cell_id: schedCell(toStep, toLayer),
+    source_cell_id: schedCell(fromStep, fromLane),
+    target_cell_id: schedCell(toStep, toLane),
   }
 }
 
@@ -189,7 +189,7 @@ export const STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK: BlueprintData = {
     kind: 'happy',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: STANDARD_SCHEDULING_CELLS,
   dependencies: STANDARD_SCHEDULING_TRIGGERS,

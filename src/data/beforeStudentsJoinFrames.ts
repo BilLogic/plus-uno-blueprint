@@ -1,7 +1,7 @@
 import { BLUEPRINT_STEP_VISUAL_PLACEHOLDER } from '@/lib/blueprintVisualPlaceholder'
 
 /** Shared placeholder for Before Students Join Partner, Lead Tutor, and Regular Tutor cells. */
-export const BEFORE_STUDENTS_JOIN_ACTION_LAYER_PLACEHOLDER =
+export const BEFORE_STUDENTS_JOIN_ACTION_LANE_PLACEHOLDER =
   BLUEPRINT_STEP_VISUAL_PLACEHOLDER
 
 /** Before Students Join Happy Path — Partner Action visuals. */

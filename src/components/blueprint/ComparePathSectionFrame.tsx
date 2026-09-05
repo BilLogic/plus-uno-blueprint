@@ -9,7 +9,7 @@ import {
   COMPARE_PATH_SECTION_BOTTOM_INSET,
   COMPARE_LABEL_TRACK_WIDTH,
 } from '@/lib/sideBySideCompareLayout'
-import { LAYER_COLUMN_WIDTH, STEP_COLUMN_GAP } from '@/lib/blueprintLayout'
+import { LANE_COLUMN_WIDTH, STEP_COLUMN_GAP } from '@/lib/blueprintLayout'
 import type { BlueprintData } from '@/types/blueprint'
 
 /** Uniform inset for single-path service blueprint section frames. */
@@ -49,7 +49,7 @@ export function ComparePathSectionFrame({
   const sectionFill = blueprintPanelSectionFillColor()
   const labelAxisOffset = excludeLabelRail
     ? variant === 'service'
-      ? LAYER_COLUMN_WIDTH
+      ? LANE_COLUMN_WIDTH
       : COMPARE_LABEL_TRACK_WIDTH + STEP_COLUMN_GAP
     : 0
 

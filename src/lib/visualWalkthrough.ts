@@ -4,13 +4,13 @@ import { pickPreferredPath } from '@/lib/pathSelection'
 import type { BlueprintData } from '@/types/blueprint'
 import type { PathKind } from '@/types/database'
 
-export const VISUAL_WALKTHROUGH_LAYER_NAMES = [
+export const VISUAL_WALKTHROUGH_LANE_NAMES = [
   'Teacher',
   'Lead Tutor',
   'Regular Tutor',
 ] as const
 
-export const VISUAL_LAYER_SHORT_LABELS: Record<string, string> = {
+export const VISUAL_LANE_SHORT_LABELS: Record<string, string> = {
   Teacher: 'Teacher',
   'Lead Tutor': 'Lead Tutor',
   'Regular Tutor': 'Regular Tutor',
@@ -25,7 +25,7 @@ export function hasEmbeddedVisualFrame(frame: string): boolean {
   )
 }
 
-export type VisualWalkthroughLayerEntry = {
+export type VisualWalkthroughLaneEntry = {
   laneName: string
   content: string
   frame: string
@@ -41,7 +41,7 @@ export type StoryboardFrameEntry = {
 export type VisualWalkthroughStep = {
   stepIndex: number
   stepName: string
-  layerEntries: VisualWalkthroughLayerEntry[]
+  laneEntries: VisualWalkthroughLaneEntry[]
   frames: string[]
 }
 
@@ -92,10 +92,10 @@ export function resolveStoryboardStripEntries(
   stepId: string,
 ): StoryboardFrameEntry[] {
   const cellLookup = buildCellLookup(blueprint.cells)
-  const layerByName = new Map(blueprint.lanes.map((lane) => [lane.name, lane]))
+  const laneByName = new Map(blueprint.lanes.map((lane) => [lane.name, lane]))
 
-  return VISUAL_WALKTHROUGH_LAYER_NAMES.flatMap((name) => {
-    const lane = layerByName.get(name)
+  return VISUAL_WALKTHROUGH_LANE_NAMES.flatMap((name) => {
+    const lane = laneByName.get(name)
     if (!lane) return []
     const cell = getCellAt(cellLookup, lane.id, stepId)
     if (!cell?.content.trim()) return []
@@ -104,7 +104,7 @@ export function resolveStoryboardStripEntries(
     return [
       {
         laneName: name,
-        label: VISUAL_LAYER_SHORT_LABELS[name] ?? name,
+        label: VISUAL_LANE_SHORT_LABELS[name] ?? name,
         frame,
         description: resolveCellDescription(cell),
       },
@@ -113,15 +113,15 @@ export function resolveStoryboardStripEntries(
 }
 
 /** True when Partner, Lead Tutor, or Regular Tutor has a cell in this step. */
-export function stepHasVisualWalkthroughLayerCells(
+export function stepHasVisualWalkthroughLaneCells(
   blueprint: StoryboardBlueprint,
   stepId: string,
 ): boolean {
   const cellLookup = buildCellLookup(blueprint.cells)
-  const layerByName = new Map(blueprint.lanes.map((lane) => [lane.name, lane]))
+  const laneByName = new Map(blueprint.lanes.map((lane) => [lane.name, lane]))
 
-  return VISUAL_WALKTHROUGH_LAYER_NAMES.some((name) => {
-    const lane = layerByName.get(name)
+  return VISUAL_WALKTHROUGH_LANE_NAMES.some((name) => {
+    const lane = laneByName.get(name)
     if (!lane) return false
     const cell = getCellAt(cellLookup, lane.id, stepId)
     return Boolean(cell?.content.trim())
@@ -148,7 +148,7 @@ export function buildVisualWalkthroughSession(
       return {
         stepIndex,
         stepName: step.name,
-        layerEntries: frameEntries.map((entry) => ({
+        laneEntries: frameEntries.map((entry) => ({
           laneName: entry.laneName,
           content: entry.description,
           frame: entry.frame,

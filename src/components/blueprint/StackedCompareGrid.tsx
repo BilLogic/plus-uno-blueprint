@@ -51,7 +51,7 @@ export function StackedCompareGrid({
   scenarioName,
   phaseName,
 }: StackedCompareGridProps) {
-  const { lanes, rows, toggleLayer, tracks, gridTemplateColumns } =
+  const { lanes, rows, toggleLane, tracks, gridTemplateColumns } =
     useCompareGridAxis(model, blueprints, compact)
 
   const rowTrackCss = useMemo(
@@ -97,7 +97,7 @@ export function StackedCompareGrid({
                   bandIndex === 0
                     ? COMPARE_STACKED_HEADER_GAP
                     : COMPARE_STACKED_BAND_GAP,
-                onToggleLayer: toggleLayer,
+                onToggleLane: toggleLane,
               }}
               compact={compact}
               scrollContainerRef={scrollContainerRef}

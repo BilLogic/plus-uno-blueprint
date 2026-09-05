@@ -35,10 +35,10 @@ export const WRAP_UP_SCENARIO_ID =
 export const WRAP_UP_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-00000000080e'
 
-const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000870'
+const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000870'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000871',
     name: 'Teacher',
@@ -105,7 +105,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LAYER_ID,
+  visual: STEP_VISUAL_LANE_ID,
   partner: 'a0000000-0000-4000-8000-000000000871',
   lead: 'a0000000-0000-4000-8000-000000000872',
   regular: 'a0000000-0000-4000-8000-000000000873',
@@ -139,8 +139,8 @@ function cell(
   }
 }
 
-function wuCell(stepSlot: string, layerSuffix: string): string {
-  return `a0000000-0000-4000-8000-0000001c${stepSlot}${layerSuffix}`
+function wuCell(stepSlot: string, laneSuffix: string): string {
+  return `a0000000-0000-4000-8000-0000001c${stepSlot}${laneSuffix}`
 }
 
 function wuDependency(dependencySlot: string): string {
@@ -150,14 +150,14 @@ function wuDependency(dependencySlot: string): string {
 function dependency(
   slot: string,
   fromStep: string,
-  fromLayer: string,
+  fromLane: string,
   toStep: string,
-  toLayer: string,
+  toLane: string,
 ): BlueprintCellDependency {
   return {
     id: wuDependency(slot),
-    source_cell_id: wuCell(fromStep, fromLayer),
-    target_cell_id: wuCell(toStep, toLayer),
+    source_cell_id: wuCell(fromStep, fromLane),
+    target_cell_id: wuCell(toStep, toLane),
   }
 }
 
@@ -184,8 +184,8 @@ function rowDependencies(
 }
 
 function columnLaneDependencies(
-  fromLayer: string,
-  toLayer: string,
+  fromLane: string,
+  toLane: string,
   idStart: number,
   stepCount: number,
 ): BlueprintCellDependency[] {
@@ -196,9 +196,9 @@ function columnLaneDependencies(
       dependency(
         String(idStart + i).padStart(3, '0'),
         step,
-        fromLayer,
+        fromLane,
         step,
-        toLayer,
+        toLane,
       ),
     )
   }
@@ -316,7 +316,7 @@ export const WRAP_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
     kind: 'happy',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: WRAP_UP_CELLS,
   dependencies: WRAP_UP_TRIGGERS,

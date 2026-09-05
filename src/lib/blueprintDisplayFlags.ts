@@ -7,7 +7,7 @@ import { WRAP_UP_SCENARIO_ID } from '@/data/wrapUpHappyPathFallback'
 const WARM_UP_SCENARIO_ID = 'a0000000-0000-4000-8000-000000000203'
 
 /** Iteration flags — flip when Visual rows and cell detail are ready to ship globally. */
-export const BLUEPRINT_VISUAL_LAYER_UI_ENABLED = true
+export const BLUEPRINT_VISUAL_LANE_UI_ENABLED = true
 export const BLUEPRINT_CELL_DETAIL_UI_ENABLED = true
 /** Visual walkthrough / presentation mode (play button + modal). */
 // Off: the ▶ sat inside the Visual lane of every blueprint looking like part
@@ -17,7 +17,7 @@ export const BLUEPRINT_CELL_DETAIL_UI_ENABLED = true
 export const BLUEPRINT_VISUAL_WALKTHROUGH_ENABLED = false
 
 /** Scenarios where the Visual row is shown before global rollout. */
-const BLUEPRINT_VISUAL_LAYER_SCENARIO_IDS = new Set<string>([
+const BLUEPRINT_VISUAL_LANE_SCENARIO_IDS = new Set<string>([
   GOAL_SETTING_SCENARIO_ID,
   WARM_UP_SCENARIO_ID,
   HELP_REQUEST_SCENARIO_ID,
@@ -32,12 +32,12 @@ const BLUEPRINT_CELL_DETAIL_SCENARIO_IDS = new Set<string>([
   WRAP_UP_SCENARIO_ID,
 ])
 
-export function isBlueprintVisualLayerEnabled(
+export function isBlueprintVisualLaneEnabled(
   scenarioId?: string | null,
 ): boolean {
-  if (BLUEPRINT_VISUAL_LAYER_UI_ENABLED) return true
+  if (BLUEPRINT_VISUAL_LANE_UI_ENABLED) return true
   if (!scenarioId) return false
-  return BLUEPRINT_VISUAL_LAYER_SCENARIO_IDS.has(scenarioId)
+  return BLUEPRINT_VISUAL_LANE_SCENARIO_IDS.has(scenarioId)
 }
 
 export function isBlueprintCellDetailEnabled(

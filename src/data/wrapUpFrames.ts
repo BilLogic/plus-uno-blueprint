@@ -1,7 +1,7 @@
 import { BLUEPRINT_STEP_VISUAL_PLACEHOLDER } from '@/lib/blueprintVisualPlaceholder'
 
 /** Shared placeholder for Wrap-Up Partner, Lead Tutor, and Regular Tutor cells. */
-export const WRAP_UP_ACTION_LAYER_PLACEHOLDER =
+export const WRAP_UP_ACTION_LANE_PLACEHOLDER =
   BLUEPRINT_STEP_VISUAL_PLACEHOLDER
 
 /** Wrap-Up Happy Path — Partner Action visuals. */

@@ -3,7 +3,7 @@ import {
   NARRATIVE_CELL_HEIGHT,
   TOUCHPOINT_ITEM_HEIGHT,
   getCellContentMinHeight,
-  getLayerRowMinHeight,
+  getLaneRowMinHeight,
   getTouchpointStackMinHeight,
 } from '@/lib/blueprintLayout'
 import type { BlueprintData, BlueprintLane } from '@/types/blueprint'
@@ -34,8 +34,8 @@ describe('cell height estimation (todo 026)', () => {
         cells: [{ lane_id: ACT_LANE.id, content }],
       }) as BlueprintData
 
-    expect(getLayerRowMinHeight(ACT_LANE, data(WORST_257))).toBe(
-      getLayerRowMinHeight(ACT_LANE, data('Signs up.')),
+    expect(getLaneRowMinHeight(ACT_LANE, data(WORST_257))).toBe(
+      getLaneRowMinHeight(ACT_LANE, data('Signs up.')),
     )
   })
 

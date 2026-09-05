@@ -42,10 +42,10 @@ export { HELP_REQUEST_SCENARIO_ID }
 export const HELP_REQUEST_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-00000000080d'
 
-const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000860'
+const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000860'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000867',
     name: 'Teacher',
@@ -127,7 +127,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LAYER_ID,
+  visual: STEP_VISUAL_LANE_ID,
   partner: 'a0000000-0000-4000-8000-000000000867',
   lead: 'a0000000-0000-4000-8000-000000000868',
   regular: 'a0000000-0000-4000-8000-000000000861',
@@ -161,8 +161,8 @@ function cell(
   }
 }
 
-function hrCell(stepSlot: string, layerSuffix: string): string {
-  return `a0000000-0000-4000-8000-0000001b${stepSlot}${layerSuffix}`
+function hrCell(stepSlot: string, laneSuffix: string): string {
+  return `a0000000-0000-4000-8000-0000001b${stepSlot}${laneSuffix}`
 }
 
 function hrDependency(dependencySlot: string): string {
@@ -172,14 +172,14 @@ function hrDependency(dependencySlot: string): string {
 function dependency(
   slot: string,
   fromStep: string,
-  fromLayer: string,
+  fromLane: string,
   toStep: string,
-  toLayer: string,
+  toLane: string,
 ): BlueprintCellDependency {
   return {
     id: hrDependency(slot),
-    source_cell_id: hrCell(fromStep, fromLayer),
-    target_cell_id: hrCell(toStep, toLayer),
+    source_cell_id: hrCell(fromStep, fromLane),
+    target_cell_id: hrCell(toStep, toLane),
   }
 }
 
@@ -206,8 +206,8 @@ function rowDependencies(
 }
 
 function columnLaneDependencies(
-  fromLayer: string,
-  toLayer: string,
+  fromLane: string,
+  toLane: string,
   idStart: number,
   stepCount: number,
 ): BlueprintCellDependency[] {
@@ -218,9 +218,9 @@ function columnLaneDependencies(
       dependency(
         String(idStart + i).padStart(3, '0'),
         step,
-        fromLayer,
+        fromLane,
         step,
-        toLayer,
+        toLane,
       ),
     )
   }
@@ -228,11 +228,11 @@ function columnLaneDependencies(
 }
 
 const partnerLeadOptions = {
-  cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
-    hrCell(stepSlot, layerSuffix),
+  cellId: (stepSlot: string, laneSuffix: '01' | '02') =>
+    hrCell(stepSlot, laneSuffix),
   dependencyId: (slot: string) => hrDependency(slot),
-  partnerLayerId: L.partner,
-  leadLayerId: L.lead,
+  partnerLaneId: L.partner,
+  leadLaneId: L.lead,
   stepIdForColumn: (column: number) => STEPS[column - 1]!.id,
   leadStepPictures: GOAL_SETTING_PARALLEL_LEAD_STEP_FRAMES,
   partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_FRAMES,
@@ -329,7 +329,7 @@ export const HELP_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
     kind: 'happy',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: HELP_REQUEST_CELLS,
   dependencies: HELP_REQUEST_TRIGGERS,

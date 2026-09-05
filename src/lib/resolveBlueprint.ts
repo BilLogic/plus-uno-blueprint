@@ -12,13 +12,13 @@ import { applyBlueprintDisplayFilters } from '@/lib/applyBlueprintDisplayFilters
 import { repairDiscoverySadPathBlueprint } from '@/lib/repairDiscoverySadPathBlueprint'
 import {
   repairWarmUpAlternatePathBlueprint,
-  repairWarmUpPathLayerPositions,
+  repairWarmUpPathLanePositions,
 } from '@/lib/repairWarmUpAlternatePathBlueprint'
 import { isBlueprintStepVisualPlaceholder } from '@/lib/blueprintVisualPlaceholder'
 import {
-  deduplicateBlueprintLayers,
+  deduplicateBlueprintLanes,
   normalizeBlueprint,
-  sortBlueprintLayers,
+  sortBlueprintLanes,
   type RawPath,
 } from '@/lib/normalizeBlueprint'
 import { cellResourcesFromLinks } from '@/lib/cellResources'
@@ -31,16 +31,16 @@ export function isBlueprintEmpty(data: BlueprintData): boolean {
   return data.lanes.length === 0
 }
 
-function repairBlueprintLayerPositionsFromFallback(
+function repairBlueprintLanePositionsFromFallback(
   data: BlueprintData,
   fallback: BlueprintData | null,
 ): BlueprintData {
   if (!fallback) {
-    return sortBlueprintLayers(data)
+    return sortBlueprintLanes(data)
   }
 
-  return sortBlueprintLayers(
-    repairWarmUpPathLayerPositions(data, fallback.lanes),
+  return sortBlueprintLanes(
+    repairWarmUpPathLanePositions(data, fallback.lanes),
   )
 }
 
@@ -150,24 +150,24 @@ function mergeMissingBlueprintContent(
   const fallback = getBlueprintFallback(scenarioId, pathId ?? data.path.id)
   if (!fallback) return data
 
-  const layerIds = new Set(data.lanes.map((lane) => lane.id))
-  const layerIdByName = new Map(
+  const laneIds = new Set(data.lanes.map((lane) => lane.id))
+  const laneIdByName = new Map(
     data.lanes.map((lane) => [lane.name, lane.id]),
   )
-  const fallbackLayerIdRemap = new Map<string, string>()
+  const fallbackLaneIdRemap = new Map<string, string>()
   const lanes = [...data.lanes]
   for (const lane of fallback.lanes) {
-    if (layerIds.has(lane.id)) continue
+    if (laneIds.has(lane.id)) continue
 
-    const existingLayerId = layerIdByName.get(lane.name)
-    if (existingLayerId) {
-      fallbackLayerIdRemap.set(lane.id, existingLayerId)
+    const existingLaneId = laneIdByName.get(lane.name)
+    if (existingLaneId) {
+      fallbackLaneIdRemap.set(lane.id, existingLaneId)
       continue
     }
 
     lanes.push(lane)
-    layerIds.add(lane.id)
-    layerIdByName.set(lane.name, lane.id)
+    laneIds.add(lane.id)
+    laneIdByName.set(lane.name, lane.id)
   }
   lanes.sort((a, b) => a.position - b.position)
 
@@ -228,7 +228,7 @@ function mergeMissingBlueprintContent(
     if (cellIds.has(cell.id)) continue
 
     const laneId =
-      fallbackLayerIdRemap.get(cell.lane_id) ?? cell.lane_id
+      fallbackLaneIdRemap.get(cell.lane_id) ?? cell.lane_id
     cells.push({ ...cell, lane_id: laneId })
     cellIds.add(cell.id)
   }
@@ -267,7 +267,7 @@ function mergeMissingBlueprintContent(
     ? { ...data, lanes, cells, steps, dependencies }
     : data
 
-  return deduplicateBlueprintLayers(merged)
+  return deduplicateBlueprintLanes(merged)
 }
 
 // ---------------------------------------------------------------------------
@@ -306,7 +306,7 @@ function applyPlusLegacyRepairs(
     // reference swimlanes. Only for the Warm-Up scenario — DB row positions
     // win everywhere else.
     if (fallback) {
-      repaired = repairWarmUpPathLayerPositions(repaired, fallback.lanes)
+      repaired = repairWarmUpPathLanePositions(repaired, fallback.lanes)
     }
   }
 
@@ -354,7 +354,7 @@ export function resolveBlueprintForScenario(
 
     return {
       blueprint: applyBlueprintDisplayFilters(
-        repairBlueprintLayerPositionsFromFallback(corrected, fallback),
+        repairBlueprintLanePositionsFromFallback(corrected, fallback),
         scenarioId,
         pathId,
       ),
@@ -395,7 +395,7 @@ export function resolveBlueprintForScenario(
       return {
         blueprint: applyBlueprintDisplayFilters(
           sortBlueprintSteps(
-            sortBlueprintLayers(
+            sortBlueprintLanes(
               applyPlusLegacyRepairs(blueprint, scenarioId, pathId, fallback),
             ),
           ),
@@ -411,8 +411,8 @@ export function resolveBlueprintForScenario(
     return {
       blueprint: applyBlueprintDisplayFilters(
         sortBlueprintSteps(
-          repairBlueprintLayerPositionsFromFallback(
-            deduplicateBlueprintLayers(fallback),
+          repairBlueprintLanePositionsFromFallback(
+            deduplicateBlueprintLanes(fallback),
             fallback,
           ),
         ),

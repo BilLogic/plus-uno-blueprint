@@ -45,10 +45,10 @@ export const SESSION_SIGN_UP_SCENARIO_ID =
   'a0000000-0000-4000-8000-000000000125'
 export const TECH_SETUP_HAPPY_PATH_ID = 'a0000000-0000-4000-8000-000000000800'
 
-const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000818'
+const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000818'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000831',
     name: 'Regular Tutor',
@@ -125,7 +125,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LAYER_ID,
+  visual: STEP_VISUAL_LANE_ID,
   regular: 'a0000000-0000-4000-8000-000000000831',
   frontStage: 'a0000000-0000-4000-8000-000000000832',
   frontStageTech: 'a0000000-0000-4000-8000-000000000833',
@@ -151,9 +151,9 @@ function cell(
   }
 }
 
-function tsCell(stepSlot: string, layerSuffix: string): string {
+function tsCell(stepSlot: string, laneSuffix: string): string {
   // Prefix 10 avoids Discovery sad-path rail detection (07/08 + …03).
-  return `a0000000-0000-4000-8000-00000010${stepSlot}${layerSuffix}`
+  return `a0000000-0000-4000-8000-00000010${stepSlot}${laneSuffix}`
 }
 
 function tsDependency(dependencySlot: string): string {
@@ -163,14 +163,14 @@ function tsDependency(dependencySlot: string): string {
 function dependency(
   slot: string,
   fromStep: string,
-  fromLayer: string,
+  fromLane: string,
   toStep: string,
-  toLayer: string,
+  toLane: string,
 ): BlueprintCellDependency {
   return {
     id: tsDependency(slot),
-    source_cell_id: tsCell(fromStep, fromLayer),
-    target_cell_id: tsCell(toStep, toLayer),
+    source_cell_id: tsCell(fromStep, fromLane),
+    target_cell_id: tsCell(toStep, toLane),
   }
 }
 
@@ -458,7 +458,7 @@ export const TECH_SETUP_HAPPY_PATH_FALLBACK: BlueprintData = {
     kind: 'happy',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: TECH_SETUP_CELLS,
   dependencies: TECH_SETUP_TRIGGERS,

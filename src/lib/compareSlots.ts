@@ -252,14 +252,14 @@ export function buildCompareModel(blueprints: CompareBlueprints): CompareModel {
   type LaneSeed = { key: string; label: string }
   const laneSeeds: LaneSeed[] = []
   const laneIndexByKey = new Map<string, number>()
-  const laneKeyByPathLayer = new Map<string, string>()
+  const laneKeyByPathLane = new Map<string, string>()
   for (const blueprint of blueprints) {
-    const orderedLayers = [...blueprint.lanes].sort(
+    const orderedLanes = [...blueprint.lanes].sort(
       (a, b) => a.position - b.position,
     )
-    for (const lane of orderedLayers) {
+    for (const lane of orderedLanes) {
       const key = normalizeCompareName(lane.name)
-      laneKeyByPathLayer.set(`${blueprint.path.id}:${lane.id}`, key)
+      laneKeyByPathLane.set(`${blueprint.path.id}:${lane.id}`, key)
       if (!laneIndexByKey.has(key)) {
         laneIndexByKey.set(key, laneSeeds.length)
         laneSeeds.push({ key, label: lane.name.trim() })
@@ -281,7 +281,7 @@ export function buildCompareModel(blueprints: CompareBlueprints): CompareModel {
   for (const blueprint of blueprints) {
     for (const cell of blueprint.cells) {
       const columnKey = columnKeyByPathStep.get(`${blueprint.path.id}:${cell.step_id}`)
-      const laneKey = laneKeyByPathLayer.get(`${blueprint.path.id}:${cell.lane_id}`)
+      const laneKey = laneKeyByPathLane.get(`${blueprint.path.id}:${cell.lane_id}`)
       if (!columnKey || !laneKey) continue
       const slotKey = makeSlotKey(laneKey, columnKey)
       let perPath = slotCells.get(slotKey)

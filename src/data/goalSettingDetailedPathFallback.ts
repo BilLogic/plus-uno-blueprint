@@ -50,10 +50,10 @@ export { GOAL_SETTING_SCENARIO_ID }
 export const GOAL_SETTING_DETAILED_PATH_ID =
   'a0000000-0000-4000-8000-000000000811'
 
-const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-0000000008a0'
+const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-0000000008a0'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-0000000008a1',
     name: 'Teacher',
@@ -155,7 +155,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LAYER_ID,
+  visual: STEP_VISUAL_LANE_ID,
   partner: 'a0000000-0000-4000-8000-0000000008a1',
   lead: 'a0000000-0000-4000-8000-0000000008a2',
   regular: 'a0000000-0000-4000-8000-0000000008a3',
@@ -260,8 +260,8 @@ function cell(
   }
 }
 
-function gdCell(stepSlot: string, layerSuffix: string): string {
-  return `a0000000-0000-4000-8000-0000001f${stepSlot}${layerSuffix}`
+function gdCell(stepSlot: string, laneSuffix: string): string {
+  return `a0000000-0000-4000-8000-0000001f${stepSlot}${laneSuffix}`
 }
 
 function gdDependency(dependencySlot: string): string {
@@ -271,14 +271,14 @@ function gdDependency(dependencySlot: string): string {
 function dependency(
   slot: string,
   fromStep: string,
-  fromLayer: string,
+  fromLane: string,
   toStep: string,
-  toLayer: string,
+  toLane: string,
 ): BlueprintCellDependency {
   return {
     id: gdDependency(slot),
-    source_cell_id: gdCell(fromStep, fromLayer),
-    target_cell_id: gdCell(toStep, toLayer),
+    source_cell_id: gdCell(fromStep, fromLane),
+    target_cell_id: gdCell(toStep, toLane),
   }
 }
 
@@ -305,8 +305,8 @@ function rowDependencies(
 }
 
 function columnLaneDependencies(
-  fromLayer: string,
-  toLayer: string,
+  fromLane: string,
+  toLane: string,
   idStart: number,
   stepCount: number,
 ): BlueprintCellDependency[] {
@@ -317,9 +317,9 @@ function columnLaneDependencies(
       dependency(
         String(idStart + i).padStart(3, '0'),
         step,
-        fromLayer,
+        fromLane,
         step,
-        toLayer,
+        toLane,
       ),
     )
   }
@@ -327,11 +327,11 @@ function columnLaneDependencies(
 }
 
 const partnerLeadOptions = {
-  cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
-    gdCell(stepSlot, layerSuffix),
+  cellId: (stepSlot: string, laneSuffix: '01' | '02') =>
+    gdCell(stepSlot, laneSuffix),
   dependencyId: (slot: string) => gdDependency(slot),
-  partnerLayerId: L.partner,
-  leadLayerId: L.lead,
+  partnerLaneId: L.partner,
+  leadLaneId: L.lead,
   stepIdForColumn: (column: number) => STEPS[column - 1]!.id,
   leadStepPictures: GOAL_SETTING_PARALLEL_LEAD_STEP_FRAMES,
   partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_FRAMES,
@@ -590,7 +590,7 @@ export const GOAL_SETTING_DETAILED_PATH_FALLBACK: BlueprintData = {
     kind: 'variant',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: GOAL_SETTING_DETAILED_CELLS,
   dependencies: GOAL_SETTING_DETAILED_TRIGGERS,

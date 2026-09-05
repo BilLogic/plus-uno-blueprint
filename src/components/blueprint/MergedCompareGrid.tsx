@@ -15,20 +15,20 @@ import { IntegratedDependencyArrows } from '@/components/blueprint/IntegratedDep
 import { PathLabelBadge } from '@/components/blueprint/PathLabelBadge'
 import { useCompareGridAxis } from '@/hooks/useCompareGridAxis'
 import {
-  BLUEPRINT_LAYER_ROW_GAP,
+  BLUEPRINT_LANE_ROW_GAP,
   STEP_COLUMN_GAP,
   STEP_COLUMN_WIDTH,
   hasBlueprintCellContent,
-  layerPrecedesBlueprintDivider,
+  lanePrecedesBlueprintDivider,
   shouldUseTouchpointCellContent,
   shouldUseStoryboardContent,
   type BlueprintCellVariant,
 } from '@/lib/blueprintLayout'
 import {
   blueprintPanelSectionFillColor,
-  getBlueprintLayerStyle,
-  getBlueprintLayerZone,
-  type BlueprintLayerStyle,
+  getBlueprintLaneStyle,
+  getBlueprintLaneZone,
+  type BlueprintLaneStyle,
 } from '@/lib/blueprintTheme'
 import type { CompareGridTrack } from '@/lib/compareGridTracks'
 import {
@@ -54,7 +54,7 @@ import {
   getComparePathArrowData,
   getCompareBoardWrapperPadding,
   getMergedCompareRowTrackCss,
-  resolveBlueprintLayer,
+  resolveBlueprintLane,
 } from '@/lib/sideBySideCompareLayout'
 import { getPathColor } from '@/lib/pathColorTheme'
 import { resolveStoryboardStripEntries } from '@/lib/visualWalkthrough'
@@ -120,7 +120,7 @@ export function MergedCompareGrid({
   const bandRef = useRef<HTMLDivElement>(null)
   const fallbackScrollRef = useRef<HTMLDivElement>(null)
   const resolvedScrollRef = scrollContainerRef ?? fallbackScrollRef
-  const { lanes, rows, toggleLayer, tracks, gridTemplateColumns } =
+  const { lanes, rows, toggleLane, tracks, gridTemplateColumns } =
     useCompareGridAxis(model, blueprints, compact)
 
   const rowTrackCss = useMemo(
@@ -291,7 +291,7 @@ export function MergedCompareGrid({
             gridTemplateRows: rowTrackCss,
             // Do NOT rely on gap inheritance into the subgrid — explicit here.
             columnGap: STEP_COLUMN_GAP,
-            rowGap: BLUEPRINT_LAYER_ROW_GAP,
+            rowGap: BLUEPRINT_LANE_ROW_GAP,
             marginTop: COMPARE_STACKED_HEADER_GAP,
           }}
         >
@@ -326,7 +326,7 @@ export function MergedCompareGrid({
                   row={row}
                   lanes={lanes}
                   compact={compact}
-                  onToggleLayer={toggleLayer}
+                  onToggleLane={toggleLane}
                   style={{
                     gridColumn: 1,
                     gridRow: rowIndex + 1,
@@ -476,13 +476,13 @@ function MergedLaneRow({
   scenarioName?: string
   phaseName?: string
 }) {
-  const laneStyle = getBlueprintLayerStyle(
+  const laneStyle = getBlueprintLaneStyle(
     lane.name,
-    getBlueprintLayerZone(lane, lanes),
+    getBlueprintLaneZone(lane, lanes),
     lane.role,
   )
   const variant = resolveMergedCellVariant(lane)
-  const flushBottom = layerPrecedesBlueprintDivider(lane, lanes)
+  const flushBottom = lanePrecedesBlueprintDivider(lane, lanes)
 
   return (
     <div className="relative flex items-stretch rounded-sm">
@@ -596,7 +596,7 @@ function MergedSubCellBlock({
   /** Canonical track index — the LAYOUT column, see `stepIndex` below. */
   columnIndex: number
   lane: BlueprintLane
-  laneStyle: BlueprintLayerStyle
+  laneStyle: BlueprintLaneStyle
   variant: BlueprintCellVariant
   compact?: boolean
   flushBottom?: boolean
@@ -654,7 +654,7 @@ function MergedSubCellBlock({
               // The canonical lane name — lanes are reconciled across paths
               // by normalized name, and this path's own lane is the one the
               // cell actually lives in.
-              laneName: resolveBlueprintLayer(lane, blueprint).name,
+              laneName: resolveBlueprintLane(lane, blueprint).name,
               stepId: subCell.stepId,
               stepName: step.name,
               stepIndex: pathStepIndex,

@@ -110,7 +110,7 @@ type ApplicationDiscoveryPathConfig = {
   cellSlotPrefix: '07' | '72'
   dependencySlotPrefix: '078' | '728'
   finalRegularTutorContent: string
-  layerIds: {
+  laneIds: {
     visual: string
     regular: string
     frontStage: string
@@ -129,7 +129,7 @@ const HAPPY_PATH_CONFIG: ApplicationDiscoveryPathConfig = {
   cellSlotPrefix: '07',
   dependencySlotPrefix: '078',
   finalRegularTutorContent: 'Interested in joining PLUS.',
-  layerIds: {
+  laneIds: {
     visual: 'a0000000-0000-4000-8000-000000000710',
     regular: 'a0000000-0000-4000-8000-000000000703',
     frontStage: 'a0000000-0000-4000-8000-000000000704',
@@ -149,7 +149,7 @@ const SAD_PATH_CONFIG: ApplicationDiscoveryPathConfig = {
   cellSlotPrefix: '72',
   dependencySlotPrefix: '728',
   finalRegularTutorContent: 'Not interested in joining PLUS.',
-  layerIds: {
+  laneIds: {
     visual: 'a0000000-0000-4000-8000-000000000791',
     regular: 'a0000000-0000-4000-8000-000000000792',
     frontStage: 'a0000000-0000-4000-8000-000000000793',
@@ -184,9 +184,9 @@ const REGULAR_TUTOR_PLACEHOLDER = {
 function appCell(
   config: ApplicationDiscoveryPathConfig,
   stepSlot: string,
-  layerSuffix: string,
+  laneSuffix: string,
 ): string {
-  return `a0000000-0000-4000-8000-000000${config.cellSlotPrefix}${stepSlot}${layerSuffix}`
+  return `a0000000-0000-4000-8000-000000${config.cellSlotPrefix}${stepSlot}${laneSuffix}`
 }
 
 function appDependency(
@@ -199,7 +199,7 @@ function appDependency(
 function buildApplicationDiscoveryFallback(
   config: ApplicationDiscoveryPathConfig,
 ): BlueprintData {
-  const L = config.layerIds
+  const L = config.laneIds
   const steps = getDiscoveryPathSteps(config)
   const finalStep = steps[steps.length - 1]!
 

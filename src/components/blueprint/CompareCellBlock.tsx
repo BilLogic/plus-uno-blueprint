@@ -22,7 +22,7 @@ import {
   BLUEPRINT_SLOT_INSET,
   BLUEPRINT_SLOT_INSET_COMPACT,
 } from '@/lib/canvasHeaderStyle'
-import type { BlueprintLayerStyle } from '@/lib/blueprintTheme'
+import type { BlueprintLaneStyle } from '@/lib/blueprintTheme'
 import { cn } from '@/lib/utils'
 import type { BlueprintCell } from '@/types/blueprint'
 import { useId, useState, type CSSProperties } from 'react'
@@ -76,7 +76,7 @@ export function CompareCellBlock({
   cellId?: string
   stepIndex: number
   content?: string
-  laneStyle: BlueprintLayerStyle
+  laneStyle: BlueprintLaneStyle
   variant: BlueprintCellVariant
   compact?: boolean
   flushBottom?: boolean

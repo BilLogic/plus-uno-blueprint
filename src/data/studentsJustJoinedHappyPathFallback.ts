@@ -26,10 +26,10 @@ export const STUDENTS_JUST_JOINED_SCENARIO_ID =
 export const STUDENTS_JUST_JOINED_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-00000000080b'
 
-const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000002020'
+const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000002020'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000002021',
     name: 'Teacher',
@@ -91,7 +91,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LAYER_ID,
+  visual: STEP_VISUAL_LANE_ID,
   partner: 'a0000000-0000-4000-8000-000000002021',
   lead: 'a0000000-0000-4000-8000-000000002022',
   regular: 'a0000000-0000-4000-8000-000000002023',
@@ -125,8 +125,8 @@ function cell(
   }
 }
 
-function sjjCell(stepSlot: string, layerSuffix: string): string {
-  return `a0000000-0000-4000-8000-00000019${stepSlot}${layerSuffix}`
+function sjjCell(stepSlot: string, laneSuffix: string): string {
+  return `a0000000-0000-4000-8000-00000019${stepSlot}${laneSuffix}`
 }
 
 function sjjDependency(dependencySlot: string): string {
@@ -136,14 +136,14 @@ function sjjDependency(dependencySlot: string): string {
 function dependency(
   slot: string,
   fromStep: string,
-  fromLayer: string,
+  fromLane: string,
   toStep: string,
-  toLayer: string,
+  toLane: string,
 ): BlueprintCellDependency {
   return {
     id: sjjDependency(slot),
-    source_cell_id: sjjCell(fromStep, fromLayer),
-    target_cell_id: sjjCell(toStep, toLayer),
+    source_cell_id: sjjCell(fromStep, fromLane),
+    target_cell_id: sjjCell(toStep, toLane),
   }
 }
 
@@ -251,7 +251,7 @@ export const STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK: BlueprintData = {
     kind: 'happy',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: STUDENTS_JUST_JOINED_CELLS,
   dependencies: STUDENTS_JUST_JOINED_TRIGGERS,

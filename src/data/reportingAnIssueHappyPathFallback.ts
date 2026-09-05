@@ -29,10 +29,10 @@ export const REPORTING_AN_ISSUE_SCENARIO_ID =
 export const REPORTING_AN_ISSUE_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-00000000080f'
 
-const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000910'
+const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000910'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000917',
     name: 'Lead Tutor',
@@ -103,7 +103,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LAYER_ID,
+  visual: STEP_VISUAL_LANE_ID,
   lead: 'a0000000-0000-4000-8000-000000000917',
   regular: 'a0000000-0000-4000-8000-000000000911',
   frontStage: 'a0000000-0000-4000-8000-000000000912',
@@ -136,8 +136,8 @@ function cell(
   }
 }
 
-function issueCell(stepSlot: string, layerSuffix: string): string {
-  return `a0000000-0000-4000-8000-0000001d${stepSlot}${layerSuffix}`
+function issueCell(stepSlot: string, laneSuffix: string): string {
+  return `a0000000-0000-4000-8000-0000001d${stepSlot}${laneSuffix}`
 }
 
 function issueDependency(dependencySlot: string): string {
@@ -147,14 +147,14 @@ function issueDependency(dependencySlot: string): string {
 function dependency(
   slot: string,
   fromStep: string,
-  fromLayer: string,
+  fromLane: string,
   toStep: string,
-  toLayer: string,
+  toLane: string,
 ): BlueprintCellDependency {
   return {
     id: issueDependency(slot),
-    source_cell_id: issueCell(fromStep, fromLayer),
-    target_cell_id: issueCell(toStep, toLayer),
+    source_cell_id: issueCell(fromStep, fromLane),
+    target_cell_id: issueCell(toStep, toLane),
   }
 }
 
@@ -282,7 +282,7 @@ export const REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK: BlueprintData = {
     kind: 'happy',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: REPORTING_AN_ISSUE_CELLS,
   dependencies: REPORTING_AN_ISSUE_TRIGGERS,
