@@ -55,6 +55,7 @@ newer; say so and follow the code.
 
 | Trigger | Load |
 |---------|------|
+| Panel labels — the word a field shows, and the column behind it | `docs/reference/interface-schema-map.md` — every label bound to its `table.column`, generated, with a reason on each of the five that diverge |
 | Composing a surface, or reaching for a primitive | `docs/reference/ui-inventory.md` — the need→primitive map, and the rule that `src/components/ui/` is the design system to compose rather than re-hand-roll |
 | React state, effects, or state shared across surfaces | `docs/engineering/codebase-guide.md` § State idioms |
 | Patterns worth copying — picker, review-then-commit list, sidebar menus, panel postures | `docs/engineering/codebase-guide.md` § Patterns to copy, by problem shape |

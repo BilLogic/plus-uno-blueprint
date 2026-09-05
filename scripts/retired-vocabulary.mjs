@@ -1,31 +1,211 @@
 /**
- * The rename map, machine-readable — the one list three checks agree on.
+ * The rename map — the one list three checks agree on, and the only place the
+ * map is written down.
  *
- * `CONTEXT.md`'s "The rename map — fixed vocabulary" table is the DOCUMENTED
- * map and stays the thing a person reads. This is the ENFORCED map. Neither
- * derives from the other, and `scripts/tests/retired-vocabulary.test.mjs`
- * asserts they still say the same thing.
+ * It used to have a documented twin. `CONTEXT.md` carried the same table in
+ * prose, this file carried it in code, and `scripts/tests/retired-vocabulary.test.mjs`
+ * held the two together — two lists on purpose, so that reformatting a markdown
+ * table could not break a build while a drifted table could still fail one.
+ * #365 made the glossary a glossary again: a document that defines terms and
+ * stops. With the prose half gone there is no pair left to hold together, and
+ * this file is both halves at once — the list CI acts on, and the commentary a
+ * person reads to learn why a word left.
  *
- * That the two are separate is the point. A prose document should not be
- * load-bearing for CI — reformatting a markdown table must not break a build,
- * and a check that parses prose acquires an exemption for every sentence that
- * merely mentions a word. But a documented map that has drifted from the
- * enforced one is a lie in the file people read to learn the vocabulary, so
- * divergence is itself a failure. Hence: two lists, one test holding them
- * together.
+ * The commentary below moved here word for word, because every paragraph of it
+ * is about THESE lists: which renames are carried in the `retired` and `copy`
+ * word lists, which are deliberately absent, and what enforces the absent ones
+ * instead. The reasoning about words retired as IDENTIFIERS rather than as
+ * words — the permanent exemption, and the narrowing of "proposition" — sits in
+ * the header of `scripts/check-retired-identifiers.mjs`, beside the exemption
+ * list that applies it.
  *
  * Read by:
  *   - `scripts/check-retired-identifiers.mjs`  (#145 Check A — database identifiers)
  *   - `scripts/check-database-names.mjs`       (#145 Check B — names inside strings)
  *   - `scripts/tests/retired-copy.test.mjs`    (#146 — words a person reads on screen)
+ *   - `scripts/stale-prose.mjs`                (#261 — code spans in swept markdown)
+ *
+ * ── WHY EACH NAME WENT, AND WHICH ARE NOT IN THE WORD LISTS ─────────────────
+ *
+ * A domain rename landed across twelve commits during an audit, and nobody could
+ * point at where the terms were defined. Here is where. **These are the current
+ * names.**
+ *
+ * This file used to add "and the old ones survive nowhere in the schema", which
+ * was never true and is the sentence that let the residue hide. `alter table …
+ * rename` moves the table and the column and nothing else: the index, the
+ * constraint, the policy, the trigger and the comment all keep the name they were
+ * created with. Twenty-two such objects still carried retired words when
+ * production was swept on 2026-08-26 (#142); `20260826110000` renames them and
+ * asserts against the catalogue that none is left. Making the next rename
+ * remember is #145's job, not this paragraph's.
+ *
+ * The reasoning, where it is worth knowing: a "tech" lane never held only
+ * technology — a printed guide, a poster, a phone line and a Zoom recording were
+ * all filed there, and four authored details had escaped onto Support Actions
+ * cells because the name said they did not belong. A touchpoint also stopped
+ * being a string: it was a name in `cells.content` whose detail lived in
+ * `cells.links` under a matching label, and when the two stopped agreeing the
+ * detail was simply not found — 57 of 117 were in that state. `row` and `column`
+ * named how a lane and a step happen to be *drawn* today, and the axis is a rendering fact rather
+ * than a domain one. "Lifecycle" was not a level above the service — it *was* the
+ * service, wearing a longer name. And `enables` was left alone, because it was
+ * already the plain word for what it means. A stakeholder's `note` held a
+ * definition on all eighteen rows — "Who the tutoring is for", "The tutor running
+ * a session" — and `summary` is this vocabulary's word for an entity's own
+ * one-liner, while `note` is an author's aside about one.
+ *
+ * **The `stakeholders.note` row is enforced somewhere else, and it has to be.** The
+ * three checks these entries feed match a retired word as a SUBSTRING of an
+ * identifier, and the retired word here is `note` — which `paths.note`,
+ * `cell_dependencies.note` and `findings.note` all still carry correctly, because
+ * all three genuinely are asides. Enforcing `note` would fail the series on those
+ * three; enforcing `stakeholders.note` would match nothing, since the identifier
+ * sweep reads a bare column name and never a qualified one. So that row's
+ * `retired` and `copy` lists are empty on purpose and the rename is enforced by
+ * [`scripts/tests/stakeholder-summary.test.mjs`](scripts/tests/stakeholder-summary.test.mjs),
+ * against the one table it concerns.
+ *
+ * The four `20260830190000` rows are one pass, and two rules decide all of it. **`name` is
+ * for structure a reader navigates; `title` is for authored content a reader
+ * reads** — which is why `slices.title` and `evidence.title` are not in the
+ * table. **`summary` is the entity's own one-liner** — not an aside about it, so
+ * `findings.note` was misnamed and `paths.note`, which genuinely is an aside, was
+ * not. Classifiers settle on `kind`; `scenarios.view_type` is not a kind but a
+ * display setting, so it is `layout` — and since `20260902120000` a setting that
+ * is stored, `stacked` or `merged`, its old `single` value folded into `stacked`
+ * because a one-path board was never a different board. `slices.origin` is renamed rather than
+ * aligned because its vocabulary (`generated`, `customized`, `human`) answers a
+ * different question from every other `origin` (`import`, `app`) — that word is
+ * now free for `services`, which gained it in the same migration.
+ *
+ * **Four of these renames are not in the enforced map's word lists**, and the
+ * reason is structural. `audit_findings` contains `findings` and
+ * `business_models` contains `business_model`, so no substring distinguishes the
+ * old name from the new one; `label`, `note` and `origin` all remain live,
+ * correct names on other tables. Those four are held by
+ * `scripts/tests/one-spelling-each.test.mjs`, which names them table-qualified.
+ *
+ * The three `20260830270000` rows are one pass too, and one rule decides all of
+ * it: **a name says what the thing is for, not what it is made of.** `visual`
+ * said the lane holds pictures, which is the least interesting thing about a row
+ * sitting beside `customer_actions` and `support_actions`; `picture` said the
+ * same thing one level down, about a column. So the lane is a **storyboard**, one
+ * image on one cell is a **frame**, and a step's frames read across the lanes are
+ * a **strip** — see `CONTEXT.md`, which is where the vocabulary lives.
+ * `slice_items` named a slide by its relationship to its parent, the shape
+ * `layers` had before it was `lanes`, and a slide's `caption` becomes a `title`
+ * under the rule the paragraph above settles.
+ *
+ * **Two of that pass are not in the enforced word lists either, for the two
+ * usual reasons.** `slice_items.caption` cannot be a fragment because `caption`
+ * is a live, correct English word — `steps.summary` is *displayed* as one, and
+ * that comment says so. And `slice_items.illustration` is not in the table at
+ * all, because it was dropped rather than renamed: it held an image that
+ * REPLACED a slide's strip instead of joining it, and no row ever set it. Both
+ * are held by
+ * [`scripts/tests/a-frame-a-strip-and-a-slide.test.mjs`](scripts/tests/a-frame-a-strip-and-a-slide.test.mjs),
+ * which also holds the one thing no schema check can see — that no word on
+ * screen calls a slide a frame.
+ *
+ * **`cells.links` is the last row, and it is not in the word lists either.**
+ * `links` is an ordinary English word the sweep would hit across the tree; the
+ * hand-written fallback blueprints in `src/data` still carry a `links` array and
+ * must, because `cellResources.ts` and `cellTouchpoints.ts` both read it; and
+ * `search_blueprint` still emits an output column of that name, because uno-bot
+ * reads it by key. What retired is the ARRANGEMENT — one column holding
+ * resources, touchpoint detail and provenance citations under a name describing
+ * one of them — and that is held by
+ * [`scripts/tests/cell-resources.test.mjs`](scripts/tests/cell-resources.test.mjs),
+ * which replays the series, asserts the column is gone and the table that
+ * replaced it carries its one-owner constraint, and proves each finding goes red.
+ *
+ * **One column is a deliberate exception.** `cells.content` keeps a word of its
+ * own: a cell's text is a sentence somebody wrote about a moment, not a name for
+ * the cell and not a one-line summary of something longer. The column's own
+ * comment says so, and the same test asserts the comment is still there.
+ *
+ * **The last five rows are a different kind of row, and the table says so in the
+ * left column.** Every row above renames something in the database and the
+ * interface follows. These do the opposite: the column was already right, and the
+ * LABEL above it was saying a word no query could find. So there is no migration —
+ * `cells.content`, `cells.value_props`, `path_steps.position` and `paths.summary`
+ * were all correct while the panel said Text, Value, Columns and Applies when —
+ * and the `Is` column carries two things: the word a reader now sees, and the
+ * column it names. They are kept in the same table as the schema→schema rows
+ * rather than beside them, because a reader looking up a word should not first
+ * have to know which kind of rename it was. These five are the label renames
+ * [#171](https://github.com/BilLogic/plus-uno-blueprint/issues/171) asked for;
+ * the MAP it asked for — every current label and the name behind it, not only the
+ * ones that moved — is `docs/reference/interface-schema-map.md`.
+ *
+ * `column` and `applies when` are enforced as retired copy: neither is said
+ * anywhere else on screen, so a reintroduction fails
+ * [`scripts/tests/retired-copy.test.mjs`](scripts/tests/retired-copy.test.mjs).
+ * `text` and `value` cannot be, for the reason four other rows here cannot —
+ * "Text size", "Add text…" and "Delete text" on the annotation toolbar are correct
+ * uses of the first, and the second is an ordinary English word the copy guard's
+ * deliberately naive JSX extraction meets inside expressions. Those two are held
+ * by [`scripts/tests/labels-name-their-columns.test.mjs`](scripts/tests/labels-name-their-columns.test.mjs),
+ * which narrows the SUBJECT to panel labels — the `label`, `term` and `title`
+ * props of the four components that put a field's name in front of a reader — and
+ * is therefore narrow enough to say `Text` without saying it about "Text size".
+ * The same test asserts the half no schema check can see: that the column each
+ * label now names is a column the schema actually has, so a label cannot be
+ * "fixed" by pointing it at a second word that is also not there.
+ *
+ * **The design system's own vocabulary is the last row, and it enforces from a
+ * test rather than from here.** Four words had grown for two ideas. A **badge**
+ * describes the thing it sits on: one per thing, not drawn from a set, never
+ * interactive — the divider label, a cell's status, a lane's stakeholder. A
+ * **tag** is one value out of a set, selectable or removable, and the owner
+ * control is the only one in the app. "Chip" and "pill" were a third and fourth
+ * name for those two, so a touchpoint is now a cell whose corner radius is a
+ * variant rather than a component with a duplicate `Button` variant of its own.
+ * No database object was ever called either word, so the identifier list is empty;
+ * [`scripts/tests/badge-and-tag.test.mjs`](scripts/tests/badge-and-tag.test.mjs)
+ * carries it, over every NAME under `src` and over one rule about behaviour —
+ * **no badge changes colour or border on hover**, because a surface that repaints
+ * under the pointer promises a click a badge never delivers. What a badge keeps is
+ * the help cursor, the focus ring and the tooltip.
+ *
+ * ### A third spelling, for the fills
+ *
+ * `retired` is how a name is written as a database identifier and `copy` is how
+ * it is written for a reader. There is a third, and a word escaped through the
+ * gap before anyone named it: `frontstage_tech` became `frontstage_touchpoints`
+ * in the schema, and the fill kept saying `frontstage-tech` in
+ * `blueprintCellStyle.ts` and `blueprint.css` for a fortnight.
+ *
+ * Three guards looked straight at it and each declined for a reason correct on
+ * its own. `check:identifiers` sweeps database identifiers, and a CSS attribute
+ * value is not one. The identifier sweep matches substrings, and the fragment has
+ * an underscore where the fill has a hyphen. `check:copy` reads what a person
+ * reads, and nobody reads an attribute selector. Nothing was broken — the seam
+ * was uncovered.
+ *
+ * `RETIRED_PRESENTATION_SPELLINGS` derives the hyphenated form from `retired`,
+ * mechanically, for the same reason `copy` is derived: a hand-kept third list
+ * could disagree with the first two, and a vocabulary with two spellings of one
+ * word is what this whole file exists to prevent.
+ * [`scripts/tests/presentation-keys.test.mjs`](scripts/tests/presentation-keys.test.mjs)
+ * holds the fill vocabulary to it, and holds the stylesheet and the module to
+ * each other.
+ *
+ * **A fill is a palette slot, not a role.** Several lane names point at one fill —
+ * `Frontstage Actions` borrows `frontstage-touchpoint` in the legacy name-keyed
+ * map, and `backstage_touchpoints` takes the `evidence` fill in the role-keyed
+ * one. So the check asks that a fill name contains no retired word; it does not
+ * ask that a fill be named after whichever role happens to use it.
  */
 
 /**
- * One row per row of `CONTEXT.md`'s rename table, in the same order.
+ * One row per rename, ordered as the series landed them.
  *
- * `was` / `is` / `migrations` are the table's three columns, reduced to the
- * code spans they contain — the test compares exactly those, so prose around
- * them ("on the `entity_status` domain") can be rewritten freely.
+ * `was` / `is` / `migrations` are the translation itself: the retired name, the
+ * name it carries today, and the migration that moved it. They are the whole of
+ * what the prose table used to say, which is why deleting that table cost
+ * nothing.
  *
  * `retired` is what the identifier checks actually match: SUBSTRINGS, not
  * whole words. `20260821370000_the_rename_reaches_the_functions.sql` is the
@@ -33,7 +213,7 @@
  * `cells_layer_step_slot_unique` because `_` is a word constituent, and a
  * function no cell write can avoid stayed broken for a day because of it.
  * Every fragment is asserted to be a substring of one of the same row's `was`
- * entries, so the enforced words cannot wander from the documented ones.
+ * entries, so the enforced words cannot wander from the names they came from.
  *
  * `copy` is the prose spelling of the same retirement, for the guard over
  * words a person reads. Each entry is asserted to correspond to a `was`
@@ -96,8 +276,8 @@ export const RENAME_MAP = Object.freeze(
       migrations: ['20260821350000'],
       retired: ['proposition'],
       // The PLURAL only, and the singular's absence is the entry rather than
-      // an omission — it is the same distinction CONTEXT.md's one permanent
-      // exemption already makes, applied to the words on screen.
+      // an omission — it is the same distinction the one permanent exemption
+      // in `check-retired-identifiers.mjs` makes, applied to words on screen.
       //
       // `propositions` was a TABLE, and it was renamed because that word
       // already meant a cell's value proposition. So the rename moved the
@@ -110,7 +290,7 @@ export const RENAME_MAP = Object.freeze(
       //
       // The identifier fragment above is untouched, because a DATABASE object
       // spelled `proposition` really is the retired one — there is exactly
-      // one, and CONTEXT.md documents it as permanent.
+      // one, and `check-retired-identifiers.mjs` documents it as permanent.
       copy: ['propositions'],
     },
     /*
@@ -585,8 +765,8 @@ export function retiredFragmentsIn(identifier) {
  *   identifier  what is exempt, exactly as the check names it
  *   because     why, in a sentence a stranger can evaluate
  *   until       the issue that ends it. ABSENT MEANS PERMANENT, and a
- *               permanent entry must be defined in CONTEXT.md — see
- *               `scripts/tests/retired-vocabulary.test.mjs`.
+ *               permanent entry must be explained in the header of the check
+ *               that applies it — see `scripts/tests/retired-vocabulary.test.mjs`.
  *
  * @typedef {{ identifier: string, because: string, until?: string }} Exemption
  */

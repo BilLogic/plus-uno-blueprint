@@ -1,17 +1,19 @@
 /**
- * The documented rename map and the enforced one still say the same thing.
+ * The rename map's word lists come from the names the map records, and every
+ * exemption still says why.
  *
- * `CONTEXT.md`'s table is what a person reads to learn the vocabulary.
- * `scripts/retired-vocabulary.mjs` is what three checks read to enforce it.
- * Neither derives from the other, deliberately: a prose document should not be
- * load-bearing for CI, and reformatting a markdown table should not break a
- * build. But a documented map that has drifted from the enforced one is a lie
- * in the file people trust, so divergence is itself a failure — which is the
- * shape that would have caught this whole class.
+ * There used to be a fourth test here, holding `CONTEXT.md`'s prose table
+ * against `scripts/retired-vocabulary.mjs`. Two lists were the point: a prose
+ * document should not be load-bearing for CI, and a documented map that had
+ * drifted from the enforced one was a lie in the file people trust. #365
+ * removed the prose half — the glossary defines terms and stops — so the pair
+ * is a single list and the parity test has nothing left to compare. What that
+ * test was protecting is now protected by there being one map.
  *
- * The exemption rules live here too, because they are the same argument. An
+ * The exemption rules live here because they are the same argument. An
  * exemption that cannot expire is how the `Layer` breadcrumb survived six
- * months.
+ * months, and a permanent one that explains itself nowhere is the same thing
+ * wearing a reason.
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
@@ -26,52 +28,20 @@ import { DATABASE_NAME_EXEMPTIONS } from '../check-database-names.mjs'
 import { replayMigrations } from '../migration-replay.mjs'
 
 const ROOT = resolve(new URL('../..', import.meta.url).pathname)
-const CONTEXT = readFileSync(resolve(ROOT, 'CONTEXT.md'), 'utf8')
+const SWEEP = resolve(ROOT, 'scripts/check-retired-identifiers.mjs')
 
-/* --------------------------------------------------------- CONTEXT.md */
-
-/** The `| … | … | … |` rows under the rename-map heading, as raw cells. */
-function documentedRows() {
-  const section = /##\s+The rename map[^\n]*\n([\s\S]*?)\n##\s/.exec(CONTEXT)
-  assert.ok(section, 'CONTEXT.md has no "## The rename map" section any more')
-  return section[1]
-    .split('\n')
-    .filter((line) => line.trim().startsWith('|'))
-    .map((line) => line.trim().slice(1, -1).split('|').map((cell) => cell.trim()))
-    .filter((cells) => cells.length === 3 && !/^-+$/.test(cells[0].replace(/[\s:]/g, '')))
-    .filter((cells) => cells[0].toLowerCase() !== 'was')
+/**
+ * The leading `/** … *\/` of a script — the header a reader lands in.
+ *
+ * Read rather than imported, because the subject IS the prose: a rule about
+ * what the header says cannot be satisfied by an exported constant.
+ */
+export function headerComment(source) {
+  const end = source.indexOf('*' + '/')
+  assert.ok(source.startsWith('#!') || source.startsWith('/**'), 'no header comment to read')
+  assert.ok(end > 0, 'no header comment to read')
+  return source.slice(0, end)
 }
-
-/** The `code spans` in a table cell, in order — the part that is data. */
-const codeSpans = (cell) => [...cell.matchAll(/`([^`]+)`/g)].map((match) => match[1])
-
-/** The rename-map table removed, so the rest of the file is definitions. */
-function contextWithoutRenameTable() {
-  return CONTEXT.split('\n')
-    .filter((line) => !line.trim().startsWith('|'))
-    .join('\n')
-}
-
-test('the enforced rename map still matches the one CONTEXT.md documents', () => {
-  const documented = documentedRows().map((cells) => ({
-    was: codeSpans(cells[0]),
-    is: codeSpans(cells[1]),
-    migrations: codeSpans(cells[2]),
-  }))
-  const enforced = RENAME_MAP.map((row) => ({
-    was: [...row.was],
-    is: [...row.is],
-    migrations: [...row.migrations],
-  }))
-  assert.deepEqual(
-    enforced,
-    documented,
-    'CONTEXT.md\'s rename map and scripts/retired-vocabulary.mjs disagree. Whichever ' +
-      'moved, move the other: the documented map is what a person reads and the ' +
-      'enforced map is what CI acts on, and a difference between them is the defect ' +
-      'this whole batch of checks exists to end.',
-  )
-})
 
 test('every enforced fragment comes from a name the map documents', () => {
   const stray = RENAME_MAP.flatMap((row) =>
@@ -128,14 +98,19 @@ test('every exemption states a reason, and an expiry or nothing', () => {
 
 /**
  * Rule 1. A permanent exemption is a claim that the word means something here,
- * and a claim about what a word means belongs in the file that defines words.
+ * and a check that deliberately skips a word has to say so where it skips it.
  * Without this, "permanent" quietly means "nobody got round to it", which is
  * exactly how the `Layer` exemption aged.
+ *
+ * The subject was `CONTEXT.md` until #365. The glossary was where the reason
+ * lived and the check was where it applied, so an exemption and its reason were
+ * two files and two edits; the glossary is now a glossary and the reasoning
+ * moved into the sweep's own header, which is what this reads.
  */
-test('every permanent exemption rests on a word CONTEXT.md defines', () => {
+test("every permanent exemption rests on a word the sweep's header defines", () => {
   const schema = replayMigrations(resolve(ROOT, 'supabase/migrations'))
   const unfiltered = staticFindings(schema, { applyExemptions: false })
-  const prose = contextWithoutRenameTable().toLowerCase()
+  const prose = headerComment(readFileSync(SWEEP, 'utf8')).toLowerCase()
 
   const undefined_ = []
   for (const entry of RETIRED_IDENTIFIER_EXEMPTIONS) {
@@ -148,10 +123,16 @@ test('every permanent exemption rests on a word CONTEXT.md defines', () => {
   assert.deepEqual(
     undefined_,
     [],
-    'A permanent exemption rests on a word CONTEXT.md does not define outside the ' +
-      `rename map: ${undefined_.join(', ')}. Give the word a glossary entry saying what ` +
-      'it means here and why it survives, or give the exemption an `until`.',
+    'A permanent exemption rests on a word the header of ' +
+      `scripts/check-retired-identifiers.mjs never explains: ${undefined_.join(', ')}. ` +
+      'Say in that header what the word means here and why it survives, or give the ' +
+      'exemption an `until`.',
   )
+})
+
+test('the header rule goes red on a header that stopped explaining itself', () => {
+  const stripped = '/**\n * A sweep with nothing to say for itself.\n */\n'
+  assert.equal(headerComment(stripped).includes('proposition'), false)
 })
 
 /**

@@ -10,6 +10,10 @@
 #   2. INDEX.md is generated. Hand-editing it drifts silently — that is
 #      literally how the previous index came to say "Three layers, never
 #      mixed" under its own GENERATED banner.
+#   3. The interface-to-schema map is generated too, for the same reason and by
+#      the same shape of check: its tables restate which column each panel
+#      label names and what the catalog says that column is, both rendered from
+#      scripts/interface-schema-map.mjs and the replayed migration series.
 #
 # No secrets and no network beyond the install.
 name: docs-harness
@@ -36,3 +40,6 @@ jobs:
 
       - name: The index is generated, not hand-edited
         run: node scripts/generate-docs-index.mjs --check
+
+      - name: The interface-to-schema map is generated, not hand-edited
+        run: npm run check:interface-map

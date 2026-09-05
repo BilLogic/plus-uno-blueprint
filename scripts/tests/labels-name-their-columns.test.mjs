@@ -42,12 +42,13 @@
  * that is not its column's name, and only one document can say which is
  * deliberate.
  *
- * So `LABEL_COLUMNS` below is that document's enforced half — every word a
- * panel puts in front of a reader, the schema name behind it, and a reason
- * wherever the two differ. `CONTEXT.md`'s "The interface→schema map" section
- * is the documented half, and a parity test holds them together in the shape
- * `retired-vocabulary.test.mjs` already uses for the rename map: two lists
- * that do not derive from each other, and a failure when they disagree.
+ * So `LABEL_COLUMNS` — `scripts/interface-schema-map.mjs`, re-exported below —
+ * is that document's enforced half: every word a panel puts in front of a
+ * reader, the schema name behind it, and a reason wherever the two differ. The
+ * half a person reads is `docs/reference/interface-schema-map.md`, RENDERED
+ * from this one since #365 rather than hand-kept beside it, so the two cannot
+ * disagree about what the map says. What can still disagree is the rendering,
+ * which is what the last pair of tests in this file watches.
  *
  * FOUR RULES MAKE IT NON-VACUOUS, and each is a way the map could rot:
  *
@@ -67,6 +68,7 @@ import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
+import { LABEL_COLUMNS } from '../interface-schema-map.mjs'
 import { replayMigrations } from '../migration-replay.mjs'
 
 const ROOT = resolve(new URL('../..', import.meta.url).pathname)
@@ -346,95 +348,14 @@ test('the column check goes red on a schema missing them', () => {
 /* ------------------------------------------ 3. and the map behind them all */
 
 /**
- * Every panel label, the schema name behind it, and why they differ.
+ * The map itself is `scripts/interface-schema-map.mjs`, re-exported here so
+ * the four rules below and their fixtures read the same way they always have.
  *
- * `label` is matched against what a panel actually says, case-insensitively
- * and whole. `names` is one or more `table.column` names, or a bare table
- * where the label heads a whole relation rather than a field of one. `because`
- * is empty on every row whose label and name already agree, and required on
- * every row where they do not.
- *
- * ONE LABEL, SEVERAL NAMES is the ordinary case rather than an escape hatch:
- * six things on this board have a `summary`, and "Summary" is the right word
- * above all of them. A row is aligned only when it aligns with EVERY name it
- * lists, so a shared word cannot be smuggled past this by pairing a divergence
- * with an agreement.
- *
- * Ordered as a reader meets them: the cell and its placement, the lane, the
- * phase, the scenario's paths, the service, the step.
+ * It moved out of this file in #365, for the reason the document it renders
+ * gives: the half a person reads is now generated from the half CI acts on,
+ * and a generator cannot import a test file without running its tests.
  */
-export const LABEL_COLUMNS = Object.freeze(
-  [
-    { label: 'Content', names: ['cells.content'], because: '' },
-    {
-      label: 'Summary',
-      names: [
-        'cells.summary',
-        'cell_touchpoints.summary',
-        'paths.summary',
-        'phases.summary',
-        'scenarios.summary',
-        'services.summary',
-        'steps.summary',
-      ],
-      because: '',
-    },
-    { label: 'Status', names: ['cells.status', 'paths.status'], because: '' },
-    { label: 'Owner', names: ['cells.owner'], because: '' },
-    { label: 'Perceived owner', names: ['cells.perceived_owner'], because: '' },
-    { label: 'Function', names: ['cells.function'], because: '' },
-    { label: 'Form', names: ['cells.form'], because: '' },
-    {
-      label: 'Value proposition',
-      names: ['cells.value_props'],
-      because:
-        '`props` abbreviates this exact phrase and no other. A label is read once and a name is typed daily, so the panel spells out what the schema shortens. Singular on purpose: a cell has one value proposition, stated once per audience — each row is a `for` and a `value` — and the plural on the column counts those statements, not separate propositions.',
-    },
-    { label: 'Touchpoint', names: ['touchpoints'], because: '' },
-    { label: 'Role', names: ['cell_touchpoints.role'], because: '' },
-    {
-      label: 'Registry',
-      names: ['cell_touchpoints.touchpoint_id'],
-      because:
-        'The column is a foreign key into `touchpoints`, and the field is where a name-only placement is linked to the registry entry it was about (#277). A reader is choosing from the registry; the panel says so rather than naming the key.',
-    },
-    { label: 'Stakeholder', names: ['lanes.stakeholder_id'], because: '' },
-    { label: 'Owner team', names: ['lanes.owner_team'], because: '' },
-    { label: 'KPIs', names: ['lanes.kpis'], because: '' },
-    { label: 'Tools', names: ['lanes.tools'], because: '' },
-    { label: 'Business impact', names: ['phases.business_impact'], because: '' },
-    {
-      label: 'Operational requirements',
-      names: ['phases.operational_requirements'],
-      because: '',
-    },
-    { label: 'Paths', names: ['paths'], because: '' },
-    {
-      label: 'Author note',
-      names: ['paths.note'],
-      because:
-        "`note` is this vocabulary's word for an author's aside, and the label says whose aside it is because it sits directly under Summary, which is the path's own sentence. That distinction is worth a word on screen and not worth a second column.",
-    },
-    { label: 'Funding', names: ['business_models.funding'], because: '' },
-    { label: 'Pricing', names: ['business_models.pricing'], because: '' },
-    { label: 'Delivery cost', names: ['business_models.delivery_cost'], because: '' },
-    { label: 'Revenue model', names: ['business_models.revenue_model'], because: '' },
-    { label: 'Partners', names: ['business_models.partners'], because: '' },
-    {
-      label: 'Examples',
-      names: ['services.entity_examples'],
-      because:
-        'The section heads a jsonb map, not a field, and the column carries an `entity_` qualifier the label drops: on the service panel the only examples in question are the board’s six entity kinds, so the qualifier is understood and the heading says the plain word. The six inputs beneath it name the kinds, not columns, so they carry no row of their own; this one row binds the whole map.',
-    },
-    { label: 'Position', names: ['path_steps.position'], because: '' },
-    {
-      label: 'Storyboard',
-      names: ['lanes.lane_role'],
-      because:
-        'The one row whose right-hand side is a VALUE rather than the name of a place to put one: `storyboard` is one of the eight `lane_role` admits, and this label heads the frames of the lane carrying it. The word is in the schema; it is simply not a column name.',
-    },
-  ].map((row) => Object.freeze({ ...row, names: Object.freeze(row.names) })),
-)
+export { LABEL_COLUMNS }
 
 /**
  * A word reduced to what a comparison can see: lower case, and every run of
@@ -495,8 +416,8 @@ test('every panel label is a word the map binds to the schema', () => {
     'A panel label is bound to nothing. This is #171 exactly: not that the word ' +
       'differs from its column, but that no document says which column it is, so ' +
       'nobody downstream can tell a decision from an accident. Add a row to ' +
-      "LABEL_COLUMNS and to CONTEXT.md's interface→schema map — with a reason if " +
-      `the two words differ:\n${found.join('\n')}`,
+      'LABEL_COLUMNS in scripts/interface-schema-map.mjs — with a reason if the two ' +
+      `words differ — then run \`npm run interface-map\`:\n${found.join('\n')}`,
   )
 })
 
@@ -617,7 +538,7 @@ test('every divergence is a decision somebody wrote down', () => {
     found,
     [],
     `A label differs from its name with no reason a stranger can evaluate: ${found.join('; ')}. ` +
-      'CONTEXT.md already keeps one word out of the interface on purpose and says why. ' +
+      'The map already keeps one word out of the interface on purpose and says why. ' +
       'That is the shape every divergence needs: a reason, or a rename.',
   )
 })
@@ -673,12 +594,28 @@ test('a row is divergent when ANY of its names disagrees', () => {
 
 /* ------------------------------------------- and the map a person reads */
 
-const CONTEXT = readFileSync(resolve(ROOT, 'CONTEXT.md'), 'utf8')
+/**
+ * The document the map renders into.
+ *
+ * It was a section of `CONTEXT.md` until #365 and a hand-kept twin of
+ * `LABEL_COLUMNS`; it is now `docs/reference/interface-schema-map.md`, and
+ * GENERATED from `LABEL_COLUMNS` by `scripts/generate-interface-schema-map.mjs`.
+ * That changes what this pair of tests is for rather than retiring it. The
+ * generator's own `--check` catches a document that stopped matching its
+ * source; what this catches is a RENDERING that stopped saying what the source
+ * says — a label emitted without its reason, a name lost out of a multi-name
+ * row — which `--check` cannot see, because `--check` compares the document to
+ * the same render.
+ */
+const DOCUMENT = readFileSync(resolve(ROOT, 'docs/reference/interface-schema-map.md'), 'utf8')
 
-/** The `| … | … | … |` rows under the interface→schema heading. */
-export function documentedRows(context = CONTEXT) {
-  const section = /##\s+The interface→schema map[^\n]*\n([\s\S]*?)(?:\n##\s|$)/.exec(context)
-  assert.ok(section, 'CONTEXT.md has no "## The interface→schema map" section any more')
+/** The `| … | … | … |` rows of the binding table, parsed back into rows. */
+export function documentedRows(document = DOCUMENT) {
+  const section = /<!-- generated:binding[^>]*-->([\s\S]*?)<!-- \/generated:binding -->/.exec(document)
+  assert.ok(
+    section,
+    'docs/reference/interface-schema-map.md has no <!-- generated:binding --> section any more',
+  )
   return section[1]
     .split('\n')
     .filter((line) => line.trim().startsWith('|'))
@@ -692,7 +629,7 @@ export function documentedRows(context = CONTEXT) {
     }))
 }
 
-test('the enforced interface map still matches the one CONTEXT.md documents', () => {
+test('the rendered map still says what LABEL_COLUMNS says', () => {
   const enforced = LABEL_COLUMNS.map((row) => ({
     label: row.label,
     names: [...row.names],
@@ -701,29 +638,29 @@ test('the enforced interface map still matches the one CONTEXT.md documents', ()
   assert.deepEqual(
     enforced,
     documentedRows(),
-    "CONTEXT.md's interface→schema map and LABEL_COLUMNS disagree. Whichever moved, " +
-      'move the other: the documented map is what a person reads and this one is what ' +
-      'CI acts on, and a difference between them is a lie in the file people trust to ' +
-      'learn the vocabulary.',
+    'docs/reference/interface-schema-map.md and LABEL_COLUMNS disagree. If the map moved, ' +
+      'run `npm run interface-map`; if the RENDERING lost something on the way — a reason, ' +
+      'one name of a multi-name row — fix renderBinding, because the document is what a ' +
+      'person reads to learn the vocabulary.',
   )
 })
 
 test('the parity check goes red on a table that has drifted', () => {
   const drifted = [
-    '## The interface→schema map',
+    '<!-- generated:binding -->',
     '',
     '| The interface says | The schema says | Why they differ |',
     '|---|---|---|',
     '| **Content** | `cells.content` | — |',
     '',
-    '## Next section',
+    '<!-- /generated:binding -->',
   ].join('\n')
   assert.deepEqual(documentedRows(drifted), [
     { label: 'Content', names: ['cells.content'], because: '' },
   ])
   assert.notEqual(documentedRows(drifted).length, LABEL_COLUMNS.length)
 
-  // A reason dropped from the documented half is a drift too, and the least
+  // A reason dropped from the rendered half is a drift too, and the least
   // visible one: the table still has every row, and one of them has quietly
   // stopped explaining itself.
   const reasonless = drifted.replace(

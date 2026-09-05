@@ -48,9 +48,10 @@ test('a fenced code block is not prose', () => {
 })
 
 test('a rename table is skipped, structurally', () => {
-  // Detected by a header row whose first cell is `Was` — not by wording. Both
-  // swept docs carry one and only one sits under a `## The rename map`
-  // heading, so a heading-based rule would have missed the other.
+  // Detected by a header row whose first cell is `Was` — not by wording. The
+  // swept docs that carry one head it differently every time (and the glossary,
+  // which used to carry the largest, carries none since #365), so a
+  // heading-based rule would have missed most of them.
   const md = [
     '| Was | Is | How the bot sees it |',
     '|---|---|---|',
