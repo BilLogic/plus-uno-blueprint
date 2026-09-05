@@ -10,7 +10,7 @@ export type BlueprintCellConnection = {
   dependencyId: string
   cellId: string
   laneName: string
-  layerRowPosition: number
+  laneRowPosition: number
   stepName: string
   stepIndex: number
   kind: BlueprintCellConnectionKind
@@ -34,7 +34,7 @@ function findCell(blueprint: BlueprintData, cellId: string): BlueprintCell | und
   return blueprint.cells.find((cell) => cell.id === resolvedId)
 }
 
-function resolveLayer(blueprint: BlueprintData, laneId: string) {
+function resolveLane(blueprint: BlueprintData, laneId: string) {
   return blueprint.lanes.find((lane) => lane.id === laneId)
 }
 
@@ -64,9 +64,9 @@ function toConnection(
   const stepIndex = resolveStepIndex(blueprint, cell.step_id)
   if (stepIndex < 0) return null
 
-  const lane = resolveLayer(blueprint, cell.lane_id)
+  const lane = resolveLane(blueprint, cell.lane_id)
   const laneName = lane?.name ?? 'Unknown lane'
-  const layerRowPosition = lane?.position ?? -1
+  const laneRowPosition = lane?.position ?? -1
   const isTech = lane ? shouldUseTouchpointCellContent(lane) : false
   const techItems = isTech ? getTouchpointNames(cell) : []
 
@@ -74,7 +74,7 @@ function toConnection(
     dependencyId: dependency.id,
     cellId,
     laneName,
-    layerRowPosition,
+    laneRowPosition,
     stepName: resolveStepName(blueprint, cell.step_id),
     stepIndex,
     kind: stepIndex === selectedStepIndex ? 'interaction' : 'connection',
@@ -226,13 +226,13 @@ export type DirectedFlowInteraction = BlueprintCellConnection & {
   direction: FlowInteractionDirection
 }
 
-export function getSelectedCellLayerRowPosition(
+export function getSelectedCellLaneRowPosition(
   blueprint: BlueprintData,
   cellId: string,
 ): number {
   const cell = findCell(blueprint, cellId)
   if (!cell) return -1
-  return resolveLayer(blueprint, cell.lane_id)?.position ?? -1
+  return resolveLane(blueprint, cell.lane_id)?.position ?? -1
 }
 
 function interactionDirectionFromRows(
@@ -246,7 +246,7 @@ function interactionDirectionFromRows(
 export function getDirectedInteractions(
   incoming: BlueprintCellConnection[],
   outgoing: BlueprintCellConnection[],
-  selectedLayerRowPosition: number,
+  selectedLaneRowPosition: number,
 ): DirectedFlowInteraction[] {
   const byCellId = new Map<string, BlueprintCellConnection>()
 
@@ -260,8 +260,8 @@ export function getDirectedInteractions(
   return [...byCellId.values()].map((connection) => ({
     ...connection,
     direction: interactionDirectionFromRows(
-      connection.layerRowPosition,
-      selectedLayerRowPosition,
+      connection.laneRowPosition,
+      selectedLaneRowPosition,
     ),
   }))
 }

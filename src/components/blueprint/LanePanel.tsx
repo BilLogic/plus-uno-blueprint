@@ -25,8 +25,8 @@ import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { updateLaneSpec } from '@/lib/laneSpecMutations'
-import { describeLaneRole, getLayerRole, labelLaneRole } from '@/lib/laneRoles'
-import { getBlueprintLayerStyle } from '@/lib/blueprintTheme'
+import { describeLaneRole, getLaneRole, labelLaneRole } from '@/lib/laneRoles'
+import { getBlueprintLaneStyle } from '@/lib/blueprintTheme'
 
 /**
  * Nothing an author has said about this lane, so a reader gets `PanelEmpty`
@@ -168,16 +168,16 @@ function LanePanelBody({
   }
 
   const fanOut = lane.siblingLaneIds.length
-  const resolvedRole = getLayerRole({ name: lane.name, role: lane.role })
+  const resolvedRole = getLaneRole({ name: lane.name, role: lane.role })
   /*
     The badge takes its colour the same way a CELL does — through
-    `getBlueprintLayerStyle`, whose `.lane` is the key blueprint.css paints
+    `getBlueprintLaneStyle`, whose `.lane` is the key blueprint.css paints
     from. The zone argument only decides the fallback for a lane with neither
     a role nor a known name, and the panel has no lane stack to read a zone
     from, so it asks for the frontstage fallback: a grey-ish badge on an
     unclassified lane, rather than a wrong-family colour.
   */
-  const laneRole = getBlueprintLayerStyle(lane.name, 'frontstage', lane.role)
+  const laneRole = getBlueprintLaneStyle(lane.name, 'frontstage', lane.role)
     .lane
 
   return (

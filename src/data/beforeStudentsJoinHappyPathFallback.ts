@@ -50,10 +50,10 @@ export const BEFORE_STUDENTS_JOIN_SCENARIO_ID =
 export const BEFORE_STUDENTS_JOIN_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000000809'
 
-const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000002010'
+const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000002010'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000002011',
     name: 'Teacher',
@@ -130,7 +130,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LAYER_ID,
+  visual: STEP_VISUAL_LANE_ID,
   partner: 'a0000000-0000-4000-8000-000000002011',
   lead: 'a0000000-0000-4000-8000-000000002012',
   regular: 'a0000000-0000-4000-8000-000000002013',
@@ -164,8 +164,8 @@ function cell(
   }
 }
 
-function bsjCell(stepSlot: string, layerSuffix: string): string {
-  return `a0000000-0000-4000-8000-00000018${stepSlot}${layerSuffix}`
+function bsjCell(stepSlot: string, laneSuffix: string): string {
+  return `a0000000-0000-4000-8000-00000018${stepSlot}${laneSuffix}`
 }
 
 function bsjDependency(dependencySlot: string): string {
@@ -175,14 +175,14 @@ function bsjDependency(dependencySlot: string): string {
 function dependency(
   slot: string,
   fromStep: string,
-  fromLayer: string,
+  fromLane: string,
   toStep: string,
-  toLayer: string,
+  toLane: string,
 ): BlueprintCellDependency {
   return {
     id: bsjDependency(slot),
-    source_cell_id: bsjCell(fromStep, fromLayer),
-    target_cell_id: bsjCell(toStep, toLayer),
+    source_cell_id: bsjCell(fromStep, fromLane),
+    target_cell_id: bsjCell(toStep, toLane),
   }
 }
 
@@ -421,7 +421,7 @@ export const BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK: BlueprintData = {
     kind: 'happy',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: BEFORE_STUDENTS_JOIN_CELLS,
   dependencies: BEFORE_STUDENTS_JOIN_TRIGGERS,

@@ -29,10 +29,10 @@ export { LESSON_MODULES_SCENARIO_ID }
 export const LESSON_MODULES_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000000802'
 
-const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000001240'
+const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000001240'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000001241',
     name: 'Regular Tutor',
@@ -84,7 +84,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LAYER_ID,
+  visual: STEP_VISUAL_LANE_ID,
   regular: 'a0000000-0000-4000-8000-000000001241',
   frontStage: 'a0000000-0000-4000-8000-000000001242',
   frontStageTech: 'a0000000-0000-4000-8000-000000001243',
@@ -119,8 +119,8 @@ function cell(
   }
 }
 
-function lmCell(stepSlot: string, layerSuffix: string): string {
-  return `a0000000-0000-4000-8000-00000012${stepSlot}${layerSuffix}`
+function lmCell(stepSlot: string, laneSuffix: string): string {
+  return `a0000000-0000-4000-8000-00000012${stepSlot}${laneSuffix}`
 }
 
 function lmDependency(dependencySlot: string): string {
@@ -130,14 +130,14 @@ function lmDependency(dependencySlot: string): string {
 function dependency(
   slot: string,
   fromStep: string,
-  fromLayer: string,
+  fromLane: string,
   toStep: string,
-  toLayer: string,
+  toLane: string,
 ): BlueprintCellDependency {
   return {
     id: lmDependency(slot),
-    source_cell_id: lmCell(fromStep, fromLayer),
-    target_cell_id: lmCell(toStep, toLayer),
+    source_cell_id: lmCell(fromStep, fromLane),
+    target_cell_id: lmCell(toStep, toLane),
   }
 }
 
@@ -286,7 +286,7 @@ export const LESSON_MODULES_HAPPY_PATH_FALLBACK: BlueprintData = {
     kind: 'happy',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: LESSON_MODULES_CELLS,
   dependencies: LESSON_MODULES_TRIGGERS,

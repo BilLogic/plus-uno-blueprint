@@ -1,7 +1,7 @@
 import { BLUEPRINT_STEP_VISUAL_PLACEHOLDER } from '@/lib/blueprintVisualPlaceholder'
 
 /** Shared placeholder for Reporting an Issue Lead Tutor and Regular Tutor cells. */
-export const REPORTING_AN_ISSUE_ACTION_LAYER_PLACEHOLDER =
+export const REPORTING_AN_ISSUE_ACTION_LANE_PLACEHOLDER =
   BLUEPRINT_STEP_VISUAL_PLACEHOLDER
 
 /** Reporting an Issue — Regular Tutor step 1 (Reach out). */

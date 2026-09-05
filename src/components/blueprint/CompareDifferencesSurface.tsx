@@ -32,8 +32,8 @@ import {
 } from '@/lib/compareReviewStore'
 import type { CompareSlot, CompareStatus } from '@/lib/compareSlots'
 import {
-  getBlueprintLayerStyle,
-  getBlueprintLayerZone,
+  getBlueprintLaneStyle,
+  getBlueprintLaneZone,
 } from '@/lib/blueprintTheme'
 import { getPathBadgeStyle, getPathColor } from '@/lib/pathColorTheme'
 import { PANEL_TEXT } from '@/lib/panelText'
@@ -288,8 +288,8 @@ export function CompareDifferencesSurface({
       for (const lane of blueprint.lanes) {
         const key = facets.find((facet) => facet.label === lane.name)?.key
         if (!key || swatches.has(key)) continue
-        const zone = getBlueprintLayerZone(lane, blueprint.lanes)
-        swatches.set(key, getBlueprintLayerStyle(lane.name, zone, lane.role).lane)
+        const zone = getBlueprintLaneZone(lane, blueprint.lanes)
+        swatches.set(key, getBlueprintLaneStyle(lane.name, zone, lane.role).lane)
       }
     }
     return { laneFacets: facets, laneSwatchByKey: swatches }

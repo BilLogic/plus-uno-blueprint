@@ -29,10 +29,10 @@ import type {
 export const APPLICATION_INTERVIEW_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000000702'
 
-const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000810'
+const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000810'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000803',
     name: 'Regular Tutor',
@@ -94,7 +94,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LAYER_ID,
+  visual: STEP_VISUAL_LANE_ID,
   regular: 'a0000000-0000-4000-8000-000000000803',
   frontStage: 'a0000000-0000-4000-8000-000000000804',
   frontStageTech: 'a0000000-0000-4000-8000-000000000806',
@@ -122,8 +122,8 @@ function cell(
   }
 }
 
-function iCell(stepSlot: string, layerSuffix: string): string {
-  return `a0000000-0000-4000-8000-00000009${stepSlot}${layerSuffix}`
+function iCell(stepSlot: string, laneSuffix: string): string {
+  return `a0000000-0000-4000-8000-00000009${stepSlot}${laneSuffix}`
 }
 
 function iDependency(dependencySlot: string): string {
@@ -133,14 +133,14 @@ function iDependency(dependencySlot: string): string {
 function dependency(
   slot: string,
   fromStep: string,
-  fromLayer: string,
+  fromLane: string,
   toStep: string,
-  toLayer: string,
+  toLane: string,
 ): BlueprintCellDependency {
   return {
     id: iDependency(slot),
-    source_cell_id: iCell(fromStep, fromLayer),
-    target_cell_id: iCell(toStep, toLayer),
+    source_cell_id: iCell(fromStep, fromLane),
+    target_cell_id: iCell(toStep, toLane),
   }
 }
 
@@ -365,7 +365,7 @@ export const APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK: BlueprintData = {
     kind: 'happy',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: INTERVIEW_CELLS,
   dependencies: INTERVIEW_TRIGGERS,

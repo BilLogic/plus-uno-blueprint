@@ -126,7 +126,7 @@ import {
 } from '@/data/techSetupHappyPathFallback'
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import {
-  assignWarmUpAlternateCellLayerId,
+  assignWarmUpAlternateCellLaneId,
   repairWarmUpAlternatePathBlueprint,
 } from '@/lib/repairWarmUpAlternatePathBlueprint'
 import {
@@ -155,13 +155,13 @@ const WARM_UP_STEP_3_ID = 'a0000000-0000-4000-8000-000000000313'
 
 const PATH_ID = WARM_UP_HAPPY_PATH_ID
 
-export const STEP_VISUAL_LAYER_ID =
+export const STEP_VISUAL_LANE_ID =
   'a0000000-0000-4000-8000-000000000310'
-const ALTERNATE_STEP_VISUAL_LAYER_ID =
+const ALTERNATE_STEP_VISUAL_LANE_ID =
   'a0000000-0000-4000-8000-000000000410'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   { id: 'a0000000-0000-4000-8000-000000000301', name: 'Teacher', position: 1 },
   { id: 'a0000000-0000-4000-8000-000000000302', name: 'Lead Tutor', position: 2 },
   { id: 'a0000000-0000-4000-8000-000000000303', name: 'Regular Tutor', position: 3 },
@@ -185,7 +185,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  stepVisual: STEP_VISUAL_LAYER_ID,
+  stepVisual: STEP_VISUAL_LANE_ID,
   partner: 'a0000000-0000-4000-8000-000000000301',
   lead: 'a0000000-0000-4000-8000-000000000302',
   regular: 'a0000000-0000-4000-8000-000000000303',
@@ -198,8 +198,8 @@ function stepVisualCellId(stepIndex: number): string {
   return `a0000000-0000-4000-8000-00000004${slot}10`
 }
 
-const WARM_UP_HAPPY_TO_ALTERNATE_LAYER_ID: Record<string, string> = {
-  [STEP_VISUAL_LAYER_ID]: ALTERNATE_STEP_VISUAL_LAYER_ID,
+const WARM_UP_HAPPY_TO_ALTERNATE_LANE_ID: Record<string, string> = {
+  [STEP_VISUAL_LANE_ID]: ALTERNATE_STEP_VISUAL_LANE_ID,
   [L.partner]: 'a0000000-0000-4000-8000-000000000401',
   [L.lead]: 'a0000000-0000-4000-8000-000000000402',
   [L.regular]: 'a0000000-0000-4000-8000-000000000403',
@@ -213,8 +213,8 @@ const WARM_UP_HAPPY_TO_ALTERNATE_LAYER_ID: Record<string, string> = {
   [L.support]: 'a0000000-0000-4000-8000-000000000409',
 }
 
-function mapAlternatePathLayerId(laneId: string): string {
-  return WARM_UP_HAPPY_TO_ALTERNATE_LAYER_ID[laneId] ?? laneId
+function mapAlternatePathLaneId(laneId: string): string {
+  return WARM_UP_HAPPY_TO_ALTERNATE_LANE_ID[laneId] ?? laneId
 }
 
 const FRONT_STAGE_TECH_ZOOM_ONLY = 'Zoom'
@@ -229,12 +229,12 @@ const WARM_UP_ZOOM_LEAVE_BREAKOUT_DESCRIPTION =
   "The tutor leaves the student's Zoom breakout room."
 
 const warmUpPartnerLeadOptions = {
-  cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
-    `a0000000-0000-4000-8000-00000004${stepSlot}${layerSuffix}`,
+  cellId: (stepSlot: string, laneSuffix: '01' | '02') =>
+    `a0000000-0000-4000-8000-00000004${stepSlot}${laneSuffix}`,
   dependencyId: (slot: string) =>
     `a0000000-0000-4000-8000-00000005${slot}`,
-  partnerLayerId: L.partner,
-  leadLayerId: L.lead,
+  partnerLaneId: L.partner,
+  leadLaneId: L.lead,
   stepIdForColumn: (column: number) => STEPS[column - 1]!.id,
   leadStepPictures: GOAL_SETTING_PARALLEL_LEAD_STEP_FRAMES,
   partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_FRAMES,
@@ -551,7 +551,7 @@ export const WARM_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
     kind: 'happy',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: WARM_UP_CELLS,
   dependencies: WARM_UP_TRIGGERS,
@@ -578,11 +578,11 @@ const WARM_UP_ALTERNATE_STEPS = STEPS.filter(
 }))
 
 const warmUpAlternatePartnerLeadOptions = {
-  cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
-    `a0000000-0000-4000-8000-00000006${stepSlot}${layerSuffix}`,
+  cellId: (stepSlot: string, laneSuffix: '01' | '02') =>
+    `a0000000-0000-4000-8000-00000006${stepSlot}${laneSuffix}`,
   dependencyId: (slot: string) => `a0000000-0000-4000-8000-00000007${slot}`,
-  partnerLayerId: mapAlternatePathLayerId(L.partner),
-  leadLayerId: mapAlternatePathLayerId(L.lead),
+  partnerLaneId: mapAlternatePathLaneId(L.partner),
+  leadLaneId: mapAlternatePathLaneId(L.lead),
   stepIdForColumn: (column: number) => WARM_UP_ALTERNATE_STEPS[column - 1]!.id,
   leadStepPictures: GOAL_SETTING_PARALLEL_LEAD_STEP_FRAMES,
   partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_FRAMES,
@@ -596,14 +596,14 @@ function buildWarmUpAlternatePathCells(): BlueprintCell[] {
   ).map((cell) => ({
     ...cell,
     id: mapHappyCellId(cell.id),
-    lane_id: mapAlternatePathLayerId(cell.lane_id),
+    lane_id: mapAlternatePathLaneId(cell.lane_id),
   }))
 
   return [
-    ...nonPartnerLeadCells.map(assignWarmUpAlternateCellLayerId),
+    ...nonPartnerLeadCells.map(assignWarmUpAlternateCellLaneId),
     ...buildParallelSessionPartnerLeadCells(
       warmUpAlternatePartnerLeadOptions,
-    ).map(assignWarmUpAlternateCellLayerId),
+    ).map(assignWarmUpAlternateCellLaneId),
   ]
 }
 
@@ -655,9 +655,9 @@ export const WARM_UP_ALTERNATE_PATH_FALLBACK: BlueprintData = {
     kind: 'variant',
     status: 'live',
   },
-  lanes: LAYERS.map((lane) => ({
+  lanes: LANES.map((lane) => ({
     ...lane,
-    id: mapAlternatePathLayerId(lane.id),
+    id: mapAlternatePathLaneId(lane.id),
   })),
   steps: WARM_UP_ALTERNATE_STEPS,
   cells: buildWarmUpAlternatePathCells(),

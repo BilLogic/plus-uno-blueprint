@@ -328,7 +328,7 @@ export function BlueprintCellDetailProvider({
 
       // The dependency table also includes technology in the selected step,
       // even when no explicit dependency connects it to the active cell.
-      const techLayerIds = new Set(
+      const techLaneIds = new Set(
         blueprint.lanes
           .filter((lane) => shouldUseTouchpointCellContent(lane))
           .map((lane) => lane.id),
@@ -336,7 +336,7 @@ export function BlueprintCellDetailProvider({
       for (const cell of blueprint.cells) {
         if (
           cell.step_id !== selection.stepId ||
-          !techLayerIds.has(cell.lane_id)
+          !techLaneIds.has(cell.lane_id)
         ) {
           continue
         }

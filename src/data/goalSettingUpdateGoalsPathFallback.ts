@@ -49,10 +49,10 @@ export { GOAL_SETTING_SCENARIO_ID }
 export const GOAL_SETTING_UPDATE_GOALS_PATH_ID =
   'a0000000-0000-4000-8000-000000000815'
 
-const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-0000000008d0'
+const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-0000000008d0'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-0000000008d1',
     name: 'Teacher',
@@ -154,7 +154,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LAYER_ID,
+  visual: STEP_VISUAL_LANE_ID,
   partner: 'a0000000-0000-4000-8000-0000000008d1',
   lead: 'a0000000-0000-4000-8000-0000000008d2',
   regular: 'a0000000-0000-4000-8000-0000000008d3',
@@ -254,8 +254,8 @@ function cell(
   }
 }
 
-function guCell(stepSlot: string, layerSuffix: string): string {
-  return `a0000000-0000-4000-8000-000000b0${stepSlot}${layerSuffix}`
+function guCell(stepSlot: string, laneSuffix: string): string {
+  return `a0000000-0000-4000-8000-000000b0${stepSlot}${laneSuffix}`
 }
 
 function guDependency(dependencySlot: string): string {
@@ -265,14 +265,14 @@ function guDependency(dependencySlot: string): string {
 function dependency(
   slot: string,
   fromStep: string,
-  fromLayer: string,
+  fromLane: string,
   toStep: string,
-  toLayer: string,
+  toLane: string,
 ): BlueprintCellDependency {
   return {
     id: guDependency(slot),
-    source_cell_id: guCell(fromStep, fromLayer),
-    target_cell_id: guCell(toStep, toLayer),
+    source_cell_id: guCell(fromStep, fromLane),
+    target_cell_id: guCell(toStep, toLane),
   }
 }
 
@@ -299,8 +299,8 @@ function rowDependencies(
 }
 
 function columnLaneDependencies(
-  fromLayer: string,
-  toLayer: string,
+  fromLane: string,
+  toLane: string,
   idStart: number,
   stepCount: number,
 ): BlueprintCellDependency[] {
@@ -311,9 +311,9 @@ function columnLaneDependencies(
       dependency(
         String(idStart + i).padStart(3, '0'),
         step,
-        fromLayer,
+        fromLane,
         step,
-        toLayer,
+        toLane,
       ),
     )
   }
@@ -321,11 +321,11 @@ function columnLaneDependencies(
 }
 
 const partnerLeadOptions = {
-  cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
-    guCell(stepSlot, layerSuffix),
+  cellId: (stepSlot: string, laneSuffix: '01' | '02') =>
+    guCell(stepSlot, laneSuffix),
   dependencyId: (slot: string) => guDependency(slot),
-  partnerLayerId: L.partner,
-  leadLayerId: L.lead,
+  partnerLaneId: L.partner,
+  leadLaneId: L.lead,
   stepIdForColumn: (column: number) => STEPS[column - 1]!.id,
   leadStepPictures: GOAL_SETTING_PARALLEL_LEAD_STEP_FRAMES,
   partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_FRAMES,
@@ -588,7 +588,7 @@ export const GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK: BlueprintData = {
     kind: 'variant',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: GOAL_SETTING_UPDATE_GOALS_CELLS,
   dependencies: GOAL_SETTING_UPDATE_GOALS_TRIGGERS,

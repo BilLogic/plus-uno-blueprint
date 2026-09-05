@@ -14,25 +14,25 @@ import { ComparePathSectionFrame } from '@/components/blueprint/ComparePathSecti
 import { IntegratedDependencyArrows } from '@/components/blueprint/IntegratedDependencyArrows'
 import { BlueprintVisualPlayButton } from '@/components/blueprint/BlueprintVisualPlayButton'
 import {
-  BLUEPRINT_LAYER_ROW_GAP,
+  BLUEPRINT_LANE_ROW_GAP,
   STEP_COLUMN_GAP,
   STORYBOARD_PLAY_GUTTER,
   STEP_COLUMN_WIDTH,
   hasBlueprintCellContent,
-  layerPrecedesBlueprintDivider,
+  lanePrecedesBlueprintDivider,
   shouldUseTouchpointCellContent,
   shouldUseStoryboardContent,
 } from '@/lib/blueprintLayout'
 import { buildCellLookup, getCellAt, getCellsAt } from '@/lib/normalizeBlueprint'
 import {
-  getBlueprintLayerStyle,
-  getBlueprintLayerZone,
+  getBlueprintLaneStyle,
+  getBlueprintLaneZone,
 } from '@/lib/blueprintTheme'
 import type { CompareGridTrack } from '@/lib/compareGridTracks'
 import {
   type BlueprintLabelRowSpec,
   getComparePathArrowData,
-  resolveBlueprintLayer,
+  resolveBlueprintLane,
 } from '@/lib/sideBySideCompareLayout'
 import { cn } from '@/lib/utils'
 import { resolveStoryboardStripEntries } from '@/lib/visualWalkthrough'
@@ -60,7 +60,7 @@ export type PathBandArrangement =
       tracks: readonly CompareGridTrack[]
       rowTrackCss: string
       marginTop?: number
-      onToggleLayer?: (laneId: string) => void
+      onToggleLane?: (laneId: string) => void
     }
 
 type BlueprintPathBandProps = {
@@ -105,7 +105,7 @@ export function BlueprintPathBand({
     buildVisualWalkthroughSession(blueprint).steps.length > 0
   // The stacked arrangement cannot shift cells right for the play control —
   // cells must stay on the canonical column tracks — so the control hangs in
-  // the rail gap instead (see CompareLayerRow).
+  // the rail gap instead (see CompareLaneRow).
   const playGutter =
     showPlay && arrangement.kind === 'column' ? STORYBOARD_PLAY_GUTTER : 0
 
@@ -123,7 +123,7 @@ export function BlueprintPathBand({
           gridTemplateRows: arrangement.rowTrackCss,
           // Do NOT rely on gap inheritance into the subgrid — explicit here.
           columnGap: STEP_COLUMN_GAP,
-          rowGap: BLUEPRINT_LAYER_ROW_GAP,
+          rowGap: BLUEPRINT_LANE_ROW_GAP,
           marginTop: arrangement.marginTop,
         }
 
@@ -179,7 +179,7 @@ export function BlueprintPathBand({
                   row={row}
                   lanes={lanes}
                   compact={compact}
-                  onToggleLayer={arrangement.onToggleLayer}
+                  onToggleLane={arrangement.onToggleLane}
                   style={{
                     gridColumn: 1,
                     gridRow: rowIndex + 1,
@@ -264,7 +264,7 @@ function CompareCardRow({
       cellTracksOnly={stackedTracks !== undefined}
     >
       {row.lane ? (
-        <CompareLayerRow
+        <CompareLaneRow
           blueprint={blueprint}
           lane={row.lane}
           lanes={lanes}
@@ -280,7 +280,7 @@ function CompareCardRow({
   )
 }
 
-function CompareLayerRow({
+function CompareLaneRow({
   blueprint,
   lane,
   lanes,
@@ -301,8 +301,8 @@ function CompareLayerRow({
   showPlay?: boolean
   stackedTracks?: readonly CompareGridTrack[]
 }) {
-  const blueprintLayer = useMemo(
-    () => resolveBlueprintLayer(lane, blueprint),
+  const blueprintLane = useMemo(
+    () => resolveBlueprintLane(lane, blueprint),
     [blueprint, lane],
   )
   const cellLookup = useMemo(
@@ -314,21 +314,21 @@ function CompareLayerRow({
     [blueprint.steps],
   )
   const isTouchpointLane = shouldUseTouchpointCellContent(lane)
-  const laneStyle = getBlueprintLayerStyle(
+  const laneStyle = getBlueprintLaneStyle(
     lane.name,
-    getBlueprintLayerZone(lane, lanes),
+    getBlueprintLaneZone(lane, lanes),
     lane.role,
   )
-  const flushBottom = layerPrecedesBlueprintDivider(lane, lanes)
+  const flushBottom = lanePrecedesBlueprintDivider(lane, lanes)
   const isStoryboardLane = shouldUseStoryboardContent(lane)
   const renderPlay =
     showPlay && isStoryboardLane && (playGutter > 0 || stackedTracks !== undefined)
 
   const renderStepCell = (step: BlueprintStep, stepIndex: number) => {
-    const cell = getCellAt(cellLookup, blueprintLayer.id, step.id)
+    const cell = getCellAt(cellLookup, blueprintLane.id, step.id)
     // Tech slots hold one cell per touchpoint since the split.
     const slotCells = isTouchpointLane
-      ? getCellsAt(cellLookup, blueprintLayer.id, step.id)
+      ? getCellsAt(cellLookup, blueprintLane.id, step.id)
       : undefined
     const variant = isStoryboardLane ? 'storyboard' : isTouchpointLane ? 'touchpoints' : 'default'
     const visualPictures = isStoryboardLane
@@ -348,7 +348,7 @@ function CompareLayerRow({
       return (
         <BlueprintEmptyCellSlot
           pathId={blueprint.path.id}
-          laneId={blueprintLayer.id}
+          laneId={blueprintLane.id}
           stepId={step.id}
           laneName={lane.name}
           stepName={step.name}

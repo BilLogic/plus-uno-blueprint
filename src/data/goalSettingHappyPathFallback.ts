@@ -40,10 +40,10 @@ export { GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION }
 export const GOAL_SETTING_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-00000000080c'
 
-const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000850'
+const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000850'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000857',
     name: 'Teacher',
@@ -125,7 +125,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LAYER_ID,
+  visual: STEP_VISUAL_LANE_ID,
   partner: 'a0000000-0000-4000-8000-000000000857',
   lead: 'a0000000-0000-4000-8000-000000000858',
   regular: 'a0000000-0000-4000-8000-000000000851',
@@ -198,8 +198,8 @@ export const GOAL_SETTING_HAPPY_PATH_RT_STEP_FRAMES = {
   shareScreen: GOAL_SETTING_HAPPY_REGULAR_TUTOR_STEP_02_FRAME,
 } as const
 
-function gsCell(stepSlot: string, layerSuffix: string): string {
-  return `a0000000-0000-4000-8000-0000001a${stepSlot}${layerSuffix}`
+function gsCell(stepSlot: string, laneSuffix: string): string {
+  return `a0000000-0000-4000-8000-0000001a${stepSlot}${laneSuffix}`
 }
 
 function gsDependency(dependencySlot: string): string {
@@ -209,14 +209,14 @@ function gsDependency(dependencySlot: string): string {
 function dependency(
   slot: string,
   fromStep: string,
-  fromLayer: string,
+  fromLane: string,
   toStep: string,
-  toLayer: string,
+  toLane: string,
 ): BlueprintCellDependency {
   return {
     id: gsDependency(slot),
-    source_cell_id: gsCell(fromStep, fromLayer),
-    target_cell_id: gsCell(toStep, toLayer),
+    source_cell_id: gsCell(fromStep, fromLane),
+    target_cell_id: gsCell(toStep, toLane),
   }
 }
 
@@ -243,8 +243,8 @@ function rowDependencies(
 }
 
 function columnLaneDependencies(
-  fromLayer: string,
-  toLayer: string,
+  fromLane: string,
+  toLane: string,
   idStart: number,
   stepCount: number,
 ): BlueprintCellDependency[] {
@@ -255,9 +255,9 @@ function columnLaneDependencies(
       dependency(
         String(idStart + i).padStart(3, '0'),
         step,
-        fromLayer,
+        fromLane,
         step,
-        toLayer,
+        toLane,
       ),
     )
   }
@@ -265,11 +265,11 @@ function columnLaneDependencies(
 }
 
 const partnerLeadOptions = {
-  cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
-    gsCell(stepSlot, layerSuffix),
+  cellId: (stepSlot: string, laneSuffix: '01' | '02') =>
+    gsCell(stepSlot, laneSuffix),
   dependencyId: (slot: string) => gsDependency(slot),
-  partnerLayerId: L.partner,
-  leadLayerId: L.lead,
+  partnerLaneId: L.partner,
+  leadLaneId: L.lead,
   stepIdForColumn: (column: number) => STEPS[column - 1]!.id,
   leadStepPictures: GOAL_SETTING_PARALLEL_LEAD_STEP_FRAMES,
   partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_FRAMES,
@@ -425,7 +425,7 @@ export const GOAL_SETTING_HAPPY_PATH_FALLBACK: BlueprintData = {
     kind: 'happy',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: GOAL_SETTING_CELLS,
   dependencies: GOAL_SETTING_TRIGGERS,

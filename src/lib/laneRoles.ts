@@ -25,7 +25,7 @@ export const STORYBOARD_ROLE = 'storyboard'
  * no lane has ever used. Both are gone — retired unused, not renamed, since
  * nothing has to migrate off a value nothing holds.
  */
-export const CANONICAL_LAYER_ROLES = [
+export const CANONICAL_LANE_ROLES = [
   CUSTOMER_ACTIONS_ROLE,
   FRONTSTAGE_ACTIONS_ROLE,
   BACKSTAGE_ACTIONS_ROLE,
@@ -36,7 +36,7 @@ export const CANONICAL_LAYER_ROLES = [
   STORYBOARD_ROLE,
 ] as const
 
-export type CanonicalLayerRole = (typeof CANONICAL_LAYER_ROLES)[number]
+export type CanonicalLaneRole = (typeof CANONICAL_LANE_ROLES)[number]
 
 /**
  * Legacy magic-name → role mapping for content that predates `lane_role`
@@ -44,7 +44,7 @@ export type CanonicalLayerRole = (typeof CANONICAL_LAYER_ROLES)[number]
  * carry no role). 'Regular Tutor' is the spine actor of the PLUS blueprints —
  * it plays the customer-actions role, so the interaction line draws after it.
  */
-export const LEGACY_NAME_TO_ROLE: Readonly<Record<string, CanonicalLayerRole>> =
+export const LEGACY_NAME_TO_ROLE: Readonly<Record<string, CanonicalLaneRole>> =
   {
     'Customer Actions': CUSTOMER_ACTIONS_ROLE,
     'Regular Tutor': CUSTOMER_ACTIONS_ROLE,
@@ -63,7 +63,7 @@ export const LEGACY_NAME_TO_ROLE: Readonly<Record<string, CanonicalLayerRole>> =
   }
 
 /** Resolve a lane's semantic role: explicit role, else legacy name, else none. */
-export function getLayerRole(lane: {
+export function getLaneRole(lane: {
   name: string
   role?: string | null
 }): string | null {

@@ -23,10 +23,10 @@ export const REPORTING_HOURS_SCENARIO_ID =
 export const REPORTING_HOURS_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000000812'
 
-const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000920'
+const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000920'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000927',
     name: 'Lead Tutor',
@@ -83,7 +83,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LAYER_ID,
+  visual: STEP_VISUAL_LANE_ID,
   lead: 'a0000000-0000-4000-8000-000000000927',
   regular: 'a0000000-0000-4000-8000-000000000921',
   frontStage: 'a0000000-0000-4000-8000-000000000922',
@@ -116,8 +116,8 @@ function cell(
   }
 }
 
-function hoursCell(stepSlot: string, layerSuffix: string): string {
-  return `a0000000-0000-4000-8000-0000001e${stepSlot}${layerSuffix}`
+function hoursCell(stepSlot: string, laneSuffix: string): string {
+  return `a0000000-0000-4000-8000-0000001e${stepSlot}${laneSuffix}`
 }
 
 function hoursDependency(dependencySlot: string): string {
@@ -127,14 +127,14 @@ function hoursDependency(dependencySlot: string): string {
 function dependency(
   slot: string,
   fromStep: string,
-  fromLayer: string,
+  fromLane: string,
   toStep: string,
-  toLayer: string,
+  toLane: string,
 ): BlueprintCellDependency {
   return {
     id: hoursDependency(slot),
-    source_cell_id: hoursCell(fromStep, fromLayer),
-    target_cell_id: hoursCell(toStep, toLayer),
+    source_cell_id: hoursCell(fromStep, fromLane),
+    target_cell_id: hoursCell(toStep, toLane),
   }
 }
 
@@ -245,7 +245,7 @@ export const REPORTING_HOURS_HAPPY_PATH_FALLBACK: BlueprintData = {
     kind: 'happy',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: REPORTING_HOURS_CELLS,
   dependencies: REPORTING_HOURS_TRIGGERS,

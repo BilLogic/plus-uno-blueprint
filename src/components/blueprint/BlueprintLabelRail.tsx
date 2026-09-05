@@ -12,8 +12,8 @@ import {
   BLUEPRINT_WRAP_CORRIDOR_MARGIN,
 } from '@/lib/blueprintLayout'
 import {
-  BLUEPRINT_LAYER_COLLAPSE_ENABLED,
-} from '@/lib/blueprintLayerCollapse'
+  BLUEPRINT_LANE_COLLAPSE_ENABLED,
+} from '@/lib/blueprintLaneCollapse'
 import {
   COMPARE_LABEL_WIDTH,
   COMPARE_PATH_SECTION_H_INSET,
@@ -224,13 +224,13 @@ export function BlueprintLabelRow({
   lanes,
   style,
   compact,
-  onToggleLayer,
+  onToggleLane,
 }: {
   row: BlueprintLabelRowSpec
   lanes: BlueprintLane[]
   style?: CSSProperties
   compact?: boolean
-  onToggleLayer?: (laneId: string) => void
+  onToggleLane?: (laneId: string) => void
 }) {
   // Hooks first: this component returns early for divider rows, and a hook
   // after that return would run in a different order between row kinds.
@@ -371,14 +371,14 @@ export function BlueprintLabelRow({
             name={row.label}
           />
         ) : null}
-        {BLUEPRINT_LAYER_COLLAPSE_ENABLED &&
+        {BLUEPRINT_LANE_COLLAPSE_ENABLED &&
           row.kind === 'lane' &&
           row.lane &&
-          onToggleLayer && (
+          onToggleLane && (
             <LaneCollapseToggle
               laneName={row.label}
               collapsed={row.collapsed ?? false}
-              onToggle={() => onToggleLayer(row.lane!.id)}
+              onToggle={() => onToggleLane(row.lane!.id)}
               className="size-6 shrink-0"
             />
           )}

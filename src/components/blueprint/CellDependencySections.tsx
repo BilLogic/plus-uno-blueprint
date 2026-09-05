@@ -41,12 +41,12 @@ type RowFlow = 'in' | 'out' | 'both'
 function resolveRowDirection(
   connection: BlueprintCellConnection,
   flow: RowFlow,
-  selectedLayerRowPosition: number,
+  selectedLaneRowPosition: number,
 ): RowDirection {
   if (connection.kind === 'interaction') {
     // Same step, different lane — vertical relationship.
-    if (selectedLayerRowPosition < 0) return 'related'
-    return connection.layerRowPosition < selectedLayerRowPosition
+    if (selectedLaneRowPosition < 0) return 'related'
+    return connection.laneRowPosition < selectedLaneRowPosition
       ? 'up'
       : 'down'
   }
@@ -183,7 +183,7 @@ type CellDependencySectionsProps = {
   /** Same-step tech without an explicit dependency (kept from panel v1). */
   otherTech: CellDependencyTechEntry[]
   /** Lane row position of the selected cell — orients up/down glyphs. */
-  selectedLayerRowPosition?: number
+  selectedLaneRowPosition?: number
   className?: string
 } & SelectHandlers
 
@@ -199,7 +199,7 @@ type CellDependencySectionsProps = {
 export function CellDependencySections({
   connections,
   otherTech,
-  selectedLayerRowPosition = -1,
+  selectedLaneRowPosition = -1,
   onCellSelect,
   onTechSelect,
   className,
@@ -256,7 +256,7 @@ export function CellDependencySections({
 
   const handlers = { onCellSelect, onTechSelect }
   const direction = (connection: BlueprintCellConnection, flow: RowFlow) =>
-    resolveRowDirection(connection, flow, selectedLayerRowPosition)
+    resolveRowDirection(connection, flow, selectedLaneRowPosition)
 
   return (
     <div className={cn('flex flex-col gap-3', className)}>

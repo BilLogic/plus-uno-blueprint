@@ -15,7 +15,7 @@ const WARM_UP_ALTERNATE_PATH_ID =
   'a0000000-0000-4000-8000-000000000350'
 
 /** Alternate-path lane ids keyed by warm-up cell id suffix (…060103 → 03). */
-const WARM_UP_ALTERNATE_LAYER_ID_BY_CELL_SUFFIX: Record<string, string> = {
+const WARM_UP_ALTERNATE_LANE_ID_BY_CELL_SUFFIX: Record<string, string> = {
   '01': 'a0000000-0000-4000-8000-000000000401',
   '02': 'a0000000-0000-4000-8000-000000000402',
   '03': 'a0000000-0000-4000-8000-000000000403',
@@ -30,28 +30,28 @@ const WARM_UP_ALTERNATE_LAYER_ID_BY_CELL_SUFFIX: Record<string, string> = {
 const WARM_UP_ALTERNATE_CELL_ID_PATTERN =
   /^a0000000-0000-4000-8000-00000006\d{4}$/
 
-export function resolveWarmUpAlternateCellLayerId(
+export function resolveWarmUpAlternateCellLaneId(
   cellId: string,
 ): string | undefined {
   if (!WARM_UP_ALTERNATE_CELL_ID_PATTERN.test(cellId)) return undefined
-  return WARM_UP_ALTERNATE_LAYER_ID_BY_CELL_SUFFIX[cellId.slice(-2)]
+  return WARM_UP_ALTERNATE_LANE_ID_BY_CELL_SUFFIX[cellId.slice(-2)]
 }
 
-export function assignWarmUpAlternateCellLayerId(
+export function assignWarmUpAlternateCellLaneId(
   cell: BlueprintCell,
 ): BlueprintCell {
-  const laneId = resolveWarmUpAlternateCellLayerId(cell.id)
+  const laneId = resolveWarmUpAlternateCellLaneId(cell.id)
   if (!laneId || cell.lane_id === laneId) return cell
   return { ...cell, lane_id: laneId }
 }
 
 /** Align lane row positions with reference swimlanes (fixes legacy DB drift). */
-export function repairWarmUpPathLayerPositions(
+export function repairWarmUpPathLanePositions(
   data: BlueprintData,
-  referenceLayers: readonly BlueprintLane[],
+  referenceLanes: readonly BlueprintLane[],
 ): BlueprintData {
   const rowByName = new Map(
-    referenceLayers.map((lane) => [lane.name, lane.position]),
+    referenceLanes.map((lane) => [lane.name, lane.position]),
   )
   const lanes = data.lanes.map((lane) => {
     const position = rowByName.get(lane.name)
@@ -75,7 +75,7 @@ export function repairWarmUpAlternatePathBlueprint(
 ): BlueprintData {
   if (data.path.id !== WARM_UP_ALTERNATE_PATH_ID) return data
 
-  const cells = data.cells.map(assignWarmUpAlternateCellLayerId)
+  const cells = data.cells.map(assignWarmUpAlternateCellLaneId)
   const cellsChanged = cells.some(
     (cell, index) => cell.lane_id !== data.cells[index]?.lane_id,
   )

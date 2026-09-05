@@ -20,10 +20,10 @@ export { SESSION_SIGN_UP_SCENARIO_ID }
 export const SESSION_SIGN_UP_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000000805'
 
-const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000878'
+const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000878'
 
-const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+const LANES = [
+  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000879',
     name: 'Regular Tutor',
@@ -70,7 +70,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LAYER_ID,
+  visual: STEP_VISUAL_LANE_ID,
   regular: 'a0000000-0000-4000-8000-000000000879',
   frontStage: 'a0000000-0000-4000-8000-000000000880',
   frontStageTech: 'a0000000-0000-4000-8000-000000000881',
@@ -96,8 +96,8 @@ function cell(
   }
 }
 
-function ssCell(stepSlot: string, layerSuffix: string): string {
-  return `a0000000-0000-4000-8000-00000013${stepSlot}${layerSuffix}`
+function ssCell(stepSlot: string, laneSuffix: string): string {
+  return `a0000000-0000-4000-8000-00000013${stepSlot}${laneSuffix}`
 }
 
 function ssDependency(dependencySlot: string): string {
@@ -107,14 +107,14 @@ function ssDependency(dependencySlot: string): string {
 function dependency(
   slot: string,
   fromStep: string,
-  fromLayer: string,
+  fromLane: string,
   toStep: string,
-  toLayer: string,
+  toLane: string,
 ): BlueprintCellDependency {
   return {
     id: ssDependency(slot),
-    source_cell_id: ssCell(fromStep, fromLayer),
-    target_cell_id: ssCell(toStep, toLayer),
+    source_cell_id: ssCell(fromStep, fromLane),
+    target_cell_id: ssCell(toStep, toLane),
   }
 }
 
@@ -199,7 +199,7 @@ export const SESSION_SIGN_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
     kind: 'happy',
     status: 'live',
   },
-  lanes: [...LAYERS],
+  lanes: [...LANES],
   steps: [...STEPS],
   cells: SESSION_SIGN_UP_CELLS,
   dependencies: SESSION_SIGN_UP_TRIGGERS,
