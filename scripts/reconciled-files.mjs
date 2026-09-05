@@ -313,4 +313,14 @@ export const RECONCILED_FILES = [
   'src/lib/compareMergedGrid.test.ts',
   'src/types/integratedBlueprint.ts',
   'scripts/erd-value-sets.mjs',
+
+  // #326 S1 — display flags. The flags module was uno's last per-scenario
+  // allowlist: two module-private `Set`s of hardcoded scenario UUIDs, read
+  // only after an `if (FLAG) return true` on a flag that is `true`, so no
+  // caller could ever observe them. asb had already deleted them; uno takes
+  // asb's file whole, and the four scenario-id imports go with the Sets.
+  // `applyBlueprintDisplayFilters.ts` — the only caller that passes a
+  // scenario id at all — was enrolled at the 1.5.0 sweep above and is not
+  // repeated here.
+  'src/lib/blueprintDisplayFlags.ts',
 ]
