@@ -26,7 +26,7 @@ test('an empty allowlist has nothing to fail on, and reads nothing', () => {
   assert.deepEqual(auditReconciled({ files: [], readInstance: refuse, readAsb: refuse }), [])
 })
 
-test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), and the viewport/layout convergence (#323 slices S0–S4)', () => {
+test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), and the viewport/layout convergence (#323 slices S0–S5)', () => {
   // #319 shipped the gate EMPTY; #351 enrolled the first files — the shared
   // arrow-routing geometry — #357 enrolled the entity panel editors asb
   // ported back out of uno, and #323's slice S0 swept every remaining
@@ -204,6 +204,13 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/blueprint/PathSummaryTooltip.tsx',
     'src/components/blueprint/ScenarioTitleBadge.tsx',
     'src/components/blueprint/BlueprintDividerBadge.tsx',
+    'src/lib/compareGridTracks.ts',
+    'src/hooks/useCollapsedBlueprintLanes.ts',
+    'src/lib/blueprintLaneCollapse.ts',
+    'src/components/blueprint/CompareTrackDecorations.tsx',
+    'src/lib/phaseRowPanelHeight.ts',
+    'src/lib/phaseRowPanelHeight.test.ts',
+    'src/hooks/useAlignedPhaseRowPanelHeight.ts',
   ])
 })
 
