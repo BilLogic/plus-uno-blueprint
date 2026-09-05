@@ -81,4 +81,159 @@ export const RECONCILED_FILES = [
   'src/components/blueprint/laneStepHeaderAffordance.test.tsx',
   'src/components/blueprint/panelDrawerShell.test.tsx',
   'src/lib/panelSheetSnapContract.test.ts',
+
+  // viewport (#323, slice S0): the camera core — pan/zoom transitions,
+  // gesture/wheel/keyboard-driven zoom, scroll regions, chrome resize, and
+  // the keyboard-target seam they all read. Pure geometry and state, no
+  // PLUS content; asb renders uno's viewport identically off this set.
+  'src/hooks/useZoomPanViewport.ts',
+  'src/lib/cameraTransition.ts',
+  'src/lib/cameraTransition.test.ts',
+  'src/lib/canvasGestureZoom.ts',
+  'src/lib/canvasGestureZoom.test.ts',
+  'src/lib/canvasWheelDelta.ts',
+  'src/lib/canvasWheelDelta.test.ts',
+  'src/lib/canvasKeyboardCamera.ts',
+  'src/lib/canvasKeyboardCamera.test.ts',
+  'src/lib/canvasKeyboardState.ts',
+  'src/lib/canvasScrollRegions.ts',
+  'src/lib/canvasScrollRegions.test.ts',
+  'src/lib/canvasChromeResize.ts',
+  'src/lib/keyboardTarget.ts',
+  'src/contexts/CanvasZoomChromeContext.tsx',
+  'src/components/editor/EditorZoomIndicator.tsx',
+
+  // layout (#323, slice S0): the geometry tokens and phase/slide layout math
+  // the viewport and the canvas both measure against.
+  'src/lib/layoutTokens.ts',
+  'src/lib/slideLayout.ts',
+  'src/components/editor/canvasPhaseSectionLayout.ts',
+
+  // compare (#323, slice S0): the side-by-side compare layout's grid tracks,
+  // review state, and zone navigation, plus the gate report test pinning them.
+  'src/lib/compareGridTracks.ts',
+  'src/lib/compareReviewStore.ts',
+  'src/lib/compareZoneNavigation.ts',
+  'src/lib/compareGate.report.test.ts',
+
+  // cover (#323, slice S0): the cover page's tab strip and the measurement
+  // hook it reads.
+  'src/components/cover/CoverTabStrip.tsx',
+  'src/components/cover/coverMeasure.ts',
+
+  // mobile shell: the read-only mobile shell and its agent-launch affordance
+  // are one implementation in both repos — no PLUS content, pure viewport.
+  'src/hooks/use-mobile.ts',
+  'src/hooks/useMobileShell.ts',
+  'src/components/mobile/MobileAgentFab.tsx',
+  'src/components/mobile/MobileAgentSheet.tsx',
+  'src/components/mobile/mobileAgentBridge.ts',
+  'src/components/mobile/mobileAgentFab.test.tsx',
+  'src/components/mobile/mobileShellLogic.test.ts',
+
+  // canvas agent providers: the model-provider adapters and the panel state
+  // and persistence they share sit above uno's own tool registry, not below
+  // it — the wiring is generic even though the tools are not.
+  'src/lib/agent/panelState.ts',
+  'src/lib/agent/persistence.ts',
+  'src/lib/agent/providers/anthropic.ts',
+  'src/lib/agent/providers/google.ts',
+  'src/lib/agent/providers/models.ts',
+  'src/lib/agent/providers/provider.ts',
+
+  // shadcn ui primitives: unmodified library components neither repo has
+  // customised — the fork point is further up, in the blueprint-specific
+  // components that compose these.
+  'src/components/ui/accordion.tsx',
+  'src/components/ui/attachment.tsx',
+  'src/components/ui/breadcrumb.tsx',
+  'src/components/ui/bubble.tsx',
+  'src/components/ui/card.tsx',
+  'src/components/ui/carousel.tsx',
+  'src/components/ui/collapsible.tsx',
+  'src/components/ui/command.tsx',
+  'src/components/ui/context-menu.tsx',
+  'src/components/ui/deferred-skeleton.tsx',
+  'src/components/ui/dialog.tsx',
+  'src/components/ui/drawer.tsx',
+  'src/components/ui/dropdown-menu.tsx',
+  'src/components/ui/input-group.tsx',
+  'src/components/ui/input.tsx',
+  'src/components/ui/marker.tsx',
+  'src/components/ui/menubar.tsx',
+  'src/components/ui/message-scroller.tsx',
+  'src/components/ui/message.tsx',
+  'src/components/ui/navigation-menu.tsx',
+  'src/components/ui/popover.tsx',
+  'src/components/ui/separator.tsx',
+  'src/components/ui/sheet.tsx',
+  'src/components/ui/sidebar.tsx',
+  'src/components/ui/spinner.tsx',
+  'src/components/ui/tabs.tsx',
+  'src/components/ui/textarea.tsx',
+  'src/components/ui/toggle-group.tsx',
+  'src/components/ui/toggle.tsx',
+  'src/components/ui/tooltip.tsx',
+
+  // blueprint entity extras: further panel and walkthrough surface that
+  // ported the same way #357's first pass did, plus the view-state and
+  // slice-membership contexts they read.
+  'src/components/blueprint/BlueprintEmptyCellSlot.tsx',
+  'src/components/blueprint/BlueprintVisualPlayButton.tsx',
+  'src/components/blueprint/EntityDetailPanel.tsx',
+  'src/components/blueprint/LaneCollapseToggle.tsx',
+  'src/components/blueprint/NotionPropertyRow.tsx',
+  'src/components/blueprint/PhasePanel.tsx',
+  'src/components/blueprint/ScenarioSlideFilters.tsx',
+  'src/components/blueprint/StakeholderSelect.test.tsx',
+  'src/components/blueprint/VisualWalkthroughShell.tsx',
+  'src/contexts/ViewStateContext.tsx',
+  'src/contexts/VisualWalkthroughContext.tsx',
+  'src/contexts/sliceMembershipContext.ts',
+
+  // editor chrome: the load-progress indicator and its test, the slide
+  // connectors, sidebar rail, and the small chrome pieces around them.
+  'src/components/editor/CanvasLoadProgress.tsx',
+  'src/components/editor/canvasLoadProgress.test.tsx',
+  'src/lib/canvasLoadProgress.ts',
+  'src/components/editor/CanvasSlideConnectors.tsx',
+  'src/components/editor/EditorSidebarRail.tsx',
+  'src/components/editor/IconTooltip.tsx',
+  'src/components/editor/OverviewPhaseRowDivider.tsx',
+  'src/components/editor/ScenarioMenubarBreadcrumb.tsx',
+  'src/components/editor/SegmentedControl.tsx',
+  'src/components/editor/SlideNav.tsx',
+
+  // dev catalog: the arrow-situation catalog page, its test, and the
+  // snapshot the test pins — a dev-only surface, still shared byte-for-byte.
+  'src/dev/ArrowSituationCatalogPage.tsx',
+  'src/dev/arrowSituationCatalog.test.tsx',
+  'src/dev/__snapshots__/arrowSituationCatalog.test.tsx.snap',
+
+  // lib grab bag: small pure utilities and their tests with no per-repo
+  // vocabulary to fork on.
+  'src/hooks/usePathSelection.ts',
+  'src/hooks/useSliceBlueprint.ts',
+  'src/lib/annotationCapture.ts',
+  'src/lib/attachmentUpload.test.ts',
+  'src/lib/cellPickGrammar.ts',
+  'src/lib/parseCellContent.ts',
+  'src/lib/placementLinkMutations.test.ts',
+  'src/lib/resolveBlueprintCellId.ts',
+  'src/lib/resourceUrl.ts',
+  'src/lib/supabase.ts',
+  'src/lib/valueProps.ts',
+
+  // styles: the tailwind hit-area plugin, typography config, and shared
+  // component variants.
+  'src/styles/tailwind-plugins/hit-area.css',
+  'src/styles/typography.config.js',
+  'src/styles/variants.css',
+
+  // scaffolding: the Vite starter assets and ambient type declaration
+  // neither repo has touched.
+  'src/assets/hero.png',
+  'src/assets/react.svg',
+  'src/assets/vite.svg',
+  'src/vite-env.d.ts',
 ]
