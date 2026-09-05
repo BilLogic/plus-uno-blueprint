@@ -80,7 +80,7 @@ export const BLUEPRINT_CONTRACT = {
   ],
 
   /** Tables the bot actively reads (probe list for /health/blueprint). */
-  botReadTables: ['cells', 'cell_dependencies', 'audit_findings', 'slices'],
+  botReadTables: ['cells', 'cell_dependencies', 'audit_findings', 'slices', 'touchpoints'],
 
   /**
    * Columns the bot names in a DIRECT PostgREST select — the reads that do not
@@ -139,9 +139,6 @@ export const BLUEPRINT_CONTRACT = {
     // The registry of the tools and surfaces the service runs through — an app
     // screen, an email, a Zoom room. Anon-readable since 20260830140000; the
     // bot reads it for "where do we use X" (plus-uno#414). Placements stay out.
-    // It joins `botReadTables` once the bot's deployed /health/blueprint probes
-    // it — the probe check runs against the live Worker, so declaring the read
-    // before the probe exists would fail this repo's gate on the bot's timing.
     touchpoints: ['id', 'name', 'kind', 'summary', 'url'],
   },
 
@@ -157,6 +154,14 @@ export const BLUEPRINT_CONTRACT = {
   fkConstraints: {
     cellDependencySource: 'cell_dependencies_source_cell_id_fkey',
     cellDependencyTarget: 'cell_dependencies_target_cell_id_fkey',
+    // `cells` → `lanes` has TWO foreign keys since 20260830180000 added the
+    // composite `cells_path_matches_lane_fkey` beside `cells_lane_id_fkey`.
+    // PostgREST refuses an unhinted `lanes(...)` embed from `cells` as
+    // ambiguous (PGRST201), which is what turned the bot's keyword-fallback
+    // cell read into "no cells matched" from that day (plus-uno#414 found it
+    // on the live /health/blueprint probe `select_cells_spec`). The bot embeds
+    // with this hint; the live check below resolves it from `cells`.
+    cellLane: 'cells_lane_id_fkey',
   },
 
   /** RPCs the bot calls. DDL is versioned in this repo's supabase/migrations. */
