@@ -447,7 +447,7 @@ function MergedSectionFrame({
           <PathLabelBadge
             key={path.id}
             name={path.name}
-            description={path.summary}
+            summary={path.summary}
             pathKind={path.kind}
           />
         ))}

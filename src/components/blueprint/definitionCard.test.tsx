@@ -183,7 +183,7 @@ describe('the surfaces that show a category and an instance', () => {
         render(
           <PathLabelBadge
             name="Happy Path"
-            description="The student joins on time."
+            summary="The student joins on time."
             pathKind="happy"
           />,
         ),
@@ -193,7 +193,7 @@ describe('the surfaces that show a category and an instance', () => {
       'a scenario title badge',
       () =>
         render(
-          <ScenarioTitleBadge name="Warm-Up" description="The first minutes." />,
+          <ScenarioTitleBadge name="Warm-Up" summary="The first minutes." />,
         ),
       'Warm-Up',
     ],

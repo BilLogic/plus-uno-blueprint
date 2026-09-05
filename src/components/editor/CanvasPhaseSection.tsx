@@ -210,7 +210,7 @@ export function CanvasPhaseSection({
       />
       <ScenarioTitleBadge
         name={ordinalLabel(ordinal, title)}
-        description={description}
+        summary={description}
         tone={interactive ? 'phase' : 'default'}
         // The time-marker register: mono, uppercase, letterspaced — the same
         // idiom the mobile reader's step eyebrows use, so both surfaces name

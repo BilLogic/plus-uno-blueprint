@@ -7,8 +7,9 @@ import type { PathKind } from '@/types/database'
 
 type PathLabelBadgeProps = {
   name: string
-  description: string | null | undefined
+  summary: string | null | undefined
   pathKind: PathKind
+  compact?: boolean
   className?: string
   style?: CSSProperties
   side?: 'top' | 'bottom' | 'left' | 'right'
@@ -34,8 +35,9 @@ type PathLabelBadgeProps = {
  */
 export function PathLabelBadge({
   name,
-  description,
+  summary,
   pathKind,
+  compact = false,
   className,
   style,
   side = 'top',
@@ -52,6 +54,7 @@ export function PathLabelBadge({
       // supplies `tabIndex`, so the explained case is reachable by keyboard.
       className={cn(
         'max-w-full cursor-default gap-1 border-transparent font-semibold',
+        compact ? 'h-5 px-2 py-0.5 text-xs' : 'h-auto px-2.5 py-1 text-sm',
         className,
       )}
       style={{
@@ -68,7 +71,7 @@ export function PathLabelBadge({
   return (
     <EntityDefinitionPopover
       kind="path"
-      description={description}
+      description={summary}
       name={name}
       showDescription
       side={side}

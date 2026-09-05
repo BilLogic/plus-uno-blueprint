@@ -15,7 +15,7 @@ type PathTypeColorKeyProps = {
  * The colour swatch in a path legend. Pass `name` to get the stable per-path
  * identity colour; without it the swatch falls back to the type's colour.
  */
-export function PathTypeColorKey({
+export function PathKindColorKey({
   type,
   name,
   className,

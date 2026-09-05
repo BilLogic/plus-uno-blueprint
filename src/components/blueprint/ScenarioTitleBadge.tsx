@@ -8,7 +8,7 @@ import type { PathKind } from '@/types/database'
 
 type ScenarioTitleBadgeProps = {
   name: string
-  description?: string | null
+  summary?: string | null
   className?: string
   style?: CSSProperties
   side?: 'top' | 'bottom' | 'left' | 'right'
@@ -19,10 +19,9 @@ type ScenarioTitleBadgeProps = {
   /**
    * A further note about this instance — the parallel-scenario aside.
    *
-   * It used to be its own ⓘ inside the badge, and that ⓘ was the one place in
-   * the app where the glyph meant "an aside" rather than "opens the panel"
-   * (#140 Q11). One glyph cannot mean two things, and this note is a fact
-   * about the same label, so it rides in the same popover.
+   * It rides inside the same definition card as the name and the kind, rather
+   * than on its own ⓘ: one glyph cannot mean both "opens the panel" and "an
+   * aside", and this note is a fact about the same label.
    */
   note?: string | null
 }
@@ -32,16 +31,18 @@ type ScenarioTitleBadgeProps = {
  *
  * One badge for two kinds because they are the same object on the board: the
  * label of a container, printed on the container's own edge. `tone="phase"`
- * puts it on a phase frame and `kind` follows from that, so the popover says
+ * puts it on a phase frame and the kind follows from that, so the popover says
  * PHASE over a phase and SCENARIO over a scenario, and neither has to be
  * passed twice.
  *
- * The explanation is a POPOVER rather than a tooltip since #140: a tooltip
- * never opens on touch, so on a phone this badge explained nothing at all.
+ * The explanation is a POPOVER rather than a tooltip: a tooltip never opens on
+ * touch, so on a phone this badge would explain nothing at all. The name
+ * carries its definition, its own summary, and — where there is one — the
+ * parallel note, on hover, on focus and on tap.
  */
 export function ScenarioTitleBadge({
   name,
-  description,
+  summary,
   className,
   style,
   side = 'top',
@@ -56,7 +57,7 @@ export function ScenarioTitleBadge({
   return (
     <EntityDefinitionPopover
       kind={tone === 'phase' ? 'phase' : 'scenario'}
-      description={description}
+      description={summary}
       name={name}
       showDescription
       note={note}
@@ -66,14 +67,8 @@ export function ScenarioTitleBadge({
         data-blueprint-fill={pathAccent ? '' : undefined}
         data-scenario-panel-title-badge={panelTone ? '' : undefined}
         data-phase-title-badge={phaseTone ? '' : undefined}
-        // The name carries its definition and its description on hover, on
-        // focus and on tap, and wears nothing that says so — #243 took the
-        // help cursor and the dotted cue away everywhere. It stays reachable
-        // by keyboard because the popover trigger supplies `tabIndex`. No
-        // hover colour: a badge that repaints under the pointer reads as
-        // clickable.
         className={cn(
-          'max-w-full gap-1 overflow-visible border-transparent',
+          'h-auto max-w-full gap-1 overflow-visible border-transparent',
           pathKind && 'font-semibold',
           (panelTone || phaseTone) && 'font-semibold',
           className,

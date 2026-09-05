@@ -1,4 +1,4 @@
-import { PathTypeColorKey } from '@/components/blueprint/PathTypeColorKey'
+import { PathKindColorKey } from '@/components/blueprint/PathKindColorKey'
 import { filterToolbarButtonClass } from '@/lib/filterToolbarButton'
 import { cn } from '@/lib/utils'
 import type { PathKind } from '@/types/database'
@@ -100,7 +100,7 @@ function PathNotionToggle({
       aria-pressed={checked}
       aria-label={pathLabel}
     >
-      <PathTypeColorKey type={path.kind} name={path.name} />
+      <PathKindColorKey type={path.kind} name={path.name} />
       <span>{pathLabel}</span>
       <StatusBadge status={path.status} />
     </button>
@@ -127,7 +127,7 @@ export function PathToolbarButton({
       aria-pressed={checked}
       aria-label={pathLabel}
     >
-      <PathTypeColorKey type={path.kind} name={path.name} />
+      <PathKindColorKey type={path.kind} name={path.name} />
       <span>{pathLabel}</span>
       <StatusBadge status={path.status} />
     </button>
@@ -180,7 +180,7 @@ function PathCheckbox({
         onClick={stopEvent}
         aria-label={pathLabel}
       />
-      <PathTypeColorKey type={path.kind} name={path.name} />
+      <PathKindColorKey type={path.kind} name={path.name} />
       <span className="min-w-0 cursor-default text-left">{pathLabel}</span>
       <StatusBadge status={path.status} />
     </label>

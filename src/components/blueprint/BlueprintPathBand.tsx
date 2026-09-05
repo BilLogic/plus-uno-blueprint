@@ -150,12 +150,17 @@ export function BlueprintPathBand({
       )}
       <ComparePathSectionFrame
         blueprint={blueprint}
+        compact={compact}
         excludeLabelRail={arrangement.kind === 'row'}
       />
       {arrangement.kind === 'row' ? (
         <>
           {/* The label rail re-emits per band: every band names its own
               lanes, in DOM order matching the path order. */}
+          {/* No bleed. The bleeds existed to fill the frame's own insets in
+              this column, back when the outline ran UNDER the rail; the frame
+              now starts after the label track, so grey pushed past the row
+              tracks lands outside the outline instead of inside it. */}
           <BlueprintStickyLabelBackdrop rowCount={rows.length} />
           {rows.map((row, rowIndex) =>
             row.kind === 'interaction' ||

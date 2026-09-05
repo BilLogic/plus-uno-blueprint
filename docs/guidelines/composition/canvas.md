@@ -19,8 +19,10 @@ claims:
   - src/components/blueprint/EntityHeader.tsx
   - src/components/blueprint/IntegratedDependencyArrows.tsx
   - src/components/blueprint/LaneCollapseToggle.tsx
+  - src/components/blueprint/PathKindBadge.tsx
+  - src/components/blueprint/PathKindColorKey.tsx
   - src/components/blueprint/PathLabelBadge.tsx
-  - src/components/blueprint/PathTypeColorKey.tsx
+  - src/components/blueprint/PathSummaryTooltip.tsx
   - src/components/blueprint/PhaseScenarioOverview.tsx
   - src/components/blueprint/ScenarioBlueprintPanel.tsx
   - src/components/blueprint/ScenarioTitleDefinition.tsx

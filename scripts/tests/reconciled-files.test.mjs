@@ -26,7 +26,7 @@ test('an empty allowlist has nothing to fail on, and reads nothing', () => {
   assert.deepEqual(auditReconciled({ files: [], readInstance: refuse, readAsb: refuse }), [])
 })
 
-test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), and the viewport/layout convergence (#323 slices S0–S1)', () => {
+test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), and the viewport/layout convergence (#323 slices S0–S4)', () => {
   // #319 shipped the gate EMPTY; #351 enrolled the first files — the shared
   // arrow-routing geometry — #357 enrolled the entity panel editors asb
   // ported back out of uno, and #323's slice S0 swept every remaining
@@ -193,6 +193,17 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/canvasFocusCells.ts',
     'src/lib/canvasFocus.ts',
     'src/lib/canvasTouchContract.test.tsx',
+    'src/hooks/useCompareGridAxis.ts',
+    'src/components/blueprint/CompareLaneRowShell.tsx',
+    'src/lib/railRhythmContract.test.ts',
+    'src/components/blueprint/BlueprintLabelRail.tsx',
+    'src/components/blueprint/ComparePathSectionFrame.tsx',
+    'src/components/blueprint/PathLabelBadge.tsx',
+    'src/components/blueprint/PathKindBadge.tsx',
+    'src/components/blueprint/PathKindColorKey.tsx',
+    'src/components/blueprint/PathSummaryTooltip.tsx',
+    'src/components/blueprint/ScenarioTitleBadge.tsx',
+    'src/components/blueprint/BlueprintDividerBadge.tsx',
   ])
 })
 

@@ -254,4 +254,22 @@ export const RECONCILED_FILES = [
   'src/lib/canvasFocusCells.ts',
   'src/lib/canvasFocus.ts',
   'src/lib/canvasTouchContract.test.tsx',
+
+  // #323 slices S3–S4: the compare canvas's shared axis and its path frame.
+  // asb absorbed uno's rail axis (asb #145) and the frame's label-axis offset,
+  // header rail and badges (asb #146), and uno takes those copies back here.
+  // The badges came with asb's spelling — `summary` where uno said
+  // `description`, `PathKind*` where uno said `PathType*` — and every uno call
+  // site was re-pointed rather than the file being edited back.
+  'src/hooks/useCompareGridAxis.ts',
+  'src/components/blueprint/CompareLaneRowShell.tsx',
+  'src/lib/railRhythmContract.test.ts',
+  'src/components/blueprint/BlueprintLabelRail.tsx',
+  'src/components/blueprint/ComparePathSectionFrame.tsx',
+  'src/components/blueprint/PathLabelBadge.tsx',
+  'src/components/blueprint/PathKindBadge.tsx',
+  'src/components/blueprint/PathKindColorKey.tsx',
+  'src/components/blueprint/PathSummaryTooltip.tsx',
+  'src/components/blueprint/ScenarioTitleBadge.tsx',
+  'src/components/blueprint/BlueprintDividerBadge.tsx',
 ]
