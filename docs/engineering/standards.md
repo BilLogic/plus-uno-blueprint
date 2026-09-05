@@ -32,7 +32,7 @@ The rules that follow:
   declared at `:root` (a root declaration would make every `var(…,
   fallback)` fallback arm unreachable).
 - DS-native components only — the rule and the primitive map live in
-  `AGENTS.md` and `docs/reference/ui-inventory.md`.
+  `docs/reference/ui-inventory.md`.
 
 ## Comment philosophy
 
@@ -70,7 +70,12 @@ than types.
 zero; any problem you introduce is yours. (`todos/004` still records an
 78-problem baseline; that premise is gone — `eslint .` over the tree returns
 clean.) `npm run typecheck` is the type-check on its own; `npm run build` runs
-it and then bundles.
+it and then bundles. `npm run check:harness` holds every file under
+`blueprint/`, `editor/`, `cover/` and `mobile/` to exactly one composition doc,
+so a surface nobody documented fails it. The three router checks —
+`npm run check:budget`, `check:negation`, `check:pointers` — hold `AGENTS.md` to
+its char budget, its recorded prohibition count and its pointer shape; each
+script's header carries the reasoning.
 
 ## Tooling traps
 
@@ -91,7 +96,9 @@ it and then bundles.
   (`src/lib/panelSheetSnap.ts`). Its stops must stay under the primitive's own
   `--drawer-content-max-height: calc(100dvh-6rem)` — a stop of `1` renders 96px
   short and nothing throws.
-- After moving/renaming any doc: `node scripts/generate-docs-index.mjs`.
+- After moving/renaming any doc: `node scripts/generate-docs-index.mjs`
+  (`npm run docs:index`). A doc with no frontmatter `summary` fails that build
+  rather than passing silently.
 - The whole-board canvas has a decoded-image memory budget — read
   [codebase-guide](codebase-guide.md#performance-constraints) before adding
   canvas assets.

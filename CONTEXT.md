@@ -339,6 +339,34 @@ sidebar is still `skeletoning` without the two contradicting each other. **Not
 the board's *status***, the six-value word for how far along a cell or a path
 is: that one is stored in a column, this one only ever describes a read.
 
+### The writing vocabulary
+
+Five words for how a document is written and reached, shared with the sibling
+repositories so that one harness review uses one language.
+
+**pointer** — a line held in always-loaded context that names material outside
+it and the branch that should reach it: a row of `AGENTS.md` § Progressive
+loading, a path beside a security line. Its wording, not its target, decides
+whether a session gets there. A *reference* is what a pointer points at.
+
+**ladder** — where a piece of writing sits by how immediately a session needs
+it: an in-file step, then an in-file reference, then a **disclosed** reference
+behind a pointer. **Not the canvas's reveal ladder** in § Five words for
+arrival, which is about how much of a board is painted.
+
+**disclosed** — a reference pushed out of the always-loaded tier and behind a
+pointer, loaded only when that pointer fires. Everything under `docs/` is
+disclosed; `AGENTS.md` is the tier itself.
+
+**leading word** — the first word of a routing item, chosen so that it is the
+word carrying the branch — *writes*, *migrations*, *skills* — and front-loaded
+so a scanned pointer triggers on it. `scripts/check-pointers.mjs` is what holds
+it there.
+
+**sprawl** — a document too long even when every line of it is live: attention
+thins across the whole of it. The cure is the ladder rather than a shorter
+sentence. Distinct from *bloat*, which is dead weight.
+
 ---
 
 ## The rename map — fixed vocabulary
