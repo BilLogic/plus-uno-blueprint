@@ -9,6 +9,12 @@ import type { PathKind } from '@/types/database'
 
 export { PATH_TYPE_ARROW_COLORS, PATH_TYPE_COLORS } from '@/lib/pathColorTheme'
 
+export const PATH_TYPE_SHORT_LABELS: Record<PathKind, string> = {
+  happy: 'Happy',
+  variant: 'Variant',
+  exception: 'Exception',
+}
+
 export const PATH_TYPE_LABELS: Record<PathKind, string> = {
   happy: 'Happy',
   variant: 'Variant',
@@ -50,4 +56,29 @@ export function getPathTypeArrowColor(
   return PATH_TYPE_ARROW_COLORS[pathKind]
 }
 
+/**
+ * Generic path names (Happy Path, Alternate Path, …) can show a type badge.
+ * A path with its own title (an `alternative` named for the activity it
+ * covers) shows that title instead — the badge would say less than the name.
+ */
+const GENERIC_PATH_TYPE_NAMES = new Set([
+  'happy path',
+  'sad path',
+  'unhappy path',
+  'alternate path',
+  'alternative path',
+  'exception',
+  'exception path',
+])
 
+export function isGenericPathTypeName(name: string): boolean {
+  return GENERIC_PATH_TYPE_NAMES.has(name.trim().toLowerCase())
+}
+
+/** Overview frames: type badge only for generic archetype names. */
+export function shouldShowPathTypeBadge(path: {
+  name: string
+  kind?: PathKind
+}): boolean {
+  return isGenericPathTypeName(path.name)
+}

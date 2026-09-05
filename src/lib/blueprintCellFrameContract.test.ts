@@ -33,6 +33,7 @@ const compareDecorations = source(
 const pathFrame = source(
   '../components/blueprint/ComparePathSectionFrame.tsx',
 )
+const pathBand = source('../components/blueprint/BlueprintPathBand.tsx')
 const touchpointCell = source(
   '../components/blueprint/BlueprintTouchpointCell.tsx',
 )
@@ -86,7 +87,15 @@ describe('stable blueprint cell frame contract', () => {
     expect(phaseOverview).toContain('lockedPanelHeight={panelHeightFor(scenario.id)}')
     expect(phaseOverview).toContain('focusedPanelHeightFloor,')
     expect(phaseOverview).not.toContain('fixedSwimlaneBodyHeight')
-    expect(pathFrame).not.toContain('extraTopInset')
+    /*
+      The frame CAN wrap the step-header row — `extraTopInset` arrived with
+      the template's copy when #323 slice S4 made this file byte-identical to
+      asb's. What is under contract is that no uno board ever asks for it: the
+      band is the frame's only caller, it passes no inset, and the frame's own
+      default is 0, so the geometry is the same one at overview and at focus.
+    */
+    expect(pathFrame).toContain('extraTopInset = 0')
+    expect(pathBand).not.toContain('extraTopInset')
   })
 
   it('retains both header axes and skeletonizes their paint at blocks tier', () => {

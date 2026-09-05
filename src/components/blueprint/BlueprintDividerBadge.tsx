@@ -56,8 +56,8 @@ export function BlueprintDividerRailLabel({
       variant="outline"
       // Since #243 nothing announces that a word is defined. What this keeps
       // is REACH — keyboard focus, so the definition is gettable without a
-      // pointer (docs/reference/panel-affordances.md § Hover is never the only
-      // way in). No hover colour: that would read as clickable and it is not.
+      // pointer: hover is never the only way in. No hover colour, which would
+      // read as clickable and it is not.
       {...(meaning ? { tabIndex: 0 } : {})}
       className={cn(
         'shrink-0 border-current/30 font-medium uppercase leading-none tracking-[0.08em]',

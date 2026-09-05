@@ -2,7 +2,7 @@
 
 > **This file OVERRIDES a pinned package document.** It replaces
 > `references/canvas-adapter.md` from `agentic-service-blueprinting`,
-> pinned at `v1.3.0` (lockfile commit `4266eaae`). It is spliced into
+> pinned at `v1.4.0` (lockfile commit `960e8785`). It is spliced into
 > every system prompt by `src/lib/agent/loop.ts` and served under the
 > bare name `canvas-adapter` by `src/lib/agent/tools/read.ts`; the
 > package's own copy reaches neither.

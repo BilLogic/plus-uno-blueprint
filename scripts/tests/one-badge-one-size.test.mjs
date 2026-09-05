@@ -40,12 +40,34 @@ import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { RECONCILED_FILES } from '../reconciled-files.mjs'
 
 const REPO_ROOT = process.cwd()
 const SOURCE_ROOT = 'src'
 
 /** Where the geometry is allowed to be written down. */
 const BADGE_COMPONENT = 'src/components/ui/badge.tsx'
+
+/**
+ * The badge wrappers whose geometry this repo does not author (#323 slice S4).
+ *
+ * These three are held BYTE-IDENTICAL to `agentic-service-blueprinting`, so
+ * their `<Badge>` class list is the template's, not a call site's — and it is
+ * not sprawl: each writes exactly two sizes, picked by a `compact` boolean the
+ * wrapper owns, so the reader still gets one rule rather than three shapes on
+ * a panel. What #236 was written to stop was a size CHOSEN at a call site, and
+ * that is still caught here: the wrappers stay in the discovered component
+ * list, so `<PathLabelBadge className="text-sm">` anywhere is a finding.
+ *
+ * The exemption is only valid while the file really is reconciled — the
+ * assertion below checks membership, so un-enrolling one of these from the
+ * drift gate hands its geometry back to this contract on the same commit.
+ */
+const UPSTREAM_BADGE_GEOMETRY = [
+  'src/components/blueprint/PathKindBadge.tsx',
+  'src/components/blueprint/PathLabelBadge.tsx',
+  'src/components/blueprint/ScenarioTitleBadge.tsx',
+]
 
 /**
  * Tailwind utilities that set a badge's size: text size, padding, height.
@@ -192,8 +214,21 @@ test('no call site passes a badge its size', () => {
     }
   }
 
+  // The exemption is not a name on a list, it is a fact about the file: a
+  // path only escapes this contract while the drift gate is holding it equal
+  // to the template's copy.
+  for (const path of UPSTREAM_BADGE_GEOMETRY) {
+    assert.ok(
+      RECONCILED_FILES.includes(path),
+      `${path} is exempt from #236 only because asb authors it. It is no ` +
+        `longer in the reconciled set, so drop it from ` +
+        `UPSTREAM_BADGE_GEOMETRY and take its sizes out.`,
+    )
+  }
+
   const found = []
   for (const [path, source] of sources) {
+    if (UPSTREAM_BADGE_GEOMETRY.includes(path)) continue
     for (const finding of sizeOverrides(source, components)) {
       found.push(`${path}:${finding.line}  ${finding.text}`)
     }

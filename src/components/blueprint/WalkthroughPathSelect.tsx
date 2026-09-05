@@ -1,6 +1,6 @@
 import { ChevronDown } from 'lucide-react'
 import { PathLabelBadge } from '@/components/blueprint/PathLabelBadge'
-import { PathTypeColorKey } from '@/components/blueprint/PathTypeColorKey'
+import { PathKindColorKey } from '@/components/blueprint/PathKindColorKey'
 import { formatPathPickerLabel } from '@/components/blueprint/PathMultiSelect'
 import {
   DropdownMenu,
@@ -35,7 +35,7 @@ export function WalkthroughPathSelect({
     return (
       <PathLabelBadge
         name={selected.path.name}
-        description={selected.path.summary}
+        summary={selected.path.summary}
         pathKind={selected.path.kind}
         className={className}
       />
@@ -58,7 +58,7 @@ export function WalkthroughPathSelect({
         })}
         aria-label={`Path: ${selectedLabel}. Choose a different path.`}
       >
-        <PathTypeColorKey
+        <PathKindColorKey
           type={selected.path.kind}
           name={selected.path.name}
         />
@@ -79,7 +79,7 @@ export function WalkthroughPathSelect({
                 key={blueprint.path.id}
                 value={blueprint.path.id}
               >
-                <PathTypeColorKey
+                <PathKindColorKey
                   type={blueprint.path.kind}
                   name={blueprint.path.name}
                 />
