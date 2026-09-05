@@ -8,7 +8,8 @@
  * asb checkout, so the outcomes are pinned to byte-equality alone and not to
  * whatever the pinned package happens to ship. The one test that does touch
  * the shipped list asserts the enrolled set — first populated by #351, the
- * shared arrow-routing engine.
+ * shared arrow-routing engine, and grown by every reconciliation ticket and
+ * pin bump since.
  *
  * Run: npm test
  */
@@ -26,13 +27,15 @@ test('an empty allowlist has nothing to fail on, and reads nothing', () => {
   assert.deepEqual(auditReconciled({ files: [], readInstance: refuse, readAsb: refuse }), [])
 })
 
-test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), and the viewport/layout convergence (#323 slices S0–S5)', () => {
+test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), the viewport/layout convergence (#323 slices S0–S5), and the asb 1.5.0 adopt', () => {
   // #319 shipped the gate EMPTY; #351 enrolled the first files — the shared
   // arrow-routing geometry — #357 enrolled the entity panel editors asb
   // ported back out of uno, and #323's slice S0 swept every remaining
   // byte-identical path under src/ (viewport/layout/compare, mobile shell,
-  // agent providers, shadcn primitives, and the rest). A stray add or removal
-  // trips here, so enrolment stays a deliberate act in a reconciliation ticket.
+  // agent providers, shadcn primitives, and the rest). Every pin bump since
+  // has ended the same way: adopt what the template moved ahead on, then sweep
+  // whatever that left byte-identical. A stray add or removal trips here, so
+  // enrolment stays a deliberate act in a reconciliation ticket.
   assert.deepEqual(RECONCILED_FILES, [
     'src/lib/blueprintArrowGeometry.ts',
     'src/lib/arrowAnchorSlots.ts',
@@ -211,6 +214,18 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/phaseRowPanelHeight.ts',
     'src/lib/phaseRowPanelHeight.test.ts',
     'src/hooks/useAlignedPhaseRowPanelHeight.ts',
+    'src/components/blueprint/ScenarioPanel.tsx',
+    'src/components/editor/AdminSessionFields.tsx',
+    'src/components/editor/AgentProviderFields.tsx',
+    'src/components/editor/CanvasSelectionProvider.tsx',
+    'src/components/editor/EditorSequenceNav.tsx',
+    'src/components/editor/PhaseSectionFlowArrow.tsx',
+    'src/components/editor/ToolFamilyMenu.tsx',
+    'src/contexts/canvasRevealContext.ts',
+    'src/lib/applyBlueprintDisplayFilters.ts',
+    'src/lib/compareMergedGrid.test.ts',
+    'src/types/integratedBlueprint.ts',
+    'scripts/erd-value-sets.mjs',
   ])
 })
 
