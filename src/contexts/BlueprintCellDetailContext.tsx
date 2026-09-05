@@ -126,6 +126,9 @@ export function BlueprintCellDetailProvider({
     setDraftCell(null)
     setPanelState(null)
     setPreviewHover(null)
+    // A reset is a close: hand the drawer back so the next opener — cell or
+    // entity — starts from nobody owning it.
+    releasePanel('cell')
   }, [resetKey])
 
   // The Differences surface only means something while a comparison is live
@@ -174,8 +177,7 @@ export function BlueprintCellDetailProvider({
   }, [selection])
 
   // Publish the open cell so the URL can carry it (`?cell=`) — that address is
-  // the share link, and the same one uno-bot builds when it cites this cell
-  // (docs/connectors/plus-uno.md).
+  // the share link, and the same one the agent builds when it cites this cell.
   // First path only: a multi-path selection is one cell read across variants,
   // and the first entry is the one the panel opens on.
   useEffect(() => {

@@ -335,4 +335,11 @@ export const RECONCILED_FILES = [
   'src/components/editor/PhaseOverviewPhaseLoopArrow.tsx',
   'src/lib/canvasCameraPolicy.ts',
   'src/lib/comparisonCameraContract.test.ts',
+
+  // #324 S1 — the cell-detail context. Two hunks apart at the 1.5.1 pin,
+  // both template-ahead: a reset hands the drawer back (`releasePanel('cell')`)
+  // so the next opener starts from nobody owning it, and the share-link
+  // comment names "the agent" rather than a deployment's bot and connector
+  // doc. uno takes both; the file is identical and enrolled.
+  'src/contexts/BlueprintCellDetailContext.tsx',
 ]
