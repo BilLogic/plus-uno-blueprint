@@ -76,6 +76,7 @@ export const BLUEPRINT_CONTRACT = {
     'slices',
     'slides',
     'evidence_counts',
+    'touchpoints',
   ],
 
   /** Tables the bot actively reads (probe list for /health/blueprint). */
@@ -135,6 +136,13 @@ export const BLUEPRINT_CONTRACT = {
     resources: ['name', 'url', 'kind'],
     audit_findings: ['id', 'cell_ids', 'status'],
     slices: ['id', 'title', 'actor'],
+    // The registry of the tools and surfaces the service runs through — an app
+    // screen, an email, a Zoom room. Anon-readable since 20260830140000; the
+    // bot reads it for "where do we use X" (plus-uno#414). Placements stay out.
+    // It joins `botReadTables` once the bot's deployed /health/blueprint probes
+    // it — the probe check runs against the live Worker, so declaring the read
+    // before the probe exists would fail this repo's gate on the bot's timing.
+    touchpoints: ['id', 'name', 'kind', 'summary', 'url'],
   },
 
   /**
