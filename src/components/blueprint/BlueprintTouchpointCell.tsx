@@ -1,14 +1,10 @@
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
-import { buttonVariants } from '@/components/ui/button'
+import { TouchpointCellFace } from '@/components/blueprint/TouchpointCellFace'
 import type { EntityStatus } from '@/lib/entityStatus'
 import {
   buildTouchpointSelection,
   type BlueprintCellSelectionContext,
 } from '@/lib/blueprintCellSelection'
-import {
-  blueprintCellButtonClassName,
-  blueprintToneAttrs,
-} from '@/lib/blueprintCellStyle'
 import {
   TOUCHPOINT_ITEM_HEIGHT,
   TOUCHPOINT_ITEM_HEIGHT_COMPACT,
@@ -55,10 +51,9 @@ type BlueprintTouchpointCellProps = {
  *
  * It is the same `BlueprintCellButton` every other cell face is, asking for
  * `variant="touchpoint"`, which is a corner radius and a padding scale and
- * nothing else. It had a separate component for its read-only face and a
- * duplicate `Button` variant of its own, which is how one thing came to have
- * three names — and why "pill" was a third design-system word for what is
- * either a badge or a cell. Both are gone; the shape is a variant.
+ * nothing else. The read-only face is `TouchpointCellFace` and this hands
+ * `asSpan` straight to it rather than drawing a second one: one shape, two
+ * surfaces, and no duplicate `Button` variant of its own.
  *
  * Touchpoints share their cell's id, so only the first carries the slice
  * sequence badge.
@@ -91,26 +86,18 @@ export function BlueprintTouchpointCell({
 
   if (asSpan) {
     return (
-      <span
-        className={cn(
-          buttonVariants({ variant: 'blueprint' }),
-          blueprintCellButtonClassName({ compact, variant: 'touchpoint' }),
-          'pointer-events-none min-w-0 shrink-0 cursor-default break-words',
-          nameOnly && 'border-dashed',
-          className,
-        )}
-        {...(nameOnly ? { 'data-name-only': '' } : {})}
-        style={{
-          ...(opacity != null && opacity < 1 ? { opacity } : undefined),
-          ...sizedStyle,
-        }}
-        title={item}
-        aria-label={item}
+      <TouchpointCellFace
+        item={item}
+        compact={compact}
+        className={className}
+        style={style}
+        opacity={opacity}
+        asSpan
+        status={status}
+        nameOnly={nameOnly}
+        inline={inline}
         aria-describedby={ariaDescribedBy}
-        {...blueprintToneAttrs(tone)}
-      >
-        <span className="line-clamp-2 break-words">{item}</span>
-      </span>
+      />
     )
   }
 
@@ -133,9 +120,9 @@ export function BlueprintTouchpointCell({
       aria-label={item}
       aria-describedby={ariaDescribedBy}
       sliceSequenceBadge={sliceSequenceBadge}
+      nameOnly={nameOnly}
       className={cn('min-w-0 shrink-0 break-words', nameOnly && 'border-dashed', className)}
       data-blueprint-touchpoint={item}
-      {...(nameOnly ? { 'data-name-only': '' } : {})}
     >
       <span className="line-clamp-2 break-words" title={item}>
         {item}

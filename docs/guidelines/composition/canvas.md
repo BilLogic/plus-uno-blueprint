@@ -27,6 +27,7 @@ claims:
   - src/components/blueprint/ScenarioBlueprintPanel.tsx
   - src/components/blueprint/ScenarioTitleDefinition.tsx
   - src/components/blueprint/ScenarioTitleBadge.tsx
+  - src/components/blueprint/TouchpointCellFace.tsx
   - src/components/blueprint/VisualStepDetailStack.tsx
   - src/components/blueprint/VisualWalkthroughModal.tsx
   - src/components/blueprint/VisualWalkthroughShell.tsx

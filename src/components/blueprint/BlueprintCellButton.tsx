@@ -71,6 +71,8 @@ type BlueprintCellButtonProps = {
   'aria-label'?: string
   'aria-describedby'?: string
   'data-blueprint-touchpoint'?: string
+  /** A name-only placement (#277): the registry lacks this touchpoint. */
+  nameOnly?: boolean
 }
 
 /**
@@ -98,6 +100,7 @@ export function BlueprintCellButton({
   'aria-describedby': ariaDescribedBy,
   'data-blueprint-touchpoint': touchpointLabel,
   status,
+  nameOnly = false,
 }: BlueprintCellButtonProps) {
   const detail = useBlueprintCellDetailOptional()
   const isInteractive = Boolean(detail?.enabled && selection && detail)
@@ -280,6 +283,7 @@ export function BlueprintCellButton({
       {...(cellId ? { 'data-blueprint-cell': cellId } : {})}
       data-step-index={stepIndex}
       {...(touchpointLabel ? { 'data-blueprint-touchpoint': touchpointLabel } : {})}
+      {...(nameOnly ? { 'data-name-only': '' } : {})}
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedBy}
       aria-pressed={isInteractive ? isActive : undefined}
