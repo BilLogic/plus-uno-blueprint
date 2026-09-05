@@ -342,4 +342,16 @@ export const RECONCILED_FILES = [
   // comment names "the agent" rather than a deployment's bot and connector
   // doc. uno takes both; the file is identical and enrolled.
   'src/contexts/BlueprintCellDetailContext.tsx',
+
+  // #325 S6 — touchpoint cell (asb 1.5.2). The template took every uno-ahead
+  // behaviour of the touchpoint cell at 1.5.2 — `status`, the fixed height,
+  // `inline`, `aria-describedby`, `selectionContext` — and kept its own split
+  // of the read-only face into `TouchpointCellFace`. uno takes that split:
+  // the face arrives whole and is enrolled here. `BlueprintTouchpointCell.tsx`
+  // itself is NOT enrolled — its `nameOnly` comment cites uno's #277 where the
+  // template cites its own #112 — and neither is `BlueprintCellButton.tsx`,
+  // which carries uno's `onOpen` (the storyboard cell opens its STEP). The
+  // heights the face reads are uno's, because `blueprintLayout.ts` stays
+  // forked at 52/42 against the template's 44/34 pending Q10.
+  'src/components/blueprint/TouchpointCellFace.tsx',
 ]
