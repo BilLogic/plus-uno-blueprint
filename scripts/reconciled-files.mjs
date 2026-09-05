@@ -323,4 +323,16 @@ export const RECONCILED_FILES = [
   // scenario id at all — was enrolled at the 1.5.0 sweep above and is not
   // repeated here.
   'src/lib/blueprintDisplayFlags.ts',
+
+  // asb 1.5.1 adopt (#324 S1+S2). The template took uno's names and camera
+  // policy — chip→badge/tag, picture→image, the loop arrow's z-20, the
+  // camera thresholds as a module — so these five arrived identical at the
+  // pin bump and are enrolment alone. `CoverCommandCopy.tsx` is the cover's
+  // copy button under the name uno already used; `canvasCameraPolicy.ts` and
+  // its contract test were uno-only files until 1.5.1 carried them over.
+  'src/components/blueprint/badgeGeometry.test.tsx',
+  'src/components/cover/CoverCommandCopy.tsx',
+  'src/components/editor/PhaseOverviewPhaseLoopArrow.tsx',
+  'src/lib/canvasCameraPolicy.ts',
+  'src/lib/comparisonCameraContract.test.ts',
 ]
