@@ -75,7 +75,12 @@ it and then bundles. `npm run check:harness` holds every file under
 so a surface nobody documented fails it. The three router checks —
 `npm run check:budget`, `check:negation`, `check:pointers` — hold `AGENTS.md` to
 its char budget, its recorded prohibition count and its pointer shape; each
-script's header carries the reasoning.
+script's header carries the reasoning. `npm run check:glossary` does the same
+for `CONTEXT.md`, which is the first pointer the router fires: headings, prose
+and `**term** — definition` rows, failing on a code fence, on a table naming a
+column, and on a section that defines no term. `npm run check:interface-map`
+holds `docs/reference/interface-schema-map.md` to what its sources render —
+run `npm run interface-map` after changing a panel label's binding.
 
 ## Tooling traps
 

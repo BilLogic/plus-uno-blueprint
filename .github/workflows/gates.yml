@@ -93,6 +93,18 @@ jobs:
       - run: npm run check:negation
       - run: npm run check:pointers
 
+      # The glossary's own check (#365). `CONTEXT.md` is the first pointer the
+      # router fires, so a session that reads `AGENTS.md` reads this next — and
+      # for a year it was two thirds reference material: a rename map of some
+      # two hundred lines and an interface-to-schema map of ninety, paid for by
+      # every session that opened the file to look up one word. Both are gone,
+      # to the check that enforces them and to a generated document under
+      # `docs/`. This is what stops the file growing them back: headings, prose
+      # and `**term** — definition` rows, with a failure for a code fence, for a
+      # table naming a column, and for a section that defines no term. Static
+      # and one file read, so it is a required check like the three above.
+      - run: npm run check:glossary
+
       # The parse gate (#148). `supabase/migrations/` is not the apply path —
       # the schema went in over MCP `apply_migration` and the files were written
       # afterwards — so until this ran, no Postgres had ever read them. Three did

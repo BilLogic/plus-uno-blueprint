@@ -30,6 +30,7 @@ const REFERENCE_DIRS = ['product', 'guidelines', 'engineering', 'reference', 'ad
  * the way they'd ask it. Update alongside any doc move. */
 const ROUTING = [
   ['What do these words mean — scenario, path, lane, cell, slice, finding?', 'CONTEXT.md'],
+  ['What does this panel label actually name in the schema?', 'docs/reference/interface-schema-map.md'],
   ['Clone it and get it running', 'SETUP.md'],
   ['What is this product / can I edit things / how do I get access?', 'docs/product/01-overview.md'],
   ['Find a scenario, read it on desktop or phone, share it, present to leadership', 'docs/product/02-team-guide.md'],

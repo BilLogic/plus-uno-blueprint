@@ -59,6 +59,67 @@
  *
  *   SUPABASE_DB_URL=postgres://… node scripts/check-retired-identifiers.mjs --service-role
  *
+ * ── WHICH WORDS ARE RETIRED AS IDENTIFIERS AND NOT AS WORDS ─────────────────
+ *
+ * This section is `CONTEXT.md`'s, word for word, until #365 moved it here. It
+ * lived in the glossary because the glossary was where a person went to ask
+ * why a sweep skipped a word; it lives here because this is the file that
+ * skips it. `RETIRED_IDENTIFIER_EXEMPTIONS` is thirty lines below, so the
+ * reason and the code that acts on it are now one edit rather than two.
+ *
+ * **"Proposition" is now retired in the plural only, and that is a narrowing of
+ * the spelling rather than of the rule.** `propositions` was a TABLE, and it was
+ * renamed *because* the word already meant a cell's value proposition — the
+ * rename moved the container and left the concept where it was. `cells.value_props`
+ * still holds value propositions, `evidence.proposition_question_key` still
+ * records which proposition an evidence row answers (see "One permanent
+ * exemption" below, which makes exactly this distinction), and the panel now
+ * says **Value proposition** where it used to say
+ * Value. Forbidding the singular on screen would forbid the word the rename was
+ * performed in order to protect. The identifier fragment is untouched, because a
+ * database object spelled `proposition` really is the retired one.
+ *
+ * ── ONE PERMANENT EXEMPTION ─────────────────────────────────────────────────
+ *
+ * A rename sweep that catches every occurrence of a retired word breaks this one.
+ * It is here because this is where the person running that sweep looks. There was
+ * a second entry until 2026-08-26, and the difference between the two is the
+ * lesson worth keeping: one is a fact about the language, the other was a queue
+ * that had stopped moving.
+ *
+ * **Permanent — `evidence.proposition_question_key`.** `propositions` became
+ * `business_model` (today `business_models`) on 2026-08-21, because that word already meant a *cell's*
+ * value proposition. This column is not that table. It records which of the three
+ * validation questions an evidence row answers — `understand`, `value`,
+ * `usability` — and those three are propositions in the ordinary sense: claims
+ * the service is betting on. The rename moved the container, not the concept.
+ * This is the only entry here that does not expire, and #146's copy guard ships
+ * with **zero** exemptions because the rest of them were removed rather than
+ * documented.
+ *
+ * Two entries have left this list, and how each left is the point.
+ *
+ * **"Derived layer" was renamed, not exempted.** A rename removes the collision
+ * where an exemption only records it. The replacement was then dropped as well,
+ * for a reason worth keeping: no one word was true of all four tables. See
+ * `CONTEXT.md` § The three records, and the one that is nobody’s.
+ *
+ * **The breadcrumb label `'Layer: '` was sequenced, and then the sequence ran.**
+ * It was a real ordering constraint: the label sits inside every *stored* chunk
+ * title, the stored title is part of the **embedded** text, and flipping it
+ * without a full re-embed strands the whole index. But it was written here as an
+ * "exception" and read as one for six months — a two-week sequencing note aged
+ * into a protected name, which is why this section now insists a dated entry
+ * carry an issue number and an owner. `20260826140000` flips the label in the
+ * view and the RPC, the corpus was re-embedded in the same change, and the
+ * contract's `breadcrumb.aliases` — the mechanism that let both spellings parse
+ * across the window — went back to empty
+ * ([#144](https://github.com/BilLogic/plus-uno-blueprint/issues/144)). What
+ * `search_blueprint` still accepts is the `'layer'` **granularity value**, which
+ * is a different gate — uno-bot's vendored copy of the contract syncing — and it
+ * is carried as a dated exemption in the contract's own list rather than in
+ * `RETIRED_IDENTIFIER_EXEMPTIONS`. See `docs/connectors/plus-uno.md`.
+ *
  * Run: node scripts/check-retired-identifiers.mjs   (also: npm run check:identifiers)
  */
 import { execFileSync } from 'node:child_process'
