@@ -525,6 +525,22 @@ export const RECONCILED_FILES = [
   // one word — a phase belongs to a service — and is simply more precise.
   'src/types/blueprintCellDetail.ts',
 
+  // The blueprint resolver (#326 S4, #396 Q36/Q37/Q40). The last thing keeping
+  // this file forked was a pair of read-time repairs for this deployment's own
+  // rows — `repairWarmUpAlternatePathBlueprint` and
+  // `repairDiscoverySadPathBlueprint`, both gated on hardcoded PLUS UUIDs, and
+  // an early return that rendered one path from its curated fixture whatever
+  // the database held. Both faults were fixed at source: the Warm-Up lane
+  // positions by `20260821270000`, and the Discovery sad path by having been
+  // deleted from the database entirely in `20250710134500`, which left its
+  // repair firing on a board no reader has seen since. A repair applied on
+  // every load is a fault the rows still have; these rows no longer have one,
+  // so the code went rather than moving upstream. What is left is the generic
+  // merge both repos want: one `fillMissing` matched by name over the two
+  // relations that replaced `cells.links`, and `path.summary` under this
+  // deployment's own column name instead of the retired `description`.
+  'src/lib/resolveBlueprint.ts',
+
   // DECLINED by #403, recorded beside the enrolments from the same sweep so
   // that the next pass reads the reasoning instead of re-deriving it. None of
   // these is a near miss waiting for a better day; each names a file this

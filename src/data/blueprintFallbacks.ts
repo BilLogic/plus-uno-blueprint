@@ -126,10 +126,6 @@ import {
 } from '@/data/techSetupHappyPathFallback'
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import {
-  assignWarmUpAlternateCellLaneId,
-  repairWarmUpAlternatePathBlueprint,
-} from '@/lib/repairWarmUpAlternatePathBlueprint'
-import {
   buildParallelSessionPartnerLeadCells,
   buildParallelSessionPartnerLeadDependencies,
 } from '@/data/parallelSessionPartnerLead'
@@ -600,10 +596,8 @@ function buildWarmUpAlternatePathCells(): BlueprintCell[] {
   }))
 
   return [
-    ...nonPartnerLeadCells.map(assignWarmUpAlternateCellLaneId),
-    ...buildParallelSessionPartnerLeadCells(
-      warmUpAlternatePartnerLeadOptions,
-    ).map(assignWarmUpAlternateCellLaneId),
+    ...nonPartnerLeadCells,
+    ...buildParallelSessionPartnerLeadCells(warmUpAlternatePartnerLeadOptions),
   ]
 }
 
@@ -1078,16 +1072,10 @@ export function getBlueprintFallback(
   const data = getRawBlueprintFallback(scenarioId, pathId, pathKind)
   if (!data) return null
 
-  const resolvedPathId = pathId ?? data.path.id
-  const repaired =
-    resolvedPathId === WARM_UP_ALTERNATE_PATH_ID
-      ? repairWarmUpAlternatePathBlueprint(data)
-      : data
-
   return applyBlueprintDisplayFilters(
-    repaired,
+    data,
     scenarioId,
-    resolvedPathId,
+    pathId ?? data.path.id,
   )
 }
 

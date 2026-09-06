@@ -27,7 +27,7 @@ test('an empty allowlist has nothing to fail on, and reads nothing', () => {
   assert.deepEqual(auditReconciled({ files: [], readInstance: refuse, readAsb: refuse }), [])
 })
 
-test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), the viewport/layout convergence (#323 slices S0–S5), the asb 1.5.0 adopt, the display flags (#326 S1), the asb 1.5.1 adopt (#324 S1+S2), the cell-detail context (#324 S1), the touchpoint-cell face (#325 S6), the #391 phase-B storyboard rename, the #403 identical-by-history sweep, and the cell-selection builders (#405)', () => {
+test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), the viewport/layout convergence (#323 slices S0–S5), the asb 1.5.0 adopt, the display flags (#326 S1), the asb 1.5.1 adopt (#324 S1+S2), the cell-detail context (#324 S1), the touchpoint-cell face (#325 S6), the #391 phase-B storyboard rename, the #403 identical-by-history sweep, the cell-selection builders (#405), and the blueprint resolver (#326 S4)', () => {
   // #319 shipped the gate EMPTY; #351 enrolled the first files — the shared
   // arrow-routing geometry — #357 enrolled the entity panel editors asb
   // ported back out of uno, and #323's slice S0 swept every remaining
@@ -48,6 +48,15 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
   // the name-only predicate and stopped deliberately at the boundary, and
   // #405 moved the selection path from `cells.links` onto placements, which
   // is what finally made `blueprintCellSelection.ts` the template's file.
+
+  // #326 S4 is the newest entry, and it is the first enrolment won by DELETING
+  // deployment code rather than by adopting the template's. `resolveBlueprint`
+  // carried two read-time repairs for this deployment's own rows, gated on
+  // hardcoded PLUS UUIDs, and they were the reason the file could never be
+  // byte-identical to anything. Both faults had already been corrected at
+  // source, so the repairs were removed rather than generalised, and what was
+  // left of the two copies differed only in the fallback merge model and in
+  // one key name.
   //
   // #407 asked whether a whole-array `deepEqual` is still the right ratchet
   // now that the list is 211 long and every reconciliation ticket touches it,
@@ -284,6 +293,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'docs/agents/triage-labels.md',
     'src/lib/blueprintCellSelection.ts',
     'src/types/blueprintCellDetail.ts',
+    'src/lib/resolveBlueprint.ts',
   ])
 })
 

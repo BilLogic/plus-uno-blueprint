@@ -46,12 +46,18 @@ you and measuring against it reports no divergence at all.
 
 ## The paths upstream may never change
 
-`scripts/template-quarantine.json` declares ten patterns this instance owns: its
-migrations and seeds, its Supabase config, `src/data/`, `src/config.ts`, the
-generated `src/types/database.ts`, the canvas agent's `role.md`, and both
-one-off data repair shims. `npm run check:template-quarantine` inspects every
-merge commit in a range whose merged-in side descends from the template's root,
-and fails the merge that took the package's version of one.
+`scripts/template-quarantine.json` declares nine patterns this instance owns:
+its migrations, its seed files and `seed.sql`, its Supabase config, `src/data/`,
+`src/config.ts`, the generated `src/types/database.ts`, and the canvas agent's
+`role.md` and `canvas-adapter.md`. `npm run check:template-quarantine` inspects
+every merge commit in a range whose merged-in side descends from the template's
+root, and fails the merge that took the package's version of one.
+
+It held eleven patterns until #326 S4, when the two one-off data repair shims
+were deleted rather than defended. That is the healthier way off this list: a
+quarantine entry protects a file the template must not touch, so an entry that
+goes away because its file did is the list getting shorter for the right
+reason.
 
 It is a check and not a `merge=ours` driver on purpose. The driver is *declared*
 in the committed `.gitattributes` and *defined* in `.git/config`, which is not
@@ -77,8 +83,9 @@ No such script was ever written, and none should be. The plan assumed the
 template would be *extracted from here*. It was not:
 `agentic-service-blueprinting` became its own repo and did the scrubbing
 upstream, by hand, over time. Measured today the delete class is already gone on
-that side — the repair shims do not exist there, and `blueprintArrowGeometry.ts`
-is 2,107 lines upstream against 3,155 here. **The direction reversed.**
+that side — it never carried the repair shims at all, and
+`blueprintArrowGeometry.ts` is 2,107 lines upstream against 3,155 here.
+**The direction reversed.**
 Scrubbing PLUS out of this tree would now mean building a second, competing
 template out of the instance.
 
@@ -126,6 +133,15 @@ Recorded so the next reader does not re-open them:
 - **The `PLUS` wordmark in `EditorChrome.tsx`** — removed.
 - **The legacy `public.services` table** — dropped in
   `20260821340000_retire_lifecycle.sql`.
+- **The two one-off data repair shims** — `repairWarmUpAlternatePathBlueprint`
+  and `repairDiscoverySadPathBlueprint` are deleted (#326 S4, #396 Q40), along
+  with the `applyPlusLegacyRepairs` block and the early return that rendered one
+  path from its fixture whatever the database held. Both faults they patched
+  were already corrected in the rows, so nothing was generalized upstream and
+  nothing had to be written to the database. `src/lib/resolveBlueprint.ts` is
+  byte-identical to the template's copy and enrolled in the reconciled set;
+  `docs/reference/retire-plus-repair-shims.sql` is kept as the record of what
+  the shims guaranteed.
 
 ## How far apart the trees are
 
