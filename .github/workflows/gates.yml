@@ -86,6 +86,17 @@ jobs:
       # rather than written down, so it is static and needs no database either.
       - run: npm run check:lane-role-values
 
+      # The roster guard (#399), the mirror of the one above. That check fails
+      # a value the constraint has RETIRED; this one fails a value it has
+      # GAINED, by holding the two documents that state the WHOLE lane-role
+      # vocabulary — the ERD's `%% Roles:` roster and the agent's own
+      # `LANE_ROLE_FILTER_PARAM` — to the constraint by set EQUALITY rather
+      # than containment. Containment one way is what let #395 happen;
+      # containment the other way is what left a new role undocumented and
+      # unfilterable. It reuses the same derived vocabulary, so it is static
+      # and needs no database either.
+      - run: npm run check:lane-role-roster
+
       # The router's three checks (#366). `AGENTS.md` is the whole always-loaded
       # tier — the one file every session is handed before it decides anything —
       # so the properties that keep it a router are held here rather than left
