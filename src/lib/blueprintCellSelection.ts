@@ -1,6 +1,6 @@
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import type { PathKind } from '@/types/database'
-import type { CellLink, CellResource } from '@/types/blueprint'
+import type { CellResource, CellTouchpoint } from '@/types/blueprint'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 
 export type BlueprintCellSelectionContext = {
@@ -14,7 +14,7 @@ export type BlueprintCellSelectionContext = {
   cellContent: string
   cellFrame?: string | null
   cellSummary?: string | null
-  cellLinks?: CellLink[]
+  cellTouchpoints?: CellTouchpoint[]
   cellResources?: CellResource[]
   pathId: string
   pathName: string
@@ -42,7 +42,7 @@ export function buildBlueprintCellSelection(
         content: context.cellContent,
         frame: context.cellFrame ?? null,
         summary: context.cellSummary ?? null,
-        links: context.cellLinks ?? [],
+        touchpoints: context.cellTouchpoints ?? [],
         resources: context.cellResources ?? [],
       },
     ],
@@ -71,7 +71,7 @@ export function buildTouchpointSelection(
         content: techItem,
         frame: context.cellFrame ?? null,
         summary: context.cellSummary ?? null,
-        links: context.cellLinks ?? [],
+        touchpoints: context.cellTouchpoints ?? [],
         resources: context.cellResources ?? [],
       },
     ],

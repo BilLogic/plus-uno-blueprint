@@ -23,6 +23,8 @@ import {
   shouldUseTouchpointCellContent,
   shouldUseStoryboardContent,
 } from '@/lib/blueprintLayout'
+import { cellResources } from '@/lib/cellResources'
+import { cellTouchpoints } from '@/lib/cellTouchpoints'
 import { buildCellLookup, getCellAt, getCellsAt } from '@/lib/normalizeBlueprint'
 import {
   getBlueprintLaneStyle,
@@ -391,8 +393,8 @@ function CompareLaneRow({
                 cellContent: cell?.content ?? '',
                 cellFrame: cell?.frame ?? null,
                 cellSummary: cell?.summary ?? null,
-                cellLinks: cell?.links,
-                cellResources: cell?.resources,
+                cellTouchpoints: cellTouchpoints(cell ?? {}),
+                cellResources: cellResources(cell ?? {}),
                 pathId: blueprint.path.id,
                 pathName: blueprint.path.name,
                 pathSummary: blueprint.path.summary,

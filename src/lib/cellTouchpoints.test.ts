@@ -24,11 +24,13 @@
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import {
+  cellTouchpoints,
   cellTouchpointsFromLinks,
   cellTouchpointsFromRows,
   findCellPlacement,
   resolveTouchpointDetail,
 } from '@/lib/cellTouchpoints'
+import { TECH_DESCRIPTION_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
 
 test('a placement row keeps its name, order and per-moment detail', () => {
   const touchpoints = cellTouchpointsFromRows([
@@ -96,6 +98,43 @@ test('non-touchpoint links are ignored', () => {
 
   assert.equal(touchpoints.length, 1)
   assert.equal(touchpoints[0]!.summary, null)
+})
+
+test('the one accessor resolves a cell from whichever source it came from', () => {
+  // A cell the normalizer built already carries placements and the accessor
+  // hands them back untouched. A cell taken straight out of `src/data` never
+  // went through the normalizer, so the accessor runs the same adapter on the
+  // shape it does carry — and that is the whole reason
+  // `cellTouchpointsFromLinks` survives the move onto placements.
+  const normalized = cellTouchpointsFromRows([
+    { id: 'ct-1', position: 1, touchpoint_id: 'tp-1', touchpoints: { name: 'Zoom' } },
+  ])
+  assert.deepEqual(
+    cellTouchpoints({ content: 'Ignored', touchpoints: normalized }),
+    normalized,
+  )
+
+  const fixture = cellTouchpoints({
+    content: 'Zoom, Email',
+    links: [
+      {
+        type: TECH_DESCRIPTION_LINK_TYPE,
+        label: 'Zoom',
+        description: 'The advisor opens the scheduled call.',
+      },
+    ],
+  })
+  assert.deepEqual(
+    fixture.map((entry) => entry.name),
+    ['Zoom', 'Email'],
+  )
+  assert.equal(fixture[0]!.summary, 'The advisor opens the scheduled call.')
+  // Minted rather than read, so neither half is set — which is what keeps
+  // `isNameOnlyPlacement` false for all of them.
+  assert.ok(fixture.every((entry) => entry.id === null && entry.touchpointId === null))
+
+  // A cell that carries neither points at nothing, rather than throwing.
+  assert.deepEqual(cellTouchpoints({}), [])
 })
 
 test('blank content yields no placements', () => {

@@ -25,6 +25,12 @@ import {
 import type { BlueprintLaneStyle } from '@/lib/blueprintTheme'
 import { cn } from '@/lib/utils'
 import type { BlueprintCell } from '@/types/blueprint'
+import { cellResources } from '@/lib/cellResources'
+import {
+  cellTouchpoints,
+  isNameOnlyPlacement,
+  touchpointNamed,
+} from '@/lib/cellTouchpoints'
 import { useId, useState, type CSSProperties } from 'react'
 
 /**
@@ -168,11 +174,20 @@ export function CompareCellBlock({
               item,
               slotCell: undefined,
             }))
-        ).map(({ item, slotCell }, index, all) =>
-          selectionContext ? (
+        ).map(({ item, slotCell }, index, all) => {
+          // A touchpoint whose placement the registry lacks is drawn dashed
+          // (#277). Read from the cell the touchpoint belongs to — its own slot
+          // in a merged view, the block's cell otherwise.
+          const placement = touchpointNamed(
+            slotCell ? cellTouchpoints(slotCell) : selectionContext?.cellTouchpoints ?? [],
+            item,
+          )
+          const nameOnly = placement ? isNameOnlyPlacement(placement) : false
+          return selectionContext ? (
             <BlueprintTouchpointCell
               key={`${slotCell?.id ?? 'anon'}-${item}-${index}`}
               item={item}
+              nameOnly={nameOnly}
               // Identity is the split's point: each touchpoint carries its own
               // cell in the selection it hands to the panel and the picker.
               selectionContext={
@@ -183,8 +198,8 @@ export function CompareCellBlock({
                       cellContent: slotCell.content ?? '',
                       cellFrame: slotCell.frame ?? null,
                       cellSummary: slotCell.summary ?? null,
-                      cellLinks: slotCell.links,
-                      cellResources: slotCell.resources,
+                      cellTouchpoints: cellTouchpoints(slotCell),
+                      cellResources: cellResources(slotCell),
                     }
                   : selectionContext
               }
@@ -203,6 +218,7 @@ export function CompareCellBlock({
             <BlueprintTouchpointCell
               key={`${item}-${index}`}
               item={item}
+              nameOnly={nameOnly}
               compact={compact}
               className={cn(
                 'shrink-0',
@@ -210,8 +226,8 @@ export function CompareCellBlock({
               )}
               aria-describedby={ariaDescribedBy}
             />
-          ),
-        )}
+          )
+        })}
       </div>
     ) : (
       <BlueprintCellButton

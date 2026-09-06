@@ -20,7 +20,7 @@
  * in production were provenance citations, and they belong in `evidence`.
  */
 import { URL_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
-import type { CellLink, CellResource } from '@/types/blueprint'
+import type { BlueprintCell, CellLink, CellResource } from '@/types/blueprint'
 
 /** A `resources` row as the board query selects it. */
 export type RawCellResource = {
@@ -80,6 +80,20 @@ export function cellResourcesFromLinks(
       },
     ]
   })
+}
+
+/**
+ * What a cell points at.
+ *
+ * The sibling of `cellTouchpoints`, and the same one accessor for the same
+ * reason: a cell the normalizer built carries `resources`, and a fixture
+ * taken straight out of `src/data` carries the retired array instead. A
+ * component asks this and never has to decide what `undefined` means.
+ */
+export function cellResources(
+  cell: Partial<Pick<BlueprintCell, 'links' | 'resources'>>,
+): CellResource[] {
+  return cell.resources ?? cellResourcesFromLinks(cell.links)
 }
 
 /** The host of a url, for a resource nobody named. */

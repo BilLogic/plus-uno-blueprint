@@ -56,6 +56,8 @@ import {
   getMergedCompareRowTrackCss,
   resolveBlueprintLane,
 } from '@/lib/sideBySideCompareLayout'
+import { cellResources } from '@/lib/cellResources'
+import { cellTouchpoints } from '@/lib/cellTouchpoints'
 import { getPathColor } from '@/lib/pathColorTheme'
 import { resolveStoryboardStripEntries } from '@/lib/storyboardWalkthrough'
 import { cn } from '@/lib/utils'
@@ -662,8 +664,8 @@ function MergedSubCellBlock({
               cellContent: cell?.content ?? '',
               cellFrame: cell?.frame ?? null,
               cellSummary: cell?.summary ?? null,
-              cellLinks: cell?.links,
-              cellResources: cell?.resources,
+              cellTouchpoints: cellTouchpoints(cell ?? {}),
+              cellResources: cellResources(cell ?? {}),
               pathId: blueprint.path.id,
               pathName: blueprint.path.name,
               pathSummary: blueprint.path.summary,

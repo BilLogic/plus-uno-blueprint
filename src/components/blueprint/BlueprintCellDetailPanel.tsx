@@ -73,7 +73,6 @@ import {
   scrollBlueprintCellIntoView,
 } from '@/lib/blueprintCellConnections'
 import {
-  cellTouchpointsFromLinks,
   findCellPlacement,
   resolveTouchpointDetail,
 } from '@/lib/cellTouchpoints'
@@ -98,7 +97,6 @@ import {
   getBlueprintLaneZone,
 } from '@/lib/blueprintTheme'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
-import { cellResourcesFromLinks } from '@/lib/cellResources'
 import { resolveStoryboardStripEntries } from '@/lib/storyboardWalkthrough'
 import { getTouchpointTone } from '@/lib/touchpointColors'
 import { PANEL_TERMS } from '@/lib/panelTerms'
@@ -107,7 +105,7 @@ import { cn } from '@/lib/utils'
 import type { ExistingDependency } from '@/components/blueprint/CellDependencyEditor'
 import type { DraftCellTarget } from '@/components/blueprint/CellPanelEditor'
 import type { DependencyEndpoint } from '@/lib/dependencyValidation'
-import type { BlueprintCell, CellLink, CellResource } from '@/types/blueprint'
+import type { BlueprintCell, CellResource, CellTouchpoint } from '@/types/blueprint'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 
 /**
@@ -435,29 +433,26 @@ function BlueprintCellDetailPanelBody() {
 
   const selectedCell = useMemo((): Pick<
     BlueprintCell,
-    'content' | 'summary' | 'links' | 'frame' | 'touchpoints' | 'resources'
+    'content' | 'summary' | 'frame' | 'touchpoints' | 'resources'
   > | null => {
     // The two branches below build a cell out of a compare-path entry rather
-    // than the board, and such an entry carries content and links but no
-    // placements. Deriving them here with the same resolver the normalizer
-    // uses is what keeps the panel reading one shape: without it these
-    // fallbacks would be the last place in the app still joining by label.
+    // than the board. Such an entry now arrives carrying placements and
+    // resources already resolved — `cellTouchpoints` and `cellResources` did
+    // that work where the selection context was built, which is the last
+    // place a cell still knows whether it came from the database or from a
+    // hand-written fixture. The panel reads one shape and joins nothing.
     const fromEntry = (entry: {
       content: string
       summary?: string | null
       frame?: string | null
-      links?: CellLink[] | null
+      touchpoints?: CellTouchpoint[] | null
       resources?: CellResource[] | null
     }) => ({
       content: entry.content,
       summary: entry.summary ?? null,
       frame: entry.frame ?? null,
-      links: entry.links ?? [],
-      touchpoints: cellTouchpointsFromLinks(entry.content, entry.links),
-      // The entry's own resources when it has them, and otherwise the same
-      // derivation the normalizer does — a fallback cell keeps them in
-      // `links` and there is nowhere else for them to come from.
-      resources: entry.resources ?? cellResourcesFromLinks(entry.links),
+      touchpoints: entry.touchpoints ?? [],
+      resources: entry.resources ?? [],
     })
 
     const pathId = pathEntry?.pathId
@@ -475,7 +470,7 @@ function BlueprintCellDetailPanelBody() {
       content: pathEntry?.content ?? '',
       summary: pathEntry?.summary ?? null,
       frame: pathEntry?.frame ?? null,
-      links: pathEntry?.links ?? [],
+      touchpoints: pathEntry?.touchpoints ?? null,
       resources: pathEntry?.resources ?? null,
     })
   }, [blueprints, pathEntry, resolvedCellId])
