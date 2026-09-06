@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { declarationsIn, rulesDeclaring, stylesheet } from '@/lib/tokenModel'
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import {
+  declarationsIn,
+  rulesDeclaring,
+  sourceFiles,
+  sourceMatching,
+  stripComments,
+  stylesheet,
+} from '@/lib/tokenModel'
 
 /**
  * The seam's own guard.
@@ -46,5 +56,47 @@ describe('the declaration reader', () => {
     )
     const written = [...text.matchAll(/^\s*--[a-zA-Z0-9-]+\s*:/gm)].length
     expect(declarationsIn('semantic.css')).toHaveLength(written)
+  })
+})
+
+/**
+ * The source reader's own guard, for the property the style rules cannot check
+ * about themselves: that a reported `file:line` is the line the reader means.
+ *
+ * `stripComments` used to DELETE block comments rather than blank them, so
+ * every newline inside a file's header vanished and every line number after it
+ * shifted up by the header's height. Nothing failed, because a passing rule
+ * reports no lines at all — the drift only shows once a rule starts failing,
+ * which is the moment the number has to be right. Widening the sample to the
+ * whole tree (#414) was that moment: `dev/ArrowSituationCatalogPage.tsx` opens
+ * with a thirteen-line header, and its `#2563eb` on line 28 was being reported
+ * at line 15, on an import statement.
+ */
+describe('the source reader', () => {
+  const SRC = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+
+  it('keeps every line, so a stripped file numbers the same as the raw one', () => {
+    for (const source of sourceFiles()) {
+      const raw = readFileSync(resolve(SRC, source.file), 'utf8')
+      expect(source.code.split('\n')).toHaveLength(raw.split('\n').length)
+    }
+  })
+
+  it('reports a match at the line it sits on in the file on disk', () => {
+    // One end-to-end check through the same path a rule takes, rather than
+    // trusting the line-count equality above to imply it.
+    const matches = sourceMatching(/ARROW_COLOR = /g)
+    expect(matches.length).toBeGreaterThan(0)
+    for (const match of matches) {
+      const [file, line] = match.split(':')
+      const raw = readFileSync(resolve(SRC, file), 'utf8').split('\n')
+      expect(raw[Number(line) - 1]).toContain('ARROW_COLOR = ')
+    }
+  })
+
+  it('still blanks what a comment says, so a comment is not a use', () => {
+    const stripped = stripComments('const a = 1 /* text-red-500 */\nconst b = 2\n')
+    expect(stripped).not.toContain('text-red-500')
+    expect(stripped.split('\n')).toHaveLength(3)
   })
 })
