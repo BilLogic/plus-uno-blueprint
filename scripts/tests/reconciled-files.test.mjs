@@ -6,10 +6,10 @@
  *
  * `auditReconciled` is exercised against in-memory readers rather than a real
  * asb checkout, so the outcomes are pinned to byte-equality alone and not to
- * whatever the pinned package happens to ship. The one test that does touch
- * the shipped list asserts the enrolled set — first populated by #351, the
- * shared arrow-routing engine, and grown by every reconciliation ticket and
- * pin bump since.
+ * whatever the pinned package happens to ship. Two tests do read the shipped
+ * list: one asserts the enrolled set — first populated by #351, the shared
+ * arrow-routing engine, and grown by every reconciliation ticket and pin bump
+ * since — and one asserts that no path on it is enrolled twice (#407).
  *
  * Run: npm test
  */
@@ -48,6 +48,29 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
   // the name-only predicate and stopped deliberately at the boundary, and
   // #405 moved the selection path from `cells.links` onto placements, which
   // is what finally made `blueprintCellSelection.ts` the template's file.
+  //
+  // #407 asked whether a whole-array `deepEqual` is still the right ratchet
+  // now that the list is 211 long and every reconciliation ticket touches it,
+  // or whether set-equality plus a separate ordering rule would hold the same
+  // ground for a smaller diff each time. It is KEPT, on three grounds.
+  //
+  // The diff is already small. The list grows by appending a block to the end
+  // of `scripts/reconciled-files.mjs` and the same paths to the end of this
+  // literal, so an ordinary ticket touches the tail of two files and nothing
+  // between them. A large diff here means an entry moved or was inserted
+  // mid-list — which is exactly the change that ought to be loud.
+  //
+  // The order is not incidental. The source file is grouped by ticket in the
+  // order the tickets landed, so the sequence IS the reconciliation history,
+  // and the blocks' prose reads against it. An "ordering rule" strong enough
+  // to hold that would have to know which ticket each path belongs to and when
+  // it merged, which is a fact no assertion in this file can reach.
+  //
+  // And set-equality would have made #407's own bug permanent instead of
+  // catching it. Comparing sets discards cardinality, so it passes on a list
+  // that enrols the same path twice — the precise defect being fixed. The
+  // duplicate check below is what closes that hole, and it closes it BESIDE
+  // `deepEqual` rather than in place of it.
   assert.deepEqual(RECONCILED_FILES, [
     'src/lib/blueprintArrowGeometry.ts',
     'src/lib/arrowAnchorSlots.ts',
@@ -223,7 +246,6 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/blueprint/PathSummaryTooltip.tsx',
     'src/components/blueprint/ScenarioTitleBadge.tsx',
     'src/components/blueprint/BlueprintDividerBadge.tsx',
-    'src/lib/compareGridTracks.ts',
     'src/hooks/useCollapsedBlueprintLanes.ts',
     'src/lib/blueprintLaneCollapse.ts',
     'src/components/blueprint/CompareTrackDecorations.tsx',
@@ -253,8 +275,6 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/blueprint/BlueprintCellButton.tsx',
     'src/components/editor/AgentScopeField.tsx',
     'src/components/editor/agentScopeField.test.tsx',
-    'src/contexts/ViewStateContext.tsx',
-    'src/styles/variants.css',
     'public/step-visual-placeholder.svg',
     'tsconfig.json',
     'tsconfig.app.json',
@@ -264,6 +284,37 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'docs/agents/triage-labels.md',
     'src/lib/blueprintCellSelection.ts',
   ])
+})
+
+test('no path is enrolled twice, so removing one entry really un-enrols a file', () => {
+  // #407. Three paths were listed twice, each because a later ticket re-listed
+  // a path an earlier one had already enrolled, inside its own commented
+  // block — the natural mistake, since the blocks are grouped by ticket and a
+  // file that two tickets touched reads as belonging in two places.
+  //
+  // Nothing was ever measured wrongly: the checker compared each of them to
+  // asb twice and reached the same verdict both times. What a duplicate breaks
+  // is REMOVAL, and removal is the operation this list most needs to keep
+  // honest. Delete one occurrence of a doubly-listed path and the file stays
+  // enrolled from the other block, silently — so a deliberate un-enrolment
+  // reads as done and has not happened. It also inflates the count in the
+  // checker's own summary line, which is the number quoted in PR bodies.
+  //
+  // This is derived from RECONCILED_FILES and from nothing else, on purpose.
+  // The `deepEqual` above is duplicate-sensitive and so does notice a new
+  // duplicate — but it notices it as a mismatch between two long arrays, and
+  // the obvious way to make that mismatch go away is to paste the new line
+  // into the expectation as well. That is how all three of the originals
+  // arrived. A check that reads only the shipped list cannot be quieted that
+  // way.
+  const seen = new Set()
+  const duplicated = []
+  for (const path of RECONCILED_FILES) {
+    if (seen.has(path) && !duplicated.includes(path)) duplicated.push(path)
+    seen.add(path)
+  }
+  assert.deepEqual(duplicated, [])
+  assert.equal(RECONCILED_FILES.length, seen.size)
 })
 
 test('an enrolled file byte-identical to asb passes', () => {
