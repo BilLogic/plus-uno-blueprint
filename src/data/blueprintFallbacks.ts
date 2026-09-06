@@ -155,13 +155,13 @@ const WARM_UP_STEP_3_ID = 'a0000000-0000-4000-8000-000000000313'
 
 const PATH_ID = WARM_UP_HAPPY_PATH_ID
 
-export const STEP_VISUAL_LANE_ID =
+export const STEP_STORYBOARD_LANE_ID =
   'a0000000-0000-4000-8000-000000000310'
-const ALTERNATE_STEP_VISUAL_LANE_ID =
+const ALTERNATE_STEP_STORYBOARD_LANE_ID =
   'a0000000-0000-4000-8000-000000000410'
 
 const LANES = [
-  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
+  { id: STEP_STORYBOARD_LANE_ID, name: 'Storyboard', position: 0 },
   { id: 'a0000000-0000-4000-8000-000000000301', name: 'Teacher', position: 1 },
   { id: 'a0000000-0000-4000-8000-000000000302', name: 'Lead Tutor', position: 2 },
   { id: 'a0000000-0000-4000-8000-000000000303', name: 'Regular Tutor', position: 3 },
@@ -185,7 +185,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  stepVisual: STEP_VISUAL_LANE_ID,
+  stepStoryboard: STEP_STORYBOARD_LANE_ID,
   partner: 'a0000000-0000-4000-8000-000000000301',
   lead: 'a0000000-0000-4000-8000-000000000302',
   regular: 'a0000000-0000-4000-8000-000000000303',
@@ -193,13 +193,13 @@ const L = {
   support: 'a0000000-0000-4000-8000-000000000309',
 } as const
 
-function stepVisualCellId(stepIndex: number): string {
+function stepStoryboardCellId(stepIndex: number): string {
   const slot = String(stepIndex + 1).padStart(2, '0')
   return `a0000000-0000-4000-8000-00000004${slot}10`
 }
 
 const WARM_UP_HAPPY_TO_ALTERNATE_LANE_ID: Record<string, string> = {
-  [STEP_VISUAL_LANE_ID]: ALTERNATE_STEP_VISUAL_LANE_ID,
+  [STEP_STORYBOARD_LANE_ID]: ALTERNATE_STEP_STORYBOARD_LANE_ID,
   [L.partner]: 'a0000000-0000-4000-8000-000000000401',
   [L.lead]: 'a0000000-0000-4000-8000-000000000402',
   [L.regular]: 'a0000000-0000-4000-8000-000000000403',
@@ -345,7 +345,7 @@ const WARM_UP_ALTERNATE_RT_TO_FRONT_TECH_TRIGGERS =
 
 const WARM_UP_CELLS: BlueprintCell[] = [
   ...STEPS.map((step, stepIndex) =>
-    cell(stepVisualCellId(stepIndex), L.stepVisual, step.id, ''),
+    cell(stepStoryboardCellId(stepIndex), L.stepStoryboard, step.id, ''),
   ),
   ...buildParallelSessionPartnerLeadCells(warmUpPartnerLeadOptions),
   cell('a0000000-0000-4000-8000-000000040103', L.regular, STEPS[0].id, 'Enter breakout room.', {

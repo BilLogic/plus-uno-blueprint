@@ -33,10 +33,10 @@ export const FILL_IN_REQUEST_SCENARIO_ID =
 export const FILL_IN_REQUEST_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000000807'
 
-const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000903'
+const STEP_STORYBOARD_LANE_ID = 'a0000000-0000-4000-8000-000000000903'
 
 const LANES = [
-  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
+  { id: STEP_STORYBOARD_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000904',
     name: 'Regular Tutor',
@@ -93,7 +93,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LANE_ID,
+  storyboard: STEP_STORYBOARD_LANE_ID,
   regular: 'a0000000-0000-4000-8000-000000000904',
   frontStage: 'a0000000-0000-4000-8000-000000000905',
   frontStageTech: 'a0000000-0000-4000-8000-000000000906',
@@ -157,7 +157,7 @@ const FILL_IN_REQUEST_TRIGGERS: BlueprintCellDependency[] = [
 ]
 
 const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
-  cell(fillCell('01', '10'), L.visual, STEPS[0].id, ''),
+  cell(fillCell('01', '10'), L.storyboard, STEPS[0].id, ''),
   cell(
     fillCell('01', '07'),
     L.backStage,
@@ -193,7 +193,7 @@ const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
     summary: FILL_IN_REQUEST_SUPPORT_STEP_01_DESCRIPTION,
   }),
 
-  cell(fillCell('02', '10'), L.visual, STEPS[1].id, ''),
+  cell(fillCell('02', '10'), L.storyboard, STEPS[1].id, ''),
   cell(
     fillCell('02', '04'),
     L.frontStage,
@@ -218,7 +218,7 @@ const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
     ],
   }),
 
-  cell(fillCell('03', '10'), L.visual, STEPS[2].id, ''),
+  cell(fillCell('03', '10'), L.storyboard, STEPS[2].id, ''),
   cell(
     fillCell('03', '03'),
     L.regular,
@@ -247,7 +247,7 @@ const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
     ],
   }),
 
-  cell(fillCell('04', '10'), L.visual, STEPS[3].id, ''),
+  cell(fillCell('04', '10'), L.storyboard, STEPS[3].id, ''),
   cell(
     fillCell('04', '03'),
     L.regular,

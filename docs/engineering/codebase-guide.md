@@ -274,17 +274,17 @@ trade — [ADR 0004](../adr/0004-the-board-is-always-fully-mounted.md) records
 what it buys and what it costs — and it sets the budget for everything added to
 the canvas.
 
-The lesson that set the rules (commit `5911a95`): step-visual images
+The lesson that set the rules (commit `5911a95`): storyboard images
 decode to `width × height × 4 bytes` of bitmap **regardless of file
 size**. ~450×700px sources across 141 mounted images meant 325 MB of
 decoded RGBA — fine on desktop, an OOM tab-kill on mobile Chrome. Hence:
 
-- **300px longest-edge cap** on step-visual assets. They display inside a
+- **300px longest-edge cap** on storyboard assets. They display inside a
   stable 4:3, `object-contain` frame; 300px retains ample high-density
   headroom without paying to decode source-sized art. Downscale before
   committing.
 - `loading="lazy"` + `decoding="async"` on every canvas `<img>`
-  (`src/components/blueprint/BlueprintStepVisual.tsx`).
+  (`src/components/blueprint/BlueprintStepStoryboard.tsx`).
 - `EditorErrorBoundary` catches recoverable throws with a designed reload
   surface. A true OOM still kills the tab; the cap is the real fix.
 - Before adding any always-mounted asset class, estimate its decoded

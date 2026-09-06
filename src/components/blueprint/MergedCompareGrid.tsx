@@ -57,7 +57,7 @@ import {
   resolveBlueprintLane,
 } from '@/lib/sideBySideCompareLayout'
 import { getPathColor } from '@/lib/pathColorTheme'
-import { resolveStoryboardStripEntries } from '@/lib/visualWalkthrough'
+import { resolveStoryboardStripEntries } from '@/lib/storyboardWalkthrough'
 import { cn } from '@/lib/utils'
 import type {
   BlueprintCell,
@@ -181,7 +181,7 @@ export function MergedCompareGrid({
           const entry = slot?.perPath[pathId]
           const cellIds = entry?.present ? entry.cellIds : undefined
           if (variant === 'storyboard') {
-            // A visual lane's face comes from the walkthrough lanes' frames,
+            // A storyboard lane's face comes from the walkthrough lanes' frames,
             // not from its own cell text, so it merges on the frame set.
             const frames = resolveStoryboardStripEntries(
               runtime.blueprint,
@@ -191,7 +191,7 @@ export function MergedCompareGrid({
             candidates.push({
               pathId,
               stepId,
-              cellIds: cellIds ?? [`visual-${stepId}`],
+              cellIds: cellIds ?? [`storyboard-${stepId}`],
               signature: frames
                 .map((frame) => `${frame.label}=${frame.frame}`)
                 .join('\u0000'),
@@ -629,8 +629,8 @@ function MergedSubCellBlock({
     .filter((cell): cell is BlueprintCell => cell !== undefined)
   const isStoryboard = variant === 'storyboard'
   const cell = cells[0]
-  const cellId = cell?.id ?? (isStoryboard ? `visual-${subCell.stepId}` : undefined)
-  const visualPictures = isStoryboard
+  const cellId = cell?.id ?? (isStoryboard ? `storyboard-${subCell.stepId}` : undefined)
+  const storyboardPictures = isStoryboard
     ? resolveStoryboardStripEntries(blueprint, subCell.stepId)
     : undefined
 
@@ -643,7 +643,7 @@ function MergedSubCellBlock({
       variant={variant}
       compact={compact}
       flushBottom={flushBottom}
-      visualPictures={visualPictures}
+      storyboardPictures={storyboardPictures}
       slotCells={variant === 'touchpoints' ? cells : undefined}
       pathMembership={pathMembership}
       selectionContext={

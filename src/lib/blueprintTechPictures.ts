@@ -1,4 +1,4 @@
-import { isBlueprintStepVisualPlaceholder } from '@/lib/blueprintVisualPlaceholder'
+import { isBlueprintStepStoryboardPlaceholder } from '@/lib/blueprintStoryboardPlaceholder'
 
 // Stock logos are template assets, shipped under `public/touchpoint-logos`.
 // Authored screenshots are not: they live in the bucket since #278.
@@ -71,6 +71,6 @@ export function resolveCellDetailImages(input: {
   }
 
   const frame = input.cellFrame?.trim()
-  if (!frame || isBlueprintStepVisualPlaceholder(frame)) return null
+  if (!frame || isBlueprintStepStoryboardPlaceholder(frame)) return null
   return [frame]
 }

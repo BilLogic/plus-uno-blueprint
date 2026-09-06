@@ -1,9 +1,9 @@
-import { BLUEPRINT_STEP_VISUAL_PLACEHOLDER } from '@/lib/blueprintVisualPlaceholder'
+import { BLUEPRINT_STEP_STORYBOARD_PLACEHOLDER } from '@/lib/blueprintStoryboardPlaceholder'
 import { WORKDAY_TECH_LOGO } from '@/lib/blueprintTechPictures'
 
 /** Shared placeholder for Reporting Hours Lead Tutor and Regular Tutor cells. */
 export const REPORTING_HOURS_ACTION_LANE_PLACEHOLDER =
-  BLUEPRINT_STEP_VISUAL_PLACEHOLDER
+  BLUEPRINT_STEP_STORYBOARD_PLACEHOLDER
 
 /** Reporting Hours — Lead Tutor step 1 (Report hours). */
 export const REPORTING_HOURS_LEAD_TUTOR_STEP_01_FRAME =

@@ -29,10 +29,10 @@ export const REPORTING_AN_ISSUE_SCENARIO_ID =
 export const REPORTING_AN_ISSUE_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-00000000080f'
 
-const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000910'
+const STEP_STORYBOARD_LANE_ID = 'a0000000-0000-4000-8000-000000000910'
 
 const LANES = [
-  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
+  { id: STEP_STORYBOARD_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000917',
     name: 'Lead Tutor',
@@ -94,7 +94,7 @@ const STEP_RESOLVE_CONCERN = {
   position: 4,
 } as const
 
-/** Visual column order: Reach out → Request assistance → Follow up → Resolve concern. */
+/** Storyboard column order: Reach out → Request assistance → Follow up → Resolve concern. */
 const STEPS = [
   STEP_REACH_OUT,
   STEP_REQUEST_ASSISTANCE,
@@ -103,7 +103,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LANE_ID,
+  storyboard: STEP_STORYBOARD_LANE_ID,
   lead: 'a0000000-0000-4000-8000-000000000917',
   regular: 'a0000000-0000-4000-8000-000000000911',
   frontStage: 'a0000000-0000-4000-8000-000000000912',
@@ -172,7 +172,7 @@ const REPORTING_AN_ISSUE_TRIGGERS: BlueprintCellDependency[] = [
 ]
 
 const REPORTING_AN_ISSUE_CELLS: BlueprintCell[] = [
-  cell(issueCell('01', '10'), L.visual, STEP_REACH_OUT.id, ''),
+  cell(issueCell('01', '10'), L.storyboard, STEP_REACH_OUT.id, ''),
   cell(
     issueCell('01', '02'),
     L.lead,
@@ -215,7 +215,7 @@ const REPORTING_AN_ISSUE_CELLS: BlueprintCell[] = [
   ),
 
   // Cell-id slot "02" is historical (Resolve was once column 2); keep IDs stable.
-  cell(issueCell('02', '10'), L.visual, STEP_RESOLVE_CONCERN.id, ''),
+  cell(issueCell('02', '10'), L.storyboard, STEP_RESOLVE_CONCERN.id, ''),
   cell(
     issueCell('02', '07'),
     L.backStage,
@@ -223,7 +223,7 @@ const REPORTING_AN_ISSUE_CELLS: BlueprintCell[] = [
     'PLUS supervisor team is able to resolve concern.',
   ),
 
-  cell(issueCell('03', '10'), L.visual, STEP_REQUEST_ASSISTANCE.id, ''),
+  cell(issueCell('03', '10'), L.storyboard, STEP_REQUEST_ASSISTANCE.id, ''),
   cell(
     issueCell('03', '04'),
     L.frontStage,
@@ -231,7 +231,7 @@ const REPORTING_AN_ISSUE_CELLS: BlueprintCell[] = [
     'If needed, PLUS staff might request assistance.',
   ),
 
-  cell(issueCell('04', '10'), L.visual, STEP_FOLLOW_UP.id, ''),
+  cell(issueCell('04', '10'), L.storyboard, STEP_FOLLOW_UP.id, ''),
   cell(
     issueCell('04', '02'),
     L.lead,

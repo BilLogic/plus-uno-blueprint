@@ -49,10 +49,10 @@ export { GOAL_SETTING_SCENARIO_ID }
 export const GOAL_SETTING_UPDATE_GOALS_PATH_ID =
   'a0000000-0000-4000-8000-000000000815'
 
-const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-0000000008d0'
+const STEP_STORYBOARD_LANE_ID = 'a0000000-0000-4000-8000-0000000008d0'
 
 const LANES = [
-  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
+  { id: STEP_STORYBOARD_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-0000000008d1',
     name: 'Teacher',
@@ -154,7 +154,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LANE_ID,
+  storyboard: STEP_STORYBOARD_LANE_ID,
   partner: 'a0000000-0000-4000-8000-0000000008d1',
   lead: 'a0000000-0000-4000-8000-0000000008d2',
   regular: 'a0000000-0000-4000-8000-0000000008d3',
@@ -342,7 +342,7 @@ const GOAL_SETTING_UPDATE_GOALS_CELLS: BlueprintCell[] = [
   ...STEPS.map((step, index) =>
     cell(
       guCell(String(index + 1).padStart(2, '0'), '10'),
-      L.visual,
+      L.storyboard,
       step.id,
       '',
     ),

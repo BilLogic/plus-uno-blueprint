@@ -1,23 +1,23 @@
 import { buildCellLookup, getCellAt } from '@/lib/normalizeBlueprint'
-import { isBlueprintStepVisualPlaceholder } from '@/lib/blueprintVisualPlaceholder'
+import { isBlueprintStepStoryboardPlaceholder } from '@/lib/blueprintStoryboardPlaceholder'
 import { pickPreferredPath } from '@/lib/pathSelection'
 import type { BlueprintData } from '@/types/blueprint'
 import type { PathKind } from '@/types/database'
 
-export const VISUAL_WALKTHROUGH_LANE_NAMES = [
+export const STORYBOARD_WALKTHROUGH_LANE_NAMES = [
   'Teacher',
   'Lead Tutor',
   'Regular Tutor',
 ] as const
 
-export const VISUAL_LANE_SHORT_LABELS: Record<string, string> = {
+export const STORYBOARD_LANE_SHORT_LABELS: Record<string, string> = {
   Teacher: 'Teacher',
   'Lead Tutor': 'Lead Tutor',
   'Regular Tutor': 'Regular Tutor',
 }
 
 /** In-session artwork batches whose gray rounded frame is baked into the PNG. */
-export function hasEmbeddedVisualFrame(frame: string): boolean {
+export function hasEmbeddedStoryboardFrame(frame: string): boolean {
   return (
     frame.includes('/warm-up/') ||
     frame.includes('/goal-setting/') ||
@@ -25,7 +25,7 @@ export function hasEmbeddedVisualFrame(frame: string): boolean {
   )
 }
 
-export type VisualWalkthroughLaneEntry = {
+export type StoryboardWalkthroughLaneEntry = {
   laneName: string
   content: string
   frame: string
@@ -38,24 +38,24 @@ export type StoryboardFrameEntry = {
   description: string
 }
 
-export type VisualWalkthroughStep = {
+export type StoryboardWalkthroughStep = {
   stepIndex: number
   stepName: string
-  laneEntries: VisualWalkthroughLaneEntry[]
+  laneEntries: StoryboardWalkthroughLaneEntry[]
   frames: string[]
 }
 
-export type VisualWalkthroughSession = {
+export type StoryboardWalkthroughSession = {
   pathId: string
   pathName: string
   pathDescription: string | null
   pathKind: PathKind
   scenarioName?: string
   phaseName?: string
-  steps: VisualWalkthroughStep[]
+  steps: StoryboardWalkthroughStep[]
 }
 
-export type VisualWalkthroughContextMeta = {
+export type StoryboardWalkthroughContextMeta = {
   scenarioName?: string
   phaseName?: string
 }
@@ -64,7 +64,7 @@ export function filterWalkthroughBlueprints(
   blueprints: BlueprintData[],
 ): BlueprintData[] {
   return blueprints.filter(
-    (blueprint) => buildVisualWalkthroughSession(blueprint).steps.length > 0,
+    (blueprint) => buildStoryboardWalkthroughSession(blueprint).steps.length > 0,
   )
 }
 
@@ -94,17 +94,17 @@ export function resolveStoryboardStripEntries(
   const cellLookup = buildCellLookup(blueprint.cells)
   const laneByName = new Map(blueprint.lanes.map((lane) => [lane.name, lane]))
 
-  return VISUAL_WALKTHROUGH_LANE_NAMES.flatMap((name) => {
+  return STORYBOARD_WALKTHROUGH_LANE_NAMES.flatMap((name) => {
     const lane = laneByName.get(name)
     if (!lane) return []
     const cell = getCellAt(cellLookup, lane.id, stepId)
     if (!cell?.content.trim()) return []
     const frame = cell.frame?.trim()
-    if (!frame || isBlueprintStepVisualPlaceholder(frame)) return []
+    if (!frame || isBlueprintStepStoryboardPlaceholder(frame)) return []
     return [
       {
         laneName: name,
-        label: VISUAL_LANE_SHORT_LABELS[name] ?? name,
+        label: STORYBOARD_LANE_SHORT_LABELS[name] ?? name,
         frame,
         description: resolveCellDescription(cell),
       },
@@ -113,14 +113,14 @@ export function resolveStoryboardStripEntries(
 }
 
 /** True when Partner, Lead Tutor, or Regular Tutor has a cell in this step. */
-export function stepHasVisualWalkthroughLaneCells(
+export function stepHasStoryboardWalkthroughLaneCells(
   blueprint: StoryboardBlueprint,
   stepId: string,
 ): boolean {
   const cellLookup = buildCellLookup(blueprint.cells)
   const laneByName = new Map(blueprint.lanes.map((lane) => [lane.name, lane]))
 
-  return VISUAL_WALKTHROUGH_LANE_NAMES.some((name) => {
+  return STORYBOARD_WALKTHROUGH_LANE_NAMES.some((name) => {
     const lane = laneByName.get(name)
     if (!lane) return false
     const cell = getCellAt(cellLookup, lane.id, stepId)
@@ -137,10 +137,10 @@ export function resolveStoryboardStrip(
   )
 }
 
-export function buildVisualWalkthroughSession(
+export function buildStoryboardWalkthroughSession(
   blueprint: BlueprintData,
-  meta?: VisualWalkthroughContextMeta,
-): VisualWalkthroughSession {
+  meta?: StoryboardWalkthroughContextMeta,
+): StoryboardWalkthroughSession {
   const steps = [...blueprint.steps]
     .sort((a, b) => a.position - b.position)
     .map((step, stepIndex) => {

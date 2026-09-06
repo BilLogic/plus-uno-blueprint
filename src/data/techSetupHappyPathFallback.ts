@@ -45,10 +45,10 @@ export const SESSION_SIGN_UP_SCENARIO_ID =
   'a0000000-0000-4000-8000-000000000125'
 export const TECH_SETUP_HAPPY_PATH_ID = 'a0000000-0000-4000-8000-000000000800'
 
-const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000818'
+const STEP_STORYBOARD_LANE_ID = 'a0000000-0000-4000-8000-000000000818'
 
 const LANES = [
-  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
+  { id: STEP_STORYBOARD_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000831',
     name: 'Regular Tutor',
@@ -125,7 +125,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LANE_ID,
+  storyboard: STEP_STORYBOARD_LANE_ID,
   regular: 'a0000000-0000-4000-8000-000000000831',
   frontStage: 'a0000000-0000-4000-8000-000000000832',
   frontStageTech: 'a0000000-0000-4000-8000-000000000833',
@@ -220,7 +220,7 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
   ...STEPS.map((step, stepIndex) =>
     cell(
       tsCell(String(stepIndex + 1).padStart(2, '0'), '10'),
-      L.visual,
+      L.storyboard,
       step.id,
       '',
     ),

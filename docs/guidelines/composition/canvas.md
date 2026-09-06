@@ -12,9 +12,9 @@ claims:
   - src/components/blueprint/BlueprintLabelRail.tsx
   - src/components/blueprint/BlueprintLaneHandles.tsx
   - src/components/blueprint/BlueprintPathBand.tsx
-  - src/components/blueprint/BlueprintStepVisual.tsx
+  - src/components/blueprint/BlueprintStepStoryboard.tsx
+  - src/components/blueprint/BlueprintStoryboardPlayButton.tsx
   - src/components/blueprint/BlueprintTouchpointCell.tsx
-  - src/components/blueprint/BlueprintVisualPlayButton.tsx
   - src/components/blueprint/EntityDefinitionPopover.tsx
   - src/components/blueprint/EntityHeader.tsx
   - src/components/blueprint/IntegratedDependencyArrows.tsx
@@ -27,10 +27,10 @@ claims:
   - src/components/blueprint/ScenarioBlueprintPanel.tsx
   - src/components/blueprint/ScenarioTitleDefinition.tsx
   - src/components/blueprint/ScenarioTitleBadge.tsx
+  - src/components/blueprint/StoryboardStepDetailStack.tsx
+  - src/components/blueprint/StoryboardWalkthroughModal.tsx
+  - src/components/blueprint/StoryboardWalkthroughShell.tsx
   - src/components/blueprint/TouchpointCellFace.tsx
-  - src/components/blueprint/VisualStepDetailStack.tsx
-  - src/components/blueprint/VisualWalkthroughModal.tsx
-  - src/components/blueprint/VisualWalkthroughShell.tsx
   - src/components/editor/AnnotationCaptureMenu.tsx
   - src/components/editor/CanvasAnnotationLayer.tsx
   - src/components/editor/CanvasAnnotationToolbar.tsx

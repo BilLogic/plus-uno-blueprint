@@ -47,10 +47,10 @@ export { ONBOARDING_MODULES_SCENARIO_ID }
 export const ONBOARDING_MODULES_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000007201'
 
-const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000828'
+const STEP_STORYBOARD_LANE_ID = 'a0000000-0000-4000-8000-000000000828'
 
 const LANES = [
-  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
+  { id: STEP_STORYBOARD_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000841',
     name: 'Regular Tutor',
@@ -122,7 +122,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LANE_ID,
+  storyboard: STEP_STORYBOARD_LANE_ID,
   regular: 'a0000000-0000-4000-8000-000000000841',
   frontStage: 'a0000000-0000-4000-8000-000000000842',
   frontStageTech: 'a0000000-0000-4000-8000-000000000843',
@@ -218,7 +218,7 @@ const ONBOARDING_MODULES_CELLS: BlueprintCell[] = [
   ...STEPS.map((step, stepIndex) =>
     cell(
       omCell(String(stepIndex + 1).padStart(2, '0'), '10'),
-      L.visual,
+      L.storyboard,
       step.id,
       '',
     ),

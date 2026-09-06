@@ -1,10 +1,10 @@
-import { BLUEPRINT_STEP_VISUAL_PLACEHOLDER } from '@/lib/blueprintVisualPlaceholder'
+import { BLUEPRINT_STEP_STORYBOARD_PLACEHOLDER } from '@/lib/blueprintStoryboardPlaceholder'
 
 /** Shared placeholder for Before Students Join Partner, Lead Tutor, and Regular Tutor cells. */
 export const BEFORE_STUDENTS_JOIN_ACTION_LANE_PLACEHOLDER =
-  BLUEPRINT_STEP_VISUAL_PLACEHOLDER
+  BLUEPRINT_STEP_STORYBOARD_PLACEHOLDER
 
-/** Before Students Join Happy Path — Partner Action visuals. */
+/** Before Students Join Happy Path — Partner Action frames. */
 
 export const BEFORE_STUDENTS_JOIN_PARTNER_STEP_01_FRAME =
   'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000180101/acd0ab9b-f6f9-6031-307b-e1da0858d486.png'
@@ -24,7 +24,7 @@ export const BEFORE_STUDENTS_JOIN_PARTNER_STEP_05_FRAME =
 export const BEFORE_STUDENTS_JOIN_PARTNER_STEP_06_FRAME =
   'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000180601/8ef906fc-360e-13f1-79b3-653e6589af9a.png'
 
-/** Before Students Join Happy Path — Lead Tutor visuals. */
+/** Before Students Join Happy Path — Lead Tutor frames. */
 
 export const BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_01_FRAME =
   'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000180102/7f56d9bb-638f-3a58-c163-36e323682235.png'
@@ -44,7 +44,7 @@ export const BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_05_FRAME =
 export const BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_06_FRAME =
   'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000180602/f6d17e33-62b6-63f5-511b-5b7950677701.png'
 
-/** Before Students Join Happy Path — Regular Tutor visuals. */
+/** Before Students Join Happy Path — Regular Tutor frames. */
 
 export const BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_01_FRAME =
   'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000180103/659067c1-1296-8554-210b-6bb6da8dc3de.png'
@@ -81,7 +81,7 @@ export const BEFORE_STUDENTS_JOIN_ZOOM_STEP_06_DESCRIPTION =
 /** Before Students Join Happy Path — PLUS App Front Stage Tech. */
 
 export const BEFORE_STUDENTS_JOIN_PLUS_APP_PLACEHOLDER =
-  BLUEPRINT_STEP_VISUAL_PLACEHOLDER
+  BLUEPRINT_STEP_STORYBOARD_PLACEHOLDER
 
 export const BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_01_FRAME =
   'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000180106/f38a7a45-d529-dca1-8a4d-542e25935004.png'

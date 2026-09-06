@@ -27,7 +27,7 @@ test('an empty allowlist has nothing to fail on, and reads nothing', () => {
   assert.deepEqual(auditReconciled({ files: [], readInstance: refuse, readAsb: refuse }), [])
 })
 
-test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), the viewport/layout convergence (#323 slices S0–S5), the asb 1.5.0 adopt, the display flags (#326 S1), the asb 1.5.1 adopt (#324 S1+S2), the cell-detail context (#324 S1), and the touchpoint-cell face (#325 S6)', () => {
+test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), the viewport/layout convergence (#323 slices S0–S5), the asb 1.5.0 adopt, the display flags (#326 S1), the asb 1.5.1 adopt (#324 S1+S2), the cell-detail context (#324 S1), the touchpoint-cell face (#325 S6), and the #391 phase-B storyboard rename', () => {
   // #319 shipped the gate EMPTY; #351 enrolled the first files — the shared
   // arrow-routing geometry — #357 enrolled the entity panel editors asb
   // ported back out of uno, and #323's slice S0 swept every remaining
@@ -141,16 +141,16 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/ui/toggle.tsx',
     'src/components/ui/tooltip.tsx',
     'src/components/blueprint/BlueprintEmptyCellSlot.tsx',
-    'src/components/blueprint/BlueprintVisualPlayButton.tsx',
+    'src/components/blueprint/BlueprintStoryboardPlayButton.tsx',
     'src/components/blueprint/EntityDetailPanel.tsx',
     'src/components/blueprint/LaneCollapseToggle.tsx',
     'src/components/blueprint/NotionPropertyRow.tsx',
     'src/components/blueprint/PhasePanel.tsx',
     'src/components/blueprint/ScenarioSlideFilters.tsx',
     'src/components/blueprint/StakeholderSelect.test.tsx',
-    'src/components/blueprint/VisualWalkthroughShell.tsx',
+    'src/components/blueprint/StoryboardWalkthroughShell.tsx',
+    'src/contexts/StoryboardWalkthroughContext.tsx',
     'src/contexts/ViewStateContext.tsx',
-    'src/contexts/VisualWalkthroughContext.tsx',
     'src/contexts/sliceMembershipContext.ts',
     'src/components/editor/CanvasLoadProgress.tsx',
     'src/components/editor/canvasLoadProgress.test.tsx',
@@ -243,6 +243,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/editor/agentScopeField.test.tsx',
     'src/contexts/ViewStateContext.tsx',
     'src/styles/variants.css',
+    'public/step-visual-placeholder.svg',
   ])
 })
 

@@ -16,7 +16,7 @@ function source(relativePath: string): string {
   return readFileSync(fileURLToPath(new URL(relativePath, import.meta.url)), 'utf8')
 }
 
-const visual = source('../components/blueprint/BlueprintStepVisual.tsx')
+const storyboard = source('../components/blueprint/BlueprintStepStoryboard.tsx')
 // The one-path board is a stacked board with one band since #280; the
 // classic single-path grid that used to sit here is gone (#285).
 const labelRail = source('../components/blueprint/BlueprintLabelRail.tsx')
@@ -49,8 +49,8 @@ const agentSpecs = source('./agent/tools/specs.ts')
 
 describe('stable blueprint cell frame contract', () => {
   it('keeps storyboard geometry at 4:3 and fits image pixels inside it', () => {
-    expect(visual).toContain("'aspect-[4/3]")
-    expect(visual).toContain('w-full max-w-full')
+    expect(storyboard).toContain("'aspect-[4/3]")
+    expect(storyboard).toContain('w-full max-w-full')
     /*
       `w-auto`, not `w-full`. The picture must be allowed to size its own box
       so the corner radius lands on the ARTWORK — stretched to the full cell
@@ -59,7 +59,7 @@ describe('stable blueprint cell frame contract', () => {
       a cell rounded at 10px. `max-w-full` is what still keeps the pixels
       inside the frame, which is what this contract is really about.
     */
-    expect(visual).toContain(
+    expect(storyboard).toContain(
       "'h-full w-auto max-w-full rounded-[calc(var(--radius-lg)-var(--spacing)-1px)] object-contain",
     )
     expect(STORYBOARD_ROW_MIN_HEIGHT).toBe(176)

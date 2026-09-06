@@ -30,7 +30,7 @@ import {
 } from '@/components/blueprint/panelShell'
 import { CellResourcesTab } from '@/components/blueprint/CellResourcesTab'
 import { IconTooltip } from '@/components/editor/IconTooltip'
-import { VisualStepDetailStack } from '@/components/blueprint/VisualStepDetailStack'
+import { StoryboardStepDetailStack } from '@/components/blueprint/StoryboardStepDetailStack'
 
 import {
   SegmentedControl,
@@ -99,7 +99,7 @@ import {
 } from '@/lib/blueprintTheme'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import { cellResourcesFromLinks } from '@/lib/cellResources'
-import { resolveStoryboardStripEntries } from '@/lib/visualWalkthrough'
+import { resolveStoryboardStripEntries } from '@/lib/storyboardWalkthrough'
 import { getTouchpointTone } from '@/lib/touchpointColors'
 import { PANEL_TERMS } from '@/lib/panelTerms'
 import { PANEL_TEXT } from '@/lib/panelText'
@@ -754,7 +754,7 @@ function BlueprintCellDetailPanelBody() {
     }
   }, [pathEntry?.pathId, resolvedCellId, selection])
 
-  const visualStepEntries = useMemo(() => {
+  const storyboardStepEntries = useMemo(() => {
     const stepId = selection?.stepId
     const pathId = pathEntry?.pathId
     if (!stepId || !pathId) return []
@@ -1397,7 +1397,7 @@ function BlueprintCellDetailPanelBody() {
               title={selection.stepName}
               meta=""
             />
-            <VisualStepDetailStack entries={visualStepEntries} />
+            <StoryboardStepDetailStack entries={storyboardStepEntries} />
           </div>
         ) : (
           <>

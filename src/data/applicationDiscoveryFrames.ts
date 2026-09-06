@@ -1,8 +1,8 @@
-import { BLUEPRINT_STEP_VISUAL_PLACEHOLDER } from '@/lib/blueprintVisualPlaceholder'
+import { BLUEPRINT_STEP_STORYBOARD_PLACEHOLDER } from '@/lib/blueprintStoryboardPlaceholder'
 
 /** Shared placeholder for Discovery Regular Tutor cells. */
 export const APPLICATION_DISCOVERY_REGULAR_TUTOR_PLACEHOLDER =
-  BLUEPRINT_STEP_VISUAL_PLACEHOLDER
+  BLUEPRINT_STEP_STORYBOARD_PLACEHOLDER
 
 /** Discovery Happy Path — Regular Tutor step 1 (word of mouth). */
 export const DISCOVERY_REGULAR_TUTOR_STEP_1_FRAME =

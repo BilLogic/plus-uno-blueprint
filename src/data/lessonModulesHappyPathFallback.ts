@@ -29,10 +29,10 @@ export { LESSON_MODULES_SCENARIO_ID }
 export const LESSON_MODULES_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000000802'
 
-const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000001240'
+const STEP_STORYBOARD_LANE_ID = 'a0000000-0000-4000-8000-000000001240'
 
 const LANES = [
-  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
+  { id: STEP_STORYBOARD_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000001241',
     name: 'Regular Tutor',
@@ -84,7 +84,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LANE_ID,
+  storyboard: STEP_STORYBOARD_LANE_ID,
   regular: 'a0000000-0000-4000-8000-000000001241',
   frontStage: 'a0000000-0000-4000-8000-000000001242',
   frontStageTech: 'a0000000-0000-4000-8000-000000001243',
@@ -167,7 +167,7 @@ const LESSON_MODULES_CELLS: BlueprintCell[] = [
   ...STEPS.map((step, stepIndex) =>
     cell(
       lmCell(String(stepIndex + 1).padStart(2, '0'), '10'),
-      L.visual,
+      L.storyboard,
       step.id,
       '',
     ),

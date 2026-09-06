@@ -50,10 +50,10 @@ export const BEFORE_STUDENTS_JOIN_SCENARIO_ID =
 export const BEFORE_STUDENTS_JOIN_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000000809'
 
-const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000002010'
+const STEP_STORYBOARD_LANE_ID = 'a0000000-0000-4000-8000-000000002010'
 
 const LANES = [
-  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
+  { id: STEP_STORYBOARD_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000002011',
     name: 'Teacher',
@@ -130,7 +130,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LANE_ID,
+  storyboard: STEP_STORYBOARD_LANE_ID,
   partner: 'a0000000-0000-4000-8000-000000002011',
   lead: 'a0000000-0000-4000-8000-000000002012',
   regular: 'a0000000-0000-4000-8000-000000002013',
@@ -243,7 +243,7 @@ function beforeStudentsJoinPlusAppLink(
 
 const BEFORE_STUDENTS_JOIN_CELLS: BlueprintCell[] = [
   ...STEPS.map((step, index) =>
-    cell(bsjCell(String(index + 1).padStart(2, '0'), '10'), L.visual, step.id, ''),
+    cell(bsjCell(String(index + 1).padStart(2, '0'), '10'), L.storyboard, step.id, ''),
   ),
 
   cell(

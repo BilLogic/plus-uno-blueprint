@@ -1,5 +1,5 @@
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
-import { BlueprintStepVisual } from '@/components/blueprint/BlueprintStepVisual'
+import { BlueprintStepStoryboard } from '@/components/blueprint/BlueprintStepStoryboard'
 import { BlueprintTouchpointCell } from '@/components/blueprint/BlueprintTouchpointCell'
 import {
   Tooltip,
@@ -68,7 +68,7 @@ export function CompareCellBlock({
   compact,
   flushBottom,
   selectionContext,
-  visualPictures,
+  storyboardPictures,
   slotCells,
   status,
   pathMembership,
@@ -81,7 +81,7 @@ export function CompareCellBlock({
   compact?: boolean
   flushBottom?: boolean
   selectionContext?: BlueprintCellSelectionContext
-  visualPictures?: Array<{ frame: string; label: string }>
+  storyboardPictures?: Array<{ frame: string; label: string }>
   /** `steps.summary` — captions the storyboard frame. */
   /** Every cell in a tech slot — one per touchpoint since the split. */
   /** Unbuilt cells wear a dashed, drained face — see BlueprintCellButton. */
@@ -131,13 +131,13 @@ export function CompareCellBlock({
   const innerContent =
     variant === 'storyboard' ? (
       <div className="relative flex h-full min-h-0 max-h-full w-full flex-1 items-center justify-center overflow-hidden">
-        <BlueprintStepVisual
+        <BlueprintStepStoryboard
           compact={compact}
           className={
             hasMembershipOutline ? 'compare-membership-outline' : undefined
           }
           fill={laneStyle.lane}
-          frames={visualPictures}
+          frames={storyboardPictures}
           selection={
             selectionContext
               ? buildBlueprintCellSelection(selectionContext)

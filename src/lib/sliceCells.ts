@@ -3,7 +3,7 @@ import {
   getFallbackPathsForScenario,
 } from '@/data/blueprintFallbacks'
 import { shouldUseStoryboardContent } from '@/lib/blueprintLayout'
-import { isBlueprintStepVisualPlaceholder } from '@/lib/blueprintVisualPlaceholder'
+import { isBlueprintStepStoryboardPlaceholder } from '@/lib/blueprintStoryboardPlaceholder'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import { FALLBACK_NAV, getBlueprintScenarioId } from '@/types/nav'
 import type { BlueprintData } from '@/types/blueprint'
@@ -155,7 +155,7 @@ export function resolveSlideStrip(
   const seen = new Set<string>()
   const add = (frame: string | null | undefined) => {
     const src = frame?.trim()
-    if (!src || isBlueprintStepVisualPlaceholder(src) || seen.has(src)) return
+    if (!src || isBlueprintStepStoryboardPlaceholder(src) || seen.has(src)) return
     seen.add(src)
     strip.push(src)
   }

@@ -179,16 +179,16 @@ export const RECONCILED_FILES = [
   // ported the same way #357's first pass did, plus the view-state and
   // slice-membership contexts they read.
   'src/components/blueprint/BlueprintEmptyCellSlot.tsx',
-  'src/components/blueprint/BlueprintVisualPlayButton.tsx',
+  'src/components/blueprint/BlueprintStoryboardPlayButton.tsx',
   'src/components/blueprint/EntityDetailPanel.tsx',
   'src/components/blueprint/LaneCollapseToggle.tsx',
   'src/components/blueprint/NotionPropertyRow.tsx',
   'src/components/blueprint/PhasePanel.tsx',
   'src/components/blueprint/ScenarioSlideFilters.tsx',
   'src/components/blueprint/StakeholderSelect.test.tsx',
-  'src/components/blueprint/VisualWalkthroughShell.tsx',
+  'src/components/blueprint/StoryboardWalkthroughShell.tsx',
+  'src/contexts/StoryboardWalkthroughContext.tsx',
   'src/contexts/ViewStateContext.tsx',
-  'src/contexts/VisualWalkthroughContext.tsx',
   'src/contexts/sliceMembershipContext.ts',
 
   // editor chrome: the load-progress indicator and its test, the slide
@@ -401,4 +401,22 @@ export const RECONCILED_FILES = [
   // converge from the template's side, where the wording is fixed.
   'src/contexts/ViewStateContext.tsx',
   'src/styles/variants.css',
+
+  // #391 phase B — storyboard, not visual. The rename's own enrolment is one
+  // file: the placeholder a `cells.frame` carries when a step has no artwork
+  // yet. Its NAME is a data value — `/step-visual-placeholder.svg` is written
+  // into fourteen applied migrations, so renaming the asset would turn every
+  // placeholder into a real frame — so only the copy inside it moved, on both
+  // sides, to the same two sentences. It is the first path enrolled under
+  // `public/`; nothing in the gate was ever restricted to `src/`, which
+  // `scripts/erd-value-sets.mjs` already showed.
+  //
+  // The three walkthrough files the template renamed stayed enrolled through
+  // the move — they are the same promise at `BlueprintStoryboardPlayButton`,
+  // `StoryboardWalkthroughShell` and `StoryboardWalkthroughContext` above, and
+  // their entries moved with them. `panelShell.tsx`,
+  // `applyBlueprintDisplayFilters.ts` and `blueprintDisplayFlags.ts` were red
+  // at the 1.6.3 pin for the reason `ScenarioTitleBadge.tsx` was red at 1.6.1
+  // — the template fixes its side first — and this change takes its text.
+  'public/step-visual-placeholder.svg',
 ]
