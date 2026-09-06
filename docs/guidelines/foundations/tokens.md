@@ -16,7 +16,7 @@ the other foundations stop needing to repeat themselves.
 Colour has four tiers and [color.md](color.md) is their single owner — read it
 there rather than a summary here. The shape generalises: **primitive values,
 then semantic roles, then a Tailwind indirection, then component-scoped
-variables a component sets on itself.** A component consumes the semantic lane;
+variables a component sets on itself.** A component consumes the semantic layer;
 reaching past it to a primitive ramp is the drift `src/lib/tokenDiscipline.test.ts`
 exists to catch.
 

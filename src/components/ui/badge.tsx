@@ -64,11 +64,11 @@ const badgeVariants = cva(
         than in the wrapper that happens to want it.
       */
       size: {
-        /** The badge: a chip held at 20px however short its label is. */
+        /** The default: held at 20px however short its label is. */
         default: "h-5 px-2 py-0.5 text-xs",
-        /** The same chip, sized to its text rather than held at 20px. */
+        /** The same shape, sized to its text rather than held at 20px. */
         fitted: "h-auto px-2 py-0.5 text-xs",
-        /** Roomier, at the chip's type scale. */
+        /** Roomier, at the default's type scale. */
         roomy: "h-auto px-2.5 py-1 text-xs",
         /** Roomier, one step up the type scale. */
         comfortable: "h-auto px-2.5 py-1 text-sm",

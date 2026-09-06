@@ -231,8 +231,9 @@ export const RECONCILED_FILES = [
   'src/styles/variants.css',
 
   // asb 1.6.1 adopt (#327 S1). The template's mechanical layers→lanes rename
-  // had mangled English in these files' comments ("tabs laneed", "the
-  // semantic lane" of design tokens); with the sentences restored on that
+  // had substituted the new word into ordinary English in these files'
+  // comments — tabs stacked over a base view, and the design tokens' semantic
+  // tier, each came out saying lane; with the sentences restored on that
   // side they match ours. `activeServiceStore.ts` is not here: the template
   // has no `useActiveService` hook to name until #325's Q45 settles the
   // active-service provider.
@@ -281,6 +282,17 @@ export const RECONCILED_FILES = [
   'src/components/blueprint/PathKindBadge.tsx',
   'src/components/blueprint/PathKindColorKey.tsx',
   'src/components/blueprint/PathSummaryTooltip.tsx',
+  // KNOWN RED UNTIL THE PIN MOVES TO asb 1.6.2, and the entry stays anyway.
+  // This file and `badgeGeometry.test.tsx` below each carried a comment
+  // calling the badge's default size a "chip". The comment sweep in
+  // `scripts/tests/badge-and-tag.test.mjs` reads comments under `src` as of
+  // this change, so both were repaired here, taking asb's own replacement
+  // sentences word for word — asb fixed its side first, and the fix is in the
+  // template's tree but not yet in a release. So the two are byte-identical to
+  // asb HEAD and differ from asb 1.6.1, which is what `check:reconciled`
+  // measures against, and it fails on exactly these two paths until the pin
+  // bumps. Dropping the entries would trade a loud, self-clearing failure for
+  // a silent end to the promise; the enrolment is the promise, and it holds.
   'src/components/blueprint/ScenarioTitleBadge.tsx',
   'src/components/blueprint/BlueprintDividerBadge.tsx',
 
@@ -385,7 +397,7 @@ export const RECONCILED_FILES = [
   // #327 S1 — the free set. Two of the seven the survey named were already
   // byte-identical at the 1.6.0 pin and are enrolment alone. The other five
   // differ by a comment each — three of them the template's mechanical
-  // `layer`→`lane` rename mangling English ("laneed", "semantic lane") — and
+  // `layer`→`lane` rename substituting the new word into ordinary English — and
   // converge from the template's side, where the wording is fixed.
   'src/contexts/ViewStateContext.tsx',
   'src/styles/variants.css',
