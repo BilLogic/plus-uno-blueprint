@@ -419,4 +419,135 @@ export const RECONCILED_FILES = [
   // at the 1.6.3 pin for the reason `ScenarioTitleBadge.tsx` was red at 1.6.1
   // — the template fixes its side first — and this change takes its text.
   'public/step-visual-placeholder.svg',
+
+  // #403 — the identical-by-history sweep. At the 1.6.4 pin eleven tracked
+  // files were already byte-identical to the template without ever having
+  // been enrolled, which is the opposite of how this list is meant to grow:
+  // a path belongs here because a ticket decided the two copies should be
+  // HELD together, not because they happen to agree today. So the eleven were
+  // judged one at a time. Six are enrolled below; the five declines are
+  // written down at the end of this block, so the next sweep over the same
+  // set finds the answers where it finds the question.
+
+  // The configuration the SHARED SET is written against. Each of these
+  // decides what the files already on this list mean, rather than how this
+  // deployment is built, and that is the whole of why they are here.
+  // `tsconfig.json` carries the `@/*` mapping every reconciled file's imports
+  // resolve through; remap it on one side alone and two hundred byte-identical
+  // files quietly stop naming the same modules — identical text with different
+  // meaning, the one failure a byte-identity gate cannot see for itself.
+  // `tsconfig.app.json` is the language those files are authored in —
+  // `strict`, `verbatimModuleSyntax`, `erasableSyntaxOnly`, the ES2023 target,
+  // the `src` include — and a repo that relaxes a flag alone discovers the
+  // breakage in the OTHER repo's build. `components.json` is the shadcn
+  // registry config that GENERATES the thirty-odd `src/components/ui/`
+  // primitives above: a changed `style` or `baseColor` moves no file by
+  // itself, it makes the next `shadcn add` on either side emit a
+  // differently-shaped primitive and starts that group drifting one file at a
+  // time with no single change to blame.
+  // These are the first root-level paths on the list.
+  'tsconfig.json',
+  'tsconfig.app.json',
+  'components.json',
+
+  // Ordinary shared surface, and the two easiest yeses of the eleven.
+  // `MobilePathSelector.tsx` is the phone's top-bar path control and belongs
+  // with the mobile shell group above — no PLUS content, pure chrome. It
+  // composes an enrolled dropdown over the `PathListItem` shape, and reads
+  // only the `id` and `name` both repos spell the same way, which is why it
+  // is identical while `src/lib/pathSelection.ts` under it is still forked.
+  // `alert.tsx` sits in `src/components/ui/` but is deliberately NOT filed
+  // with the "unmodified library components" group, whose comment it would
+  // make false: this one is customised, and heavily — the filled icon square,
+  // the tinted status surfaces, the contrast measurement written into its own
+  // comments. That both repos carry the SAME customisation argues for the
+  // gate rather than against it, because a shared recipe nobody is holding to
+  // one shape is exactly what drifts unnoticed. The brand divergence lives a
+  // tier below, in the values `colors.css` gives these tokens, and that file
+  // is not on this list and is not meant to be.
+  'src/components/mobile/MobilePathSelector.tsx',
+  'src/components/ui/alert.tsx',
+
+  // The harness standard (#364), and the first path enrolled under `docs/`.
+  // Nothing in the gate was ever restricted to `src/`, which
+  // `scripts/erd-value-sets.mjs` and `public/step-visual-placeholder.svg`
+  // already showed. This file maps the five canonical triage roles to the
+  // label strings a tracker actually uses, and both repos drive the same
+  // engineering skills off it, so a role the template respells is a label
+  // this deployment's agents would go on applying under the old one. Its two
+  // neighbours in `docs/agents/` are the control: `issue-tracker.md` and
+  // `domain.md` are the same standard and both differ, each by the single
+  // sentence naming a per-repo fact. This one names none — uno's right-hand
+  // column is the canonical strings unchanged, and `AGENTS.md` pins them that
+  // way inline. The file's closing line invites a deployment to edit that
+  // column; if uno ever takes it up the entry comes out, which is how one of
+  // these promises ends rather than a reason never to make it.
+  'docs/agents/triage-labels.md',
+
+  // DECLINED by #403, recorded beside the enrolments from the same sweep so
+  // that the next pass reads the reasoning instead of re-deriving it. None of
+  // these is a near miss waiting for a better day; each names a file this
+  // deployment wants free, and a later ticket that wants to reverse one
+  // should have to argue with the paragraph under it.
+  //
+  // `vite.config.ts` — how this deployment is BUILT, served and tested, which
+  //   is the one category where an instance legitimately differs from the
+  //   package it is a deployment of. uno ships to Netlify and asb ships as a
+  //   dependency. A base path, a dev proxy onto a local Supabase, a sourcemap
+  //   setting, or one more glob in the vitest `include` for a new
+  //   `scripts/tests/` suite are all changes uno is entitled to make alone,
+  //   and every one of them would land as a gate failure.
+  //
+  // `tsconfig.node.json` — the compiler config for exactly one file,
+  //   `vite.config.ts`, which the line above leaves free. It governs nothing
+  //   on this list: `src/` is `tsconfig.app.json`'s, and no other enrolled
+  //   path is TypeScript at all. Pinning a config to the template while its
+  //   only subject is allowed to move is a promise about nothing, and the
+  //   two entries would contradict each other the first time either moved.
+  //
+  // `eslint.config.js` — a register of THIS repo's own lint exceptions. Its
+  //   per-file block names four components that co-export a hook or a constant
+  //   beside the component itself, and its ignore list names a working
+  //   convention; both are lists that grow whenever one repo gains a file the
+  //   other has not got, and the divergence table in
+  //   `docs/engineering/template-relationship.md` counts hundreds of such
+  //   files on each side. The two configs agree today only because neither has
+  //   needed a new exception since they converged, which is a coincidence with
+  //   a short half-life. The specific harm the tsconfig entries above exist to
+  //   prevent is absent here as well: two repos disagreeing about
+  //   `no-unused-vars` cannot make identical source mean different things, it
+  //   only makes one repo's lint louder than the other's.
+  //
+  // `public/favicon.svg` — deployment identity, unclaimed rather than shared.
+  //   `index.html` sits beside it as the same shared path and already
+  //   diverges on exactly one line, `<title>PLUS</title>` against the
+  //   template's own name; the favicon is the other half of the same browser
+  //   tab, and it matches only because nobody has drawn a PLUS mark yet.
+  //   Enrolling it would say the deployment's mark is the template's to set,
+  //   and would turn the day PLUS draws one into a gate failure.
+  //   `step-visual-placeholder.svg` above is the contrast rather than the
+  //   precedent: its NAME is a data value written into fourteen applied
+  //   migrations, and its contents are two sentences of copy the repos agreed
+  //   on word for word. An identity mark carries no such contract to hold.
+  //
+  // `supabase/migrations/20260803001000_slices_origin_allows_human.sql` — the
+  //   flattest no of the five, on three independent grounds, and it needed to
+  //   be: nothing on this list is a migration.
+  //   `scripts/template-quarantine.json` quarantines `supabase/migrations/**`
+  //   outright — the deployment owns its series, and a merge may never bring
+  //   the template's copy of one. Enrolling it would put a single path under
+  //   two flatly contradictory declarations: the template may never change
+  //   this file here, AND this file must change here the moment the
+  //   template's copy moves. It is also APPLIED, and an applied migration is
+  //   never edited (`docs/engineering/access-and-security.md` § Migrations
+  //   workflow, ADR 0009), so the gate's only remedy would be the one thing
+  //   the repo forbids and the entry could only ever be dropped. Finally the
+  //   shared filename is a coincidence of a shared plan and not a
+  //   convergence: three of uno's ~860 migrations share a name with one of
+  //   the template's thirty-eight, and the other two have ALREADY diverged —
+  //   annotated upstream with the `@core` / `@recipe` markers
+  //   `generate-portable-core.mjs` reads to build the template's
+  //   portable-core contract. This one is identical only because that
+  //   annotation pass has not reached it. When it does, the gate would fire
+  //   on a change uno must not take and has no use for.
 ]
