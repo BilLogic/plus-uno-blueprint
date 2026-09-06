@@ -2,6 +2,8 @@ import {
   buildTouchpointSelection,
   getTouchpointNames,
 } from '@/lib/blueprintCellSelection'
+import { cellResources } from '@/lib/cellResources'
+import { cellTouchpoints } from '@/lib/cellTouchpoints'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import { shouldUseTouchpointCellContent } from '@/lib/blueprintLayout'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
@@ -93,8 +95,8 @@ export function buildTouchpointSelectionForItem(
       cellContent: cell.content,
       cellFrame: cell.frame,
       cellSummary: cell.summary,
-      cellLinks: cell.links,
-      cellResources: cell.resources,
+      cellTouchpoints: cellTouchpoints(cell),
+      cellResources: cellResources(cell),
       pathId: blueprint.path.id,
       pathName: blueprint.path.name,
       pathSummary: blueprint.path.summary,

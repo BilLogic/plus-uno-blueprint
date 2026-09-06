@@ -26,7 +26,7 @@ function cellAt(stepIndex: number, cellId: string): BlueprintCellSelection {
         content: 'Greets the tutor',
         frame: null,
         summary: null,
-        links: [],
+        touchpoints: [],
       },
     ],
   }

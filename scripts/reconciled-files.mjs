@@ -484,6 +484,19 @@ export const RECONCILED_FILES = [
   // these promises ends rather than a reason never to make it.
   'docs/agents/triage-labels.md',
 
+  // #405 — the cell-selection builders. The last fact between the two copies
+  // was a fork stated four times: this deployment's selection context carried
+  // `cellLinks` and wrote `links` into each path entry, where the template
+  // carries `cellTouchpoints` and writes `touchpoints`. The template had
+  // finished a migration this deployment started, so the deployment owed it
+  // rather than the other way round, and #401 had already closed the other
+  // fact by moving `isNameOnlyPlacement` into `cellTouchpoints.ts`. The
+  // selection path now takes placements; `cellTouchpointsFromLinks` stays as
+  // the adapter for a hand-written fixture board, called from the one
+  // accessor (`cellTouchpoints`) at the seam where a cell last knows which
+  // source it came from.
+  'src/lib/blueprintCellSelection.ts',
+
   // DECLINED by #403, recorded beside the enrolments from the same sweep so
   // that the next pass reads the reasoning instead of re-deriving it. None of
   // these is a near miss waiting for a better day; each names a file this

@@ -27,7 +27,7 @@ test('an empty allowlist has nothing to fail on, and reads nothing', () => {
   assert.deepEqual(auditReconciled({ files: [], readInstance: refuse, readAsb: refuse }), [])
 })
 
-test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), the viewport/layout convergence (#323 slices S0–S5), the asb 1.5.0 adopt, the display flags (#326 S1), the asb 1.5.1 adopt (#324 S1+S2), the cell-detail context (#324 S1), the touchpoint-cell face (#325 S6), the #391 phase-B storyboard rename, and the #403 identical-by-history sweep', () => {
+test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), the viewport/layout convergence (#323 slices S0–S5), the asb 1.5.0 adopt, the display flags (#326 S1), the asb 1.5.1 adopt (#324 S1+S2), the cell-detail context (#324 S1), the touchpoint-cell face (#325 S6), the #391 phase-B storyboard rename, the #403 identical-by-history sweep, and the cell-selection builders (#405)', () => {
   // #319 shipped the gate EMPTY; #351 enrolled the first files — the shared
   // arrow-routing geometry — #357 enrolled the entity panel editors asb
   // ported back out of uno, and #323's slice S0 swept every remaining
@@ -43,6 +43,11 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
   // other five are named, with their reasons, at the foot of
   // `scripts/reconciled-files.mjs`; this list is the record that they were
   // considered and left off on purpose, not overlooked.
+  //
+  // #405 is the newest entry and the end of a two-ticket sequence: #401 fixed
+  // the name-only predicate and stopped deliberately at the boundary, and
+  // #405 moved the selection path from `cells.links` onto placements, which
+  // is what finally made `blueprintCellSelection.ts` the template's file.
   assert.deepEqual(RECONCILED_FILES, [
     'src/lib/blueprintArrowGeometry.ts',
     'src/lib/arrowAnchorSlots.ts',
@@ -257,6 +262,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/mobile/MobilePathSelector.tsx',
     'src/components/ui/alert.tsx',
     'docs/agents/triage-labels.md',
+    'src/lib/blueprintCellSelection.ts',
   ])
 })
 

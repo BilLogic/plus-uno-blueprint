@@ -24,7 +24,7 @@ import {
   normalizeRole,
   type TouchpointRoleValue,
 } from '@/lib/touchpointRole'
-import type { CellLink, CellTouchpoint } from '@/types/blueprint'
+import type { BlueprintCell, CellLink, CellTouchpoint } from '@/types/blueprint'
 
 /** A `cell_touchpoints` row as the board query selects it. */
 export type RawCellTouchpoint = {
@@ -113,6 +113,35 @@ export function cellTouchpointsFromLinks(
  */
 export function isNameOnlyPlacement(placement: CellTouchpoint): boolean {
   return placement.id !== null && placement.touchpointId === null
+}
+
+/**
+ * The touchpoints placed at a cell.
+ *
+ * THE ONE ACCESSOR, and the only place in the app that still has to know a
+ * board can arrive from two sources. A cell the normalizer built already
+ * carries placements, whichever source it came from. A cell taken straight
+ * out of `src/data` never went through the normalizer — `getBlueprintFallback`
+ * hands its fixtures over as they are written — so it carries the delimited
+ * `content` string and the label-keyed `links` array instead, and the same
+ * adapter the normalizer would have used resolves it here.
+ *
+ * Every reader downstream of this then sees placements and nothing else,
+ * which is what lets `blueprintCellSelection.ts` carry `cellTouchpoints`
+ * rather than `cellLinks` and be the template's file exactly.
+ */
+export function cellTouchpoints(
+  cell: Partial<Pick<BlueprintCell, 'content' | 'links' | 'touchpoints'>>,
+): CellTouchpoint[] {
+  return cell.touchpoints ?? cellTouchpointsFromLinks(cell.content, cell.links)
+}
+
+/** The placement a touchpoint's label names, or null when nothing is placed there. */
+export function touchpointNamed(
+  touchpoints: readonly CellTouchpoint[],
+  name: string,
+): CellTouchpoint | null {
+  return touchpoints.find((placement) => placement.name === name) ?? null
 }
 
 /** What the detail panel shows for one touchpoint at one cell. */
