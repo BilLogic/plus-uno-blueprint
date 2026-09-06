@@ -370,4 +370,12 @@ export const RECONCILED_FILES = [
   // `service_id` rather than dropped it — Q21) and is not here.
   'src/components/editor/AgentScopeField.tsx',
   'src/components/editor/agentScopeField.test.tsx',
+
+  // #327 S1 — the free set. Two of the seven the survey named were already
+  // byte-identical at the 1.6.0 pin and are enrolment alone. The other five
+  // differ by a comment each — three of them the template's mechanical
+  // `layer`→`lane` rename mangling English ("laneed", "semantic lane") — and
+  // converge from the template's side, where the wording is fixed.
+  'src/contexts/ViewStateContext.tsx',
+  'src/styles/variants.css',
 ]
