@@ -303,7 +303,13 @@ export const RECONCILED_FILES = [
   // which is the `Math.max(rowPanelHeight ?? 0, floor)` uno already had
   // inline; the hook's `focusedPanelHeight` is `excludedPanelHeight` in asb's
   // spelling, and `PhaseScenarioOverview` (still forked) was re-pointed.
-  'src/lib/compareGridTracks.ts',
+  //
+  // `src/lib/compareGridTracks.ts` is the fourth of S5a's paths, and it is
+  // deliberately NOT repeated here (#407). Slice S0 had enrolled it the day
+  // before, in the `compare (#323, slice S0)` block above, beside the review
+  // store and the zone navigation it is the layout half of. S5a's lane-collapse
+  // work changed the file, which is why the slice names it in this sentence,
+  // but the promise to hold it byte-identical is S0's and is made only once.
   'src/hooks/useCollapsedBlueprintLanes.ts',
   'src/lib/blueprintLaneCollapse.ts',
   'src/components/blueprint/CompareTrackDecorations.tsx',
@@ -398,9 +404,21 @@ export const RECONCILED_FILES = [
   // byte-identical at the 1.6.0 pin and are enrolment alone. The other five
   // differ by a comment each — three of them the template's mechanical
   // `layer`→`lane` rename substituting the new word into ordinary English — and
-  // converge from the template's side, where the wording is fixed.
-  'src/contexts/ViewStateContext.tsx',
-  'src/styles/variants.css',
+  // converge from the template's side, where the wording is fixed. Four of
+  // those five are enrolled in the `asb 1.6.1 adopt (#327 S1)` block above;
+  // the fifth, `activeServiceStore.ts`, is named there as waiting on #325's
+  // Q45 and is not on this list yet.
+  //
+  // The free two are `src/contexts/ViewStateContext.tsx` and
+  // `src/styles/variants.css`, and neither is listed here (#407). "Already
+  // byte-identical at the 1.6.0 pin" was all the survey checked, and it was
+  // true for a reason the survey did not look for: #323's slice-S0 sweep had
+  // enrolled both the day before — the view-state context up with the panel
+  // and walkthrough surface that reads it, the variants sheet up with the
+  // hit-area plugin and the typography config. So S1 owed no new entry for
+  // either. This paragraph is the record that it considered them, kept where
+  // a later pass over the same seven will look for it rather than adding the
+  // two lines back.
 
   // #391 phase B — storyboard, not visual. The rename's own enrolment is one
   // file: the placeholder a `cells.frame` carries when a step has no artwork
