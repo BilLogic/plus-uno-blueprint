@@ -237,6 +237,8 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/blueprint/BlueprintCellButton.tsx',
     'src/components/editor/AgentScopeField.tsx',
     'src/components/editor/agentScopeField.test.tsx',
+    'src/contexts/ViewStateContext.tsx',
+    'src/styles/variants.css',
   ])
 })
 
