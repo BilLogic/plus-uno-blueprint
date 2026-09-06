@@ -40,10 +40,10 @@ export { GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION }
 export const GOAL_SETTING_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-00000000080c'
 
-const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000850'
+const STEP_STORYBOARD_LANE_ID = 'a0000000-0000-4000-8000-000000000850'
 
 const LANES = [
-  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
+  { id: STEP_STORYBOARD_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000857',
     name: 'Teacher',
@@ -125,7 +125,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LANE_ID,
+  storyboard: STEP_STORYBOARD_LANE_ID,
   partner: 'a0000000-0000-4000-8000-000000000857',
   lead: 'a0000000-0000-4000-8000-000000000858',
   regular: 'a0000000-0000-4000-8000-000000000851',
@@ -284,7 +284,7 @@ const GOAL_SETTING_TRIGGERS: BlueprintCellDependency[] = [
 
 const GOAL_SETTING_CELLS: BlueprintCell[] = [
   ...STEPS.map((step, index) =>
-    cell(gsCell(String(index + 1).padStart(2, '0'), '10'), L.visual, step.id, ''),
+    cell(gsCell(String(index + 1).padStart(2, '0'), '10'), L.storyboard, step.id, ''),
   ),
   ...buildParallelSessionPartnerLeadCells(partnerLeadOptions),
 

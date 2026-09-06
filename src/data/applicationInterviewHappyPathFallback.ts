@@ -29,10 +29,10 @@ import type {
 export const APPLICATION_INTERVIEW_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000000702'
 
-const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000810'
+const STEP_STORYBOARD_LANE_ID = 'a0000000-0000-4000-8000-000000000810'
 
 const LANES = [
-  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
+  { id: STEP_STORYBOARD_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000803',
     name: 'Regular Tutor',
@@ -94,7 +94,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LANE_ID,
+  storyboard: STEP_STORYBOARD_LANE_ID,
   regular: 'a0000000-0000-4000-8000-000000000803',
   frontStage: 'a0000000-0000-4000-8000-000000000804',
   frontStageTech: 'a0000000-0000-4000-8000-000000000806',
@@ -179,7 +179,7 @@ const INTERVIEW_CELLS: BlueprintCell[] = [
   ...STEPS.map((step, stepIndex) =>
     cell(
       iCell(String(stepIndex + 1).padStart(2, '0'), '10'),
-      L.visual,
+      L.storyboard,
       step.id,
       '',
     ),

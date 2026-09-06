@@ -1,4 +1,4 @@
-/** Students Just Joined Happy Path — Partner Action visuals. */
+/** Students Just Joined Happy Path — Partner Action frames. */
 
 export const STUDENTS_JUST_JOINED_PARTNER_STEP_01_FRAME =
   'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190101/b2c048eb-8c1b-1e90-b650-91c83f61bff0.png'
@@ -9,7 +9,7 @@ export const STUDENTS_JUST_JOINED_PARTNER_STEP_02_FRAME =
 export const STUDENTS_JUST_JOINED_PARTNER_STEP_03_FRAME =
   'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190301/c2a5af30-6c33-aaf8-66e0-f782fca767f4.png'
 
-/** Students Just Joined Happy Path — Lead Tutor visuals. */
+/** Students Just Joined Happy Path — Lead Tutor frames. */
 
 export const STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_01_FRAME =
   'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190102/218c9cbc-f78d-ce67-c06f-2a719dfe355c.png'
@@ -20,7 +20,7 @@ export const STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_02_FRAME =
 export const STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_03_FRAME =
   'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190302/24a8b06c-a3d5-905b-f0c2-8183ccfc30af.png'
 
-/** Students Just Joined Happy Path — Regular Tutor visuals. */
+/** Students Just Joined Happy Path — Regular Tutor frames. */
 
 export const STUDENTS_JUST_JOINED_REGULAR_TUTOR_STEP_03_FRAME =
   'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190303/8dc54203-5cb3-6128-a60d-6ff39b848e54.png'

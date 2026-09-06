@@ -42,10 +42,10 @@ export { HELP_REQUEST_SCENARIO_ID }
 export const HELP_REQUEST_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-00000000080d'
 
-const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000860'
+const STEP_STORYBOARD_LANE_ID = 'a0000000-0000-4000-8000-000000000860'
 
 const LANES = [
-  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
+  { id: STEP_STORYBOARD_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000867',
     name: 'Teacher',
@@ -127,7 +127,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LANE_ID,
+  storyboard: STEP_STORYBOARD_LANE_ID,
   partner: 'a0000000-0000-4000-8000-000000000867',
   lead: 'a0000000-0000-4000-8000-000000000868',
   regular: 'a0000000-0000-4000-8000-000000000861',
@@ -250,7 +250,7 @@ const HELP_REQUEST_TRIGGERS: BlueprintCellDependency[] = [
 
 const HELP_REQUEST_CELLS: BlueprintCell[] = [
   ...STEPS.map((step, index) =>
-    cell(hrCell(String(index + 1).padStart(2, '0'), '10'), L.visual, step.id, ''),
+    cell(hrCell(String(index + 1).padStart(2, '0'), '10'), L.storyboard, step.id, ''),
   ),
   ...buildParallelSessionPartnerLeadCells(partnerLeadOptions),
 

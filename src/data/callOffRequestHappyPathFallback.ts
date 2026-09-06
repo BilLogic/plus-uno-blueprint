@@ -32,10 +32,10 @@ export const CALL_OFF_REQUEST_SCENARIO_ID =
 export const CALL_OFF_REQUEST_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000000808'
 
-const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000971'
+const STEP_STORYBOARD_LANE_ID = 'a0000000-0000-4000-8000-000000000971'
 
 const LANES = [
-  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
+  { id: STEP_STORYBOARD_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000972',
     name: 'Regular Tutor',
@@ -102,7 +102,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LANE_ID,
+  storyboard: STEP_STORYBOARD_LANE_ID,
   regular: 'a0000000-0000-4000-8000-000000000972',
   frontStage: 'a0000000-0000-4000-8000-000000000973',
   frontStageTech: 'a0000000-0000-4000-8000-000000000974',
@@ -175,12 +175,12 @@ const CALL_OFF_REQUEST_TRIGGERS: BlueprintCellDependency[] = [
 ]
 
 const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
-  cell(callOffCell('01', '10'), L.visual, STEPS[0].id, ''),
+  cell(callOffCell('01', '10'), L.storyboard, STEPS[0].id, ''),
   cell(callOffCell('01', '03'), L.regular, STEPS[0].id, 'Tutor needs to call off.', {
     frame: CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_01_FRAME,
   }),
 
-  cell(callOffCell('02', '10'), L.visual, STEPS[1].id, ''),
+  cell(callOffCell('02', '10'), L.storyboard, STEPS[1].id, ''),
   cell(
     callOffCell('02', '03'),
     L.regular,
@@ -204,7 +204,7 @@ const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
     'Tutor supervisor team reviews Google Form request for shift swap.',
   ),
 
-  cell(callOffCell('03', '10'), L.visual, STEPS[2].id, ''),
+  cell(callOffCell('03', '10'), L.storyboard, STEPS[2].id, ''),
   cell(
     callOffCell('03', '03'),
     L.regular,
@@ -228,7 +228,7 @@ const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
     ],
   }),
 
-  cell(callOffCell('04', '10'), L.visual, STEPS[3].id, ''),
+  cell(callOffCell('04', '10'), L.storyboard, STEPS[3].id, ''),
   cell(
     callOffCell('04', '03'),
     L.regular,
@@ -252,7 +252,7 @@ const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
     ],
   }),
 
-  cell(callOffCell('05', '10'), L.visual, STEPS[4].id, ''),
+  cell(callOffCell('05', '10'), L.storyboard, STEPS[4].id, ''),
   cell(
     callOffCell('05', '07'),
     L.backStage,
@@ -278,7 +278,7 @@ const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
     summary: CALL_OFF_REQUEST_SUPPORT_STEP_05_DESCRIPTION,
   }),
 
-  cell(callOffCell('06', '10'), L.visual, STEPS[5].id, ''),
+  cell(callOffCell('06', '10'), L.storyboard, STEPS[5].id, ''),
   cell(
     callOffCell('06', '03'),
     L.regular,

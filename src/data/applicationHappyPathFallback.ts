@@ -111,7 +111,7 @@ type ApplicationDiscoveryPathConfig = {
   dependencySlotPrefix: '078' | '728'
   finalRegularTutorContent: string
   laneIds: {
-    visual: string
+    storyboard: string
     regular: string
     frontStage: string
     frontStageTech: string
@@ -130,7 +130,7 @@ const HAPPY_PATH_CONFIG: ApplicationDiscoveryPathConfig = {
   dependencySlotPrefix: '078',
   finalRegularTutorContent: 'Interested in joining PLUS.',
   laneIds: {
-    visual: 'a0000000-0000-4000-8000-000000000710',
+    storyboard: 'a0000000-0000-4000-8000-000000000710',
     regular: 'a0000000-0000-4000-8000-000000000703',
     frontStage: 'a0000000-0000-4000-8000-000000000704',
     frontStageTech: 'a0000000-0000-4000-8000-000000000706',
@@ -150,7 +150,7 @@ const SAD_PATH_CONFIG: ApplicationDiscoveryPathConfig = {
   dependencySlotPrefix: '728',
   finalRegularTutorContent: 'Not interested in joining PLUS.',
   laneIds: {
-    visual: 'a0000000-0000-4000-8000-000000000791',
+    storyboard: 'a0000000-0000-4000-8000-000000000791',
     regular: 'a0000000-0000-4000-8000-000000000792',
     frontStage: 'a0000000-0000-4000-8000-000000000793',
     frontStageTech: 'a0000000-0000-4000-8000-000000000794',
@@ -204,7 +204,7 @@ function buildApplicationDiscoveryFallback(
   const finalStep = steps[steps.length - 1]!
 
   const lanes = [
-    { id: L.visual, name: 'Storyboard', position: 0 },
+    { id: L.storyboard, name: 'Storyboard', position: 0 },
     { id: L.regular, name: 'Regular Tutor', position: 1 },
     { id: L.frontStageTech, name: 'Front Stage Tech', position: 2 },
     { id: L.frontStage, name: 'Front Stage Actions', position: 3 },
@@ -310,7 +310,7 @@ function buildApplicationDiscoveryFallback(
     ...steps.map((step, stepIndex) =>
       cell(
         appCell(config, String(stepIndex + 1).padStart(2, '0'), '10'),
-        L.visual,
+        L.storyboard,
         step.id,
         '',
       ),

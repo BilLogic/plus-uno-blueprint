@@ -246,7 +246,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         scenario: str('Restrict to a scenario by name, e.g. "Warm-Up"'),
         kind: str('happy | variant | exception'),
         lane_role: str(
-          'frontstage_actions | frontstage_tech | backstage_actions | backstage_tech | visual',
+          'frontstage_actions | frontstage_tech | backstage_actions | backstage_tech | storyboard',
         ),
         service: SERVICE_SCOPE_PARAM,
         limit: {
@@ -278,7 +278,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         scenario: str('Restrict to a scenario by name'),
         kind: str('happy | variant | exception'),
         lane_role: str(
-          'frontstage_actions | frontstage_tech | backstage_actions | backstage_tech | visual',
+          'frontstage_actions | frontstage_tech | backstage_actions | backstage_tech | storyboard',
         ),
         service: SERVICE_SCOPE_PARAM,
         limit: {

@@ -35,10 +35,10 @@ export const WRAP_UP_SCENARIO_ID =
 export const WRAP_UP_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-00000000080e'
 
-const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000870'
+const STEP_STORYBOARD_LANE_ID = 'a0000000-0000-4000-8000-000000000870'
 
 const LANES = [
-  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
+  { id: STEP_STORYBOARD_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000871',
     name: 'Teacher',
@@ -105,7 +105,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LANE_ID,
+  storyboard: STEP_STORYBOARD_LANE_ID,
   partner: 'a0000000-0000-4000-8000-000000000871',
   lead: 'a0000000-0000-4000-8000-000000000872',
   regular: 'a0000000-0000-4000-8000-000000000873',
@@ -216,7 +216,7 @@ const WRAP_UP_TRIGGERS: BlueprintCellDependency[] = [
 
 const WRAP_UP_CELLS: BlueprintCell[] = [
   ...STEPS.map((step, index) =>
-    cell(wuCell(String(index + 1).padStart(2, '0'), '10'), L.visual, step.id, ''),
+    cell(wuCell(String(index + 1).padStart(2, '0'), '10'), L.storyboard, step.id, ''),
   ),
 
   cell(wuCell('01', '01'), L.partner, STEPS[0].id, 'Help students log out of Zoom.', {

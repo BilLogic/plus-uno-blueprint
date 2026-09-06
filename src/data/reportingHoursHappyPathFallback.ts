@@ -23,10 +23,10 @@ export const REPORTING_HOURS_SCENARIO_ID =
 export const REPORTING_HOURS_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000000812'
 
-const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000920'
+const STEP_STORYBOARD_LANE_ID = 'a0000000-0000-4000-8000-000000000920'
 
 const LANES = [
-  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
+  { id: STEP_STORYBOARD_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000927',
     name: 'Lead Tutor',
@@ -83,7 +83,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LANE_ID,
+  storyboard: STEP_STORYBOARD_LANE_ID,
   lead: 'a0000000-0000-4000-8000-000000000927',
   regular: 'a0000000-0000-4000-8000-000000000921',
   frontStage: 'a0000000-0000-4000-8000-000000000922',
@@ -154,7 +154,7 @@ const REPORTING_HOURS_TRIGGERS: BlueprintCellDependency[] = [
 ]
 
 const REPORTING_HOURS_CELLS: BlueprintCell[] = [
-  cell(hoursCell('01', '10'), L.visual, REPORT_HOURS_STEP_ID, ''),
+  cell(hoursCell('01', '10'), L.storyboard, REPORT_HOURS_STEP_ID, ''),
   cell(
     hoursCell('01', '02'),
     L.lead,
@@ -185,7 +185,7 @@ const REPORTING_HOURS_CELLS: BlueprintCell[] = [
     },
   ),
 
-  cell(hoursCell('02', '10'), L.visual, RECEIVE_PAYCHECK_STEP_ID, ''),
+  cell(hoursCell('02', '10'), L.storyboard, RECEIVE_PAYCHECK_STEP_ID, ''),
   cell(
     hoursCell('02', '02'),
     L.lead,
@@ -212,7 +212,7 @@ const REPORTING_HOURS_CELLS: BlueprintCell[] = [
     },
   ),
 
-  cell(hoursCell('03', '10'), L.visual, APPROVE_HOURS_STEP_ID, ''),
+  cell(hoursCell('03', '10'), L.storyboard, APPROVE_HOURS_STEP_ID, ''),
   cell(
     hoursCell('03', '07'),
     L.backStage,

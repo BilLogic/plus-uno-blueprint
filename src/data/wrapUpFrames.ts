@@ -1,10 +1,10 @@
-import { BLUEPRINT_STEP_VISUAL_PLACEHOLDER } from '@/lib/blueprintVisualPlaceholder'
+import { BLUEPRINT_STEP_STORYBOARD_PLACEHOLDER } from '@/lib/blueprintStoryboardPlaceholder'
 
 /** Shared placeholder for Wrap-Up Partner, Lead Tutor, and Regular Tutor cells. */
 export const WRAP_UP_ACTION_LANE_PLACEHOLDER =
-  BLUEPRINT_STEP_VISUAL_PLACEHOLDER
+  BLUEPRINT_STEP_STORYBOARD_PLACEHOLDER
 
-/** Wrap-Up Happy Path — Partner Action visuals. */
+/** Wrap-Up Happy Path — Partner Action frames. */
 
 export const WRAP_UP_PARTNER_STEP_01_FRAME =
   'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0101/30b4be58-bca7-4766-292f-f97f76fd7b4c.png'
@@ -18,7 +18,7 @@ export const WRAP_UP_PARTNER_STEP_03_FRAME =
 export const WRAP_UP_PARTNER_STEP_04_FRAME =
   'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0401/7c034094-330b-860b-595b-ce195c753c3f.png'
 
-/** Wrap-Up Happy Path — Lead Tutor visuals. */
+/** Wrap-Up Happy Path — Lead Tutor frames. */
 
 export const WRAP_UP_LEAD_TUTOR_STEP_01_FRAME =
   'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0102/122c0e83-cb94-5202-a7d8-8e363263fc4c.png'
@@ -32,7 +32,7 @@ export const WRAP_UP_LEAD_TUTOR_STEP_03_FRAME =
 export const WRAP_UP_LEAD_TUTOR_STEP_04_FRAME =
   'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0402/5872cc3d-d7be-ef82-190d-50f78abe0e99.png'
 
-/** Wrap-Up Happy Path — Regular Tutor visuals. */
+/** Wrap-Up Happy Path — Regular Tutor frames. */
 
 export const WRAP_UP_REGULAR_TUTOR_STEP_01_FRAME =
   'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0103/37f0c948-30bf-3c0c-e731-c2a48f45b3b1.png'

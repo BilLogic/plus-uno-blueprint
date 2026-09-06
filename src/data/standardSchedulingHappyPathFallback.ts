@@ -20,10 +20,10 @@ export const STANDARD_SCHEDULING_SCENARIO_ID =
 export const STANDARD_SCHEDULING_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000000806'
 
-const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000885'
+const STEP_STORYBOARD_LANE_ID = 'a0000000-0000-4000-8000-000000000885'
 
 const LANES = [
-  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
+  { id: STEP_STORYBOARD_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000886',
     name: 'Regular Tutor',
@@ -70,7 +70,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LANE_ID,
+  storyboard: STEP_STORYBOARD_LANE_ID,
   regular: 'a0000000-0000-4000-8000-000000000886',
   frontStage: 'a0000000-0000-4000-8000-000000000887',
   frontStageTech: 'a0000000-0000-4000-8000-000000000888',
@@ -130,7 +130,7 @@ const STANDARD_SCHEDULING_TRIGGERS: BlueprintCellDependency[] = [
 ]
 
 const STANDARD_SCHEDULING_CELLS: BlueprintCell[] = [
-  cell(schedCell('01', '10'), L.visual, STEPS[0].id, ''),
+  cell(schedCell('01', '10'), L.storyboard, STEPS[0].id, ''),
 
   cell(
     schedCell('01', '07'),
@@ -152,7 +152,7 @@ const STANDARD_SCHEDULING_CELLS: BlueprintCell[] = [
     summary: STANDARD_SCHEDULING_SUPPORT_STEP_01_DESCRIPTION,
   }),
 
-  cell(schedCell('02', '10'), L.visual, STEPS[1].id, ''),
+  cell(schedCell('02', '10'), L.storyboard, STEPS[1].id, ''),
   cell(
     schedCell('02', '03'),
     L.regular,

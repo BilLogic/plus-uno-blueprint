@@ -226,7 +226,7 @@ test('z-index is spelled one way, so a contract cannot pin the other', () => {
  * and `--text-3xs` (10px) exist because the editor's dense chrome kept writing
  * `text-[11px]`/`text-[10px]`, and naming them made the ladder reusable. The
  * next two literals went in anyway — `text-[9px]` on a sequence badge,
- * `text-[8px]` on a visual-lane caption — each one a size with no name and no
+ * `text-[8px]` on a storyboard-lane caption — each one a size with no name and no
  * way for the next call site to find it. They are `--text-4xs`/`--text-5xs`
  * now, and this is what stops the sixth.
  *

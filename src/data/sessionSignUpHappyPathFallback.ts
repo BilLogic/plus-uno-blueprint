@@ -20,10 +20,10 @@ export { SESSION_SIGN_UP_SCENARIO_ID }
 export const SESSION_SIGN_UP_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-000000000805'
 
-const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-000000000878'
+const STEP_STORYBOARD_LANE_ID = 'a0000000-0000-4000-8000-000000000878'
 
 const LANES = [
-  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
+  { id: STEP_STORYBOARD_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000879',
     name: 'Regular Tutor',
@@ -70,7 +70,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LANE_ID,
+  storyboard: STEP_STORYBOARD_LANE_ID,
   regular: 'a0000000-0000-4000-8000-000000000879',
   frontStage: 'a0000000-0000-4000-8000-000000000880',
   frontStageTech: 'a0000000-0000-4000-8000-000000000881',
@@ -130,9 +130,9 @@ const SESSION_SIGN_UP_TRIGGERS: BlueprintCellDependency[] = [
 ]
 
 const SESSION_SIGN_UP_CELLS: BlueprintCell[] = [
-  // Visual row
-  cell(ssCell('01', '10'), L.visual, STEPS[0].id, ''),
-  cell(ssCell('02', '10'), L.visual, STEPS[1].id, ''),
+  // Storyboard row
+  cell(ssCell('01', '10'), L.storyboard, STEPS[0].id, ''),
+  cell(ssCell('02', '10'), L.storyboard, STEPS[1].id, ''),
 
   // Step 1 — Sign up
   cell(

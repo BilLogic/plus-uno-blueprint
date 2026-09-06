@@ -459,9 +459,9 @@
  * are two rungs rather than one because the two sizes are not
  * interchangeable: 9px is the digit inside a size-4 sequence badge, where the
  * glyph has to clear the circle's padding, and 8px is a nowrap caption under a
- * visual-lane thumbnail, where any growth is a clipped label. Collapsing them
- * would be a design change nobody asked for, and the ladder stays uniform at
- * one step per rung: 11, 10, 9, 8.
+ * storyboard-lane thumbnail, where any growth is a clipped label. Collapsing
+ * them would be a design change nobody asked for, and the ladder stays uniform
+ * at one step per rung: 11, 10, 9, 8.
  *
  * --text-5xl is that same argument at the other end. Two display headings sit
  * above the body ladder — the scenario slide title at 40px and the cover

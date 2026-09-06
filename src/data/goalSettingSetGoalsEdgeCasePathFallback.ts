@@ -52,10 +52,10 @@ export { GOAL_SETTING_SCENARIO_ID }
 export const GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_ID =
   'a0000000-0000-4000-8000-000000000816'
 
-const STEP_VISUAL_LANE_ID = 'a0000000-0000-4000-8000-0000000008e0'
+const STEP_STORYBOARD_LANE_ID = 'a0000000-0000-4000-8000-0000000008e0'
 
 const LANES = [
-  { id: STEP_VISUAL_LANE_ID, name: 'Storyboard', position: 0 },
+  { id: STEP_STORYBOARD_LANE_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-0000000008e1',
     name: 'Teacher',
@@ -162,7 +162,7 @@ const STEPS = [
 ] as const
 
 const L = {
-  visual: STEP_VISUAL_LANE_ID,
+  storyboard: STEP_STORYBOARD_LANE_ID,
   partner: 'a0000000-0000-4000-8000-0000000008e1',
   lead: 'a0000000-0000-4000-8000-0000000008e2',
   regular: 'a0000000-0000-4000-8000-0000000008e3',
@@ -352,7 +352,7 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
   ...STEPS.map((step, index) =>
     cell(
       geCell(String(index + 1).padStart(2, '0'), '10'),
-      L.visual,
+      L.storyboard,
       step.id,
       '',
     ),

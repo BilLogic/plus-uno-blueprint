@@ -32,20 +32,30 @@
  * narrower guard, or nowhere.
  *
  * THE LIST GROWS WITH EACH RENAME — that is the point, and a sweep that only
- * knows the last one is a fixed bug rather than a guard. #391 will rename
- * `visual` to `storyboard` across 386 sites, and the tree today holds 27
- * "visually", 5 "visualization" and a handful of "visual language" /
- * "visual vocabulary": a word replacement produces `storyboardly` and
- * `storyboardization` from the first two, and they are pre-registered below so
- * the rename lands against a guard instead of after one.
+ * knows the last one is a fixed bug rather than a guard. #391 renamed `visual`
+ * to `storyboard`, and the subject above still holds 36 "visually", 9
+ * "visualization" and 7 "visual language" / "visual vocabulary", every one of
+ * them the ordinary English word: a replacement over those produces
+ * `storyboardly` and the `storyboardise` family, which were registered here
+ * BEFORE the rename ran, so it landed against a guard instead of after one.
+ *
+ * The third shape came from the template's own phase of that rename, and it is
+ * the `semantic lane` case one word over. A storyboard is made of FRAMES —
+ * `20260830270000` settled that, and the rename map's `cells.picture` row says
+ * why — so "storyboard element" is never what a sentence here means; it is
+ * "visual element" with the noun swapped. Nothing is registered for
+ * "storyboard order" or "storyboard centre": both halves of those are ordinary
+ * English, and the only rule separating residue from sense there is the list of
+ * sentences they came from, which is a fixed bug rather than a guard.
  *
  * `storyboard walkthrough` is deliberately NOT registered, and the omission is
  * the entry. It reads like residue and is this deployment's CURRENT, correct
  * name: `scripts/retired-vocabulary.mjs` records that the only reader-facing
  * "Visual walkthrough" was the storyboard played step by step and now says so,
- * and `VisualWalkthroughModal.tsx` labels it that on purpose. Registering it
- * would flag code that is right, which is the one thing this file must never
- * do. The same test that keeps "semantic lane roles" green keeps this green.
+ * and `StoryboardWalkthroughModal.tsx` labels it that on purpose. Registering
+ * it would flag code that is right, which is the one thing this file must
+ * never do. The same test that keeps "semantic lane roles" green keeps this
+ * green.
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
@@ -94,14 +104,16 @@ export function scannedFiles(root = REPO_ROOT) {
  * lookahead is what tells the two apart — the residue is `semantic lane`
  * standing where a tier was meant, with no role after it.
  *
- * The last two are #391's, registered before the rename rather than after it.
+ * The last three are #391's. Two were registered before the rename rather
+ * than after it; the third arrived with the template's phase of it.
  */
 const MANGLED = [
   { pattern: /\blaneed\b/i, meant: 'layered' },
   { pattern: /\bunlaneed\b/i, meant: 'unlayered' },
   { pattern: /\bsemantic lane(?![_ ]roles?\b)/i, meant: 'semantic layer' },
   { pattern: /\bstoryboardly\b/i, meant: 'visually' },
-  { pattern: /\bstoryboardi[sz]ation\b/i, meant: 'visualization' },
+  { pattern: /\bstoryboardi[sz](?:e|es|ed|ing|ation|ations)\b/i, meant: 'visualise / visualisation' },
+  { pattern: /\bstoryboard elements?\b/i, meant: 'visual element' },
 ]
 
 /**
@@ -198,21 +210,30 @@ test('the sweep reads the residue and not the column it resembles', () => {
   )
 })
 
-test('the shapes #391 will produce are registered before the rename', () => {
-  // The two a `visual`→`storyboard` word replacement obviously makes, and the
-  // three phrases it must leave alone: the deployment's current name for the
-  // storyboard played step by step, and the word `storyboard` doing its job.
+test('the shapes #391 produced are registered, and the words it installed are not', () => {
+  // The three a `visual`→`storyboard` word replacement makes, and the four
+  // phrases it must leave alone: the deployment's current name for the
+  // storyboard played step by step, and the word `storyboard` doing its job as
+  // a lane, a plural and the thing a frame belongs to.
   assert.deepEqual(
     mangledIn(
       [
         'the label is storyboardly hidden but still read aloud',
         'a storyboardization of the whole path',
+        'we storyboardize the strip on mount',
+        'spatial/storyboard elements that do not fit the grid',
         'Storyboard walkthrough',
         'the storyboard lane holds one frame per step',
         'storyboards are rows, not media',
+        'a storyboard frame is one image on one cell',
       ].join('\n'),
     ).map((hit) => `${hit.line}:${hit.meant}`),
-    ['1:visually', '2:visualization'],
+    [
+      '1:visually',
+      '2:visualise / visualisation',
+      '3:visualise / visualisation',
+      '4:visual element',
+    ],
   )
 })
 

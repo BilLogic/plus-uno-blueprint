@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
   BLUEPRINT_CELL_DETAIL_UI_ENABLED,
-  BLUEPRINT_VISUAL_LANE_UI_ENABLED,
-  BLUEPRINT_VISUAL_WALKTHROUGH_ENABLED,
+  BLUEPRINT_STORYBOARD_LANE_UI_ENABLED,
+  BLUEPRINT_STORYBOARD_WALKTHROUGH_ENABLED,
   isBlueprintCellDetailEnabled,
-  isBlueprintVisualLaneEnabled,
-  isBlueprintVisualWalkthroughEnabled,
+  isBlueprintStoryboardLaneEnabled,
+  isBlueprintStoryboardWalkthroughEnabled,
 } from './blueprintDisplayFlags'
 import { applyBlueprintDisplayFilters } from './applyBlueprintDisplayFilters'
 import { STORYBOARD_ROLE } from './laneRoles'
@@ -60,30 +60,30 @@ const sampleBlueprint = (): BlueprintData => ({
     kind: 'happy',
     status: 'live',
   },
-  lanes: [lane('lane-actions', 'customer_actions'), lane('lane-visual', STORYBOARD_ROLE)],
+  lanes: [lane('lane-actions', 'customer_actions'), lane('lane-storyboard', STORYBOARD_ROLE)],
   steps: [{ id: 'step-1', name: 'Arrive', position: 0 }],
-  cells: [cell('cell-actions', 'lane-actions'), cell('cell-visual', 'lane-visual')],
+  cells: [cell('cell-actions', 'lane-actions'), cell('cell-storyboard', 'lane-storyboard')],
   dependencies: [
     {
       id: 'dep-1',
       source_cell_id: 'cell-actions',
-      target_cell_id: 'cell-visual',
+      target_cell_id: 'cell-storyboard',
     },
   ],
 })
 
 describe('blueprint display flags', () => {
-  it('ships the visual lane and cell detail on, and the walkthrough off', () => {
-    expect(BLUEPRINT_VISUAL_LANE_UI_ENABLED).toBe(true)
+  it('ships the storyboard lane and cell detail on, and the walkthrough off', () => {
+    expect(BLUEPRINT_STORYBOARD_LANE_UI_ENABLED).toBe(true)
     expect(BLUEPRINT_CELL_DETAIL_UI_ENABLED).toBe(true)
-    expect(BLUEPRINT_VISUAL_WALKTHROUGH_ENABLED).toBe(false)
-    expect(isBlueprintVisualWalkthroughEnabled()).toBe(false)
+    expect(BLUEPRINT_STORYBOARD_WALKTHROUGH_ENABLED).toBe(false)
+    expect(isBlueprintStoryboardWalkthroughEnabled()).toBe(false)
   })
 
   it('ignores the scenario id — every id gets the flag, not an allowlist', () => {
     for (const scenarioId of SCENARIO_IDS) {
-      expect(isBlueprintVisualLaneEnabled(scenarioId)).toBe(
-        BLUEPRINT_VISUAL_LANE_UI_ENABLED,
+      expect(isBlueprintStoryboardLaneEnabled(scenarioId)).toBe(
+        BLUEPRINT_STORYBOARD_LANE_UI_ENABLED,
       )
       expect(isBlueprintCellDetailEnabled(scenarioId)).toBe(
         BLUEPRINT_CELL_DETAIL_UI_ENABLED,
