@@ -81,10 +81,10 @@ A shared slot therefore **shows every selected path** rather than encoding
 the negative half: no whole-cell path wash, lane fills preserved.
 
 What counts as agreement is content-only, on purpose. A detail-only difference —
-description or links — must not fork the canvas; it lives in the ledger. Equal
-signatures collapse into one drawn cell whatever the slot kind, with the rest
-hidden and their arrow ids aliased onto the drawn one. Sub-cell order follows
-the sidebar's selection order.
+summary, resources or touchpoints — must not fork the canvas; it lives in the
+ledger. Equal signatures collapse into one drawn cell whatever the slot kind,
+with the rest hidden and their arrow ids aliased onto the drawn one. Sub-cell
+order follows the sidebar's selection order.
 
 Worth knowing: the per-slot merge is independent of any long shared *run* of
 columns. The measured median spine coverage was 13%, which is why agreement is

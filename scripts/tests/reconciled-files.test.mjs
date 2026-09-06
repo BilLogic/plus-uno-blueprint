@@ -296,6 +296,11 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/blueprintCellSelection.ts',
     'src/types/blueprintCellDetail.ts',
     'src/lib/resolveBlueprint.ts',
+    'src/lib/compareSlots.ts',
+    'src/lib/compareMergedGrid.ts',
+    'src/lib/compareLedger.ts',
+    'src/lib/compareSlots.test.ts',
+    'src/lib/compareLedger.test.ts',
   ])
 })
 

@@ -250,12 +250,12 @@ function FilterToggle({
  * enumeration of every difference between the compared paths.
  *
  * One accordion group PER STEP (canonical column) that has a canvas
- * difference, in canonical order, one open at a time; detail-only
- * (description/resources) diffs in a trailing unnumbered group. A single step
- * group with nothing after it renders flat — accordion chrome around one
- * group is furniture. Opening a group flies the camera to that step's cells:
- * accordion + fly is ONE gesture, through the shared active-step cursor the
- * compare navigation reads too.
+ * difference, in canonical order, one open at a time; detail-only diffs —
+ * summary, resources or touchpoints — in a trailing unnumbered group. A
+ * single step group with nothing after it renders flat — accordion chrome
+ * around one group is furniture. Opening a group flies the camera to that
+ * step's cells: accordion + fly is ONE gesture, through the shared
+ * active-step cursor the compare navigation reads too.
  *
  * Counts: exactly one per group, at the END of its header row, post-filter.
  * There is no total anywhere on this surface — the menubar Diff count owns

@@ -1,5 +1,7 @@
 import { groupBy } from '@/lib/utils'
 import type { BlueprintData } from '@/types/blueprint'
+import { cellResources } from '@/lib/cellResources'
+import { cellTouchpoints } from '@/lib/cellTouchpoints'
 
 /**
  * Compare v3's single source of truth: slot-level comparison records for
@@ -23,7 +25,12 @@ import type { BlueprintData } from '@/types/blueprint'
  * whose names token-overlap strongly (2-path compare only).
  */
 
-export const COMPARE_FIELDS = ['content', 'summary', 'resources'] as const
+export const COMPARE_FIELDS = [
+  'content',
+  'summary',
+  'resources',
+  'touchpoints',
+] as const
 export type CompareField = (typeof COMPARE_FIELDS)[number]
 
 /** Moves here from types/integratedBlueprint (which re-exports during migration). */
@@ -87,7 +94,7 @@ export type CompareBlueprints = [BlueprintData, BlueprintData, ...BlueprintData[
 
 /**
  * Taxonomy V7 — a divergence with no canvas zone: every path present,
- * content identical, only description/resources differ. Slot verdict stays
+ * content identical, only summary, resources or touchpoints differ. Slot verdict stays
  * `divergent` (the ledger's "Detail-only differences" group and the `[≠ N]`
  * count include it), but the CANVAS must not mark it: the fork condition is
  * "content differs OR presence differs", so column verdicts and runs treat
@@ -113,7 +120,7 @@ const PUNCTUATION = /[.,;:!?'"‘’“”()[\]{}\-–—/\\]+/g
 
 /**
  * Alignment normalization: lowercase, strip punctuation and articles,
- * collapse whitespace. Pinned by tests on the real Ecoeled rename cases
+ * collapse whitespace. Pinned by tests on a deployment's real rename cases
  * (quote-only, trailing-period, and dropped-"the" step renames), which
  * would otherwise fabricate phantom remove+add column pairs.
  */
@@ -226,18 +233,26 @@ function multisetSignature(values: readonly string[]): string {
 }
 
 /**
- * A cell's resources, as one comparable string.
- *
- * Read from `resources` rather than from the retired `links` array, which
- * also carried touchpoint detail and provenance — so this used to report two
- * cells as differing over a screenshot path or a card number, neither of
- * which is a resource and neither of which a reader could see.
+ * Two signatures where there was one, because the column they read is now two
+ * tables. A slot whose resources match but whose touchpoint prose does not is
+ * a real difference, and the single `links` signature said only that
+ * "something in that column" moved.
  */
 function resourceSignature(cell: BlueprintData['cells'][number]): string {
-  return (cell.resources ?? [])
+  return cellResources(cell)
+    .map((resource) => `${resource.kind}${KEY_SEPARATOR}${resource.name}${KEY_SEPARATOR}${resource.url ?? ''}`)
+    .sort()
+    .join(KEY_SEPARATOR)
+}
+
+function touchpointSignature(cell: BlueprintData['cells'][number]): string {
+  return cellTouchpoints(cell)
     .map(
-      (resource) =>
-        `${resource.kind}${KEY_SEPARATOR}${resource.name}${KEY_SEPARATOR}${resource.url ?? ''}`,
+      (placement) =>
+        // What the placement points at is in the cell's resources, which
+        // `resourceSignature` already covers.
+        `${placement.name}${KEY_SEPARATOR}${placement.summary ?? ''}` +
+        `${KEY_SEPARATOR}${placement.role ?? ''}`,
     )
     .sort()
     .join(KEY_SEPARATOR)
@@ -322,6 +337,7 @@ export function buildCompareModel(blueprints: CompareBlueprints): CompareModel {
           cells.map((cell) => (cell.summary ?? '').trim()),
         ),
         resources: multisetSignature(cells.map(resourceSignature)),
+        touchpoints: multisetSignature(cells.map(touchpointSignature)),
       }
       perPath[pathId] = {
         present: true,
