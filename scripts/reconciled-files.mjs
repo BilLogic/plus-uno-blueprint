@@ -555,6 +555,48 @@ export const RECONCILED_FILES = [
   // deployment's own column name instead of the retired `description`.
   'src/lib/resolveBlueprint.ts',
 
+  // The compare data layer (#382, answered as section F of the decision queue
+  // #396). These three files were the last of the v1.5.0 adopt left outside
+  // the gate, and the fact keeping them out was not a fork: the template
+  // compares a FOURTH field, `touchpoints`, and this deployment compared
+  // three. The superset rule that settles most of these — the deployment's
+  // richer version wins — decides nothing when one side simply lacks a
+  // feature, so the owner decided it, and the decision is that this
+  // deployment takes the field.
+  //
+  // What the field buys is not a tidier list of constants. A touchpoint lane's
+  // cell carries placements its grid label never names — the author types one
+  // touchpoint into the cell and places the rest from the panel — so two paths
+  // could hold a visibly different set of touchpoints at the same slot, agree
+  // on content, summary and resources, and be reported `shared`. The reader
+  // was told the paths were identical at a slot whose board drew different
+  // touchpoints. `src/components/blueprint/compareTouchpointDifferences.test.tsx`
+  // is the evidence that the fourth field changed that, and it stays OFF this
+  // list: the template has no test for its own field, so a byte-identical one
+  // is not available to write.
+  //
+  // Two facts came with the field and are worth naming, because neither is
+  // about touchpoints. `compareMergedGrid.ts` differed by a single comment
+  // clause and `compareLedger.ts` by that plus a local rename — `position` to
+  // `columnPosition`, in a function that already has a `columnLabel` beside
+  // it. Both are the template's wording of a shared implementation, and
+  // neither changes what any of the three files computes.
+  //
+  // The two tests come with the sources rather than after them, which is the
+  // rule the #357 block above states: a shared implementation whose test
+  // drifts is a shared implementation nobody is holding to the same promise.
+  // `compareMergedGrid.test.ts` was already enrolled at the v1.5.0 sweep
+  // while its source was not, so this closes that pair from the other side.
+  // Their diffs were the same shape as the sources' — the vocabulary this
+  // deployment has already taken (`description` to `summary`, a named
+  // deployment to "a deployment"), one stray indent, and one assertion the
+  // template added when it deleted a dead guard.
+  'src/lib/compareSlots.ts',
+  'src/lib/compareMergedGrid.ts',
+  'src/lib/compareLedger.ts',
+  'src/lib/compareSlots.test.ts',
+  'src/lib/compareLedger.test.ts',
+
   // DECLINED by #403, recorded beside the enrolments from the same sweep so
   // that the next pass reads the reasoning instead of re-deriving it. None of
   // these is a near miss waiting for a better day; each names a file this

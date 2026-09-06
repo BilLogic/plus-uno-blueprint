@@ -56,13 +56,13 @@ function makeBlueprint(
       summary: null,
       note: null,
       kind: 'happy',
-    status: 'live',
+      status: 'live',
     },
     lanes,
     steps: stepRows,
     cells: blueprintCells,
     dependencies: (options.dependencies ?? []).map((dependency, index) => ({
-      id: `${pathId}-trigger-${index}`,
+      id: `${pathId}-dependency-${index}`,
       source_cell_id: dependency.source,
       target_cell_id: dependency.target,
       kind: dependency.kind,
@@ -73,7 +73,7 @@ function makeBlueprint(
 const pair = (a: BlueprintData, b: BlueprintData): CompareBlueprints => [a, b]
 
 describe('normalizeCompareName', () => {
-  // The three real Ecoeled rename shapes that fabricated phantom clusters.
+  // The three real rename shapes, from a deployment, that fabricated phantom clusters.
   it('aligns quote-only renames', () => {
     expect(normalizeCompareName("click on 'set goals' cta")).toBe(
       normalizeCompareName('click on set goals cta'),
@@ -134,6 +134,9 @@ describe('buildCompareModel — alignment and verdicts', () => {
 
     const fsShip = bySlot.get(makeSlotKey('fs', 'ship#0'))
     expect(fsShip?.perPath['crisis']).toEqual({ present: false })
+    // A one-path slot is `only`, never `divergent`, so the field comparison
+    // never runs on it — the count guard it used to carry was dead.
+    expect(fsShip?.differingFields).toEqual([])
   })
 
   it('pairs duplicate step names by occurrence', () => {
@@ -230,7 +233,7 @@ describe('buildCompareModel — fields and multisets', () => {
       [{ lane: 'FS', step: 'Pay', content: 'Pay', summary: 'via invoice' }],
     )
     const model = buildCompareModel(pair(a, b))
-    // Fork condition is content-or-presence: a description-only difference
+    // Fork condition is content-or-presence: a summary-only difference
     // must not tint the column or split a run — it is ledger-only.
     expect(model.columns[0].verdict).toBe('shared')
     expect(model.runs).toEqual([{ kind: 'shared', columnKeys: ['pay#0'] }])

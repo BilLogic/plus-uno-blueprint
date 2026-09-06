@@ -49,7 +49,7 @@ function isZoneCompareSlot(slot: CompareSlot): boolean {
  * model's column-then-lane order (a tested invariant upstream).
  */
 export function deriveCompareZones(model: CompareModel): CompareZone[] {
-  const position = new Map(
+  const columnPosition = new Map(
     model.columns.map((column, index) => [column.columnKey, index + 1]),
   )
   const columnLabel = new Map(
@@ -60,8 +60,8 @@ export function deriveCompareZones(model: CompareModel): CompareZone[] {
   for (const run of model.runs) {
     if (run.kind !== 'divergent') continue
     const keys = run.columnKeys
-    const start = position.get(keys[0]) ?? 0
-    const end = position.get(keys[keys.length - 1]) ?? start
+    const start = columnPosition.get(keys[0]) ?? 0
+    const end = columnPosition.get(keys[keys.length - 1]) ?? start
     const keySet = new Set(keys)
     const firstLabel = columnLabel.get(keys[0]) ?? ''
     const lastLabel = columnLabel.get(keys[keys.length - 1]) ?? firstLabel
@@ -97,7 +97,7 @@ export type CompareStepGroup = {
 /**
  * One group per canonical column that has any canvas difference, in
  * canonical column order — the ledger's accordion grain. A column whose only
- * difference is detail-only (description/resources) gets NO group: it lives
+ * difference is detail-only (summary, resources, touchpoints) gets NO group: it lives
  * exclusively in the trailing `getDetailOnlyCompareSlots` group, the same V7
  * rule zones follow.
  */
