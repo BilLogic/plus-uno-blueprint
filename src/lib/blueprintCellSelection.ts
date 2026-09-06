@@ -87,30 +87,20 @@ export function buildTouchpointSelection(
  * through the normalizer, and splitting the text is what those sources
  * mean. Where placements exist they win, because they are what the board is
  * drawn from and what an author's edit writes.
+ *
+ * A name-only placement (#112) is what makes that preference load-bearing
+ * rather than tidy: its name is in no text, so a reader that split the text
+ * would drop it silently. Whether a name IS one is not answered here — that
+ * is `isNameOnlyPlacement` in `cellTouchpoints.ts`, which reads the row as
+ * well as the registry link, and so does not mistake a fallback placement,
+ * which has neither, for one.
  */
 export function getTouchpointNames(cell: {
   content?: string | null
   touchpoints?: readonly { name: string }[]
 }): string[] {
-  return getTouchpointEntries(cell).map((entry) => entry.name)
-}
-
-/**
- * The same list, each name saying whether the registry has it. A name-only
- * placement (#277) is drawn dashed; a name split from the text is not a
- * placement at all and is drawn plainly.
- */
-export function getTouchpointEntries(cell: {
-  content?: string | null
-  touchpoints?: readonly { name: string; touchpointId?: string | null }[]
-}): Array<{ name: string; nameOnly: boolean }> {
-  if (cell.touchpoints?.length) {
-    return cell.touchpoints.map((entry) => ({
-      name: entry.name,
-      nameOnly: entry.touchpointId === null,
-    }))
-  }
-  return parseCellContentItems(cell.content ?? '').map((name) => ({ name, nameOnly: false }))
+  if (cell.touchpoints?.length) return cell.touchpoints.map((entry) => entry.name)
+  return parseCellContentItems(cell.content ?? '')
 }
 
 export function isSameBlueprintCellSelection(

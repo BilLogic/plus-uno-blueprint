@@ -104,6 +104,17 @@ export function cellTouchpointsFromLinks(
   })
 }
 
+/**
+ * A placement the registry lacks: a real row that names its touchpoint by
+ * name alone (#277). A fallback placement has no row and no registry, and is
+ * not one of these — `cellTouchpointsFromLinks` mints it with both halves
+ * null, so reading the registry link alone would call every touchpoint on a
+ * hand-written board name-only and draw the whole lane dashed.
+ */
+export function isNameOnlyPlacement(placement: CellTouchpoint): boolean {
+  return placement.id !== null && placement.touchpointId === null
+}
+
 /** What the detail panel shows for one touchpoint at one cell. */
 export type TouchpointDetail = {
   /**
