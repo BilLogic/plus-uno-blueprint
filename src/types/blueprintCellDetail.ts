@@ -27,13 +27,13 @@ export type BlueprintPanelSurface = 'details' | 'differences'
 
 export type BlueprintCellSelection = {
   scenarioName: string
-  /** Parent phase label when known (e.g. Pre-Session). */
+  /** Parent service phase label when known (e.g. Pre-Session). */
   phaseName?: string
   laneName: string
   stepId: string
   stepName: string
   stepIndex: number
-  /** Set when a single touchpoint is selected (Front Stage Tech, Back Stage Tech). */
+  /** Set when a single touchpoint is selected on a touchpoint lane. */
   techItem?: string
   paths: BlueprintCellPathEntry[]
 }
