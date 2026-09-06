@@ -29,6 +29,7 @@ import { ServiceOverviewHeader } from '@/components/editor/ServiceOverviewHeader
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { setSidebarCollapsedState } from '@/contexts/sidebarCollapsedContext'
 import { SlideStickyHeader } from '@/components/editor/SlideStickyHeader'
+import { EntityDetailProvider } from '@/contexts/EntityDetailContext'
 import { PathSelectionProvider } from '@/contexts/PathSelectionContext'
 import type { NavItem } from '@/types/nav'
 import { QUERY_DEFAULTS } from '@/lib/queryClient'
@@ -101,13 +102,21 @@ const skeleton = () =>
  * is always mounted, so one render can be read at both widths.
  */
 function mountShell(client: QueryClient) {
+  /*
+    Inside the entity panel's provider, which `EditorShell` mounts above every
+    tree in the app. The header's title is an affordance that reads the panel
+    through `useEntityDetail`, and that hook throws outside the provider rather
+    than returning an inert value — so a surface rendered on its own brings it.
+  */
   return render(
-    <QueryClientProvider client={client}>
-      <TooltipProvider>
-        <ServiceOverviewHeader />
-        <FloatingSidebarNavbar onExpand={() => {}} />
-      </TooltipProvider>
-    </QueryClientProvider>,
+    <EntityDetailProvider>
+      <QueryClientProvider client={client}>
+        <TooltipProvider>
+          <ServiceOverviewHeader />
+          <FloatingSidebarNavbar onExpand={() => {}} />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </EntityDetailProvider>,
   )
 }
 
@@ -241,16 +250,18 @@ const SCENARIO: NavItem = {
 
 function mountSlideBar(slide: NavItem) {
   return render(
-    <TooltipProvider>
-      <PathSelectionProvider>
-        <SlideStickyHeader
-          slide={slide}
-          slides={[PHASE, SCENARIO]}
-          paths={[]}
-          selectedPathIds={[]}
-        />
-      </PathSelectionProvider>
-    </TooltipProvider>,
+    <EntityDetailProvider>
+      <TooltipProvider>
+        <PathSelectionProvider>
+          <SlideStickyHeader
+            slide={slide}
+            slides={[PHASE, SCENARIO]}
+            paths={[]}
+            selectedPathIds={[]}
+          />
+        </PathSelectionProvider>
+      </TooltipProvider>
+    </EntityDetailProvider>,
   )
 }
 

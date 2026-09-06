@@ -131,8 +131,6 @@ const CELL_DETAIL_PICTURE_CLASS =
   'absolute inset-0 h-full w-full object-contain object-center'
 const CELL_DETAIL_LOGO_CLASS =
   'size-32 shrink-0 rounded-lg bg-muted/20 p-2 object-contain object-center'
-const CELL_DETAIL_SMALL_LOGO_CLASS =
-  'size-[6.5rem] shrink-0 rounded-lg bg-muted/20 p-2 object-contain object-center'
 
 type PanelTab = 'dependencies' | 'evidence' | 'resources'
 
@@ -512,8 +510,15 @@ function BlueprintCellDetailPanelBody() {
         : 'frontstage'
     return {
       laneName,
-      /** The row record, or a name-only stand-in when the lane is unknown. */
-      lane: laneRecord ?? { name: laneName },
+      /**
+       * The row record, or a name-only stand-in when the lane is unknown.
+       *
+       * The stand-in spells `role: null` rather than omitting the key, so that
+       * both arms of the union answer the question "what role is this lane?".
+       * A reader of `lane.role` gets the honest answer — none recorded — where
+       * an absent key would be a type error at every call site that asks.
+       */
+      lane: laneRecord ?? { name: laneName, role: null },
       // Keyed by lane_role — the name argument is only the legacy fallback.
       style: getBlueprintLaneStyle(laneName, zone, laneRecord?.role),
       /* What the badge MEANS, for its hover. Resolved the way the canvas
@@ -917,6 +922,7 @@ function BlueprintCellDetailPanelBody() {
             cellId={null}
             draft={draft}
             laneName={draft.laneName}
+            laneRole={laneResolution?.lane.role ?? null}
             onDone={clearSelection}
           />
         </div>
@@ -1125,14 +1131,18 @@ function BlueprintCellDetailPanelBody() {
     <div className="flex w-full flex-col items-center gap-3">
       {(() => {
         const images = detailImages ?? []
-        const useSmallerTechLogo = [
-          'social media',
-          'on-campus booth',
-          'handshake',
-          'handshake employer profile',
-        ].includes(techDetailLabel?.trim().toLowerCase() ?? '')
+        // A picture is a logo by the filename convention the stock assets
+        // under `public/touchpoint-logos` follow, and by nothing else.
+        //
+        // Four touchpoint names used to be listed here by hand — a deployment's
+        // own tools, matched case-insensitively — and every picture on such a
+        // cell was then treated as a logo and drawn at `6.5rem` rather than in
+        // the 4:3 frame. It was a rendering taste with no way for anyone
+        // outside this file to see it, set it, or find out why their cell drew
+        // differently from the one beside it (#396 Q29). A per-touchpoint size
+        // hint, if one is ever wanted, is data on the registry row next to
+        // `icon_url` — not four strings in a component.
         const isTechLogo = (src: string) =>
-          useSmallerTechLogo ||
           src.includes('-logo.') ||
           src.includes('/logo/')
         const logos = images.filter(isTechLogo)
@@ -1148,9 +1158,7 @@ function BlueprintCellDetailPanelBody() {
                     src={src}
                     alt=""
                     className={cn(
-                      useSmallerTechLogo
-                        ? CELL_DETAIL_SMALL_LOGO_CLASS
-                        : CELL_DETAIL_LOGO_CLASS,
+                      CELL_DETAIL_LOGO_CLASS,
                       src.includes('figma-logo.') && 'bg-transparent',
                     )}
                   />
@@ -1308,6 +1316,7 @@ function BlueprintCellDetailPanelBody() {
         <CellPanelEditor
           cellId={resolvedCellId}
           laneName={selection.laneName}
+          laneRole={selectedLane?.role ?? null}
           // The placement the reader clicked, so its four detail fields join
           // the cell's form under one Save rather than arriving as a second
           // editor with a second Save button.
