@@ -39,14 +39,6 @@
     {
       "path": "src/lib/agent/canvas-adapter.md",
       "reason": "The instance override of the package's references/canvas-adapter.md (#115). Its two 'FULL surface' rows enumerate THIS registry's tool names and this database's dependency kinds, so the template's version of it is wrong here by construction."
-    },
-    {
-      "path": "src/lib/repairDiscoverySadPathBlueprint.ts",
-      "reason": "One-off repair for this instance's own data. Meaningless upstream."
-    },
-    {
-      "path": "src/lib/repairWarmUpAlternatePathBlueprint.ts",
-      "reason": "One-off repair for this instance's own data. Meaningless upstream."
     }
   ],
   "notQuarantined": {
