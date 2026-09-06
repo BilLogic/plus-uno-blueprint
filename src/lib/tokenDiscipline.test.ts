@@ -6,7 +6,7 @@ import { classUsesMatching, sourceFiles, sourceMatching } from '@/lib/tokenModel
  * The token-discipline rule, enforced — now against the one model.
  *
  * `docs/guidelines/foundations/color.md` states it plainly: components consume
- * the SEMANTIC lane, never the primitive ramps ("`text-warning`, not
+ * the SEMANTIC layer, never the primitive ramps ("`text-warning`, not
  * `text-amber-1100`"), and no raw colour values where a token exists. Both
  * halves are convention, not types, and both had drifted.
  *
@@ -96,7 +96,7 @@ test('the model reads more than the component tree', () => {
   assert.ok(sourceFiles().length > 200, 'reads the whole tree, not a sample')
 })
 
-test('source takes colour from the semantic lane, not the primitive ramps', () => {
+test('source takes colour from the semantic layer, not the primitive ramps', () => {
   const ramps = [...PRIMITIVE_RAMPS, ...FOREIGN_RAMPS].join('|')
   const offenders = sourceMatching(
     new RegExp(`\\b(?:${UTILITY_PREFIXES})-(?:${ramps})-[0-9]{2,4}\\b`, 'g'),

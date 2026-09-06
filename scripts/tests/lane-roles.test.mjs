@@ -77,7 +77,7 @@ test('every canonical role has a description and a style', () => {
     undescribed,
     [],
     'a canonical role with no entry in LANE_ROLE_DESCRIPTIONS shows as the ' +
-      'generic "Lane" chip, which is what a lane with no role shows',
+      'generic "Lane" badge, which is what a lane with no role shows',
   )
 
   const unstyled = roles.filter(

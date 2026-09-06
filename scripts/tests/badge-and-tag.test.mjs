@@ -14,27 +14,44 @@
  * 1. **No NAME says chip or pill.** The subject is every source file under
  *    `src`, comments removed, so a component, a prop, a constant, a variant
  *    string, a data attribute or a file name that reintroduces either word
- *    fails — including one written next week. Comments are deliberately not
- *    the subject: `src/lib/tokenModel.ts`'s `stripComments` states the reason
- *    ("a comment naming the class it replaced is not a use of that class"),
- *    and a guard that read them could not be satisfied by any tree that
- *    explains its own history. `src` is the whole subject for the same
- *    reason: `docs/plans`, `docs/adr`, `docs/brainstorms` and
+ *    fails — including one written next week. `src` is the whole subject
+ *    because `docs/plans`, `docs/adr`, `docs/brainstorms` and
  *    `supabase/migrations` are DATED RECORDS of what was decided and applied
  *    on a day, and rewriting a record is worse than the word it removes. The
  *    living docs — `docs/guidelines`, `docs/reference` — were swept by hand
  *    with this change and are held by review, not by this file.
  *
- * 2. **No badge changes colour or border on hover.** The subject is every
+ * 2. **No COMMENT says chip or pill either.** The same walk, read on its other
+ *    axis: `commentsOnly()` is the exact complement of `stripComments`, so one
+ *    corpus feeds two assertions rather than two walks drifting apart. This
+ *    half was excluded on the argument that a codebase is allowed to say why a
+ *    word left, and that a guard reading comments could not be satisfied by
+ *    any tree that explains its own history. That argument is right about the
+ *    DOCUMENTS and wrong about the axis. What it protects is the rename map
+ *    and this file, and both live under `scripts/`, outside a subject that was
+ *    always `src`. Inside `src` a comment is not history — it is the sentence
+ *    the next reader learns the name from, which is how six of them went on
+ *    calling the badge a chip after #182 renamed everything around them.
+ *
+ *    NO EXEMPTION LIST, and that is a property of the subject rather than an
+ *    omission. The four documents this repository exempts everywhere else —
+ *    a guard's own file, `.changeset/`, `CHANGELOG.md` and
+ *    `supabase/migrations/` — are outside `src` by construction, so nothing
+ *    whose job is to write the retired word down is ever read. `lane_role`'s
+ *    catalogue comment still says "pill cells" because no migration has
+ *    changed it, and the scripts that quote that comment as a fixture quote it
+ *    accurately; they move when the comment does.
+ *
+ * 3. **No badge changes colour or border on hover.** The subject is every
  *    `<Badge …>` element in the app plus the primitive's own variant table —
  *    an element-shaped subject rather than a list of badge files, because the
  *    next badge will be in a file this list has never heard of. A hover state
  *    reads as clickable and a badge is not; the tooltip, the focus ring and
  *    the help cursor are what say "there is something here".
  *
- * Both are proved to go red, in the shape `scripts/tests/rls-posture.test.mjs`
- * argues for: a check that is green against this tree could equally be a check
- * that examines nothing.
+ * All three are proved to go red, in the shape
+ * `scripts/tests/rls-posture.test.mjs` argues for: a check that is green
+ * against this tree could equally be a check that examines nothing.
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
@@ -51,6 +68,31 @@ export function stripComments(source) {
   return source
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/(^|[^:])\/\/.*$/gm, '$1')
+}
+
+/** A block comment, or a line comment whose `//` is not part of a URL. */
+const COMMENT = /\/\*[\s\S]*?\*\/|(^|[^:])(\/\/.*)$/gm
+
+/**
+ * The complement of `stripComments`: every comment kept, every other character
+ * blanked to a space.
+ *
+ * Blanked rather than collected, so a line number still means what it says —
+ * the report below is `file:line`, and a guard that names the wrong line is a
+ * guard nobody trusts twice. It is written against the same two patterns
+ * instead of subtracting one result from the other, because positions shift
+ * the moment anything is removed.
+ */
+export function commentsOnly(source) {
+  const out = source.replace(/[^\n]/g, ' ').split('')
+  for (const match of source.matchAll(COMMENT)) {
+    const text = match[2] ?? match[0]
+    const start = match.index + (match[2] ? match[1].length : 0)
+    for (let i = 0; i < text.length; i += 1) {
+      if (text[i] !== '\n') out[start + i] = text[i]
+    }
+  }
+  return out.join('')
 }
 
 function walk(dir) {
@@ -71,7 +113,14 @@ function walk(dir) {
 }
 
 /**
- * Every TypeScript and stylesheet file under `src`, comments stripped.
+ * Every TypeScript and stylesheet file under `src`, split into its two halves:
+ * `code` is the file with comments stripped, `comments` is what the stripping
+ * removed.
+ *
+ * ONE walk, because the name assertion and the comment assertion are one
+ * corpus read on two axes; a second walk would be a second thing to keep in
+ * step, and the sampling gap asserted below would then have to be asserted
+ * twice.
  *
  * Test files are IN, unlike `sourceFiles()`'s roots: a test that asserts
  * against `techPillFace` is carrying the retired name just as surely as the
@@ -90,9 +139,11 @@ export function designSystemSources() {
         The subject is every file that IS there.
       */
       try {
+        const source = readFileSync(path, 'utf8')
         return {
           file: relative(ROOT, path).split('\\').join('/'),
-          code: stripComments(readFileSync(path, 'utf8')),
+          code: stripComments(source),
+          comments: commentsOnly(source),
         }
       } catch {
         return null
@@ -147,22 +198,6 @@ test('the name check goes red on a component that reintroduces either word', () 
   ])
 })
 
-test('the name check reads names and not comments', () => {
-  // The subject, stated as a passing case. A codebase is allowed to say why a
-  // word left; it is not allowed to go on using it.
-  const quiet = [
-    {
-      file: 'src/components/blueprint/Quiet.tsx',
-      code: [
-        '/* The touchpoint face used to be a pill with its own component. */',
-        'export function TouchpointBadge() {} // was a chip',
-      ].join('\n'),
-    },
-  ]
-  const sources = quiet.map((one) => ({ ...one, code: stripComments(one.code) }))
-  assert.deepEqual(namesThatSayChipOrPill(sources), [])
-})
-
 test('the tree the name check reads is the tree, not a handful of files', () => {
   // The failure this whole file exists to prevent, one level up: a walker that
   // found nothing would pass exactly as loudly as a codebase that is clean.
@@ -176,7 +211,93 @@ test('the tree the name check reads is the tree, not a handful of files', () => 
   }
 })
 
-/* --------------------------------------------------- 2. a badge has no hover */
+/* ------------------------------------------- 2. chip and pill, in a comment */
+
+/** Every comment in the tree that still says chip or pill, with where it is. */
+export function commentsThatSayChipOrPill(sources) {
+  const out = []
+  for (const { file, comments } of sources) {
+    comments.split('\n').forEach((line, index) => {
+      if (SAYS_RETIRED.test(line)) out.push(`${file}:${index + 1} ${line.trim()}`)
+    })
+  }
+  return out
+}
+
+test('no comment in the app says chip or pill', () => {
+  const found = commentsThatSayChipOrPill(designSystemSources())
+  assert.deepEqual(
+    found,
+    [],
+    'A comment says "chip" or "pill". A comment inside `src` is where the next ' +
+      'reader learns what to call the thing, so it teaches the retired name as ' +
+      'surely as a component would: a BADGE describes the thing it sits on, a ' +
+      'TAG is one value out of a set. Where neither word is what the sentence ' +
+      'means, say what it means — the default size, a filled square, a ' +
+      `button — rather than reaching for a third:\n${found.join('\n')}`,
+  )
+})
+
+test('the comment check goes red on the sentences the name check ignores', () => {
+  // The two axes on one corpus, stated as the pair they are: these lines are
+  // invisible to the name check by construction, and the whole of what the
+  // comment check is for.
+  const planted = [
+    {
+      file: 'src/components/blueprint/Quiet.tsx',
+      code: [
+        '/* The touchpoint face used to be a pill with its own component. */',
+        'export function TouchpointBadge() {} // was a chip',
+      ].join('\n'),
+    },
+    {
+      file: 'src/styles/quiet.css',
+      code: '/* a touchpoint, once a chip, sits a step paler */\n.cell { color: red; }',
+    },
+  ].map(({ file, code }) => ({ file, code: stripComments(code), comments: commentsOnly(code) }))
+
+  assert.deepEqual(namesThatSayChipOrPill(planted), [])
+  assert.deepEqual(commentsThatSayChipOrPill(planted), [
+    'src/components/blueprint/Quiet.tsx:1 ' +
+      '/* The touchpoint face used to be a pill with its own component. */',
+    'src/components/blueprint/Quiet.tsx:2 // was a chip',
+    'src/styles/quiet.css:1 /* a touchpoint, once a chip, sits a step paler */',
+  ])
+})
+
+test('the comment reader keeps the line numbers and drops the code', () => {
+  // The extraction, on the shapes the corpus actually holds: a bare code line,
+  // a block spanning two lines, a `//` inside a URL (which is the reason
+  // `stripComments` carries `(^|[^:])` at all), and a trailing comment.
+  const source = [
+    'const a = 1',
+    '/* block',
+    '   spanning */',
+    "const url = 'https://example.com' // after a URL",
+    'const b = 2 // trailing',
+  ].join('\n')
+  const lines = commentsOnly(source).split('\n')
+  assert.equal(lines.length, 5, 'a blanked line went missing')
+  assert.deepEqual(
+    lines.map((line) => line.trim()),
+    ['', '/* block', 'spanning */', '// after a URL', '// trailing'],
+  )
+  // Blanked, not deleted: the comment sits where it sat.
+  assert.equal(lines[4].indexOf('//'), source.split('\n')[4].indexOf('//'))
+})
+
+test('the walk reads the comments it claims to', () => {
+  // The same fact the name walk asserts, one axis over. A reader that returned
+  // nothing would satisfy the assertion above in silence.
+  const sources = designSystemSources()
+  const written = sources.flatMap(({ comments }) =>
+    comments.split('\n').filter((line) => line.trim() !== ''),
+  )
+  assert.ok(written.length > 1000, `only ${written.length} comment lines were read`)
+  assert.ok(sources.some(({ comments }) => comments.includes('badge')))
+})
+
+/* --------------------------------------------------- 3. a badge has no hover */
 
 /**
  * Every `<Badge …>` opening tag in the app, and the primitive's variant table.
