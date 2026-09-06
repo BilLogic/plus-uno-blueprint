@@ -376,4 +376,7 @@ it there.
 
 **sprawl** — a document too long even when every line of it is live: attention
 thins across the whole of it. The cure is the ladder rather than a shorter
-sentence. Distinct from *bloat*, which is dead weight.
+sentence. Distinct from *bloat*, which is dead weight — and this file was both
+at once until #365, when the rename map and the interface-to-schema map it had
+grown moved out to the check and the reference that own them. What measures the
+always-loaded tier's share of it is `scripts/check-router-budget.mjs`.
