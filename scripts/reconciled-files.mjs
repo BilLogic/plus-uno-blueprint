@@ -116,6 +116,20 @@ export const RECONCILED_FILES = [
   'src/lib/compareZoneNavigation.ts',
   'src/lib/compareGate.report.test.ts',
 
+  // The two compare contracts the template took at v1.8.0, when it adopted
+  // this deployment's answers to #396's Q50, Q17, Q16 and Q52. They are the
+  // pinning half of those decisions rather than the decisions themselves:
+  // `mergedMembershipRailContract` asserts the membership OUTLINE and the
+  // absence of the rail wash and the divergence strip, and
+  // `blueprintLayoutEstimate` measures the fixed-face cell heights that
+  // replaced the template's text measurement. Both became byte-identical the
+  // moment the template stopped drawing the other way, and both are the sort
+  // of file where a one-sided edit is the drift worth catching — a contract
+  // that stops asserting an absence on one side only is how a deleted
+  // component comes back.
+  'src/lib/mergedMembershipRailContract.test.ts',
+  'src/lib/blueprintLayoutEstimate.test.ts',
+
   // cover (#323, slice S0): the cover page's tab strip and the measurement
   // hook it reads.
   'src/components/cover/CoverTabStrip.tsx',

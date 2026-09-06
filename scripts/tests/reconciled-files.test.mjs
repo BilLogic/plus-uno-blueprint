@@ -139,6 +139,8 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/compareReviewStore.ts',
     'src/lib/compareZoneNavigation.ts',
     'src/lib/compareGate.report.test.ts',
+    'src/lib/mergedMembershipRailContract.test.ts',
+    'src/lib/blueprintLayoutEstimate.test.ts',
     'src/components/cover/CoverTabStrip.tsx',
     'src/components/cover/coverMeasure.ts',
     'src/hooks/use-mobile.ts',
