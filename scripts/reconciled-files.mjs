@@ -596,6 +596,21 @@ export const RECONCILED_FILES = [
   'src/lib/compareLedger.ts',
   'src/lib/compareSlots.test.ts',
   'src/lib/compareLedger.test.ts',
+  // The entity panel's state (#324, #396 Q31). The provider moved from the
+  // canvas — `ServiceOverviewView`, which is one tab body — up to `EditorShell`,
+  // above both the desktop and the mobile tree, so it spans the sidebar and
+  // the chrome as well as the board. That was the whole of what still separated
+  // the two copies of this file: with the provider reaching everything, the
+  // hook stops returning an inert value outside it and throws instead, which
+  // is the template's text word for word. A silent affordance is the one
+  // failure a UI cannot report; a mounting mistake that crashes in development
+  // is one it can.
+  //
+  // `EditorShell.tsx` and `ServiceOverviewView.tsx` are the two files the move
+  // edits and NEITHER is enrolled — both are hundreds of lines apart from the
+  // template on matters this ticket does not touch. What is enrolled is the
+  // context they now agree about.
+  'src/contexts/EntityDetailContext.tsx',
 
   // DECLINED by #403, recorded beside the enrolments from the same sweep so
   // that the next pass reads the reasoning instead of re-deriving it. None of

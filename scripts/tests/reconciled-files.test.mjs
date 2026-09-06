@@ -27,7 +27,7 @@ test('an empty allowlist has nothing to fail on, and reads nothing', () => {
   assert.deepEqual(auditReconciled({ files: [], readInstance: refuse, readAsb: refuse }), [])
 })
 
-test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), the viewport/layout convergence (#323 slices S0–S5), the asb 1.5.0 adopt, the display flags (#326 S1), the asb 1.5.1 adopt (#324 S1+S2), the cell-detail context (#324 S1), the touchpoint-cell face (#325 S6), the #391 phase-B storyboard rename, the #403 identical-by-history sweep, the cell-selection builders (#405), and the blueprint resolver (#326 S4)', () => {
+test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), the viewport/layout convergence (#323 slices S0–S5), the asb 1.5.0 adopt, the display flags (#326 S1), the asb 1.5.1 adopt (#324 S1+S2), the cell-detail context (#324 S1), the touchpoint-cell face (#325 S6), the #391 phase-B storyboard rename, the #403 identical-by-history sweep, the cell-selection builders (#405), the blueprint resolver (#326 S4), and the entity-detail provider (#324, #396 Q31)', () => {
   // #319 shipped the gate EMPTY; #351 enrolled the first files — the shared
   // arrow-routing geometry — #357 enrolled the entity panel editors asb
   // ported back out of uno, and #323's slice S0 swept every remaining
@@ -49,8 +49,17 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
   // #405 moved the selection path from `cells.links` onto placements, which
   // is what finally made `blueprintCellSelection.ts` the template's file.
 
-  // #326 S4 is the newest entry, and it is the first enrolment won by DELETING
-  // deployment code rather than by adopting the template's. `resolveBlueprint`
+  // #324 is the newest entry, and it is the first won by MOVING a component
+  // rather than by editing one. `EntityDetailContext.tsx` differed from the
+  // template in a single function: the hook returned an inert value outside
+  // its provider, because the provider was mounted on one tab body and every
+  // affordance elsewhere in the shell had to survive not reaching it. #396's
+  // Q31 hoists the provider to `EditorShell`, above both trees, so nothing is
+  // outside it any more and the hook can throw the way the template's does.
+  // The file was not so much reconciled as made true.
+  //
+  // #326 S4 was the entry before it, and it is the first enrolment won by
+  // DELETING deployment code rather than by adopting the template's. `resolveBlueprint`
   // carried two read-time repairs for this deployment's own rows, gated on
   // hardcoded PLUS UUIDs, and they were the reason the file could never be
   // byte-identical to anything. Both faults had already been corrected at
@@ -301,6 +310,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/compareLedger.ts',
     'src/lib/compareSlots.test.ts',
     'src/lib/compareLedger.test.ts',
+    'src/contexts/EntityDetailContext.tsx',
   ])
 })
 

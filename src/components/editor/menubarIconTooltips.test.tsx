@@ -19,6 +19,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { SlideStickyHeader } from '@/components/editor/SlideStickyHeader'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { EntityDetailProvider } from '@/contexts/EntityDetailContext'
 import { PathSelectionProvider } from '@/contexts/PathSelectionContext'
 import type { NavItem } from '@/types/nav'
 
@@ -91,17 +92,25 @@ const glyphButtons = () =>
   ]
 
 function mountBar() {
+  /*
+    Inside the entity panel's provider, which `EditorShell` mounts above every
+    tree in the app. The header's title is an affordance that reads the panel
+    through `useEntityDetail`, and that hook throws outside the provider rather
+    than returning an inert value — so a surface rendered on its own brings it.
+  */
   return render(
-    <TooltipProvider>
-      <PathSelectionProvider>
-        <SlideStickyHeader
-          slide={SCENARIO}
-          slides={[PHASE, SCENARIO]}
-          paths={[HAPPY, LATE]}
-          selectedPathIds={[HAPPY.id, LATE.id]}
-        />
-      </PathSelectionProvider>
-    </TooltipProvider>,
+    <EntityDetailProvider>
+      <TooltipProvider>
+        <PathSelectionProvider>
+          <SlideStickyHeader
+            slide={SCENARIO}
+            slides={[PHASE, SCENARIO]}
+            paths={[HAPPY, LATE]}
+            selectedPathIds={[HAPPY.id, LATE.id]}
+          />
+        </PathSelectionProvider>
+      </TooltipProvider>
+    </EntityDetailProvider>,
   )
 }
 

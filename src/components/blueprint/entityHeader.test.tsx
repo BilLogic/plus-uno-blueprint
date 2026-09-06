@@ -93,6 +93,18 @@ const panelOpener = () =>
     '[data-entity-title-affordance]',
   ) as HTMLButtonElement | null
 
+/**
+ * Every render of this bar, inside the provider it now requires.
+ *
+ * `EntityDetailProvider` is mounted on `EditorShell` in the app, above both
+ * trees, and `useEntityDetail` throws outside it — a mounting mistake is meant
+ * to be loud. A test renders the bar on its own, so the provider comes with it
+ * here rather than being restated at each call site.
+ */
+function renderWithEntityDetail(ui: ReactNode) {
+  return render(<EntityDetailProvider>{ui}</EntityDetailProvider>)
+}
+
 /** The box's own height, read back the way a browser would resolve it. */
 function measure(): string {
   const element = block()
@@ -131,14 +143,14 @@ describe('EntityHeader height', () => {
 
   it('is the same two-line box in every state', () => {
     for (const [name, element] of cases) {
-      render(element)
+      renderWithEntityDetail(element)
       expect(measure(), name).toBe(BLUEPRINT_MENUBAR_IDENTITY_HEIGHT)
       cleanup()
     }
   })
 
   it('is unchanged by the kind badge sharing the title row', () => {
-    render(
+    renderWithEntityDetail(
       <EntityHeader
         kind="scenario"
         id="scn-1"
@@ -155,18 +167,18 @@ describe('EntityHeader height', () => {
 
 describe('EntityHeader states', () => {
   it('loading paints a skeleton, and no title', () => {
-    render(<EntityHeader kind="service" status="loading" />)
+    renderWithEntityDetail(<EntityHeader kind="service" status="loading" />)
     expect(skeleton()).not.toBeNull()
     expect(titleSlot()).toBeNull()
   })
 
   it('the skeleton is not announced to a screen reader', () => {
-    render(<EntityHeader kind="service" status="loading" />)
+    renderWithEntityDetail(<EntityHeader kind="service" status="loading" />)
     expect(skeleton()?.getAttribute('aria-hidden')).toBe('true')
   })
 
   it('ready with a service shows the name and the summary', () => {
-    render(
+    renderWithEntityDetail(
       <EntityHeader
         kind="service"
         id="svc-1"
@@ -180,7 +192,7 @@ describe('EntityHeader states', () => {
   })
 
   it('ready with no service leaves the bar present, not absent', () => {
-    render(<EntityHeader kind="service" />)
+    renderWithEntityDetail(<EntityHeader kind="service" />)
     expect(block()).not.toBeNull()
     expect(titleSlot()).toBeNull()
     expect(summarySlot()).toBeNull()
@@ -188,7 +200,7 @@ describe('EntityHeader states', () => {
   })
 
   it('error leaves the bar present and reads as a failure, not as empty', () => {
-    render(
+    renderWithEntityDetail(
       <EntityHeader
         kind="service"
         status="error"
@@ -200,7 +212,7 @@ describe('EntityHeader states', () => {
   })
 
   it('the failure never reaches the title slot', () => {
-    render(
+    renderWithEntityDetail(
       <EntityHeader
         kind="service"
         status="error"
@@ -214,7 +226,7 @@ describe('EntityHeader states', () => {
   })
 
   it('an error message wins the summary slot from a stale summary', () => {
-    render(
+    renderWithEntityDetail(
       <EntityHeader
         kind="service"
         id="svc-1"
@@ -290,14 +302,14 @@ describe('the bar arrives with the shell around it', () => {
 
   it('holds an answered query behind the shell’s boot lane', () => {
     setShellBooting(true)
-    render(ready)
+    renderWithEntityDetail(ready)
     expect(skeleton()).not.toBeNull()
     expect(screen.queryByText('PLUS Tutoring')).toBeNull()
   })
 
   it('and shows it the moment that lane lifts', () => {
     setShellBooting(true)
-    render(ready)
+    renderWithEntityDetail(ready)
     act(() => setShellBooting(false))
     expect(skeleton()).toBeNull()
     expect(screen.getByText('PLUS Tutoring')).not.toBeNull()
@@ -306,7 +318,7 @@ describe('the bar arrives with the shell around it', () => {
   it('keeps skeletoning when the lane lifts first and the query has not answered', () => {
     // The other order. Whichever wait is longer is the one the reader sees.
     setShellBooting(true)
-    render(<EntityHeader kind="service" status="loading" />)
+    renderWithEntityDetail(<EntityHeader kind="service" status="loading" />)
     act(() => setShellBooting(false))
     expect(skeleton()).not.toBeNull()
   })
@@ -314,14 +326,14 @@ describe('the bar arrives with the shell around it', () => {
   it('waits on the query alone where no shell publishes a lane', () => {
     // The mobile shell, and this file's every other render. A bar with
     // nothing to wait for must not wait forever.
-    render(ready)
+    renderWithEntityDetail(ready)
     expect(skeleton()).toBeNull()
     expect(screen.getByText('PLUS Tutoring')).not.toBeNull()
   })
 
   it('holds the phase bar on the same beat as the service bar', () => {
     setShellBooting(true)
-    render(
+    renderWithEntityDetail(
       <EntityHeader kind="phase" id="p-1" label="Warm-Up" status="ready" />,
     )
     expect(skeleton()).not.toBeNull()
@@ -333,7 +345,7 @@ describe('the kind badge', () => {
 
   it('names the kind on each of the three navbar surfaces', () => {
     for (const kind of navbarKinds) {
-      render(<EntityHeader kind={kind} id={`${kind}-1`} label="Ecoeled" />)
+      renderWithEntityDetail(<EntityHeader kind={kind} id={`${kind}-1`} label="Ecoeled" />)
       expect(kindBadge()?.textContent, kind).toBe(
         ENTITY_KIND_DEFINITIONS[kind].label,
       )
@@ -342,7 +354,7 @@ describe('the kind badge', () => {
   })
 
   it('sits after the title, not before it', () => {
-    render(<EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />)
+    renderWithEntityDetail(<EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />)
     const position = titleSlot()!.compareDocumentPosition(kindBadge()!)
     // The badge FOLLOWS the title in document order, which is what "to the
     // right of it" means to a screen reader and to anyone reading the DOM.
@@ -350,15 +362,15 @@ describe('the kind badge', () => {
   })
 
   it('has no name to hang off while the bar has no name', () => {
-    render(<EntityHeader kind="scenario" status="loading" />)
+    renderWithEntityDetail(<EntityHeader kind="scenario" status="loading" />)
     expect(kindBadge()).toBeNull()
     cleanup()
-    render(<EntityHeader kind="scenario" status="error" message="No." />)
+    renderWithEntityDetail(<EntityHeader kind="scenario" status="error" message="No." />)
     expect(kindBadge()).toBeNull()
   })
 
   it('discloses that kind’s definition on hover', async () => {
-    render(<EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />)
+    renderWithEntityDetail(<EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />)
     hover(kindBadge()!)
     // The scenario definition, verbatim from the one map that holds it —
     // a copy here would be a second place for it to drift.
@@ -369,7 +381,7 @@ describe('the kind badge', () => {
   })
 
   it('discloses the phase definition on the phase bar, not the scenario one', async () => {
-    render(<EntityHeader kind="phase" id="ph-1" label="Onboarding" />)
+    renderWithEntityDetail(<EntityHeader kind="phase" id="ph-1" label="Onboarding" />)
     hover(kindBadge()!)
     await waitFor(
       () => expect(definitionFor('phase')).not.toBeNull(),
@@ -379,10 +391,8 @@ describe('the kind badge', () => {
   })
 
   it('does not open the entity panel', () => {
-    render(
-      <EntityDetailProvider>
-        <EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />
-      </EntityDetailProvider>,
+    renderWithEntityDetail(
+      <EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />,
     )
     fireEvent.click(kindBadge()!)
     // `aria-pressed` on the opener is the panel's own read-back. The badge is
@@ -392,10 +402,8 @@ describe('the kind badge', () => {
   })
 
   it('leaves the title block still opening the panel', () => {
-    render(
-      <EntityDetailProvider>
-        <EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />
-      </EntityDetailProvider>,
+    renderWithEntityDetail(
+      <EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />,
     )
     // The control for the claim above: the panel does open, from the block —
     // otherwise "the badge does not open it" would pass on a dead bar.
@@ -404,14 +412,14 @@ describe('the kind badge', () => {
   })
 
   it('announces the kind together with the name', () => {
-    render(<EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />)
+    renderWithEntityDetail(<EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />)
     // Kind first, so the visible word starts the accessible name rather than
     // being buried inside a different one.
     expect(screen.getByLabelText('Scenario: Ecoeled')).toBe(kindBadge())
   })
 
   it('is reachable, and openable, by keyboard alone', async () => {
-    render(<EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />)
+    renderWithEntityDetail(<EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />)
     const badge = kindBadge()!
     expect(badge.tabIndex).toBe(0)
     badge.focus()
@@ -437,10 +445,8 @@ describe('the kind badge', () => {
  */
 describe('the title text is the opener', () => {
   it('opens the entity panel when the title text itself is clicked', () => {
-    render(
-      <EntityDetailProvider>
-        <EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />
-      </EntityDetailProvider>,
+    renderWithEntityDetail(
+      <EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />,
     )
     // The visible word, found by its text — not `panelOpener()`, which is the
     // control we are proving the word reaches.
@@ -450,10 +456,8 @@ describe('the title text is the opener', () => {
   })
 
   it('toggles the panel shut on a second click of the text', () => {
-    render(
-      <EntityDetailProvider>
-        <EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />
-      </EntityDetailProvider>,
+    renderWithEntityDetail(
+      <EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />,
     )
     fireEvent.click(screen.getByText('Ecoeled'))
     fireEvent.click(screen.getByText('Ecoeled'))
@@ -462,7 +466,7 @@ describe('the title text is the opener', () => {
   })
 
   it('names the action on hover', async () => {
-    render(
+    renderWithEntityDetail(
       <TooltipProvider>
         <EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />
       </TooltipProvider>,
@@ -475,10 +479,8 @@ describe('the title text is the opener', () => {
   })
 
   it('is a focusable button, so the keyboard can operate it', () => {
-    render(
-      <EntityDetailProvider>
-        <EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />
-      </EntityDetailProvider>,
+    renderWithEntityDetail(
+      <EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />,
     )
     const opener = panelOpener()!
     // A native button carries Enter/Space activation by contract; the claim a
@@ -532,7 +534,7 @@ function fakeSupabase() {
 }
 
 function mountBar(client: QueryClient) {
-  return render(
+  return renderWithEntityDetail(
     <QueryClientProvider client={client}>
       <ServiceOverviewHeader />
     </QueryClientProvider>,

@@ -18,7 +18,7 @@
  *     the whole tree and no single render can observe an absence everywhere.
  *     Prior art for the source-reading half: `stakeholderDefinitionReader.test.ts`.
  */
-import type { ReactElement } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
@@ -48,9 +48,22 @@ import {
   PANEL_TERMS,
 } from '@/lib/panelTerms'
 import { CanvasModeContext } from '@/contexts/canvasModeContext'
+import { EntityDetailProvider } from '@/contexts/EntityDetailContext'
 import { EntityExamplesContext } from '@/contexts/EntityExamplesContext'
 
 afterEach(cleanup)
+
+/**
+ * A render inside the entity panel's provider.
+ *
+ * `EntityTitleAffordance` reads the panel through `useEntityDetail`, which
+ * throws outside the provider — the app mounts it once, on `EditorShell`,
+ * above every tree. A test renders the affordance alone, so it brings the
+ * provider with it.
+ */
+function renderWithEntityDetail(ui: ReactNode) {
+  return render(<EntityDetailProvider>{ui}</EntityDetailProvider>)
+}
 
 /* --------------------------------------------------------- opening one */
 
@@ -462,7 +475,9 @@ describe('nothing on the page announces that a word is defined', () => {
   })
 
   it('the canvas title draws no icon beside the name', () => {
-    render(<EntityTitleAffordance kind="scenario" id="s-1" label="Warm-Up" />)
+    renderWithEntityDetail(
+      <EntityTitleAffordance kind="scenario" id="s-1" label="Warm-Up" />,
+    )
     const block = document.querySelector('[data-entity-title]') as HTMLElement
     // The ⓘ existed because a hover-only control is invisible on touch. The
     // opener is the whole block and the definition is a popover, so neither
@@ -509,7 +524,9 @@ describe('a definition hangs off a badge, never off a label', () => {
     // PANEL (#305), so it IS interactive now — but no definition popover
     // hangs off it: no `aria-haspopup`, which is what marks a definition
     // trigger elsewhere in this file.
-    render(<EntityTitleAffordance kind="scenario" id="s-1" label="Warm-Up" />)
+    renderWithEntityDetail(
+      <EntityTitleAffordance kind="scenario" id="s-1" label="Warm-Up" />,
+    )
     const title = screen.getByRole('button', { name: 'View details: Warm-Up' })
     expect(title.hasAttribute('aria-haspopup')).toBe(false)
   })
