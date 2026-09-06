@@ -23,6 +23,7 @@ import {
   TOUCHPOINT_LABEL_WARNING,
 } from '@/lib/cellContentLimits'
 import { parseCellContentItems } from '@/lib/parseCellContent'
+import { shouldUseTouchpointCellContent } from '@/lib/blueprintLayout'
 import { PANEL_TEXT } from '@/lib/panelText'
 import { updateCellContent } from '@/lib/cellContentMutations'
 import { RoleSelect } from '@/components/blueprint/RoleSelect'
@@ -144,6 +145,7 @@ export function CellPanelEditor({
   cellId,
   draft,
   laneName,
+  laneRole = null,
   placement = null,
   placementResources = [],
   fallbackDescription = '',
@@ -152,8 +154,14 @@ export function CellPanelEditor({
   /** Existing cell to edit; null when creating from a draft target. */
   cellId: string | null
   draft?: DraftCellTarget
-  /** Selects narrative-copy versus technology-label guidance. */
+  /**
+   * The lane this cell sits in, as name and role. Together they select
+   * narrative-copy versus touchpoint-label guidance, through the same
+   * predicate the board draws the lane's cells with — the role decides, and
+   * the name is only the fallback for a row that carries none.
+   */
   laneName?: string
+  laneRole?: string | null
   /**
    * The touchpoint placement the panel was opened on, when a touchpoint was
    * clicked. Its four detail fields join this form.
@@ -217,6 +225,7 @@ export function CellPanelEditor({
         cellId={cellId}
         draft={undefined}
         laneName={laneName}
+        laneRole={laneRole}
         placement={editable}
         placementResources={placementResources}
         baseline={baseline}
@@ -233,6 +242,7 @@ export function CellPanelEditor({
       cellId={null}
       draft={draft}
       laneName={laneName ?? draft.laneName}
+      laneRole={laneRole}
       baseline={{
         content: '',
         summary: '',
@@ -258,6 +268,7 @@ function CellPanelEditorForm({
   cellId,
   draft,
   laneName,
+  laneRole,
   placement,
   placementResources,
   baseline: baselineProp,
@@ -267,6 +278,7 @@ function CellPanelEditorForm({
   cellId: string | null
   draft: DraftCellTarget | undefined
   laneName: string | undefined
+  laneRole: string | null | undefined
   /** Non-null only when it carries a row id — see CellPanelEditor. */
   placement: CellTouchpoint | null
   placementResources: readonly CellResource[]
@@ -330,20 +342,48 @@ function CellPanelEditorForm({
     }))
 
   const blocked = !form.content.trim()
-  const isTechCell =
-    laneName === 'Front Stage Tech' || laneName === 'Back Stage Tech'
-  const techItems = isTechCell ? parseCellContentItems(form.content) : []
-  const longestTechItem = techItems.reduce(
+  /*
+    Which guidance this cell gets, decided the way the board decides it.
+
+    A touchpoint-lane cell holds a LIST — one touchpoint per line — so the
+    number worth showing an author is the longest single label, measured
+    against the width one item has on the board. Every other lane holds one
+    sentence, measured whole.
+
+    This asked `laneName === 'Front Stage Tech' || laneName === 'Back Stage
+    Tech'` until #396 Q30. Those are two display names out of this
+    deployment's own board, and `lanes.name` is free-form in any language, so
+    the guidance was silently absent on every lane that answers to the same
+    role under another name — including `Front Stage Touchpoints`, the name
+    the schema's own vocabulary uses. `shouldUseTouchpointCellContent` is the
+    predicate the panel and the band already resolve this with: the row's
+    `lane_role` where it carries one, the legacy name map only as a fallback.
+
+    So this is a behaviour change and not a rename: the guidance now appears
+    on ANY touchpoint-role lane. That is the intended outcome — a cell drawn
+    as a stack of labels should be authored against a label's width wherever
+    it sits.
+  */
+  const isTouchpointCell = shouldUseTouchpointCellContent({
+    name: laneName ?? '',
+    role: laneRole,
+  })
+  const touchpointItems = isTouchpointCell
+    ? parseCellContentItems(form.content)
+    : []
+  const longestTouchpointItem = touchpointItems.reduce(
     (longest, item) => Math.max(longest, item.length),
     0,
   )
-  const contentTarget = isTechCell
+  const contentTarget = isTouchpointCell
     ? TOUCHPOINT_LABEL_TARGET
     : CELL_CONTENT_TARGET
-  const contentWarning = isTechCell
+  const contentWarning = isTouchpointCell
     ? TOUCHPOINT_LABEL_WARNING
     : CELL_CONTENT_WARNING
-  const measuredLength = isTechCell ? longestTechItem : form.content.length
+  const measuredLength = isTouchpointCell
+    ? longestTouchpointItem
+    : form.content.length
   const overContentWarning = measuredLength > contentWarning
 
   const effectiveSummary = descriptionTouched
@@ -508,7 +548,7 @@ function CellPanelEditorForm({
           )}
           data-cell-content-guidance=""
         >
-          {isTechCell
+          {isTouchpointCell
             ? `${measuredLength} characters in the longest touchpoint · ${contentTarget} recommended per label${overContentWarning ? ` · review above ${contentWarning}` : ''}`
             : `${measuredLength} characters · ${contentTarget} recommended${overContentWarning ? ` · review above ${contentWarning}` : ''}`}
         </p>
@@ -566,7 +606,7 @@ function CellPanelEditorForm({
             <RegistryLink
               placement={{ id: placement.id, name: placement.name }}
               cellId={cellId}
-              shown={techItems}
+              shown={touchpointItems}
               onWritten={(gone) => {
                 invalidateQueries('service-phases')
                 invalidateQueries(`cell-content:${cellId}`)

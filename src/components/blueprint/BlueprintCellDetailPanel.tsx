@@ -510,8 +510,15 @@ function BlueprintCellDetailPanelBody() {
         : 'frontstage'
     return {
       laneName,
-      /** The row record, or a name-only stand-in when the lane is unknown. */
-      lane: laneRecord ?? { name: laneName },
+      /**
+       * The row record, or a name-only stand-in when the lane is unknown.
+       *
+       * The stand-in spells `role: null` rather than omitting the key, so that
+       * both arms of the union answer the question "what role is this lane?".
+       * A reader of `lane.role` gets the honest answer — none recorded — where
+       * an absent key would be a type error at every call site that asks.
+       */
+      lane: laneRecord ?? { name: laneName, role: null },
       // Keyed by lane_role — the name argument is only the legacy fallback.
       style: getBlueprintLaneStyle(laneName, zone, laneRecord?.role),
       /* What the badge MEANS, for its hover. Resolved the way the canvas
@@ -915,6 +922,7 @@ function BlueprintCellDetailPanelBody() {
             cellId={null}
             draft={draft}
             laneName={draft.laneName}
+            laneRole={laneResolution?.lane.role ?? null}
             onDone={clearSelection}
           />
         </div>
@@ -1308,6 +1316,7 @@ function BlueprintCellDetailPanelBody() {
         <CellPanelEditor
           cellId={resolvedCellId}
           laneName={selection.laneName}
+          laneRole={selectedLane?.role ?? null}
           // The placement the reader clicked, so its four detail fields join
           // the cell's form under one Save rather than arriving as a second
           // editor with a second Save button.
