@@ -77,6 +77,15 @@ jobs:
       - run: npm run check:identifiers
       - run: npm run check:database-names
 
+      # The value guard (#395). The two above sweep database OBJECTS — a table,
+      # a column, a function. This one sweeps the VALUES a constrained column
+      # accepts, which is a different axis and was unwatched: the ERD and the
+      # agent's own tool specs went on teaching two lane roles the CHECK
+      # constraint had stopped accepting, and nothing failed, because nothing
+      # typechecks a value. Its vocabulary is derived from the migration series
+      # rather than written down, so it is static and needs no database either.
+      - run: npm run check:lane-role-values
+
       # The router's three checks (#366). `AGENTS.md` is the whole always-loaded
       # tier — the one file every session is handed before it decides anything —
       # so the properties that keep it a router are held here rather than left

@@ -25,6 +25,7 @@ import {
   staticFindings,
 } from '../check-retired-identifiers.mjs'
 import { DATABASE_NAME_EXEMPTIONS } from '../check-database-names.mjs'
+import { LANE_ROLE_VALUE_EXEMPTIONS } from '../check-lane-role-values.mjs'
 import { replayMigrations } from '../migration-replay.mjs'
 
 const ROOT = resolve(new URL('../..', import.meta.url).pathname)
@@ -78,6 +79,7 @@ test('every retired prose spelling comes from a retired identifier', () => {
 const ALL_EXEMPTIONS = [
   ...RETIRED_IDENTIFIER_EXEMPTIONS.map((entry) => ({ ...entry, list: 'identifier' })),
   ...DATABASE_NAME_EXEMPTIONS.map((entry) => ({ ...entry, list: 'database name' })),
+  ...LANE_ROLE_VALUE_EXEMPTIONS.map((entry) => ({ ...entry, list: 'lane-role value' })),
 ]
 
 test('every exemption states a reason, and an expiry or nothing', () => {
