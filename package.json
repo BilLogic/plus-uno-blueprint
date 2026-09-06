@@ -39,6 +39,7 @@
     "check:rls-posture:live": "node scripts/check-rls-posture.mjs",
     "check:auth-posture": "node scripts/check-auth-posture.mjs",
     "check:database-names": "node scripts/check-database-names.mjs",
+    "check:lane-role-values": "node scripts/check-lane-role-values.mjs",
     "check:migration-syntax": "node scripts/check-migration-syntax.mjs",
     "check:proof-footprint": "node scripts/check-proof-footprint.mjs",
     "check:new-table-grants": "node scripts/check-new-table-grants.mjs",

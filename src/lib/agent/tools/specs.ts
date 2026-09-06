@@ -84,6 +84,25 @@ const SERVICE_SCOPE_PARAM = str(
 )
 
 /**
+ * The lane-role filter shared by the two reads that take one.
+ *
+ * ONE constant rather than the same sentence written twice. It used to be
+ * twice, and both copies went on offering the two `*_tech` role spellings
+ * long after 20260830150000 renamed them to `frontstage_touchpoints` and
+ * `backstage_touchpoints` (#395). A spec is the only description of the value
+ * set the model ever sees, so a stale one is not a cosmetic defect: the
+ * filter it produces matches no lane, and the read comes back empty while
+ * reporting success.
+ *
+ * The list is the whole vocabulary the `lanes_lane_role_check` constraint
+ * admits, and `scripts/check-lane-role-values.mjs` fails the build if a
+ * retired spelling comes back to it.
+ */
+const LANE_ROLE_FILTER_PARAM = str(
+  'customer_actions | frontstage_actions | frontstage_touchpoints | backstage_actions | backstage_touchpoints | partner_actions | support_actions | storyboard',
+)
+
+/**
  * The mobile reading roster — the ONLY tools offered while the mobile shell
  * is up, for every tier including service accounts. Mobile is view-only by
  * decision (2026-08-08 plan): navigation, reading, and Q&A; no writes, no
@@ -245,9 +264,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         phase: str('Restrict to a phase by name, e.g. "In-session"'),
         scenario: str('Restrict to a scenario by name, e.g. "Warm-Up"'),
         kind: str('happy | variant | exception'),
-        lane_role: str(
-          'frontstage_actions | frontstage_tech | backstage_actions | backstage_tech | storyboard',
-        ),
+        lane_role: LANE_ROLE_FILTER_PARAM,
         service: SERVICE_SCOPE_PARAM,
         limit: {
           type: 'number',
@@ -277,9 +294,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         phase: str('Restrict to a phase by name'),
         scenario: str('Restrict to a scenario by name'),
         kind: str('happy | variant | exception'),
-        lane_role: str(
-          'frontstage_actions | frontstage_tech | backstage_actions | backstage_tech | storyboard',
-        ),
+        lane_role: LANE_ROLE_FILTER_PARAM,
         service: SERVICE_SCOPE_PARAM,
         limit: {
           type: 'number',
@@ -770,7 +785,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         scenario_id: str('Scenario id'),
         name: str('Lane label'),
         lane_role: str(
-          'Semantic role (e.g. frontstage_actions, backstage_tech); omit if none fits',
+          'Semantic role (e.g. frontstage_actions, backstage_touchpoints); omit if none fits',
         ),
         at_position: { type: 'number', description: 'Insert row (1-based); omit to append' },
       },

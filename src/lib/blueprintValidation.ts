@@ -40,9 +40,9 @@ export const VIEW_TYPE_HINTS: Record<ViewType, string> = {
  * contains, not from the generic service-blueprint diagram. Two things there
  * are easy to get wrong and are load-bearing:
  *
- * - The roles are `frontstage_tech`, not `front_stage_tech`. Every lane here
- *   carries one. That was not always true: this set gave Regular Tutor and
- *   Support Actions a null role while production gave them
+ * - The roles are `frontstage_touchpoints`, not `front_stage_touchpoints`.
+ *   Every lane here carries one. That was not always true: this set gave
+ *   Regular Tutor and Support Actions a null role while production gave them
  *   `customer_actions` and (since the divider migration) `support_actions`,
  *   so a scenario created from this template started life with two lanes
  *   whose dividers were drawn by name lookup rather than by role. Actor lanes
