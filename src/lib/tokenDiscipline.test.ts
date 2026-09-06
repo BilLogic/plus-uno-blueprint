@@ -3,6 +3,7 @@ import { dirname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
+import { BRAND } from '@/config'
 import { classUsesMatching, sourceFiles, sourceMatching } from '@/lib/tokenModel'
 
 /**
@@ -201,8 +202,32 @@ const RAW_HEX = /#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g
 const hexIsExempt = (match: string): boolean =>
   HEX_EXEMPT_FILES.some((entry) => match.startsWith(`${entry.file}:`))
 
-test('source carries no raw hex colours', () => {
-  const offenders = sourceMatching(RAW_HEX).filter((use) => !hexIsExempt(use))
+/*
+ * `config.ts` is exempt too, and deliberately NOT on the list above: its one
+ * hex is re-derived rather than named. The rule forbids a raw colour where a
+ * token exists, and for the deployment's accent none does — it is the value
+ * the brand tokens are derived FROM, the input at the seam rather than a
+ * colour picked at a call site (#411). A listed file would let any hex in;
+ * asserting that the hex IS `BRAND.accent` lets exactly the seam through and
+ * treats a second one as an offender like everything else.
+ */
+test('source carries no raw hex colours, bar the one the brand seam takes', () => {
+  const found = sourceMatching(RAW_HEX)
+
+  const seam = found.filter((entry) => entry.startsWith('config.ts:'))
+  assert.equal(
+    seam.length,
+    1,
+    `config.ts may carry one hex, the brand accent:\n${seam.join('\n')}`,
+  )
+  assert.ok(
+    BRAND.accent !== undefined && seam[0].endsWith(BRAND.accent),
+    `the hex in config.ts is not the accent it exports: ${seam[0]}`,
+  )
+
+  const offenders = found.filter(
+    (use) => !hexIsExempt(use) && !seam.includes(use),
+  )
   assert.deepEqual(
     offenders,
     [],

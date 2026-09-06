@@ -1,8 +1,8 @@
 ---
 audience: designers
 summary: The four color-token tiers, semantic-only consumption, dark mode as a class, the forced-colors stance, lane tints, and the agent-ink precedent.
-sources: src/styles/colors.css, src/styles/semantic.css, src/styles/theme.css, src/styles/blueprint.css, src/styles/themes/, src/lib/canvasAnnotations.ts
-last-reviewed: 2026-08-25
+sources: src/styles/colors.css, src/styles/semantic.css, src/styles/theme.css, src/styles/blueprint.css, src/styles/themes/, src/lib/canvasAnnotations.ts, src/config.ts, src/lib/brandAccent.ts
+last-reviewed: 2026-09-06
 ---
 
 # Color
@@ -15,6 +15,31 @@ role?", and the palette exists only so the semantic layer has something to
 derive from. This is Supabase's rule, adopted verbatim; it is what lets dark
 mode, theming dials (`--hue`, `--contrast`, `--chroma`), and forced-colors all
 work without touching a single component.
+
+## The one raw color, and where it enters
+
+The rule above is "no raw color where a token exists", and there is exactly one
+place where none does: `brand.accent` in `src/config.ts`, the deployment's own
+accent. It is the value the brand tokens are derived *from*, so it is written
+the way a deployer knows it — a CSS hex — and `src/lib/brandAccent.ts` reads it
+at boot, converts it to its OKLCH hue and writes that onto the root element as
+`--hue`. An inline custom property on `documentElement` outranks every
+stylesheet selector, so the accent wins under `:root`, under `.dark` and in
+print.
+
+`tokenDiscipline.test.ts` allows that one hex and nothing else, and it checks
+the exemption rather than trusting it: the file may carry a single hex and it
+has to be the accent the module exports.
+
+What the accent reaches is the hue, and only the hue. The filled control's
+lightness and chroma are `--primary-lightness` and `--primary-chroma` in
+`semantic.css` — a tuning decision with three walked-back passes recorded above
+`--primary`, not a brand fact — and the `--brand-*` ramp is per-theme HSL
+literals each deployment authors in its own theme files. So rebranding is two
+moves that belong together: set the accent, and re-derive the ramp on its hue.
+`palette.test.ts` holds the two against each other for the accent this
+deployment ships, and `brandAccent.test.ts` measures that any accent, set or
+unset, still clears the contrast floors in both themes.
 
 ## The tier system
 

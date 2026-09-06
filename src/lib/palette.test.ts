@@ -19,6 +19,7 @@ import {
   oklchToLinearSrgb,
   palette,
   resolvePaletteToken,
+  resolveValue,
   stylesheet,
 } from '@/lib/tokenModel'
 
@@ -62,7 +63,6 @@ describe('brand fill', () => {
   // this block resolves the declarations on disk and measures them directly —
   // the fill is the most-tuned colour in the system and has been retuned three
   // times, twice into a state someone had to walk back.
-  const semantic = stylesheet('semantic.css').text
   const light = stylesheet('themes/light.css').text
 
   // Through the cascade, not off the page: a dial's value is what wins at the
@@ -72,14 +72,13 @@ describe('brand fill', () => {
   const FOREGROUND_LIGHTNESS = dial('--foreground-lightness', 'light')
   const CHROMA = dial('--chroma', 'light')
 
-  // --primary: oklch(<l> <c> var(--primary-hue))
-  const declared =
-    /--primary:\s*oklch\(\s*([\d.]+)\s+([\d.]+)\s+var\(--primary-hue\)\s*\)/.exec(
-      semantic,
-    )
-  if (!declared) throw new Error('--primary is no longer a literal L C hue')
-  const L = Number(declared[1])
-  const C = Number(declared[2])
+  // `--primary: oklch(var(--primary-lightness) var(--primary-chroma)
+  // var(--primary-hue))`. These were literals inside that expression until
+  // #412 named them; read through the cascade rather than off the page, so
+  // that a dial a theme starts turning is picked up here without a second
+  // reader learning about theme files.
+  const L = dial('--primary-lightness', 'light')
+  const C = dial('--primary-chroma', 'light')
 
   const canvas = oklch(SURFACE, 0, dial('--surface-hue', 'light'))
 
@@ -87,6 +86,19 @@ describe('brand fill', () => {
     // A drive-by edit that moves either number lands on this assertion first
     // and has to read the tuning history above the declaration to change it.
     expect({ L, C }).toEqual({ L: 0.83, C: 0.135 })
+  })
+
+  it('is one colour in both themes, which is why its dials are not per-theme', () => {
+    // The premise #412 settled on: PLUS's filled control does not invert
+    // between modes the way the template's neutral one does, so
+    // `--primary-lightness`, `--primary-chroma` and `--ring-lightness` are
+    // dials neither theme turns and live in `semantic.css`. If a pass ever
+    // gives dark its own fill, this fails first and the dials move into both
+    // theme files together.
+    expect(resolveValue('--primary', 'light')).toBe(
+      resolveValue('--primary', 'dark'),
+    )
+    expect(resolveValue('--ring', 'light')).toBe(resolveValue('--ring', 'dark'))
   })
 
   it('sits on the brand ramp rather than beside it', () => {
@@ -146,7 +158,7 @@ describe('brand fill', () => {
     // c * 1.3 has been over the ceiling at L 0.58 across every retune, so what
     // actually renders is the gamut-mapped value. Measure that, not the
     // requested one, or this test passes on a colour no browser draws.
-    const ringL = 0.58
+    const ringL = dial('--ring-lightness', 'light')
     const ring = oklch(ringL, Math.min(C * 1.3, chromaCeiling(ringL, HUE)), HUE)
     expect(contrast(ring, canvas)).toBeGreaterThanOrEqual(3)
   })

@@ -28,6 +28,11 @@
      declares; `themeDials.test.ts` now holds that for every dial. */
   --surface-hue: var(--hue);
   --chroma: 0.005;
+  /* `--primary-lightness`, `--primary-chroma` and `--ring-lightness` are not
+     here for the same reason they are not in `themes/light.css`: this
+     deployment runs one brand fill in both modes, so neither theme turns them
+     and all three live in `semantic.css`. The note in the light theme carries
+     the history. #412. */
   --surface: 0.19;
   --elevation-step: 0.025;
   --contrast: 0.5;
