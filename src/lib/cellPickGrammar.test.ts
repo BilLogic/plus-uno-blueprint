@@ -21,7 +21,7 @@ function cellAt(stepIndex: number, cellId: string): BlueprintCellSelection {
         cellId,
         pathId: 'path-1',
         pathName: 'Happy',
-        pathDescription: null,
+        pathSummary: null,
         pathKind: 'happy',
         content: 'Greets the tutor',
         frame: null,

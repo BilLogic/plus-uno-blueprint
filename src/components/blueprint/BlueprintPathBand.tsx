@@ -390,12 +390,12 @@ function CompareLaneRow({
                 cellId: cell?.id ?? `storyboard-${step.id}`,
                 cellContent: cell?.content ?? '',
                 cellFrame: cell?.frame ?? null,
-                cellDescription: cell?.summary ?? null,
+                cellSummary: cell?.summary ?? null,
                 cellLinks: cell?.links,
                 cellResources: cell?.resources,
                 pathId: blueprint.path.id,
                 pathName: blueprint.path.name,
-                pathDescription: blueprint.path.summary,
+                pathSummary: blueprint.path.summary,
                 pathKind: blueprint.path.kind,
               }
             : undefined

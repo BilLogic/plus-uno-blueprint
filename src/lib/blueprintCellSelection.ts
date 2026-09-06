@@ -13,12 +13,12 @@ export type BlueprintCellSelectionContext = {
   cellId: string
   cellContent: string
   cellFrame?: string | null
-  cellDescription?: string | null
+  cellSummary?: string | null
   cellLinks?: CellLink[]
   cellResources?: CellResource[]
   pathId: string
   pathName: string
-  pathDescription?: string | null
+  pathSummary?: string | null
   pathKind: PathKind
 }
 
@@ -37,11 +37,11 @@ export function buildBlueprintCellSelection(
         cellId: context.cellId,
         pathId: context.pathId,
         pathName: context.pathName,
-        pathDescription: context.pathDescription ?? null,
+        pathSummary: context.pathSummary ?? null,
         pathKind: context.pathKind,
         content: context.cellContent,
         frame: context.cellFrame ?? null,
-        summary: context.cellDescription ?? null,
+        summary: context.cellSummary ?? null,
         links: context.cellLinks ?? [],
         resources: context.cellResources ?? [],
       },
@@ -66,11 +66,11 @@ export function buildTouchpointSelection(
         cellId: context.cellId,
         pathId: context.pathId,
         pathName: context.pathName,
-        pathDescription: context.pathDescription ?? null,
+        pathSummary: context.pathSummary ?? null,
         pathKind: context.pathKind,
         content: techItem,
         frame: context.cellFrame ?? null,
-        summary: context.cellDescription ?? null,
+        summary: context.cellSummary ?? null,
         links: context.cellLinks ?? [],
         resources: context.cellResources ?? [],
       },
