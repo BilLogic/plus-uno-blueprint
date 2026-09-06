@@ -95,8 +95,12 @@ const SERVICE_SCOPE_PARAM = str(
  * reporting success.
  *
  * The list is the whole vocabulary the `lanes_lane_role_check` constraint
- * admits, and `scripts/check-lane-role-values.mjs` fails the build if a
- * retired spelling comes back to it.
+ * admits, and two checks hold it there, one per direction.
+ * `scripts/check-lane-role-values.mjs` fails the build if a retired spelling
+ * comes back to it; `scripts/check-lane-role-roster.mjs` fails it whenever
+ * this list and the constraint stop being the same SET, so a role added to
+ * the constraint and not to this line is a failure too (#399) — the agent
+ * cannot filter on a role nothing here has told it about.
  */
 const LANE_ROLE_FILTER_PARAM = str(
   'customer_actions | frontstage_actions | frontstage_touchpoints | backstage_actions | backstage_touchpoints | partner_actions | support_actions | storyboard',
