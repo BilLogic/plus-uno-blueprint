@@ -131,8 +131,6 @@ const CELL_DETAIL_PICTURE_CLASS =
   'absolute inset-0 h-full w-full object-contain object-center'
 const CELL_DETAIL_LOGO_CLASS =
   'size-32 shrink-0 rounded-lg bg-muted/20 p-2 object-contain object-center'
-const CELL_DETAIL_SMALL_LOGO_CLASS =
-  'size-[6.5rem] shrink-0 rounded-lg bg-muted/20 p-2 object-contain object-center'
 
 type PanelTab = 'dependencies' | 'evidence' | 'resources'
 
@@ -1125,14 +1123,18 @@ function BlueprintCellDetailPanelBody() {
     <div className="flex w-full flex-col items-center gap-3">
       {(() => {
         const images = detailImages ?? []
-        const useSmallerTechLogo = [
-          'social media',
-          'on-campus booth',
-          'handshake',
-          'handshake employer profile',
-        ].includes(techDetailLabel?.trim().toLowerCase() ?? '')
+        // A picture is a logo by the filename convention the stock assets
+        // under `public/touchpoint-logos` follow, and by nothing else.
+        //
+        // Four touchpoint names used to be listed here by hand — a deployment's
+        // own tools, matched case-insensitively — and every picture on such a
+        // cell was then treated as a logo and drawn at `6.5rem` rather than in
+        // the 4:3 frame. It was a rendering taste with no way for anyone
+        // outside this file to see it, set it, or find out why their cell drew
+        // differently from the one beside it (#396 Q29). A per-touchpoint size
+        // hint, if one is ever wanted, is data on the registry row next to
+        // `icon_url` — not four strings in a component.
         const isTechLogo = (src: string) =>
-          useSmallerTechLogo ||
           src.includes('-logo.') ||
           src.includes('/logo/')
         const logos = images.filter(isTechLogo)
@@ -1148,9 +1150,7 @@ function BlueprintCellDetailPanelBody() {
                     src={src}
                     alt=""
                     className={cn(
-                      useSmallerTechLogo
-                        ? CELL_DETAIL_SMALL_LOGO_CLASS
-                        : CELL_DETAIL_LOGO_CLASS,
+                      CELL_DETAIL_LOGO_CLASS,
                       src.includes('figma-logo.') && 'bg-transparent',
                     )}
                   />
