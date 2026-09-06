@@ -366,9 +366,11 @@
    * swap the face; unset, the defaults apply.
    *
    * The default is the one thing that differs from theirs, and it has to:
-   * their default is Circular, which is a licensed face we cannot ship. Ubuntu
-   * Sans is the brand face here, loaded from `@fontsource-variable/ubuntu-sans`
-   * in the entry — variable, so the whole weight axis comes in one file.
+   * their default is Circular, which is a licensed face we cannot ship.
+   * Ubuntu Sans is the default here, loaded from
+   * `@fontsource-variable/ubuntu-sans` in the entry — variable, so the whole
+   * weight axis comes in one file. A fork that wants a different face swaps
+   * the import and this default together.
    *
    * No heading font, no type-scale overrides, no weight overrides: Supabase
    * defines none, and headings are this stack at a heavier weight.

@@ -16,8 +16,8 @@ import { declarationsIn, namesIn } from '@/lib/tokenModel'
  * TWO. An alias that duplicates a name `theme.css` already registers is not a
  * synonym for anything — `--color-foreground-contrast` sat here at exactly
  * `theme.css`'s value, and since `theme.css` imports later, this file's copy
- * could never win. Same shape as the `--surface-hue` default in `semantic.css`
- * that `themeDials.test.ts` now forbids, one layer up.
+ * could never win. A declaration that reads like a fallback, sitting in a file
+ * that sorts too early to be one.
  */
 
 const COMPAT = 'compat.css'

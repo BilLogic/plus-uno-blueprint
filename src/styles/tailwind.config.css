@@ -52,8 +52,10 @@
 @plugin '@tailwindcss/forms';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
-/* The two faces the stacks in theme.css name first. Both variable, so each is
- * one file across its whole weight axis. */
+/* The two faces theme.css names first — variable, so each is one file
+ * across its whole weight axis. A fork that wants a different typeface
+ * swaps these imports and the matching --font-sans/--font-mono defaults in
+ * theme.css together. */
 @import '@fontsource-variable/ubuntu-sans';
 @import '@fontsource-variable/source-code-pro';
 

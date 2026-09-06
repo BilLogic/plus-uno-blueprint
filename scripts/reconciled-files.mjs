@@ -678,4 +678,48 @@ export const RECONCILED_FILES = [
   //   portable-core contract. This one is identical only because that
   //   annotation pass has not reached it. When it does, the gate would fire
   //   on a change uno must not take and has no use for.
+
+  // The shared stylesheets (#327 S3, gated on #396 Q47). Q47 made `tokenModel`
+  // the single style seam in both repositories, and that is what makes a
+  // stylesheet convergence checkable rather than hopeful: both sides now
+  // resolve the same declarations through the same reader, so "identical" can
+  // be measured at the value rather than argued at the text.
+  //
+  // Seven of the eleven shared sheets converged. Two moved in BOTH directions
+  // — `tailwind.config.css` and `theme.css` — which is the convergence rule
+  // working rather than one side winning. Nothing renders differently: 626
+  // tokens resolved in light and dark on this side, 622 on the template's,
+  // zero moved on either.
+  //
+  // The four that stayed out are three problems and not four, and none of them
+  // is a stylesheet problem. `colors.css` differs in exactly seven
+  // `--color-brand-*` steps written as literals; `print.css`'s WHOLE
+  // divergence is a block restating those same ramps, and it has to use
+  // literals because `themes/dark.css` sets its copies with no `@media
+  // screen`, so a `var()` would resolve to the dark value on paper; and
+  // `semantic.css` differs over where the primary and ring dials live. All
+  // three are Q42 — the brand seam, which turns out not to be confined to
+  // `themes/*.css` the way that question assumed. `blueprint.css` is the
+  // genuine fourth: #323 still owns half of it, and it carries a
+  // `partner-action` lane role the template's schema has no value for.
+  //
+  // The four non-stylesheet files come with the sheets rather than after them.
+  // `motion.ts` and `motion.test.ts` moved together because converging
+  // `animations.css` exposed that the test had stopped measuring anything: it
+  // reduced selectors with a pattern that stops at a hyphen, so an added
+  // `[data-slot='skeleton']` made it throw on a null instead of report a gap.
+  // A test that reads one file and reduces selectors by pattern is one rename
+  // away from measuring nothing, which is exactly the drift this list exists
+  // to catch.
+  'src/styles/base.css',
+  'src/styles/utilities.css',
+  'src/styles/unset-tw-colors.css',
+  'src/styles/compat.css',
+  'src/styles/animations.css',
+  'src/styles/tailwind.config.css',
+  'src/styles/theme.css',
+  'src/lib/motion.ts',
+  'src/lib/motion.test.ts',
+  'src/lib/tailwindColorReset.test.ts',
+  'src/lib/compatLayer.test.ts',
 ]
