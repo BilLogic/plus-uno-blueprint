@@ -1,3 +1,6 @@
+import { readdirSync, statSync } from 'node:fs'
+import { dirname, relative, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { classUsesMatching, sourceFiles, sourceMatching } from '@/lib/tokenModel'
@@ -14,9 +17,17 @@ import { classUsesMatching, sourceFiles, sourceMatching } from '@/lib/tokenModel
  * `src/components/**.tsx` with its own reader, which is why
  * `src/lib/filterToolbarButton.ts` could carry `border-border/60` and
  * `border-border/50` — the exact pattern the third rule forbids — and stay
- * green for months. The sample now comes from `tokenModel`, which reads every
- * non-test file under `components/`, `contexts/`, `hooks/`, `lib/`, `data/`,
- * so widening it once widens it for every rule that asks (ADR 0001).
+ * green for months. The sample comes from `tokenModel` now, so widening it
+ * once widens it for every rule that asks (ADR 0001).
+ *
+ * That move replaced one directory with a list of six roots, and a list is the
+ * same mistake with a longer arm: it is only ever right about the directories
+ * that existed when someone typed it. `App.tsx`, `main.tsx`, `content/`,
+ * `types/` and `dev/` were never on it, so eleven files sat outside every rule
+ * below — and `dev/ArrowSituationCatalogPage.tsx` had been carrying twenty-one
+ * raw hex colours the whole time, which is the fifth defect a widening has
+ * surfaced and the reason the model now walks the tree rather than a list
+ * (#414). The first test in this file is what holds that open.
  */
 
 /** Ramps colors.css owns. Semantic tokens derive from these; source may not. */
@@ -84,16 +95,46 @@ const UTILITY_PREFIXES =
  */
 const VARIANTS = '(?:[\\w-]+(?:-\\[[^\\]]*\\])?:|\\[[^\\]]*\\]:)*'
 
-test('the model reads more than the component tree', () => {
-  // A rule is only as good as its sample, and this file's sample used to be
-  // one directory. If the reader ever narrows again, every assertion below
-  // starts passing for the wrong reason.
-  const roots = new Set(sourceFiles().map((file) => file.file.split('/')[0]))
-  assert.ok(roots.has('components'), 'reads components/')
-  assert.ok(roots.has('lib'), 'reads lib/')
-  assert.ok(roots.has('hooks'), 'reads hooks/')
-  assert.ok(roots.has('contexts'), 'reads contexts/')
-  assert.ok(sourceFiles().length > 200, 'reads the whole tree, not a sample')
+const SRC = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+
+/**
+ * Every non-test `.ts`/`.tsx` under `src`, enumerated independently.
+ *
+ * A second walk in a file whose whole point is that there should be one — and
+ * deliberately so. It reads no file and applies no rule; it lists paths, and
+ * it exists precisely to be compared against the model's own list. A guard
+ * that asked the model whether the model reads enough could only ever agree
+ * with itself.
+ */
+function everySourceFile(dir: string = SRC): string[] {
+  return readdirSync(dir).flatMap((entry) => {
+    const path = resolve(dir, entry)
+    if (statSync(path).isDirectory()) return everySourceFile(path)
+    if (!/\.tsx?$/.test(entry)) return []
+    if (entry.includes('.test.')) return []
+    return [relative(SRC, path).split('\\').join('/')]
+  })
+}
+
+test('the sample is the whole tree, file for file', () => {
+  // A rule is only as good as its sample, and this file's sample has now been
+  // too narrow twice: one directory, then a list of six roots. Counting files
+  // or naming roots is what let both versions pass — `roots.has('lib')` is
+  // true of a reader that misses `types/`, and a `length > 200` floor is true
+  // of a reader that misses eleven files out of 442. So this asserts the set
+  // difference in both directions and names what is missing, which is the one
+  // form a narrowing cannot satisfy by adding another string to a list.
+  const sampled = new Set(sourceFiles().map((file) => file.file))
+  const onDisk = everySourceFile()
+  const missing = onDisk.filter((file) => !sampled.has(file))
+  assert.deepEqual(
+    missing,
+    [],
+    `Outside the model's sample, so outside every rule below:\n${missing.join('\n')}`,
+  )
+  const phantom = [...sampled].filter((file) => !onDisk.includes(file))
+  assert.deepEqual(phantom, [], `Sampled but not on disk:\n${phantom.join('\n')}`)
+  assert.ok(onDisk.length > 400, 'the tree itself is still the whole tree')
 })
 
 test('source takes colour from the semantic layer, not the primitive ramps', () => {
@@ -108,14 +149,77 @@ test('source takes colour from the semantic layer, not the primitive ramps', () 
   )
 })
 
+/**
+ * Files allowed to carry something the hex pattern matches, and why.
+ *
+ * Both entries are `src/dev/`, and they are here for two different reasons —
+ * which is the point of naming files rather than narrowing the pattern. A
+ * pattern bent to step over these would read, to the next person, as a rule
+ * that never covered them; the same argument the vendored font-size list makes
+ * below, and the reason neither exemption is a regex.
+ *
+ * `ArrowSituationCatalogPage.tsx` is a measuring instrument, not a surface.
+ * It is reached only at `/proto/arrows` behind `import.meta.env.DEV`, which
+ * Vite folds to a static `false` in a production build, so the module and its
+ * colours are dropped by the bundler and reach neither a user nor the compiled
+ * stylesheet. Its twenty-one hexes are calibration — graph paper, a cell
+ * outline, one blue arrow, one violet alternate — and none of them names a
+ * role this design system has a token for. The two ways to "fix" it are both
+ * worse than the exemption: minting `--arrow-catalog-*` names in `src/styles`
+ * would put tokens no shipping surface consumes into the production layer,
+ * which is the liveness problem ADR 0001 already flags; and taking the
+ * semantic tokens instead would make a fixed visual reference invert with the
+ * theme, which is the one thing a reference held against a golden snapshot
+ * must not do.
+ *
+ * `arrowSituationCatalog.ts` carries no colour at all. Its four matches are
+ * `(#348)` and `(#349)` — issue references inside the `note:` prose of the
+ * fixtures, in a string rather than a comment, so comment-stripping cannot
+ * reach them and a three-digit hex pattern cannot tell them from `#fff`. The
+ * page has two of the same, in JSX text.
+ *
+ * Every entry is asserted below to still match something, so a file that stops
+ * needing its exemption loses it instead of leaving a dead carve-out behind
+ * for the next hex to slip through.
+ */
+const HEX_EXEMPT_FILES: ReadonlyArray<{ file: string; because: string }> = [
+  {
+    file: 'dev/ArrowSituationCatalogPage.tsx',
+    because:
+      'dev-only /proto/arrows instrument, dropped from production builds; its colours are calibration, not vocabulary — plus two (#NNN) issue references in prose',
+  },
+  {
+    file: 'dev/arrowSituationCatalog.ts',
+    because:
+      'no colours at all — four (#NNN) issue references inside fixture note: strings, which the hex pattern cannot distinguish from #fff',
+  },
+]
+
+/** Six- and three-digit hex. `#{id}` template strings and CSS ids are not colours. */
+const RAW_HEX = /#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g
+
+const hexIsExempt = (match: string): boolean =>
+  HEX_EXEMPT_FILES.some((entry) => match.startsWith(`${entry.file}:`))
+
 test('source carries no raw hex colours', () => {
-  // Six- and three-digit hex only: `#{id}` template strings and CSS ids are
-  // not colours, and neither is an 8-digit anything this codebase writes.
-  const offenders = sourceMatching(/#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g)
+  const offenders = sourceMatching(RAW_HEX).filter((use) => !hexIsExempt(use))
   assert.deepEqual(
     offenders,
     [],
     `Raw hex in source — add or use a token (see guidelines/foundations/color.md):\n${offenders.join('\n')}`,
+  )
+})
+
+test('every hex exemption is still a file that needs one', () => {
+  const matches = sourceMatching(RAW_HEX)
+  const stale = HEX_EXEMPT_FILES.filter(
+    (entry) => !matches.some((use) => use.startsWith(`${entry.file}:`)),
+  ).map((entry) => entry.file)
+  assert.deepEqual(
+    stale,
+    [],
+    `Exempted from the hex rule but no longer matching it: ${stale.join(', ')}. ` +
+      'If the file moved, move the exemption with it; if the hexes are gone, delete the exemption.',
   )
 })
 

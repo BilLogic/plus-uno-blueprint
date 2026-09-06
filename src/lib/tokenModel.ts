@@ -379,33 +379,31 @@ function substitute(value: string, theme: Theme, seen: Set<string>): string {
 // Consumers
 // ---------------------------------------------------------------------------
 
-const SOURCE_ROOTS = ['components', 'contexts', 'hooks', 'lib', 'data', 'config.ts']
-
 let cachedSource: SourceFile[] | null = null
 
 /**
  * Every non-test TypeScript file under `src`, comments stripped.
  *
- * The roots are everything that can carry a class string or an inline style —
- * `lib/`, `hooks/` and `contexts/` included, which is the sampling gap that
- * let `lib/filterToolbarButton.ts` carry the exact patterns the raw-value
- * guard forbids while that guard read only `components/`.
+ * The whole tree, deliberately, rather than a list of roots that names the
+ * directories someone thought of. A list was what stood here — `components`,
+ * `contexts`, `hooks`, `lib`, `data`, `config.ts` — and it was already the
+ * second version of the same mistake. The first version was
+ * `tokenDiscipline.test.ts` walking `components/` alone, which is how
+ * `lib/filterToolbarButton.ts` carried the exact `border-border/60` the
+ * raw-value guard forbids and stayed green for months. Naming five roots
+ * instead of one fixed that instance and kept the shape: `App.tsx`,
+ * `main.tsx`, `content/`, `types/` and `dev/` — eleven files — sat outside
+ * every style rule in this repository, and `dev/` was carrying twenty-one raw
+ * hex colours the whole time (#414).
+ *
+ * A root list can only ever be right about the directories that existed when
+ * it was written. Walking the tree is right about the next one too, which is
+ * the property the ADR asks for: widen the sampling here, once, and every rule
+ * that asks the model inherits the fix (ADR 0001).
  */
 export function sourceFiles(): SourceFile[] {
   if (cachedSource) return cachedSource
-  const files: string[] = []
-  for (const root of SOURCE_ROOTS) {
-    const path = resolve(SRC, root)
-    let stats
-    try {
-      stats = statSync(path)
-    } catch {
-      continue
-    }
-    if (stats.isDirectory()) files.push(...tsFiles(path))
-    else files.push(path)
-  }
-  cachedSource = files
+  cachedSource = tsFiles(SRC)
     .map((path) => ({
       file: relative(SRC, path).split('\\').join('/'),
       code: stripComments(readFileSync(path, 'utf8')),
@@ -424,11 +422,20 @@ function tsFiles(dir: string): string[] {
   })
 }
 
-/** A comment naming the class it replaced is not a use of that class. */
+/**
+ * A comment naming the class it replaced is not a use of that class.
+ *
+ * Block comments are BLANKED rather than deleted, for the same reason
+ * `blankComments` blanks them in the stylesheets: every newline has to
+ * survive, or every line number this model reports after the file's header
+ * comment is wrong. It used to delete them, and the drift was not small —
+ * `dev/ArrowSituationCatalogPage.tsx` opens with a thirteen-line header, so
+ * the `#2563eb` on its line 28 was reported at line 15, pointing the reader
+ * at an import. A guard that names the wrong line is a guard someone stops
+ * trusting.
+ */
 export function stripComments(source: string): string {
-  return source
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/(^|[^:])\/\/.*$/gm, '$1')
+  return blankComments(source).replace(/(^|[^:])\/\/.*$/gm, '$1')
 }
 
 let cachedConsumers: Consumer[] | null = null
