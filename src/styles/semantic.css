@@ -68,6 +68,37 @@
    */
   --radius: 0.625rem;
 
+  /*
+   * The filled control's two dials, and the focus ring's one.
+   *
+   * The template carries these three in its theme files, where a neutral fill
+   * inverts between modes — near-black at L 0.205 in light, near-white at
+   * L 0.922 in dark — and the ring takes 0.58 on the white canvas and 0.62 on
+   * the black one. Their absence here was read as a deletion (#412). The
+   * history says otherwise: this deployment's theme files were written on
+   * 2026-08-04 (65a94b66) and never carried them, the template introduced them
+   * on 2026-08-18 (a3b54922), and the only thing joining the two histories is
+   * fbb4b249, a `-s ours` graft whose tree is byte-identical to its first
+   * parent and which imports nothing. Nothing was ever removed here.
+   *
+   * They are dials all the same, and until now they were literals — `0.83` and
+   * `0.135` inside `--primary`, a bare `0.58` inside the ring's relative
+   * colour — which is precisely what made the filled control and the focus
+   * ring untunable without rewriting a derivation. Naming them is #412's
+   * answer. The values are exactly the literals they replace, so nothing
+   * repaints; the tuning history that argues for them is at `--primary` below.
+   *
+   * They live HERE and not in `themes/`, by the invariant at the top of this
+   * file: this deployment runs one brand fill in both modes, so neither theme
+   * turns any of the three, and a dial neither theme turns is not a dial a
+   * theme owns — the same rule that moved `--radius` out on 2026-08-26. Should
+   * a later pass want a darker fill on the dark canvas, the dial moves into
+   * BOTH theme files together, which is what `themeDials.test.ts` holds.
+   */
+  --primary-lightness: 0.83;
+  --primary-chroma: 0.135;
+  --ring-lightness: 0.58;
+
   /* --- Contrast ---------------------------------------------------------
    * Global knob, 0–1. 0.5 is the baseline: foreground lands exactly on
    * `--foreground-lightness`, and borders sit mid-strength. Below 0.5 text
@@ -255,8 +286,16 @@
    *     clearing SC 1.4.11's 3:1 in both.
    * The multipliers are left as ratios rather than clamped to a literal:
    * a hardcoded ceiling would be wrong the moment `--hue` moves, and the
-   * browser's chroma reduction is already the behaviour we want. */
-  --primary: oklch(0.83 0.135 var(--primary-hue));
+   * browser's chroma reduction is already the behaviour we want.
+   *
+   * The L and the C this whole history argues about are the
+   * `--primary-lightness` and `--primary-chroma` dials declared at the top of
+   * this block (#412). They were spelled out here as literals until then; the
+   * numbers did not move, only their home did, and this comment is still where
+   * a retune has to be argued. */
+  --primary: oklch(
+    var(--primary-lightness) var(--primary-chroma) var(--primary-hue)
+  );
   /* The Supabase button treatment: flat fill, one shade-darker hairline.
    * Derived, so it tracks any future retune of --primary. */
   --primary-border: oklch(from var(--primary) calc(l - 0.12) calc(c * 1.25) h);
@@ -377,7 +416,7 @@
   /* Alias, exactly as upstream: one name for the plate, one for its role. */
   --control: var(--control-raised);
 
-  --ring: oklch(from var(--primary) 0.58 calc(c * 1.3) h);
+  --ring: oklch(from var(--primary) var(--ring-lightness) calc(c * 1.3) h);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
   --sidebar-accent: var(--accent);
