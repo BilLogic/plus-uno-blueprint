@@ -515,6 +515,16 @@ export const RECONCILED_FILES = [
   // source it came from.
   'src/lib/blueprintCellSelection.ts',
 
+  // #405 follow-up — the type the selection builders write into. Two comment
+  // lines were all that separated the copies, and one of them was residue of
+  // the lane-vocabulary rename (#395): it named the touchpoint lanes by their
+  // retired display names, `Front Stage Tech, Back Stage Tech`, which no
+  // deployment but this one ever had. The template's wording says `on a
+  // touchpoint lane`, which is the lane ROLE and is what the glossary now
+  // uses. Taking it is a correction, not a preference. The other line gains
+  // one word — a phase belongs to a service — and is simply more precise.
+  'src/types/blueprintCellDetail.ts',
+
   // DECLINED by #403, recorded beside the enrolments from the same sweep so
   // that the next pass reads the reasoning instead of re-deriving it. None of
   // these is a near miss waiting for a better day; each names a file this

@@ -283,6 +283,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/ui/alert.tsx',
     'docs/agents/triage-labels.md',
     'src/lib/blueprintCellSelection.ts',
+    'src/types/blueprintCellDetail.ts',
   ])
 })
 
