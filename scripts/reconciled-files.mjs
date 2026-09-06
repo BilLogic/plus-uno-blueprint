@@ -230,6 +230,17 @@ export const RECONCILED_FILES = [
   'src/styles/typography.config.js',
   'src/styles/variants.css',
 
+  // asb 1.6.1 adopt (#327 S1). The template's mechanical layers→lanes rename
+  // had mangled English in these files' comments ("tabs laneed", "the
+  // semantic lane" of design tokens); with the sentences restored on that
+  // side they match ours. `activeServiceStore.ts` is not here: the template
+  // has no `useActiveService` hook to name until #325's Q45 settles the
+  // active-service provider.
+  'src/components/EditorErrorBoundary.tsx',
+  'src/components/editor/SidebarNav.tsx',
+  'src/contexts/viewStateStore.ts',
+  'src/styles/global.css',
+
   // scaffolding: the Vite starter assets and ambient type declaration
   // neither repo has touched.
   'src/assets/hero.png',
