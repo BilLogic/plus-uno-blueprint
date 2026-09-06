@@ -50,6 +50,7 @@
     "check:seed-load": "node scripts/check-seed-loads.mjs",
     "check:write-surface": "node scripts/check-write-surface.mjs",
     "check:reconciled": "node scripts/check-reconciled-files.mjs",
+    "check:duplicate-meaning": "node scripts/check-duplicate-meaning.mjs",
     "check:copy": "vitest run scripts/tests/retired-copy.test.mjs",
     "agent-account": "node scripts/generate-agent-account.mjs",
     "check:agent-account": "node scripts/generate-agent-account.mjs --check"

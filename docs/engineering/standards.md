@@ -82,6 +82,18 @@ column, and on a section that defines no term. `npm run check:interface-map`
 holds `docs/reference/interface-schema-map.md` to what its sources render —
 run `npm run interface-map` after changing a panel label's binding.
 
+**The two gates on the template boundary**, `npm run check:reconciled` and
+`npm run check:duplicate-meaning`, both read the lockfile-pinned
+`node_modules/agentic-service-blueprinting` rather than a sibling checkout,
+which is what lets them run on a pull request from a clean install. The first
+holds every file `scripts/reconciled-files.mjs` declares byte-identical to the
+template's copy. The second asks the opposite question about the files that
+will never be identical: whether a paragraph of this repository's harness prose
+is already stated in the template's copy of the same document. `CONTEXT.md` is
+the case that needs it — this glossary carries forty-one terms and the
+template's twenty-six, so the two files must differ permanently and no
+byte-level check can ever look inside them.
+
 **The two local guards**, both of which need a Postgres 17 server and neither
 of which is in CI for that reason — no workflow stands one up.
 `npm run replay:migrations` builds an empty database from

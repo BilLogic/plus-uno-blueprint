@@ -212,3 +212,28 @@ jobs:
       # (zero entries, a trivial pass); each reconciliation ticket enrols its
       # file with a one-line append to the allowlist.
       - run: npm run check:reconciled
+
+      # The cross-repository duplicate sweep (#364, story 8). Its sibling above
+      # asks whether two declared-identical files still agree byte for byte;
+      # this asks the opposite question about the files that will never be
+      # identical — whether a paragraph of this deployment's harness prose is
+      # already stated in the template, in a document nothing holds together.
+      #
+      # `CONTEXT.md` is why the two cannot be one check. This glossary defines
+      # forty-one terms and the template's defines twenty-six, so the two files
+      # must differ permanently and can never join the reconciled allowlist —
+      # yet a definition copied across and left unadapted sits inside them,
+      # invisible to every byte comparison. The sweep normalises away line
+      # wrapping, letter case, markdown syntax and each repository's own name
+      # before it compares, which is what makes it a test of meaning rather
+      # than of bytes.
+      #
+      # The spec put this check in `plus-uno`, and `scripts/check-harness.mjs`
+      # there forbids it: a member that cannot run on a clean checkout makes
+      # that gate permanently red, and no runner there has a second repository
+      # on disk. It runs here because this is the only one of the three repos
+      # that holds both harnesses at once — the template arrives through the
+      # lockfile as `node_modules/agentic-service-blueprinting`. So, like the
+      # two checks above, it belongs in `gates` after `npm ci`, needs no
+      # database, no credential and no network, and can be a required check.
+      - run: npm run check:duplicate-meaning
