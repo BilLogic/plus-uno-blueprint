@@ -20,7 +20,6 @@ import {
 import { WARM_UP_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/warmUpRegularTutorLinks'
 import { applyBlueprintDisplayFilters } from '@/lib/applyBlueprintDisplayFilters'
 import { mergeUrlLinks, techDescriptionLink } from '@/lib/blueprintTechDescriptions'
-import { getScenarioParallelNote } from '@/lib/scenarioParallelInfo'
 import { WARM_UP_SCENARIO_ID } from '@/data/parallelSessionScenarioIds'
 import { ZOOM_TECH_LOGO } from '@/lib/blueprintTechPictures'
 import {
@@ -543,7 +542,12 @@ export const WARM_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
     name: 'Student shares screen',
     summary:
       'Engaged or partially engaged student warm-up.',
-    note: getScenarioParallelNote(WARM_UP_SCENARIO_ID),
+    // A path's note is what is true of THAT route. Whether this scenario runs
+    // beside others is true of every route in it, so it lives on the scenario
+    // now — `scenarios.note` — and no longer here, where six sibling paths
+    // each carried the same sentence with nothing making them agree
+    // (#326 S6, 20260905130000).
+    note: null,
     kind: 'happy',
     status: 'live',
   },
@@ -645,7 +649,12 @@ export const WARM_UP_ALTERNATE_PATH_FALLBACK: BlueprintData = {
     id: WARM_UP_ALTERNATE_PATH_ID,
     name: 'No screen share',
     summary: 'Not engaged student warm-up.',
-    note: getScenarioParallelNote(WARM_UP_SCENARIO_ID),
+    // A path's note is what is true of THAT route. Whether this scenario runs
+    // beside others is true of every route in it, so it lives on the scenario
+    // now — `scenarios.note` — and no longer here, where six sibling paths
+    // each carried the same sentence with nothing making them agree
+    // (#326 S6, 20260905130000).
+    note: null,
     kind: 'variant',
     status: 'live',
   },

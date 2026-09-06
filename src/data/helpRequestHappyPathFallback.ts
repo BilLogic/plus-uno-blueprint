@@ -23,7 +23,6 @@ import {
   HELP_REQUEST_ZOOM_STEP_04_DESCRIPTION,
   HELP_REQUEST_ZOOM_STEP_05_DESCRIPTION,
 } from '@/data/helpRequestFrames'
-import { getScenarioParallelNote } from '@/lib/scenarioParallelInfo'
 import {
   buildParallelSessionPartnerLeadCells,
   buildParallelSessionPartnerLeadDependencies,
@@ -325,7 +324,12 @@ export const HELP_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
     name: 'Resolved in the room',
     summary:
       'Tutors receive and resolve student help requests during the session.',
-    note: getScenarioParallelNote(HELP_REQUEST_SCENARIO_ID),
+    // A path's note is what is true of THAT route. Whether this scenario runs
+    // beside others is true of every route in it, so it lives on the scenario
+    // now — `scenarios.note` — and no longer here, where six sibling paths
+    // each carried the same sentence with nothing making them agree
+    // (#326 S6, 20260905130000).
+    note: null,
     kind: 'happy',
     status: 'live',
   },

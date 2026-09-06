@@ -1,19 +1,20 @@
 import type { ReactElement } from 'react'
 import { EntityDefinitionPopover } from '@/components/blueprint/EntityDefinitionPopover'
-import { getScenarioParallelTooltip } from '@/lib/scenarioParallelInfo'
 import type { NavItem } from '@/types/nav'
 
 type ScenarioTitleDefinitionProps = {
   /** A phase slide's title says PHASE; a scenario's says SCENARIO. */
   kind?: 'phase' | 'scenario'
-  /** The scenario whose parallel note to carry, where there is one. */
-  slide?: Pick<NavItem, 'id' | 'label'> | null
+  /** The scenario whose note to carry, where the row has one. */
+  slide?: Pick<NavItem, 'note'> | null
   children: ReactElement
 }
 
 /**
- * A slide header's title, carrying what a scenario IS and — where there is
- * one — the note that this scenario runs alongside others.
+ * A slide header's title, carrying what a scenario IS and — where the row has
+ * one — `scenarios.note`, the aside beside it. In this deployment that note
+ * says which scenarios run alongside this one; it used to be three sentences
+ * in TypeScript keyed on three hardcoded scenario ids (#326 S6, #396 Q38).
  *
  * It was `ScenarioParallelInfoTooltip`: an ⓘ parked before the title, whose
  * hover said "this scenario can run in parallel with…". That made ⓘ mean two
@@ -37,7 +38,7 @@ export function ScenarioTitleDefinition({
   return (
     <EntityDefinitionPopover
       kind={kind}
-      note={slide ? getScenarioParallelTooltip(slide) : null}
+      note={slide?.note ?? null}
       side="bottom"
     >
       {children}

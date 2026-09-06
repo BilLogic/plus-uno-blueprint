@@ -37,6 +37,13 @@ export type NavItem = {
   viewType?: SlideViewType
   /** The row's summary, shown under the slide title. */
   summary?: string | null
+  /**
+   * `scenarios.note` — the aside a reader should know besides what the
+   * scenario IS, carried on the title's definition popover. Today it says
+   * which other scenarios this one can run beside; a deployment writes
+   * whatever is true of its own board (#326 S6, #396 Q38).
+   */
+  note?: string | null
 }
 
 const PRE_SESSION_ID = 'a0000000-0000-4000-8000-000000000103'
@@ -252,6 +259,14 @@ export const FALLBACK_NAV: NavItem[] = [
     viewType: 'stacked',
     summary:
       'Tutors greet and move students to breakout rooms as the session begins.',
+    /*
+      `scenarios.note` for the three in-session scenarios that overlap. The
+      database says this in the column; this list is what a board with no
+      database reads, so it says it here — fixture content, beside every
+      other sentence this file already holds (#326 S6).
+    */
+    note:
+      'This scenario can run in parallel with the Goal Setting and Help Request scenarios.',
   },
   {
     id: 'a0000000-0000-4000-8000-000000000204',
@@ -261,6 +276,8 @@ export const FALLBACK_NAV: NavItem[] = [
     viewType: 'stacked',
     summary:
       'Tutors guide students through goal setting in breakout sessions.',
+    note:
+      'This scenario can run in parallel with the Warm-Up and Help Request scenarios.',
   },
   {
     id: 'a0000000-0000-4000-8000-000000000205',
@@ -270,6 +287,8 @@ export const FALLBACK_NAV: NavItem[] = [
     viewType: 'stacked',
     summary:
       'Tutors receive and resolve student help requests during the session.',
+    note:
+      'This scenario can run in parallel with the Warm-Up and Goal Setting scenarios.',
   },
   {
     id: 'a0000000-0000-4000-8000-000000000206',

@@ -7,7 +7,7 @@ import type { NavItem } from '@/types/nav'
 
 type ScenarioSlideHeaderProps = {
   title: string
-  slide?: Pick<NavItem, 'id' | 'label'>
+  slide?: Pick<NavItem, 'note'>
   description?: string | null
   phaseLabel?: string
   paths?: PathOption[]

@@ -108,7 +108,7 @@ would have re-asserted fixes as defects. Still true:
 |---|---|
 | `src/lib/blueprintArrowGeometry.ts` | 3,155 lines, 20 distinct hardcoded cell UUIDs, 58 Regular-Tutor references. Inert for foreign content — an ID match fails and routing falls through to the default — but the largest PLUS coupling in the tree. |
 | `src/lib/blueprintDisplayFlags.ts` | 53 lines of per-scenario rollout flags, keyed to one PLUS scenario UUID. |
-| `src/lib/touchpointColors.ts` and the touchpoint description/frame tables | PLUS-branded tech vocabulary: `PLUS App`, `Zoom`, `Zoom Recording`. |
+| The touchpoint description/frame tables | PLUS-branded tech vocabulary: `PLUS App`, `Zoom`, `Zoom Recording`. `src/lib/touchpointColors.ts` left this list in #326 S6 — its colours and aliases are `touchpoints.tone` and `touchpoints.aliases` now, and what remains in the tree is `src/data/touchpointRegistryFallback.ts`, the mirror the fixture boards read because they have no database to query. |
 | `src/config.ts` | `ORG_NAME = 'PLUS'`. Quarantined — owned here by design, not a defect. |
 | `package.json` | `"name": "plus-service-hub"`. |
 | `public/touchpoint-logos/` | Stock logos for well-known tools. The PLUS product screenshots that used to sit beside them moved into the `cell-attachments` bucket (#278). |

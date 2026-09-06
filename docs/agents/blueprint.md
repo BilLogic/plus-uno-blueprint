@@ -374,13 +374,14 @@ Things a cell, or one touchpoint placement, points at. A link is one kind of res
 ### `scenarios`
 Scenario within a phase
 
-1 of 8 columns described.
+2 of 9 columns described.
 
 | Column | Meaning |
 |---|---|
 | `created_at` | — |
 | `id` | — |
 | `name` | — |
+| `note` | An aside about the scenario, beside the summary that says what it is: most often what else may be running at the same time ("this scenario can run in parallel with Goal Setting and Help Request"). Blueprint data, not app configuration — it replaces a Record keyed on hardcoded scenario ids in src/lib/scenarioParallelInfo.ts (#326 S2, Decision D4). A scenario's fact, held once, rather than the same sentence copied onto each of its paths through paths.note. Free prose in the author's own language rather than a structured flag the renderer would have to compose a sentence from. |
 | `position` | — |
 | `phase_id` | — |
 | `summary` | — |
@@ -474,17 +475,20 @@ Blueprint column (journey step) scoped to a service scenario
 ### `touchpoints`
 Deployment-level catalog of the tools, documents, channels and artifacts the services use. One row per real thing, unique by name across the deployment; a service references it, no service owns it (ADR 0014).
 
-1 of 9 columns described.
+4 of 12 columns described.
 
 | Column | Meaning |
 |---|---|
+| `aliases` | The other spellings that mean this touchpoint — an older name the service has stopped using, a label that carried its own specification, a lower-case one a person typed into a cell. The name is the identity (ADR 0014); these resolve to it. This deployment's own history, which is why it is a column and not the TECH_LABEL_ALIASES literal in touchpointColors.ts (#326 S2, #396 Q48). Nullable rather than NOT NULL DEFAULT '{}' like stakeholders.aliases: null means no aliases have been considered, which is what every row means today. Uniqueness against other names and aliases is not constrained here — that rule belongs with the resolver, in S6. |
 | `created_at` | — |
+| `icon_url` | A stable URL for the touchpoint's stock icon or logo — the mark a well-known tool shows in the detail panel. A property of the thing the deployment owns, authored once per name, never per placement. Blueprint data rather than app configuration: null draws nothing, and the renderer reads this row instead of matching a tool name against a table baked into code (#326 S2, Decision D4). Matches the template's column of the same name (asb 21000124000000) so a re-map round-trips. |
 | `id` | — |
 | `kind` | — |
 | `name` | The identity: unique across the deployment, so a second service reuses an entry by naming the same tool the same way rather than minting its own. |
 | `origin` | — |
 | `stakeholder_id` | — |
 | `summary` | — |
+| `tone` | The palette family this touchpoint's face is drawn in — the deployment's own choice, one of the renderer's tone names (crimson, gold, indigo, purple, red, tomato, yellow). A product fact ("Zoom is blue"), not a styling one, which is why it is a row and not a literal in touchpointColors.ts (#326 S2, #396 Q48). Deliberately unconstrained: the tone vocabulary belongs to the token model (ADR 0001) and a CHECK here would be a second copy of it, free to drift. Null means no preference — the renderer falls back deterministically, exactly as it does for a tool the old map never named. |
 | `updated_at` | — |
 | `url` | — |
 

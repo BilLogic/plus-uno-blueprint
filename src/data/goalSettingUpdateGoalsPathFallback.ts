@@ -1,5 +1,4 @@
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
-import { getScenarioParallelNote } from '@/lib/scenarioParallelInfo'
 import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
 import { GOAL_SETTING_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/goalSettingRegularTutorLinks'
 import {
@@ -584,7 +583,12 @@ export const GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK: BlueprintData = {
     name: 'Update Goals',
     summary:
       'First tutoring day of a new goal cycle after personalized goals have been set.',
-    note: getScenarioParallelNote(GOAL_SETTING_SCENARIO_ID),
+    // A path's note is what is true of THAT route. Whether this scenario runs
+    // beside others is true of every route in it, so it lives on the scenario
+    // now — `scenarios.note` — and no longer here, where six sibling paths
+    // each carried the same sentence with nothing making them agree
+    // (#326 S6, 20260905130000).
+    note: null,
     kind: 'variant',
     status: 'live',
   },

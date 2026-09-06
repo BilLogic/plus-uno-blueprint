@@ -10,6 +10,7 @@ import { EditorProvider } from '@/contexts/EditorContext'
 import { EntityExamplesProvider } from '@/contexts/EntityExamplesContext'
 import { PathSelectionProvider } from '@/contexts/PathSelectionContext'
 import { SupabaseProvider } from '@/contexts/SupabaseProvider'
+import { TouchpointRegistryProvider } from '@/contexts/TouchpointRegistryProvider'
 import { ViewStateProvider } from '@/contexts/ViewStateContext'
 import { queryClient } from '@/lib/queryClient'
 
@@ -37,9 +38,14 @@ function App() {
                     {/* One read of the service's six examples, shared by every
                         definition popover under it (#302). */}
                     <EntityExamplesProvider>
-                      <EditorErrorBoundary>
-                        <EditorShell />
-                      </EditorErrorBoundary>
+                      {/* One read of the touchpoint registry's colours and
+                          aliases, shared by every touchpoint face under it
+                          (#326 S6). */}
+                      <TouchpointRegistryProvider>
+                        <EditorErrorBoundary>
+                          <EditorShell />
+                        </EditorErrorBoundary>
+                      </TouchpointRegistryProvider>
                     </EntityExamplesProvider>
                     {/* Outside the boundary: a write can fail as the shell
                         falls over, and the notice is what says so. */}
