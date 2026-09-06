@@ -48,7 +48,7 @@ export type StoryboardWalkthroughStep = {
 export type StoryboardWalkthroughSession = {
   pathId: string
   pathName: string
-  pathDescription: string | null
+  pathSummary: string | null
   pathKind: PathKind
   scenarioName?: string
   phaseName?: string
@@ -159,7 +159,7 @@ export function buildStoryboardWalkthroughSession(
   return {
     pathId: blueprint.path.id,
     pathName: blueprint.path.name,
-    pathDescription: blueprint.path.summary,
+    pathSummary: blueprint.path.summary,
     pathKind: blueprint.path.kind,
     scenarioName: meta?.scenarioName?.trim() || undefined,
     phaseName: meta?.phaseName?.trim() || undefined,

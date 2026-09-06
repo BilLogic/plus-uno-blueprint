@@ -105,7 +105,7 @@ function getDiscoveryPathSteps(config: ApplicationDiscoveryPathConfig) {
 type ApplicationDiscoveryPathConfig = {
   pathId: string
   pathName: string
-  pathDescription: string
+  pathSummary: string
   pathKind: PathKind
   cellSlotPrefix: '07' | '72'
   dependencySlotPrefix: '078' | '728'
@@ -124,7 +124,7 @@ type ApplicationDiscoveryPathConfig = {
 const HAPPY_PATH_CONFIG: ApplicationDiscoveryPathConfig = {
   pathId: APPLICATION_HAPPY_PATH_ID,
   pathName: 'Standard',
-  pathDescription: 'Potential tutors discover and want to join PLUS.',
+  pathSummary: 'Potential tutors discover and want to join PLUS.',
   pathKind: 'happy',
   cellSlotPrefix: '07',
   dependencySlotPrefix: '078',
@@ -143,7 +143,7 @@ const HAPPY_PATH_CONFIG: ApplicationDiscoveryPathConfig = {
 const SAD_PATH_CONFIG: ApplicationDiscoveryPathConfig = {
   pathId: APPLICATION_SAD_PATH_ID,
   pathName: 'Sad Path',
-  pathDescription:
+  pathSummary:
     'Potential tutors discover and are not interested in joining PLUS.',
   pathKind: 'exception',
   cellSlotPrefix: '72',
@@ -534,7 +534,7 @@ function buildApplicationDiscoveryFallback(
     path: {
       id: config.pathId,
       name: config.pathName,
-      summary: config.pathDescription,
+      summary: config.pathSummary,
       note: null,
       kind: config.pathKind,
       status: 'live',

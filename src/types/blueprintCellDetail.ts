@@ -5,7 +5,7 @@ export type BlueprintCellPathEntry = {
   cellId: string
   pathId: string
   pathName: string
-  pathDescription?: string | null
+  pathSummary?: string | null
   pathKind: PathKind
   content: string
   frame?: string | null

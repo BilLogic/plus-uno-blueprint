@@ -182,7 +182,7 @@ export function CompareCellBlock({
                       cellId: slotCell.id,
                       cellContent: slotCell.content ?? '',
                       cellFrame: slotCell.frame ?? null,
-                      cellDescription: slotCell.summary ?? null,
+                      cellSummary: slotCell.summary ?? null,
                       cellLinks: slotCell.links,
                       cellResources: slotCell.resources,
                     }
