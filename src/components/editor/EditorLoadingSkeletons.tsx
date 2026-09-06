@@ -98,13 +98,13 @@ export function ServiceOverviewCanvasSkeleton({
   loopChannelOffset = 0,
 }: {
   phases: OverviewSkeletonPhase[]
-  /** Extra left padding when the lifecycle loop arrow has a channel. */
+  /** Extra left padding when the service loop arrow has a channel. */
   loopChannelOffset?: number
 }) {
   const rows = phases.length > 0 ? phases : UNKNOWN_SHAPE
 
   return (
-    // Nothing here paints — every visual element is deleted (decided
+    // Nothing here paints — every painted element is deleted (decided
     // 2026-08-17: the progress bar is the ONLY visible loading signal).
     // What remains is pure geometry: one spacer per phase row at the loaded
     // board's dimensions, so the camera pre-fit still frames the right
@@ -245,7 +245,7 @@ const PRESENTATION_SKELETON_FRAMES = [2, 3, 1]
 
 /**
  * Presentation tab placeholder — header band, stage (frame counter, media
- * area, caption + narrative lines, cell-badge row) and filmstrip, at the
+ * area, title + narrative lines, cell-badge row) and filmstrip, at the
  * loaded stage's own paddings. The root pins `.dark` exactly as the real
  * stage does, so the skeleton paints in stage tokens whatever the app theme.
  */

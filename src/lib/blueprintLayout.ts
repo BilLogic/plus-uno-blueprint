@@ -20,14 +20,14 @@ export const TOUCHPOINT_CELL_LANE_ROLES = [
   BACKSTAGE_TOUCHPOINTS_ROLE,
 ] as const
 
-/** Roles rendered as picture rows instead of text cells. */
+/** Roles rendered as storyboard frame rows instead of text cells. */
 export const STORYBOARD_LANE_ROLES = [STORYBOARD_ROLE] as const
 
 /** 192px inner face at 4:3 plus the service/compare shell's vertical padding. */
 export const STORYBOARD_ROW_MIN_HEIGHT = 176
 export const STORYBOARD_ROW_MIN_HEIGHT_COMPACT = 168
 
-/** Max height for the visual cell button inside a swimlane row (excludes shell padding). */
+/** Max height for the storyboard cell button inside a swimlane row (excludes shell padding). */
 export function getStoryboardCellButtonMaxHeight(compact = false): number {
   const rowHeight = compact ? STORYBOARD_ROW_MIN_HEIGHT_COMPACT : STORYBOARD_ROW_MIN_HEIGHT
   const shellVerticalPad = compact ? 24 : 32
@@ -41,13 +41,13 @@ export function shouldUseTouchpointCellContent(lane: LaneRoleSource): boolean {
   )
 }
 
-/** Which face a lane's cells wear — touchpoint stack, step visual, or plain cell. */
+/** Which face a lane's cells wear — touchpoint stack, storyboard, or plain cell. */
 export type BlueprintCellVariant = 'default' | 'touchpoints' | 'storyboard'
 
 /**
- * Whether a cell has anything to draw for its lane's variant. A visual cell
- * is decided by its pictures upstream, a touchpoint cell by having at least one
- * parsable item, a plain cell by non-blank content.
+ * Whether a cell has anything to draw for its lane's variant. A storyboard
+ * cell is decided by its frames upstream, a touchpoint cell by having at least
+ * one parsable item, a plain cell by non-blank content.
  */
 export function hasBlueprintCellContent(
   content: string | undefined,
@@ -83,8 +83,8 @@ export function shouldShowVisibilityLineAfter(
     return false
   }
 
-  // Frontstage tech can sit above frontstage actions — the visibility line
-  // follows the actions lane, not the tech lane.
+  // A frontstage-touchpoints lane can sit above frontstage actions — the
+  // visibility line follows the actions lane, not the touchpoints lane.
   if (role === FRONTSTAGE_TOUCHPOINTS_ROLE && lanes) {
     const index = lanes.findIndex((entry) => entry.id === lane.id)
     const next = lanes[index + 1]
@@ -317,7 +317,7 @@ export const LANE_COLUMN_WIDTH = 220
 export const STEP_COLUMN_WIDTH = 220
 /** Visible space between step columns where dependency arrows are drawn. */
 export const STEP_COLUMN_GAP = 24
-/** Left gutter on the white board so the play control clears Visual cells. */
+/** Left gutter on the white board so the play control clears storyboard cells. */
 export const STORYBOARD_PLAY_GUTTER = 28
 
 export function getStepColumnLeft(stepIndex: number): number {
@@ -602,7 +602,7 @@ export const BLUEPRINT_CANVAS_COMPARE_GAP = 24
 export const BLUEPRINT_CANVAS_STACK_GAP = BLUEPRINT_CANVAS_COMPARE_GAP
 /** PathMultiSelect fieldset + legend on canvas artboards. */
 export const BLUEPRINT_PATH_FILTER_HEIGHT = 72
-/** Scenario slide header in stack view (title, description, controls). */
+/** Scenario slide header in stack view (title, summary, controls). */
 export const BLUEPRINT_SCENARIO_HEADER_HEIGHT = 220
 /** Compact scenario header on canvas artboards. */
 export const BLUEPRINT_SCENARIO_HEADER_HEIGHT_COMPACT = 200
