@@ -44,7 +44,6 @@ import {
   type NavItem,
   type SlideViewType,
 } from '@/types/nav'
-import { getScenarioParallelTooltip } from '@/lib/scenarioParallelInfo'
 import { BlueprintPanelLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import type { BlueprintData } from '@/types/blueprint'
 
@@ -382,7 +381,7 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
     ? slide.summary
     : undefined
   const sectionTitleInfoTooltip = sectionTitleLabel
-    ? getScenarioParallelTooltip(slide)
+    ? (slide.note ?? null)
     : null
 
   // The chrome this panel will actually have — a locked panel has no resize

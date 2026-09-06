@@ -809,6 +809,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          note: string | null
           position: number
           phase_id: string
           summary: string | null
@@ -819,6 +820,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          note?: string | null
           position?: number
           phase_id: string
           summary?: string | null
@@ -829,6 +831,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          note?: string | null
           position?: number
           phase_id?: string
           summary?: string | null
@@ -980,35 +983,44 @@ export type Database = {
       }
       touchpoints: {
         Row: {
+          aliases: string[] | null
           created_at: string
+          icon_url: string | null
           id: string
           kind: string
           name: string
           origin: string
           stakeholder_id: string | null
           summary: string | null
+          tone: string | null
           updated_at: string
           url: string | null
         }
         Insert: {
+          aliases?: string[] | null
           created_at?: string
+          icon_url?: string | null
           id?: string
           kind?: string
           name: string
           origin: string
           stakeholder_id?: string | null
           summary?: string | null
+          tone?: string | null
           updated_at?: string
           url?: string | null
         }
         Update: {
+          aliases?: string[] | null
           created_at?: string
+          icon_url?: string | null
           id?: string
           kind?: string
           name?: string
           origin?: string
           stakeholder_id?: string | null
           summary?: string | null
+          tone?: string | null
           updated_at?: string
           url?: string | null
         }

@@ -1,11 +1,36 @@
 ---
 title: 'Make touchpoint colours a stored, editable product fact'
 type: feat
-status: draft
+status: active
 date: 2026-08-05
 ---
 
 # ✨ Make touchpoint colours a stored, editable product fact
+
+## Where this landed — 2026-09-06
+
+Three of the four units have shipped, in a different shape from the one drawn
+below, because a `touchpoints` table arrived from another direction while this
+plan sat: `20260830140000` created it as a registry with names, kinds and
+placements, and `20260905110000` / `20260905120000` added `tone` and `aliases`
+to it rather than standing up the single-purpose table this plan sketched.
+
+- **Unit 1** — the column, not a table, and no backfill inside the migration.
+  The values are `docs/reference/seed-touchpoint-colours-and-scenario-notes.sql`,
+  which the owner runs.
+- **Unit 2** — the read path is a module store in `src/lib/touchpointColors.ts`
+  and not a context, because `TouchpointCellFace` became the template's file
+  and takes a label with no prop to carry a tone in.
+- **Unit 4** — done: the seed map is the generic eleven the template ships, and
+  the deployment's twenty-odd are rows.
+- **Unit 3 — the swatch picker — has NOT shipped.** Nobody can change a colour
+  from the app yet; the column is read-only to the deployed site by policy.
+  That is the live remainder of this plan.
+
+Two of the open questions below were answered by events rather than decided.
+`Zoom / PLUS App` never became two touchpoints — the registry has one row per
+tool and placements link to it — and the CHECK constraint this plan wanted was
+deliberately NOT written, for the reasons `20260905110000` sets out.
 
 ## Why
 

@@ -98,7 +98,7 @@ import {
 } from '@/lib/blueprintTheme'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import { resolveStoryboardStripEntries } from '@/lib/storyboardWalkthrough'
-import { getTouchpointTone } from '@/lib/touchpointColors'
+import { useTouchpointToneResolver } from '@/hooks/useTouchpointToneResolver'
 import { PANEL_TERMS } from '@/lib/panelTerms'
 import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
@@ -243,6 +243,12 @@ function BlueprintCellDetailPanelBody() {
     about what the agent can reach, not about which chrome is on screen.
   */
   const mobile = useMobileShell()
+  /*
+    The touchpoint badge's colour, taken here rather than beside the badge:
+    the label it is about is derived far below, past an early return, and a
+    hook cannot go there. The resolver is a function for exactly that reason.
+  */
+  const resolveTouchpointTone = useTouchpointToneResolver()
   /**
    * One-shot "← Back to Differences" control: set when the ledger's ⇱ opens a
    * cell in Details, cleared when used — and whenever the panel leaves
@@ -1238,7 +1244,7 @@ function BlueprintCellDetailPanelBody() {
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         <PanelKindBadge
           label={techDetailLabel!}
-          tone={getTouchpointTone(techDetailLabel!)}
+          tone={resolveTouchpointTone(techDetailLabel!)}
           title={techDetailLabel!}
         />
         {/*

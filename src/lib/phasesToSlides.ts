@@ -3,7 +3,7 @@ import { asSlideViewType, type NavItem } from '@/types/nav'
 
 export type ScenarioRow = Pick<
   Scenario,
-  'id' | 'name' | 'summary' | 'position' | 'phase_id' | 'layout'
+  'id' | 'name' | 'summary' | 'note' | 'position' | 'phase_id' | 'layout'
 >
 
 export type PhaseRow = Pick<
@@ -46,6 +46,10 @@ export function phasesToSlides(phases: PhaseRow[]): NavItem[] {
         index: scenarioIndex + 1,
         label: scenario.name,
         summary: scenario.summary,
+        // The scenario's aside, straight off the row. It used to be a
+        // `Record<uuid, string>` in `src/lib/scenarioParallelInfo.ts` keyed on
+        // three hardcoded PLUS scenario ids (#326 S6, #396 Q38).
+        note: scenario.note,
         parentId: phase.id,
         // One vocabulary. The column now holds client tokens
         // (`single | stacked`), so there is no seam to cross — but a row
