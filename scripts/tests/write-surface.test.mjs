@@ -352,6 +352,14 @@ test('the override is the file the app serves, and the package copy still differ
   // that has a schema reason to stay apart — it trips when the package read
   // surface grows to include it, the signal that the override's last reason
   // is gone and #325 S4 (delete the override, import the package's) is due.
+  //
+  // S4 CAME DUE AGAINST asb v1.9.0 AND WAS REFUSED. This assertion still
+  // holds, which is the whole answer: the package's read row names one
+  // journey read this app does not register and omits both rows above, so
+  // importing it would ship a "FULL read surface" sentence wrong in both
+  // directions — a phantom name the agent would call, and two real tools it
+  // would believe it could not. The write rows already match exactly; the
+  // read row is the last of it. Q24 settles before S4 is retried.
   const ours = read(ADAPTER)
   const theirs = read(join(PACKAGE, 'references/canvas-adapter.md'))
   assert.notEqual(ours, theirs)

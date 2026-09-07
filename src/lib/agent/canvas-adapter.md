@@ -1,20 +1,31 @@
 # Canvas adapter — running the blueprint skills against a live canvas
 
 > **This file OVERRIDES a pinned package document.** It replaces
-> `references/canvas-adapter.md` from `agentic-service-blueprinting`,
-> pinned at `v1.4.0` (lockfile commit `960e8785`). It is spliced into
-> every system prompt by `src/lib/agent/loop.ts` and served under the
-> bare name `canvas-adapter` by `src/lib/agent/tools/read.ts`; the
+> `references/canvas-adapter.md` from `agentic-service-blueprinting`, at
+> whatever release `package-lock.json` pins. It is spliced into every
+> system prompt by `src/lib/agent/loop.ts` and served under the bare name
+> `canvas-adapter` by `src/lib/agent/tools/referenceDocs.ts`; the
 > package's own copy reaches neither.
 >
 > **Why an override rather than the package's text.** The package's
-> adapter enumerates the PACKAGE's registry: twelve tool names this app
-> does not have, thirty-three of this app's missing, and a dependency
-> vocabulary this database refuses. Both of its surface rows are labelled
-> "the FULL surface", and an agent reads that sentence as permission — a
-> tool missing from the list is a tool it believes it cannot call. The
-> twelve wrong names are deliberately NOT repeated here; a prompt is no
-> place to rehearse identifiers that do not resolve. They are listed in
+> adapter enumerates the PACKAGE's registry, and the two registries do
+> not agree. Both of its surface rows are labelled "the FULL surface",
+> and an agent reads that sentence as permission — a tool missing from
+> the list is a tool it believes it cannot call, and a tool named in it
+> is one the agent will call and this registry will not answer.
+>
+> **The gap has shrunk to the read row, and stopped there.** asb v1.0.0
+> retired the phantom write tool and moved its served references onto
+> this database's dependency vocabulary; v1.6.0 took the stakeholder and
+> evidence tools (#325 S3). The write rows now match exactly, in both
+> directions. What remains is one journey read the package names and this
+> app does not register — deliberately NOT repeated here, because a
+> prompt is no place to rehearse an identifier that does not resolve —
+> and two reads this app has and the package's row omits:
+> `list_blueprint`, the name the two repositories spell differently and
+> #396 Q24 has yet to reconcile, and `search_blueprint`, whose ranked
+> read needs a `public.search_blueprint` RPC the portable core cannot
+> carry (asb #163 part B). The absent name is written down in
 > `docs/engineering/agent-system.md` and in plus-uno-blueprint#115.
 >
 > **Everything else is the package's text, deliberately.** The rulebook is

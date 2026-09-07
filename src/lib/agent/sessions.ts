@@ -51,16 +51,21 @@ function write(next: AgentSession[]) {
 
 /**
  * The session list as it stands, for callers outside React — the agent's
- * list_sessions tool reads THIS rather than querying `agent_sessions`
- * directly, and that is a scoping decision, not a convenience one. It was
- * load-bearing until 2026-08-28, when the table carried no owner column and a
- * blanket "authenticated manage agent sessions" policy — a direct query then
- * handed the agent every user's chat history. `agent_sessions.user_id` and
- * per-user RLS now close that from the other side, and this stays anyway:
- * reading the store the session switcher reads means the agent sees exactly
- * what the USER sees, which is narrower than what the row-level gate permits
- * (localStorage sessions the DB never received, and no sessions from another
- * browser the user has not hydrated).
+ * `list_sessions` tool reads THIS rather than querying `agent_sessions`
+ * directly, and that is a scoping decision, not a convenience one.
+ *
+ * It was once a security one as well. A deployment of this code ran for a
+ * while with no owner column on the table and a blanket "authenticated
+ * manage agent sessions" policy, and a direct query there would have handed
+ * the agent every user's chat history. An owner column and per-user RLS
+ * close that from the other side now — and the store read stays anyway,
+ * because the two things it buys are not things a row-level gate does.
+ *
+ * It is NARROWER than the gate: reading the store the session switcher reads
+ * means the agent sees exactly what the USER sees, and no more (localStorage
+ * sessions the database never received, and no sessions from another browser
+ * the user has not hydrated). And it needs no database at all, which is why
+ * the tool works unchanged with none behind it — there is no query to fail.
  */
 export function agentSessionsSnapshot(): AgentSession[] {
   return snapshot
