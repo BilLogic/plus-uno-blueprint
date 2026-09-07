@@ -28,6 +28,7 @@ import {
   cellTouchpointsFromLinks,
   cellTouchpointsFromRows,
   findCellPlacement,
+  placementResources,
   resolveTouchpointDetail,
 } from '@/lib/cellTouchpoints'
 import { TECH_DESCRIPTION_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
@@ -38,13 +39,17 @@ test('a placement row keeps its name, order and per-moment detail', () => {
       position: 2,
       summary: 'The tutor opens the session detail page.',
       role: 'core',
-      touchpoints: { name: 'PLUS App', kind: 'app', url: 'https://plus.example' },
+      touchpoints: {
+        name: 'PLUS App',
+        kind: 'app',
+        icon_url: '/touchpoint-logos/plus-logo.png',
+      },
     },
     {
       position: 1,
       summary: null,
       role: null,
-      touchpoints: { name: 'Zoom', kind: 'app', url: null },
+      touchpoints: { name: 'Zoom', kind: 'app', icon_url: null },
     },
   ])
 
@@ -56,6 +61,13 @@ test('a placement row keeps its name, order and per-moment detail', () => {
   assert.equal(touchpoints[1]!.summary, 'The tutor opens the session detail page.')
   assert.equal(touchpoints[1]!.role, 'core')
   assert.equal(touchpoints[0]!.summary, null)
+
+  // The tool's stock logo comes off the registry row it names (#326). It used
+  // to be a table of nine tool names inside `blueprintTechPictures.ts`, which
+  // is why 233 of the 359 placements in production had no logo to draw and no
+  // author could give them one.
+  assert.equal(touchpoints[1]!.iconUrl, '/touchpoint-logos/plus-logo.png')
+  assert.equal(touchpoints[0]!.iconUrl, null)
 })
 
 test('fallback content and links produce the same placements', () => {
@@ -156,13 +168,13 @@ test('both sources agree on everything but the one field fallback cannot know', 
       position: 1,
       summary: 'Opens the dashboard.',
       role: null,
-      touchpoints: { name: 'PLUS App', kind: 'other', url: null },
+      touchpoints: { name: 'PLUS App', kind: 'other', icon_url: null },
     },
     {
       position: 2,
       summary: null,
       role: null,
-      touchpoints: { name: 'Email', kind: 'other', url: null },
+      touchpoints: { name: 'Email', kind: 'other', icon_url: null },
     },
   ])
 
@@ -329,7 +341,7 @@ test('a placement the registry lacks keeps its own name and no registry id (#277
       position: 0,
       touchpoint_id: 'tp-1',
       name: null,
-      touchpoints: { name: 'Handshake', kind: 'app', url: null },
+      touchpoints: { name: 'Handshake', kind: 'app', icon_url: null },
     },
     {
       id: 'ct-2',
@@ -348,3 +360,39 @@ test('a placement the registry lacks keeps its own name and no registry id (#277
   )
 })
 
+/**
+ * A placement's own resources, which is where its pictures and links live.
+ *
+ * `resources` rows are the CELL's — they render in the cell's list — and the
+ * ones carrying a placement's id belong to that placement (#271). Featured
+ * first, because that is the one its owner leads with: the detail panel draws
+ * it as the placement's picture and the rest behind it.
+ */
+test('a placement takes the cell resources that carry its id, featured first', () => {
+  const resources = [
+    { id: 'r-1', name: 'Notes', kind: 'link', url: 'https://a.example', placementId: 'ct-2', featured: false },
+    { id: 'r-2', name: 'Shot', kind: 'attachment', url: 'https://b.example', placementId: 'ct-1', featured: false },
+    { id: 'r-3', name: 'Hero', kind: 'attachment', url: 'https://c.example', placementId: 'ct-1', featured: true },
+    { id: 'r-4', name: 'The cell', kind: 'link', url: 'https://d.example', placementId: null, featured: true },
+  ]
+
+  assert.deepEqual(
+    placementResources(resources, 'ct-1').map((resource) => resource.id),
+    ['r-3', 'r-2'],
+  )
+  // Another placement's, and the cell's own, are not this placement's.
+  assert.deepEqual(
+    placementResources(resources, 'ct-2').map((resource) => resource.id),
+    ['r-1'],
+  )
+})
+
+test('a placement with no row of its own points at nothing', () => {
+  // A fallback board mints placements with a null id. Matching those against
+  // `placementId === null` would hand every such placement the cell's own
+  // resources, which belong to the cell and not to any tool on it.
+  const resources = [
+    { id: 'r-4', name: 'The cell', kind: 'link', url: 'https://d.example', placementId: null, featured: true },
+  ]
+  assert.deepEqual(placementResources(resources, null), [])
+})

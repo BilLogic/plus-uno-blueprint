@@ -21,7 +21,7 @@ import { WARM_UP_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/warmUpRegularTuto
 import { applyBlueprintDisplayFilters } from '@/lib/applyBlueprintDisplayFilters'
 import { mergeUrlLinks, techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import { WARM_UP_SCENARIO_ID } from '@/data/parallelSessionScenarioIds'
-import { ZOOM_TECH_LOGO } from '@/lib/blueprintTechPictures'
+import { ZOOM_TECH_LOGO } from '@/data/techLogos'
 import {
   APPLICATION_HAPPY_PATH_FALLBACK,
   APPLICATION_HAPPY_PATH_ID,

@@ -1,4 +1,4 @@
-import { NOTION_TECH_LOGO } from '@/lib/blueprintTechPictures'
+import { NOTION_TECH_LOGO } from '@/data/techLogos'
 
 /** Notion logo for Lesson Modules Back Stage Tech cells. */
 export const LESSON_MODULES_NOTION_LOGO = NOTION_TECH_LOGO

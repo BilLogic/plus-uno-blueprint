@@ -34,7 +34,7 @@ import {
   DISCOVERY_SOCIAL_MEDIA_STEP_2_FRAME,
 } from '@/data/applicationDiscoveryFrames'
 import { techDescriptionLink, URL_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
-import { FIGMA_TECH_LOGO } from '@/lib/blueprintTechPictures'
+import { FIGMA_TECH_LOGO } from '@/data/techLogos'
 import type {
   BlueprintCell,
   BlueprintCellDependency,

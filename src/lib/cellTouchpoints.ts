@@ -20,11 +20,17 @@
  */
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import { TECH_DESCRIPTION_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
+import { orderedNamedRows } from '@/lib/orderedNamedRows'
 import {
   normalizeRole,
   type TouchpointRoleValue,
 } from '@/lib/touchpointRole'
-import type { BlueprintCell, CellLink, CellTouchpoint } from '@/types/blueprint'
+import type {
+  BlueprintCell,
+  CellLink,
+  CellResource,
+  CellTouchpoint,
+} from '@/types/blueprint'
 
 /** A `cell_touchpoints` row as the board query selects it. */
 export type RawCellTouchpoint = {
@@ -36,31 +42,27 @@ export type RawCellTouchpoint = {
   /** The registry entry, or null with `name` set — a name-only placement (#277). */
   touchpoint_id?: string | null
   name?: string | null
-  /** The joined catalog row. PostgREST names the embed after the table. */
-  touchpoints: { name: string; kind?: string | null; url?: string | null } | null
+  /** The joined registry row. PostgREST names the embed after the table. */
+  touchpoints?: { name: string; kind?: string | null; icon_url?: string | null } | null
 }
 
-/** Placements from database rows, ordered by the position the author chose. */
+/** Placements from database rows, in the order the author put them. */
 export function cellTouchpointsFromRows(
   rows: readonly RawCellTouchpoint[] | null | undefined,
 ): CellTouchpoint[] {
-  if (!rows || rows.length === 0) return []
-
-  return rows
-    .filter((row) => row.touchpoints?.name || row.name?.trim())
-    .slice()
-    // Sorted here rather than trusted: PostgREST does not promise an order
-    // for an embedded resource, and the touchpoints would otherwise come back in
-    // whatever order the planner chose.
-    .sort((a, b) => a.position - b.position)
-    .map((row) => ({
+  // The registry's spelling where there is a registry row; the placement's
+  // own name where the registry lacks it (or a fallback board has none).
+  const named = (rows ?? []).map((row) => ({
+    ...row,
+    name: row.touchpoints?.name ?? row.name ?? null,
+  }))
+  return orderedNamedRows(named, (row, name) => ({
       id: row.id ?? null,
-      touchpointId: row.touchpoints ? (row.touchpoint_id ?? null) : null,
-      // The registry's spelling where there is a registry row; the
-      // placement's own name where the registry lacks it.
-      name: row.touchpoints?.name ?? row.name!.trim(),
+      touchpointId: row.touchpoint_id ?? null,
+      name,
       kind: row.touchpoints?.kind ?? null,
-      summary: row.summary ?? null,
+      iconUrl: row.touchpoints?.icon_url ?? null,
+      summary: row.summary?.trim() || null,
       role: normalizeRole(row.role),
     }))
 }
@@ -94,10 +96,11 @@ export function cellTouchpointsFromLinks(
       id: null,
       touchpointId: null,
       name,
-      // The fallback shape has nowhere to record a kind or a role, and
-      // inventing either would make this source disagree with the database
-      // for the same board.
+      // The fallback shape has nowhere to record a kind, an icon or a role,
+      // and inventing any of them would make this source disagree with the
+      // database for the same board.
       kind: null,
+      iconUrl: null,
       summary: link?.description ?? null,
       role: null,
     }
@@ -113,6 +116,19 @@ export function cellTouchpointsFromLinks(
  */
 export function isNameOnlyPlacement(placement: CellTouchpoint): boolean {
   return placement.id !== null && placement.touchpointId === null
+}
+
+/** The resources one placement points at, in author order, featured first. */
+export function placementResources(
+  resources: readonly CellResource[],
+  placementId: string | null,
+): CellResource[] {
+  if (!placementId) return []
+  const own = resources.filter((resource) => resource.placementId === placementId)
+  return [
+    ...own.filter((resource) => resource.featured),
+    ...own.filter((resource) => !resource.featured),
+  ]
 }
 
 /**

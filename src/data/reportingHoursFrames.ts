@@ -1,5 +1,5 @@
 import { BLUEPRINT_STEP_STORYBOARD_PLACEHOLDER } from '@/lib/blueprintStoryboardPlaceholder'
-import { WORKDAY_TECH_LOGO } from '@/lib/blueprintTechPictures'
+import { WORKDAY_TECH_LOGO } from '@/data/techLogos'
 
 /** Shared placeholder for Reporting Hours Lead Tutor and Regular Tutor cells. */
 export const REPORTING_HOURS_ACTION_LANE_PLACEHOLDER =

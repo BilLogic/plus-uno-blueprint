@@ -20,7 +20,7 @@ import {
   GOOGLE_FORM_TECH_LOGO,
   NOTION_TECH_LOGO,
   ZOOM_TECH_LOGO,
-} from '@/lib/blueprintTechPictures'
+} from '@/data/techLogos'
 import type {
   BlueprintCell,
   BlueprintCellDependency,

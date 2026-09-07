@@ -27,7 +27,7 @@ import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import {
   EMAIL_TECH_LOGO,
   SLACK_TECH_LOGO,
-} from '@/lib/blueprintTechPictures'
+} from '@/data/techLogos'
 import type {
   BlueprintCell,
   BlueprintCellDependency,

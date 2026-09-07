@@ -108,12 +108,30 @@ const AUTHORED_FRAME =
 /** A stock logo, named by the convention `public/touchpoint-logos` follows. */
 const STOCK_LOGO = '/touchpoint-logos/zoom-logo.png'
 
-function placement(name: string, id: string | null = 'ct-1'): CellTouchpoint {
-  return { id, touchpointId: 'tp-1', name, kind: 'app', summary: null, role: null }
+function placement(
+  name: string,
+  iconUrl: string | null = null,
+  id: string | null = 'ct-1',
+): CellTouchpoint {
+  return {
+    id,
+    touchpointId: 'tp-1',
+    name,
+    kind: 'app',
+    iconUrl,
+    summary: null,
+    role: null,
+  }
 }
 
 function selectionFor(options: {
   touchpointName: string
+  /**
+   * The stock logo the touchpoint's registry row carries (#326). A table of
+   * nine tool NAMES inside the renderer used to answer this, which is why a
+   * fixture could get a logo without ever saying it had one.
+   */
+  iconUrl?: string | null
   frame?: string | null
   resources?: CellResource[]
 }): BlueprintCellSelection {
@@ -136,7 +154,7 @@ function selectionFor(options: {
         content: options.touchpointName,
         summary: 'What the reader meets at this moment.',
         frame: options.frame ?? null,
-        touchpoints: [placement(options.touchpointName)],
+        touchpoints: [placement(options.touchpointName, options.iconUrl ?? null)],
         resources: options.resources ?? [],
       },
     ],
@@ -178,7 +196,10 @@ async function open(selection: BlueprintCellSelection) {
 
 describe('the pictures a cell panel draws', () => {
   it('draws a stock logo at the one logo size', async () => {
-    await open(selectionFor({ touchpointName: 'Zoom' }))
+    // The logo is the touchpoint's own `icon_url`, read off the registry row
+    // through the placement. The fixture has to SAY the tool has one now,
+    // where before the renderer knew nine names by heart and answered for it.
+    await open(selectionFor({ touchpointName: 'Zoom', iconUrl: STOCK_LOGO }))
 
     const logo = pictureFor(STOCK_LOGO)
     expect(logo.className).toContain('size-32')
