@@ -6,15 +6,15 @@ import {
   FRONTSTAGE_ACTIONS_ROLE,
   FRONTSTAGE_TOUCHPOINTS_ROLE,
   getLaneRole,
-  SUPPORT_ACTIONS_ROLE,
   STORYBOARD_ROLE,
+  SUPPORT_ACTIONS_ROLE,
 } from '@/lib/laneRoles'
 import type { BlueprintData, BlueprintLane } from '@/types/blueprint'
 
 /** Minimal lane shape for role-driven layout checks. */
 type LaneRoleSource = { name: string; role?: string | null }
 
-/** Roles whose cells list multiple items as inline touchpoints (newline-separated content). */
+/** Roles whose cells list each touchpoint as its own inline cell (newline-separated content). */
 export const TOUCHPOINT_CELL_LANE_ROLES = [
   FRONTSTAGE_TOUCHPOINTS_ROLE,
   BACKSTAGE_TOUCHPOINTS_ROLE,
@@ -29,7 +29,9 @@ export const STORYBOARD_ROW_MIN_HEIGHT_COMPACT = 168
 
 /** Max height for the storyboard cell button inside a swimlane row (excludes shell padding). */
 export function getStoryboardCellButtonMaxHeight(compact = false): number {
-  const rowHeight = compact ? STORYBOARD_ROW_MIN_HEIGHT_COMPACT : STORYBOARD_ROW_MIN_HEIGHT
+  const rowHeight = compact
+    ? STORYBOARD_ROW_MIN_HEIGHT_COMPACT
+    : STORYBOARD_ROW_MIN_HEIGHT
   const shellVerticalPad = compact ? 24 : 32
   return rowHeight - shellVerticalPad
 }
@@ -37,7 +39,8 @@ export function getStoryboardCellButtonMaxHeight(compact = false): number {
 export function shouldUseTouchpointCellContent(lane: LaneRoleSource): boolean {
   const role = getLaneRole(lane)
   return (
-    role !== null && (TOUCHPOINT_CELL_LANE_ROLES as readonly string[]).includes(role)
+    role !== null &&
+    (TOUCHPOINT_CELL_LANE_ROLES as readonly string[]).includes(role)
   )
 }
 
@@ -99,17 +102,17 @@ export function shouldShowVisibilityLineAfter(
 /**
  * Support handoff lanes, which sit below backstage actions.
  *
- * This used to compare `lane.name` against two English strings, because the
- * 36 support lanes in the database carried no role and nothing else
- * identified them. `lanes.name` is free-form in any language, so renaming or
- * translating one deleted a divider from the board with nothing reporting it.
+ * This used to compare `lane.name` against two English strings, as a fallback
+ * for lanes carrying no role. `lanes.name` is free-form in any language, so
+ * renaming or translating one deleted a divider from the board with nothing
+ * reporting it — and a template cannot key its layout off the label one
+ * deployment happens to use.
  *
- * Those rows now carry `support_actions`, and the only name lookup left is
- * the one in `LEGACY_NAME_TO_ROLE`, which every lane in the hand-written
- * fallback blueprints already goes through because that data predates
- * `lane_role` entirely. So a name can still stand in for a missing role, in
- * exactly one declared place, rather than in a comparison local to this file
- * that no other divider had.
+ * The role is the whole test now. A board whose rows predate `lane_role`
+ * still resolves through `LEGACY_NAME_TO_ROLE`, which every lane in the
+ * hand-written fallback blueprints already goes through, so a name can still
+ * stand in for a missing role — in exactly one declared place, rather than in
+ * a comparison local to this file that no other divider had.
  */
 function isSupportHandoffLane(lane: LaneRoleSource): boolean {
   return getLaneRole(lane) === SUPPORT_ACTIONS_ROLE
@@ -358,9 +361,15 @@ export const BLUEPRINT_ARTBOARD_WIDTH_BUFFER = 32
 /**
  * Half the hit target for an insert affordance, on BOTH axes.
  *
- * Was declared separately in BlueprintColumnHandles and BlueprintLaneHandles,
- * same name and same value in two files — so a column insert 8px wide and a
- * lane insert 10px tall was a bug nothing would have caught.
+ * The line drawn is 1px; the target is 16. That gap is the whole difference
+ * between an affordance people use and one they fight, and it is what Figma's
+ * row/column inserts do — the visible mark is a hairline, the thing you have
+ * to hit is a finger's width.
+ *
+ * Declared here because it was declared separately in BlueprintColumnHandles
+ * and BlueprintLaneHandles, same name and same value in two files — so a
+ * column insert 8px wide beside a lane insert 10px tall was a bug nothing
+ * would have caught.
  */
 export const BLUEPRINT_INSERT_HIT_HALF = 8
 
@@ -471,9 +480,10 @@ export function getMaxTouchpointCountInLane(
   // cell per touchpoint, and a row sized to the tallest single cell would be
   // one touchpoint tall over a stack of three.
   //
-  // Placements where the cell has them, the text where it does not: a
-  // name-only placement (#277) is a face the text never names, and a stack
-  // sized from the text alone would clip it.
+  // Placements where the cell has them, the text where it does not — the same
+  // reading `getTouchpointNames` does, because this count has to agree with
+  // the list that gets drawn. A name-only placement (#112) is a face the text
+  // never names, and a stack sized from the text alone would clip it.
   const perStep = new Map<string, number>()
   for (const cell of data.cells) {
     if (cell.lane_id !== laneId) continue
@@ -613,7 +623,7 @@ export function getBlueprintGridMinWidth(stepCount: number): number {
   return LANE_COLUMN_WIDTH + getStepColumnsWidth(stepCount)
 }
 
-/** Pixel width of a compact one-path board (excluding artboard wrapper padding). */
+/** Pixel width of a compact blueprint grid (excluding artboard wrapper padding). */
 export function getBlueprintCompactGridWidth(stepCount: number): number {
   return (
     getBlueprintGridMinWidth(stepCount) +
@@ -622,7 +632,7 @@ export function getBlueprintCompactGridWidth(stepCount: number): number {
   )
 }
 
-/** Pixel height of a compact one-path board (excluding artboard wrapper padding). */
+/** Pixel height of a compact blueprint grid (excluding artboard wrapper padding). */
 export function getBlueprintCompactGridHeight(data: BlueprintData): number {
   const header = BLUEPRINT_HEADER_HEIGHT_COMPACT + BLUEPRINT_COMPACT_HEADER_GAP
   const gridBody = getBlueprintGridMinHeight(data, {
@@ -650,7 +660,7 @@ export function getBlueprintArtboardSize(data: BlueprintData): ArtboardSize {
   return { width, height }
 }
 
-/** Canvas artboard size for multiple side-by-side compact grids (e.g. Warm-Up path compare). */
+/** Canvas artboard size for multiple side-by-side compact grids (a path compare). */
 export function getStackedCanvasArtboardSize(
   blueprints: BlueprintData[],
   options?: {

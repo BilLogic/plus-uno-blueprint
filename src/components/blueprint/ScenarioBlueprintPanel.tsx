@@ -118,6 +118,8 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
     ? getSlideDisplayLabel(parentPhase, slides)
     : undefined
   const storedViewType =
+    // The deployment's context answers `undefined` for a scenario that has
+    // made no choice, so the default lands here rather than in the reader.
     displayViewTypeProp ?? getScenarioDisplayViewType(slide) ?? 'stacked'
   // Compare needs two sides. The toggle hides below 2 selected paths, but
   // the stored override survives — falling back here keeps a scenario from
@@ -126,9 +128,11 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
     storedViewType === 'merged' && selectedPathIds.length < 2
       ? 'stacked'
       : storedViewType
-  const useSideBySideLayout =
-    (displayViewType === 'stacked' || displayViewType === 'merged') &&
-    selectedPathIds.length > 0
+  // One path stacked is one band — there is no third arrangement, and no
+  // second one either: an overview tile draws the board smaller, never
+  // differently.
+  const useSideBySideLayout = selectedPathIds.length > 0
+
   const visibleBlueprints = useMemo(
     () =>
       useSideBySideLayout
@@ -176,15 +180,15 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
     Is THIS board the one the detail view is scoped to? Every scenario stays
     mounted behind the focused one, and the cell-detail provider's `enabled`
     is a single boolean above all of them — which is why the two axis headers
-    went live on all 23 boards at once, and why a lane header on a band the
-    reader had not chosen opened "Nothing recorded for this lane yet."
+    would go live on every board at once, and why a lane header on a band the
+    reader had not chosen would open "Nothing recorded for this lane yet."
     Published as a context rather than threaded as a prop: the headers sit
     five components down (rail → band → grid → panel body) and nothing in
     between has any business knowing about focus.
 
     Not `focusActive` — that is the CAMERA's focus, and it is false on the one
-    board a slice tab or the phone shell renders solo, where the detail view
-    is nonetheless scoped to exactly that scenario.
+    board a slice tab renders solo, where the detail view is nonetheless
+    scoped to exactly that scenario.
   */
   const boardInDetailScope =
     cellDetail?.scenarioId != null && cellDetail.scenarioId === slide.id
@@ -377,15 +381,16 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
   const stackedColumnCount =
     compareModel?.columns.length ??
     visibleBlueprints.reduce((sum, blueprint) => sum + blueprint.steps.length, 0)
-  const sectionTitleDescription = sectionTitleLabel
+  const sectionTitleSummary = sectionTitleLabel
     ? slide.summary
     : undefined
   const sectionTitleInfoTooltip = sectionTitleLabel
     ? (slide.note ?? null)
     : null
 
-  // The chrome this panel will actually have — a locked panel has no resize
-  // handle, and an estimate that budgets one is dead gray space.
+  // The chrome this panel will ACTUALLY have. A locked panel carries no
+  // resize handle, and an estimate that budgets one is dead gray space —
+  // the estimate has to describe the same panel the measurement will.
   const scrollChrome = { lockHeight: lockPanelHeight }
   const panelHeight =
     lockedPanelHeight ??
@@ -414,7 +419,7 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
     onNavigate,
     navigateLabel: onNavigate ? `Open ${scenarioName} scenario` : undefined,
     panelTitleLabel: sectionTitleLabel,
-    panelTitleDescription: sectionTitleDescription,
+    panelTitleSummary: sectionTitleSummary,
     panelTitleInfoTooltip: sectionTitleInfoTooltip,
     focusSlideId: slide.id,
     dimmed,
@@ -473,48 +478,49 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
   if (useSideBySideLayout) {
     return (
       <ScenarioBoardScopeContext.Provider value={boardInDetailScope}>
-      <ResizableComparePanel
-        {...comparePanelProps}
-        fitContentKey={`${compareFitContentKey}:${visibleBlueprints.map((b) => b.path.id).join(',')}`}
-      >
-        {mergedModel !== null ? (
-          <MergedCompareGrid
-            blueprints={visibleBlueprints}
-            model={mergedModel}
-            scrollContainerRef={scrollContainerRef}
-            scenarioName={scenarioName}
-            phaseName={phaseName}
-          />
-        ) : (
-          <StackedCompareGrid
-            blueprints={visibleBlueprints}
-            model={compareModel}
-            scrollContainerRef={scrollContainerRef}
-            scenarioName={scenarioName}
-            phaseName={phaseName}
-          />
-        )}
-      </ResizableComparePanel>
+        <ResizableComparePanel
+          {...comparePanelProps}
+          fitContentKey={`${compareFitContentKey}:${visibleBlueprints.map((b) => b.path.id).join(',')}`}
+        >
+          {mergedModel !== null ? (
+            <MergedCompareGrid
+              blueprints={visibleBlueprints}
+              model={mergedModel}
+              scrollContainerRef={scrollContainerRef}
+              scenarioName={scenarioName}
+              phaseName={phaseName}
+            />
+          ) : (
+            <StackedCompareGrid
+              blueprints={visibleBlueprints}
+              model={compareModel}
+              scrollContainerRef={scrollContainerRef}
+              scenarioName={scenarioName}
+              phaseName={phaseName}
+              sectionTitleLabel={sectionTitleLabel}
+            />
+          )}
+        </ResizableComparePanel>
       </ScenarioBoardScopeContext.Provider>
     )
   }
 
   return (
-    /* No path selected: the same scope, an empty board — see the compare branch above. */
+    /* No path selected: the same scope, an empty board — see the branch above. */
     <ScenarioBoardScopeContext.Provider value={boardInDetailScope}>
-    <ResizableComparePanel
-      {...comparePanelProps}
-      fitContentKey={`${compareFitContentKey}:${visibleBlueprints.map((b) => b.path.id).join(',')}:none`}
-    >
-      {/*
-        Nothing, on purpose. This branch is reached only with no visible
-        blueprint, and until #285 it mapped that empty list over the classic
-        single-path grid — a renderer no path could reach once #280 made a
-        one-path scenario a stacked board with one band. The empty state is
-        the same empty state; the renderer that drew it is gone.
-      */}
-      <div className="flex flex-row items-start gap-6" />
-    </ResizableComparePanel>
+      <ResizableComparePanel
+        {...comparePanelProps}
+        fitContentKey={`${compareFitContentKey}:${visibleBlueprints.map((b) => b.path.id).join(',')}:none`}
+      >
+        {/*
+          Nothing, on purpose. This branch is reached only with no visible
+          blueprint. It used to map that empty list over the horizontal
+          overview arrangement, which no path can reach now that a scenario
+          is one board drawn at one size. The empty state is the same empty
+          state; the second renderer that drew it is gone.
+        */}
+        <div className="flex flex-row items-start gap-6" />
+      </ResizableComparePanel>
     </ScenarioBoardScopeContext.Provider>
   )
 })
