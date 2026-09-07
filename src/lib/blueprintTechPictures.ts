@@ -1,76 +1,76 @@
+import type { CellResource, CellTouchpoint } from '@/types/blueprint'
+import { placementResources, touchpointNamed } from '@/lib/cellTouchpoints'
 import { isBlueprintStepStoryboardPlaceholder } from '@/lib/blueprintStoryboardPlaceholder'
 
-// Stock logos are template assets, shipped under `public/touchpoint-logos`.
-// Authored screenshots are not: they live in the bucket since #278.
-
-export const ZOOM_TECH_LOGO =
-  '/touchpoint-logos/zoom-logo.png'
-
-export const SLACK_TECH_LOGO =
-  '/touchpoint-logos/slack-logo.png'
-
-export const EMAIL_TECH_LOGO =
-  '/touchpoint-logos/email-logo.png'
-
-export const WORKDAY_TECH_LOGO =
-  '/touchpoint-logos/workday-logo.png'
-
-export const GOOGLE_FORM_TECH_LOGO =
-  '/touchpoint-logos/google-form-logo.png'
-
-export const NOTION_TECH_LOGO =
-  '/touchpoint-logos/notion-logo.png'
-
-export const FIGMA_TECH_LOGO =
-  '/touchpoint-logos/figma-logo.png'
-
-const TECH_ITEM_DETAIL_PICTURES: Record<string, readonly string[]> = {
-  Zoom: [ZOOM_TECH_LOGO],
-  Slack: [SLACK_TECH_LOGO],
-  Email: [EMAIL_TECH_LOGO],
-  Workday: [WORKDAY_TECH_LOGO],
-  'Google Form Application': [GOOGLE_FORM_TECH_LOGO],
-  'Shift Swap Google Form': [GOOGLE_FORM_TECH_LOGO],
-  'Google Quizzes': [GOOGLE_FORM_TECH_LOGO],
-  Notion: [NOTION_TECH_LOGO],
-  Figma: [FIGMA_TECH_LOGO],
-}
-
-
-export function getTechItemDetailPictures(
+/**
+ * Detail-panel frames come from the touchpoint placed at this cell — no
+ * hardcoded logo registry. Falls back to the cell's own frame.
+ *
+ * A placement's pictures are its attachments (#111): resources on the cell
+ * that carry the placement's id, featured first. The `screenshots` column
+ * they replaced was one array where the old link entry carried `frame` and
+ * `frames` and the reader had to prefer one over the other.
+ */
+function attachmentsFor(
+  touchpoints: readonly CellTouchpoint[],
+  resources: readonly CellResource[],
   techItem: string,
-): readonly string[] | null {
-  return TECH_ITEM_DETAIL_PICTURES[techItem] ?? null
+): string[] | null {
+  const placement = touchpointNamed(touchpoints, techItem)
+  if (!placement) return null
+  const attachments = placementResources(resources, placement.id)
+    .filter((resource) => resource.kind === 'attachment')
+    .map((resource) => resource.url?.trim() ?? '')
+    .filter(Boolean)
+  return attachments.length > 0 ? attachments : null
 }
 
 /**
- * The images for a detail panel: the tool's stock logo, then the cell's
- * frame. A placement's own picture is its featured attachment (#272), which
- * the panel draws ahead of these — the `screenshot` column that used to come
- * first left for `resources` in #276.
- *
- * This used to take the cell's raw content and links and pick through them,
- * with nine `content === '<tool>'` branches written out by hand — Zoom, PLUS
- * App, Slack, Email, Workday, Google Form, Notion, Google Quiz, Figma —
- * because the label lookup returned nothing for everything else and someone
- * patched the tools they noticed. A single-touchpoint cell now resolves to
- * its placement, so `techItem` carries the name in every one of those cases
- * and the branches said nothing the logo lookup does not.
- *
- * `TECH_ITEM_DETAIL_PICTURES` stays: a stock logo for a well-known tool is a
- * static asset, not authored content, and no placement should have to carry
- * one in order to show it.
+ * The touchpoint's own stock icon, read off the registry row the placement
+ * names (#326). This is where a tool's logo lives now — one string in a
+ * column — rather than a tool name matched against a table baked into the
+ * renderer. Null where the placement's touchpoint carries none.
  */
-export function resolveCellDetailImages(input: {
-  techItem?: string | null
-  cellFrame?: string | null
-}): readonly string[] | null {
-  if (input.techItem) {
-    const techPictures = getTechItemDetailPictures(input.techItem)
-    if (techPictures) return techPictures
-  }
+function iconFor(
+  touchpoints: readonly CellTouchpoint[],
+  name: string,
+): string | null {
+  return touchpointNamed(touchpoints, name)?.iconUrl?.trim() || null
+}
 
-  const frame = input.cellFrame?.trim()
+function framePictures(cellFrame?: string | null): string[] | null {
+  const frame = cellFrame?.trim()
   if (!frame || isBlueprintStepStoryboardPlaceholder(frame)) return null
   return [frame]
+}
+
+export function resolveCellDetailImages(input: {
+  techItem?: string | null
+  cellContent?: string | null
+  cellFrame?: string | null
+  cellTouchpoints?: readonly CellTouchpoint[]
+  cellResources?: readonly CellResource[]
+}): readonly string[] | null {
+  const touchpoints = input.cellTouchpoints ?? []
+  const resources = input.cellResources ?? []
+  const content = input.cellContent?.trim() ?? ''
+
+  // The tool this panel is about: the clicked touchpoint, else the cell's own name
+  // when it holds exactly one touchpoint (content === the placement's name).
+  const techItem = input.techItem?.trim() || null
+  const icon =
+    (techItem ? iconFor(touchpoints, techItem) : null) ??
+    (content ? iconFor(touchpoints, content) : null)
+
+  // The placement's authored screenshots — the frame is the fallback for a
+  // cell with no placement carrying its own.
+  const attachments =
+    (techItem ? attachmentsFor(touchpoints, resources, techItem) : null) ??
+    (content ? attachmentsFor(touchpoints, resources, content) : null)
+  const rest = attachments ?? framePictures(input.cellFrame)
+
+  // The stock icon leads; the panel draws it as the logo and the rest as
+  // screenshots.
+  if (icon) return [icon, ...(rest ?? [])]
+  return rest
 }

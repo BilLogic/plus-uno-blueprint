@@ -20,6 +20,7 @@
  * in production were provenance citations, and they belong in `evidence`.
  */
 import { URL_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
+import { orderedNamedRows } from '@/lib/orderedNamedRows'
 import type { BlueprintCell, CellLink, CellResource } from '@/types/blueprint'
 
 /** A `resources` row as the board query selects it. */
@@ -37,18 +38,9 @@ export type RawCellResource = {
 export function cellResourcesFromRows(
   rows: readonly RawCellResource[] | null | undefined,
 ): CellResource[] {
-  if (!rows || rows.length === 0) return []
-
-  return rows
-    .filter((row) => (row.name ?? '').trim())
-    .slice()
-    // Sorted here rather than trusted: PostgREST does not promise an order
-    // for an embedded resource, so the list would otherwise come back in
-    // whatever order the planner chose.
-    .sort((a, b) => a.position - b.position)
-    .map((row) => ({
+  return orderedNamedRows(rows, (row, name) => ({
       id: row.id ?? null,
-      name: row.name!.trim(),
+      name,
       kind: row.kind?.trim() || 'link',
       url: row.url?.trim() || null,
       placementId: row.cell_touchpoint_id ?? null,

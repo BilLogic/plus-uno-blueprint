@@ -37,7 +37,7 @@ import {
 } from '@/data/beforeStudentsJoinFrames'
 import { SUPPORT_ACTIONS_DESCRIPTION } from '@/data/supportActionsCopy'
 import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
-import { ZOOM_TECH_LOGO } from '@/lib/blueprintTechPictures'
+import { ZOOM_TECH_LOGO } from '@/data/techLogos'
 import type {
   BlueprintCell,
   BlueprintCellDependency,

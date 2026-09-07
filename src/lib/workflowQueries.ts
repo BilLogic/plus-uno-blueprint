@@ -82,7 +82,7 @@ export const PATH_BLUEPRINT_SELECT = `
       touchpoints (
         name,
         kind,
-        url
+        icon_url
       )
     ),
     resources!resources_cell_id_fkey (

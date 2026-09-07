@@ -22,7 +22,7 @@ import {
   WRAP_UP_ZOOM_STEP_02_DESCRIPTION,
   WRAP_UP_ZOOM_STEP_03_DESCRIPTION,
 } from '@/data/wrapUpFrames'
-import { ZOOM_TECH_LOGO } from '@/lib/blueprintTechPictures'
+import { ZOOM_TECH_LOGO } from '@/data/techLogos'
 import type {
   BlueprintCell,
   BlueprintCellDependency,

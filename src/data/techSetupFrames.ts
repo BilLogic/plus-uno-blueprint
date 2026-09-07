@@ -1,4 +1,4 @@
-import { WORKDAY_TECH_LOGO } from '@/lib/blueprintTechPictures'
+import { WORKDAY_TECH_LOGO } from '@/data/techLogos'
 
 /** Workday logo for Tech Setup Front Stage Tech and Back Stage Tech cells. */
 export const TECH_SETUP_WORKDAY_LOGO = WORKDAY_TECH_LOGO

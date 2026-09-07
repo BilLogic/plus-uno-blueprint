@@ -19,7 +19,7 @@ import {
   EMAIL_TECH_LOGO,
   GOOGLE_FORM_TECH_LOGO,
   SLACK_TECH_LOGO,
-} from '@/lib/blueprintTechPictures'
+} from '@/data/techLogos'
 import type {
   BlueprintCell,
   BlueprintCellDependency,

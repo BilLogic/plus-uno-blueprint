@@ -13,7 +13,7 @@ import {
   STUDENTS_JUST_JOINED_ZOOM_STEP_02_DESCRIPTION,
   STUDENTS_JUST_JOINED_ZOOM_STEP_03_DESCRIPTION,
 } from '@/data/studentsJustJoinedFrames'
-import { ZOOM_TECH_LOGO } from '@/lib/blueprintTechPictures'
+import { ZOOM_TECH_LOGO } from '@/data/techLogos'
 import type {
   BlueprintCell,
   BlueprintCellDependency,

@@ -1021,10 +1021,14 @@ function BlueprintCellDetailPanelBody() {
       : detailBodyText
   const detailImages = resolveCellDetailImages({
     techItem: touchpointDetail?.name ?? selection.techItem,
+    cellContent: selection.paths[0]?.content,
     cellFrame: selection.paths[0]?.frame,
+    cellTouchpoints: selectedCell?.touchpoints ?? [],
+    cellResources,
   })
   // A featured attachment is the placement's picture (#272); the frame is
-  // the cell's.
+  // the cell's. The stock logo ahead of both is the touchpoint's own
+  // `icon_url` (#326) — the nine-name table this used to consult is gone.
   const showImages = Boolean(
     (featured.preview || detailImages?.length) && !isStoryboardLane,
   )
