@@ -10,8 +10,10 @@
  *
  *   1. THE WIRING — and this is the assertion that matters most.
  *      `src/lib/agent/loop.ts` splices the adapter's FULL text into every
- *      system prompt on every turn, and `src/lib/agent/tools/read.ts`
- *      serves it under the bare name `canvas-adapter`. Both must resolve
+ *      system prompt on every turn, and
+ *      `src/lib/agent/tools/referenceDocs.ts` — the Q19 fork seam, which
+ *      owns every reference specifier this app resolves — serves it under
+ *      the bare name `canvas-adapter`. Both must resolve
  *      `src/lib/agent/canvas-adapter.md` and NOT
  *      `agentic-service-blueprinting/references/canvas-adapter.md`.
  *      Without this check the other three still pass while the app serves
@@ -45,8 +47,8 @@
  *
  * Deliberately text-parsed, like upstream and like
  * `scripts/tests/toolParity.test.mjs`: specs.ts is TypeScript behind a
- * path alias, loop.ts and read.ts import supabase-js and Vite `?raw`
- * markdown, and a check that needs a build step is a check that gets
+ * path alias, loop.ts imports supabase-js and referenceDocs.ts imports Vite
+ * `?raw` markdown, and a check that needs a build step is a check that gets
  * skipped.
  *
  * Static, needs no database, runs in `gates`.
@@ -62,7 +64,7 @@ const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url))
 const ADAPTER = 'src/lib/agent/canvas-adapter.md'
 const SPECS = 'src/lib/agent/tools/specs.ts'
 const LOOP = 'src/lib/agent/loop.ts'
-const READ = 'src/lib/agent/tools/read.ts'
+const DOCS = 'src/lib/agent/tools/referenceDocs.ts'
 const HARNESS = 'scripts/agent-harness/run.mjs'
 const SCHEMA = 'supabase/schema.reference.sql'
 const MIGRATIONS = 'supabase/migrations'
@@ -105,7 +107,7 @@ export function adapterImport(source, { specifier }) {
  * The app modules import by alias; the harness runs under Node and reads the
  * repo-relative path with `readFileSync`, so it is matched as a path string.
  */
-export function wiringFaults({ loop, read, harness }) {
+export function wiringFaults({ loop, docs, harness }) {
   const faults = []
 
   const loopBinding = adapterImport(loop, { specifier: OVERRIDE_SPECIFIER })
@@ -122,16 +124,16 @@ export function wiringFaults({ loop, read, harness }) {
     faults.push({ problem: `${LOOP} still imports '${PACKAGE_ADAPTER}?raw'` })
   }
 
-  const readBinding = adapterImport(read, { specifier: OVERRIDE_SPECIFIER })
-  if (!readBinding) {
-    faults.push({ problem: `${READ} does not import '${OVERRIDE_SPECIFIER}?raw'` })
-  } else if (!new RegExp(`'canvas-adapter':\\s*${readBinding}\\b`).test(read)) {
+  const docsBinding = adapterImport(docs, { specifier: OVERRIDE_SPECIFIER })
+  if (!docsBinding) {
+    faults.push({ problem: `${DOCS} does not import '${OVERRIDE_SPECIFIER}?raw'` })
+  } else if (!new RegExp(`'canvas-adapter':\\s*${docsBinding}\\b`).test(docs)) {
     faults.push({
-      problem: `${READ}'s REFERENCES maps 'canvas-adapter' to something other than ${readBinding}`,
+      problem: `${DOCS}'s REFERENCE_DOCS maps 'canvas-adapter' to something other than ${docsBinding}`,
     })
   }
-  if (adapterImport(read, { specifier: PACKAGE_ADAPTER })) {
-    faults.push({ problem: `${READ} still imports '${PACKAGE_ADAPTER}?raw'` })
+  if (adapterImport(docs, { specifier: PACKAGE_ADAPTER })) {
+    faults.push({ problem: `${DOCS} still imports '${PACKAGE_ADAPTER}?raw'` })
   }
 
   // The eval harness assembles the same prompt under Node. A harness reading
@@ -358,7 +360,7 @@ export function compare({ read, referenceDocs, migrations }) {
   const documented = documentedKinds(adapter)
 
   return {
-    wiring: wiringFaults({ loop: read(LOOP), read: read(READ), harness: read(HARNESS) }),
+    wiring: wiringFaults({ loop: read(LOOP), docs: read(DOCS), harness: read(HARNESS) }),
     write: differences(
       documentedTools(adapter, 'That is the FULL write surface'),
       declaredTools(specs, 'WRITE_TOOL_NAMES'),
@@ -389,13 +391,13 @@ export function compare({ read, referenceDocs, migrations }) {
 /**
  * The installed references this app SERVES, by package-relative path.
  *
- * Derived from `read.ts`'s own `?raw` imports rather than by walking the
- * package: the package ships IDE-only references this app never serves, and a
- * check that demanded the override name those would be demanding a warning
- * about a document the agent cannot open.
+ * Derived from `referenceDocs.ts`'s own `?raw` imports rather than by walking
+ * the package: the package ships IDE-only references this app never serves,
+ * and a check that demanded the override name those would be demanding a
+ * warning about a document the agent cannot open.
  */
 function servedReferenceDocs(root) {
-  const source = readFileSync(join(root, READ), 'utf8')
+  const source = readFileSync(join(root, DOCS), 'utf8')
   return [...source.matchAll(/from 'agentic-service-blueprinting\/([^']+\.md)\?raw'/g)].map(
     ([, name]) => ({ name, text: readFileSync(join(root, PACKAGE, name), 'utf8') }),
   )
@@ -467,7 +469,7 @@ function main() {
 
   if (problems.length === 0) {
     console.log(
-      `${ADAPTER} is what loop.ts and read.ts serve; its surface rows are ` +
+      `${ADAPTER} is what loop.ts and referenceDocs.ts serve; its surface rows are ` +
         'exactly WRITE_TOOL_NAMES and READ_TOOL_NAMES; its dependency kinds are ' +
         'the ones the constraint enforces',
     )

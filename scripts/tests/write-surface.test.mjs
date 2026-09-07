@@ -124,9 +124,9 @@ const WIRED = {
     '  return [ROLE, canvasAdapterDoc, note].join("")',
     '}',
   ].join('\n'),
-  read: [
+  docs: [
     "import canvasAdapter from '@/lib/agent/canvas-adapter.md?raw'",
-    'const REFERENCES = {',
+    'export const REFERENCE_DOCS = {',
     "  'canvas-adapter': canvasAdapter,",
     '}',
   ].join('\n'),
@@ -175,10 +175,10 @@ test('get_reference serving something other than the imported override fails', (
   // The bug: the prompt gets the override and `get_reference('canvas-adapter')`
   // hands the agent a different document, so the agent can be told two
   // incompatible things about its own tools in one session.
-  const read = WIRED.read.replace("'canvas-adapter': canvasAdapter", "'canvas-adapter': somethingElse")
-  const faults = wiringFaults({ ...WIRED, read })
+  const docs = WIRED.docs.replace("'canvas-adapter': canvasAdapter", "'canvas-adapter': somethingElse")
+  const faults = wiringFaults({ ...WIRED, docs })
   assert.equal(faults.length, 1)
-  assert.match(faults[0].problem, /REFERENCES maps 'canvas-adapter'/)
+  assert.match(faults[0].problem, /REFERENCE_DOCS maps 'canvas-adapter'/)
 })
 
 test('the eval harness reading a different adapter fails', () => {
@@ -312,7 +312,7 @@ test('listDifferences names both a missing warning and a stale one', () => {
 
 function liveResult() {
   const referenceDocs = [
-    ...read('src/lib/agent/tools/read.ts').matchAll(
+    ...read('src/lib/agent/tools/referenceDocs.ts').matchAll(
       /from 'agentic-service-blueprinting\/([^']+\.md)\?raw'/g,
     ),
   ].map(([, name]) => ({ name, text: read(join(PACKAGE, name)) }))
@@ -392,7 +392,7 @@ test('the supersession list is the installed docs that actually teach the wrong 
   // Reported as names rather than a count so a failure says which document.
   const claimed = supersededPaths(read(ADAPTER))
   const actual = [
-    ...read('src/lib/agent/tools/read.ts').matchAll(
+    ...read('src/lib/agent/tools/referenceDocs.ts').matchAll(
       /from 'agentic-service-blueprinting\/([^']+\.md)\?raw'/g,
     ),
   ]
