@@ -756,4 +756,46 @@ export const RECONCILED_FILES = [
   'src/components/editor/EditorLoadingSkeletons.tsx',
   'src/components/cover/coverInline.tsx',
   'src/components/editor/AgentMarkdown.tsx',
+
+  // asb 1.10.0 adopt. Three slices again, and the shell is the one worth
+  // naming.
+  //
+  // #327 S5 converged `EditorShell.tsx` — about nine hundred lines that had
+  // been drifting since the fork. The template took our aside model, our #328
+  // vocabulary, `shellContext.ts`, the second error boundary (#396 Q46), the
+  // collapsed navbar's path selector and the owner-guarded collapse context;
+  // the last thing between the two files was ONE COMMENT, our `?cell=`
+  // deep-link note, which named uno-bot and pointed at a connector document
+  // the template does not ship.
+  'src/components/editor/EditorShell.tsx',
+  'src/components/editor/EditorRail.tsx',
+  'src/components/editor/SlideModeView.tsx',
+  'src/components/editor/collapsedPathSelector.test.tsx',
+  'src/components/editor/serviceBarSidebarResponse.test.tsx',
+  'src/components/editorErrorBoundary.test.tsx',
+  'src/contexts/sidebarCollapsedContext.ts',
+  'src/lib/shellContext.ts',
+  'src/lib/shellContext.test.ts',
+
+  // #325 S4. The slice's headline — deleting our `canvas-adapter.md` override
+  // — was REFUSED with measurements: the read rows still differ by two names,
+  // and #431 records why that is a schema fork rather than a rename. These
+  // four converged anyway. `sessions.ts` had been one hunk away since #208,
+  // a comment where each repo kept half the reason for reading the session
+  // store rather than the table; it now carries both, each stated without a
+  // column name, because the schemas fork there.
+  'src/lib/agent/attachments.ts',
+  'src/lib/agent/providers/openai.ts',
+  'src/lib/agent/role.md',
+  'src/lib/agent/sessions.ts',
+
+  // #327 S6 / #326 S6. The colour resolver is generic and the twenty-odd
+  // names it used to hold are rows now (#425). Five comments stood between
+  // the two copies, each naming something the template cannot have — two
+  // migration stamps, an ADR number that is 0014 here and 0003 there, this
+  // file's own path, and a gloss naming the service. Byte identity was
+  // reached by rewriting those five on BOTH sides, not by copying one over
+  // the other.
+  'src/lib/touchpointColors.ts',
+  'src/hooks/useTouchpointToneResolver.ts',
 ]

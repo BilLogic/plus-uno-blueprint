@@ -334,6 +334,21 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/editor/EditorLoadingSkeletons.tsx',
     'src/components/cover/coverInline.tsx',
     'src/components/editor/AgentMarkdown.tsx',
+    'src/components/editor/EditorShell.tsx',
+    'src/components/editor/EditorRail.tsx',
+    'src/components/editor/SlideModeView.tsx',
+    'src/components/editor/collapsedPathSelector.test.tsx',
+    'src/components/editor/serviceBarSidebarResponse.test.tsx',
+    'src/components/editorErrorBoundary.test.tsx',
+    'src/contexts/sidebarCollapsedContext.ts',
+    'src/lib/shellContext.ts',
+    'src/lib/shellContext.test.ts',
+    'src/lib/agent/attachments.ts',
+    'src/lib/agent/providers/openai.ts',
+    'src/lib/agent/role.md',
+    'src/lib/agent/sessions.ts',
+    'src/lib/touchpointColors.ts',
+    'src/hooks/useTouchpointToneResolver.ts',
   ])
 })
 
