@@ -349,6 +349,8 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/agent/sessions.ts',
     'src/lib/touchpointColors.ts',
     'src/hooks/useTouchpointToneResolver.ts',
+    'src/lib/blueprintTechPictures.ts',
+    'src/lib/orderedNamedRows.ts',
   ])
 })
 

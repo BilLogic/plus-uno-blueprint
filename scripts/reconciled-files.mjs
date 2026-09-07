@@ -798,4 +798,14 @@ export const RECONCILED_FILES = [
   // the other.
   'src/lib/touchpointColors.ts',
   'src/hooks/useTouchpointToneResolver.ts',
+
+  // #325 S5, after the seed. `blueprintTechPictures.ts` held a table of nine
+  // tool NAMES against nine asset paths, inside the renderer, where no author
+  // could see it or set it. It is the template's file now, reading
+  // `touchpoints.icon_url` through the placement — but only after
+  // `20260906100000` put the six names that table actually matched into rows.
+  // Deleting it first would have blanked a logo drawn today on 126 of 359
+  // placements, which is why that migration applied before this merged.
+  'src/lib/blueprintTechPictures.ts',
+  'src/lib/orderedNamedRows.ts',
 ]
