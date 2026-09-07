@@ -19,6 +19,7 @@ import {
 import type { BlueprintData } from '@/types/blueprint'
 import { agentSessionsSnapshot } from '@/lib/agent/sessions'
 import { loadPersistedEvents } from '@/lib/agent/persistence'
+import { REFERENCE_DOCS } from '@/lib/agent/tools/referenceDocs'
 import { REFERENCE_NAMES } from '@/lib/agent/tools/referenceNames'
 import {
   SCOPE_ALL,
@@ -26,29 +27,6 @@ import {
   servicePhaseNames,
   type ServiceScope,
 } from '@/lib/agent/tools/serviceScope'
-// The instance override, not the package's copy — see the REFERENCES note
-// below and `src/lib/agent/canvas-adapter.md`'s own header (#115).
-import canvasAdapter from '@/lib/agent/canvas-adapter.md?raw'
-// The blueprint's own account of itself (#260): one file, read here, by the
-// bot and by IDE sessions. Its schema section is rendered from the catalog.
-import blueprintAccount from '../../../../docs/agents/blueprint.md?raw'
-import dataModel from 'agentic-service-blueprinting/references/data-model.md?raw'
-import elicitationProtocol from 'agentic-service-blueprinting/skills/map/references/elicitation-protocol.md?raw'
-import cocreatePlaybook from 'agentic-service-blueprinting/skills/map/references/cocreate-playbook.md?raw'
-import laneVocabulary from 'agentic-service-blueprinting/references/lane-vocabulary.md?raw'
-import laneRoles from 'agentic-service-blueprinting/references/lane-roles.md?raw'
-import auditPlaybook from 'agentic-service-blueprinting/references/audit-playbook.md?raw'
-import whatifPlaybook from 'agentic-service-blueprinting/skills/whatif/references/whatif-playbook.md?raw'
-import checkGapSweep from 'agentic-service-blueprinting/skills/audit/references/check-gap-sweep.md?raw'
-import checkJargonLint from 'agentic-service-blueprinting/skills/audit/references/check-jargon-lint.md?raw'
-import checkChannelConflict from 'agentic-service-blueprinting/skills/audit/references/check-channel-conflict.md?raw'
-import checkKpiAlignment from 'agentic-service-blueprinting/skills/audit/references/check-kpi-alignment.md?raw'
-import checkPerceivedOwner from 'agentic-service-blueprinting/skills/audit/references/check-perceived-owner.md?raw'
-import checkValueLedger from 'agentic-service-blueprinting/skills/audit/references/check-value-ledger.md?raw'
-import checkFeeVisibility from 'agentic-service-blueprinting/skills/audit/references/check-fee-visibility.md?raw'
-import checkObsoleteSource from 'agentic-service-blueprinting/skills/audit/references/check-obsolete-source.md?raw'
-import slicePlaybook from 'agentic-service-blueprinting/skills/slice/references/slice-playbook.md?raw'
-import sliceTemplates from 'agentic-service-blueprinting/skills/slice/references/slice-templates.md?raw'
 
 type Client = SupabaseClient<Database>
 
@@ -69,58 +47,33 @@ const UUID =
 
 /**
  * The same reference files the IDE skills read from disk, served as a tool.
- * One progressive-disclosure mechanism, two consumers, and now literally
- * one copy: these resolve into the installed `agentic-service-blueprinting`
- * package, pinned by the lockfile. Editing a file in the plugin repo and
- * bumping the pin upgrades both; nothing here can be edited instead.
+ * One progressive-disclosure mechanism, two consumers.
  *
- * ONE EXCEPTION, and it is deliberate. `canvas-adapter` is served from
- * `src/lib/agent/canvas-adapter.md` in this repo, because the package's
- * copy names the package's registry — twelve tools this app does not have,
- * thirty-three of ours missing — and calls those rows "the FULL surface"
- * (#115). A rulebook that enumerates tool names cannot be shared by two
- * installations with different tools. `scripts/check-write-surface.mjs`
- * fails if this key ever points back at the package.
+ * WHERE those files come from is a DECLARED FORK SEAM: `referenceDocs.ts`
+ * is the only module that names their paths, because a vendored tree and an
+ * installed package can never spell the same specifier. Read its header
+ * before adding, moving or overriding a document — this file deliberately
+ * knows nothing about any of that, and that ignorance is what lets it be
+ * shared verbatim.
+ *
+ * The names live in `referenceNames.ts` (a leaf module, so specs.ts can
+ * quote them without the seam's `?raw` import graph). `referenceDocs.ts`
+ * holds the documents themselves; the init-time check below keeps the two in
+ * lockstep. It is the fastest failure for a reference added on one side and
+ * not the other — the throw happens at module init, before any test that
+ * touches the tools can get further.
  */
-const REFERENCES: Record<string, string> = {
-  'canvas-adapter': canvasAdapter,
-  blueprint: blueprintAccount,
-  'lane-roles': laneRoles,
-  'lane-vocabulary': laneVocabulary,
-  'elicitation-protocol': elicitationProtocol,
-  'cocreate-playbook': cocreatePlaybook,
-  'data-model': dataModel,
-  'audit-playbook': auditPlaybook,
-  'whatif-playbook': whatifPlaybook,
-  'check-gap-sweep': checkGapSweep,
-  'check-jargon-lint': checkJargonLint,
-  'check-channel-conflict': checkChannelConflict,
-  'check-kpi-alignment': checkKpiAlignment,
-  'check-perceived-owner': checkPerceivedOwner,
-  'check-value-ledger': checkValueLedger,
-  'check-fee-visibility': checkFeeVisibility,
-  'check-obsolete-source': checkObsoleteSource,
-  'slice-playbook': slicePlaybook,
-  'slice-templates': sliceTemplates,
-}
-
-// The names live in `referenceNames.ts` (a leaf module, so specs.ts can
-// quote them without this file's ?raw import graph). This record is the
-// documents themselves; the init-time check keeps the two in lockstep.
-// It is the fastest failure for a reference added upstream and taken here
-// without being published — the throw happens at module init, before any
-// test that touches the tools can get further.
 {
-  const here = Object.keys(REFERENCES).sort().join(',')
+  const here = Object.keys(REFERENCE_DOCS).sort().join(',')
   const published = [...REFERENCE_NAMES].sort().join(',')
   if (here !== published)
     throw new Error(
-      'REFERENCES (read.ts) and REFERENCE_NAMES (referenceNames.ts) drifted — add the reference to both.',
+      'REFERENCE_DOCS (referenceDocs.ts) and REFERENCE_NAMES (referenceNames.ts) drifted — add the reference to both.',
     )
 }
 
 export function readReference(name: string): string {
-  const doc = REFERENCES[name]
+  const doc = REFERENCE_DOCS[name]
   if (doc) return doc
   return `Unknown reference "${name}". Available: ${REFERENCE_NAMES.join(', ')}`
 }
