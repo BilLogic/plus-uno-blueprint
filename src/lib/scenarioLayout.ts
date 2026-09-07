@@ -19,7 +19,7 @@ export type LayoutChangeOutcome = 'written' | 'session-only'
  *
  *   - an editor (`canWrite`) writes `scenarios.layout` through the recorded
  *     `update_scenario_layout`, inverse included, and the structure queries
- *     refetch so the stored value comes back as the slide's own `viewType`;
+ *     refetch so the stored value comes back as the slide's own `layout`;
  *   - anon and view-only sessions hold no write on the column, so their
  *     choice is `session-only` and lives in the editor's override map.
  *

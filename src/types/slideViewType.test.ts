@@ -20,7 +20,7 @@ describe('asSlideViewType', () => {
 describe('getSlideViewType', () => {
   it('is the stored token, and stacked when a slide has none', () => {
     expect(
-      getSlideViewType({ id: 's', index: 0, label: 'S', viewType: 'merged' }),
+      getSlideViewType({ id: 's', index: 0, label: 'S', layout: 'merged' }),
     ).toBe('merged')
     expect(getSlideViewType({ id: 's', index: 0, label: 'S' })).toBe('stacked')
   })

@@ -408,7 +408,7 @@ function ServiceOverviewViewImpl({
     blueprintsByPathId,
     loading: blueprintsLoading,
     progress: blueprintsProgress,
-    viewType: overviewViewType,
+    layout: overviewViewType,
     resolveSelectedPathIds,
     resolveHappyPathIds,
   } = usePhaseBlueprintFilters({

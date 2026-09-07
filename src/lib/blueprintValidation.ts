@@ -1,4 +1,4 @@
-import type { LaneSetEntry, ViewType } from '@/lib/authoringRpc'
+import type { LaneSetEntry, Layout } from '@/lib/authoringRpc'
 
 /**
  * What a new scenario needs before it is worth sending.
@@ -9,7 +9,7 @@ import type { LaneSetEntry, ViewType } from '@/lib/authoringRpc'
  * type; the database's copy stays as the authority.
  */
 
-export const VIEW_TYPES: ViewType[] = ['stacked', 'merged']
+export const LAYOUTS: Layout[] = ['stacked', 'merged']
 
 /**
  * Display names.
@@ -18,13 +18,13 @@ export const VIEW_TYPES: ViewType[] = ['stacked', 'merged']
  * read those" — which was true of `side-by-side` and is the whole reason the
  * vocabulary collapsed. The stored token is now the token the UI names.
  */
-export const VIEW_TYPE_LABELS: Record<ViewType, string> = {
+export const LAYOUT_LABELS: Record<Layout, string> = {
   stacked: 'Stacked',
   merged: 'Merged',
 }
 
-/** What each view type is for, in the words someone choosing one would use. */
-export const VIEW_TYPE_HINTS: Record<ViewType, string> = {
+/** What each layout is for, in the words someone choosing one would use. */
+export const LAYOUT_HINTS: Record<Layout, string> = {
   stacked: 'Each path as its own band',
   merged: 'The paths merged into one grid',
 }
@@ -70,7 +70,7 @@ export const MIN_STEP_COUNT = 1
 export type DraftBlueprint = {
   phaseId: string | null
   name: string
-  viewType: ViewType
+  layout: Layout
   /** Copy lanes from this version. Null means use `DEFAULT_LANE_SET`. */
   laneSourcePathId: string | null
   stepCount: number
@@ -99,7 +99,7 @@ export function validateDraftBlueprint(draft: DraftBlueprint): string[] {
       'The first version needs a name — say what the route is, e.g. "Signs up without conflicts".',
     )
   }
-  if (!VIEW_TYPES.includes(draft.viewType)) {
+  if (!LAYOUTS.includes(draft.layout)) {
     problems.push('Pick how the versions should be laid out.')
   }
   if (!Number.isInteger(draft.stepCount)) {

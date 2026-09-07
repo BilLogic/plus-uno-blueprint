@@ -75,7 +75,7 @@ type EditorContextValue = {
   getScenarioDisplayViewType: (slide: NavItem) => SlideViewType | undefined
   setScenarioDisplayViewType: (
     scenarioId: string,
-    viewType: SlideViewType,
+    layout: SlideViewType,
   ) => void
   slidesLoading: boolean
   slidesError: string | null
@@ -360,21 +360,21 @@ export function EditorProvider({ children }: EditorProviderProps) {
     THIS scenario chose gets the override, then the slide's own stored
     layout, then `undefined` — never a default it has to treat as a sentinel.
   */
-  const [viewTypeOverrides, setViewTypeOverrides] = useState<
-    Record<string, { viewType: SlideViewType; over: SlideViewType | undefined }>
+  const [layoutOverrides, setLayoutOverrides] = useState<
+    Record<string, { layout: SlideViewType; over: SlideViewType | undefined }>
   >({})
 
   const getScenarioDisplayViewType = useCallback(
     (slide: NavItem): SlideViewType | undefined => {
-      const override = viewTypeOverrides[slide.id]
-      if (!override || override.over !== slide.viewType) return slide.viewType
-      return override.viewType
+      const override = layoutOverrides[slide.id]
+      if (!override || override.over !== slide.layout) return slide.layout
+      return override.layout
     },
-    [viewTypeOverrides],
+    [layoutOverrides],
   )
 
-  const clearViewTypeOverride = useCallback((scenarioId: string) => {
-    setViewTypeOverrides((current) => {
+  const clearLayoutOverride = useCallback((scenarioId: string) => {
+    setLayoutOverrides((current) => {
       if (!(scenarioId in current)) return current
       const next = { ...current }
       delete next[scenarioId]
@@ -383,31 +383,25 @@ export function EditorProvider({ children }: EditorProviderProps) {
   }, [])
 
   const setScenarioDisplayViewType = useCallback(
-    (scenarioId: string, viewType: SlideViewType) => {
+    (scenarioId: string, layout: SlideViewType) => {
       const slide = slides.find((item) => item.id === scenarioId)
       const previous = slide ? getScenarioDisplayViewType(slide) : undefined
-      if (previous === viewType) return
-      setViewTypeOverrides((current) => ({
+      if (previous === layout) return
+      setLayoutOverrides((current) => ({
         ...current,
-        [scenarioId]: { viewType, over: slide?.viewType },
+        [scenarioId]: { layout, over: slide?.layout },
       }))
       void persistScenarioLayout(client, canWrite, {
         scenarioId,
-        layout: viewType,
+        layout,
         previous,
       }).catch((error: unknown) => {
         // The row kept its old value, so the screen goes back to it.
         console.error('[layout] update_scenario_layout failed:', error)
-        clearViewTypeOverride(scenarioId)
+        clearLayoutOverride(scenarioId)
       })
     },
-    [
-      slides,
-      client,
-      canWrite,
-      getScenarioDisplayViewType,
-      clearViewTypeOverride,
-    ],
+    [slides, client, canWrite, getScenarioDisplayViewType, clearLayoutOverride],
   )
 
   const slidesLoading = configured && loading && dbSlides.length === 0

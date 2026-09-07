@@ -10,7 +10,7 @@ type UsePhaseBlueprintFiltersOptions = {
   slides: NavItem[]
   enabled?: boolean
   getScenarioDisplayViewType: (slide: NavItem) => SlideViewType | undefined
-  setScenarioDisplayViewType: (scenarioId: string, viewType: SlideViewType) => void
+  setScenarioDisplayViewType: (scenarioId: string, layout: SlideViewType) => void
 }
 
 export type PhaseBlueprintFilters = {
@@ -19,8 +19,8 @@ export type PhaseBlueprintFilters = {
   loading: boolean
   /** Real fetch progress: settled request chunks over total. */
   progress: { loaded: number; total: number }
-  viewType: SlideViewType
-  setViewType: (viewType: SlideViewType) => void
+  layout: SlideViewType
+  setViewType: (layout: SlideViewType) => void
   /** This view's selection for a scenario — what a focused scenario draws. */
   resolveSelectedPathIds: (scenarioId: string, paths: PathListItem[]) => string[]
   /** The scenario's happy path alone — what a phase row draws. */
@@ -73,7 +73,7 @@ export function usePhaseBlueprintFilters({
   // `activeScenarioIds` is the scope: the store may prune any of these that
   // came back with no paths, which is how a deleted — or reverted-duplicate —
   // scenario leaves the catalog instead of outliving the session in it.
-  const viewType = useMemo(() => {
+  const layout = useMemo(() => {
     if (activeScenarioIds.length === 0) return 'stacked' as SlideViewType
 
     const viewTypes = activeScenarioIds.map((scenarioId) => {
@@ -127,7 +127,7 @@ export function usePhaseBlueprintFilters({
     blueprintsByPathId,
     loading,
     progress,
-    viewType,
+    layout,
     setViewType,
     resolveSelectedPathIds,
     resolveHappyPathIds,
