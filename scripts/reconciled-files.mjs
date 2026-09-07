@@ -808,4 +808,21 @@ export const RECONCILED_FILES = [
   // placements, which is why that migration applied before this merged.
   'src/lib/blueprintTechPictures.ts',
   'src/lib/orderedNamedRows.ts',
+
+  // asb 1.11.0 adopt. #358 S6 and #324 S3+S4.
+  //
+  // The band and the merged grid were kept apart by less than their line counts
+  // suggested: an import's position, a stray blank line an earlier move left
+  // behind, and `cellTouchpoints(cell ?? {})` against
+  // `cell ? cellTouchpoints(cell) : undefined`.
+  'src/components/blueprint/BlueprintPathBand.tsx',
+  'src/components/blueprint/MergedCompareGrid.tsx',
+
+  // The placement editor's two controls, which the template gained with the
+  // whole block — including three writers it had been carrying with NO CALLER
+  // anywhere, reachable only by a revert. Byte identity cost three bare issue
+  // numbers leaving our doc comments.
+  'src/components/blueprint/RoleSelect.tsx',
+  'src/components/blueprint/PlacementResourcesList.tsx',
+  'src/lib/utils.ts',
 ]
