@@ -513,6 +513,9 @@ function MergedLaneRow({
             : assembly.kind === 'shared'
               ? [assembly.representative]
               : assembly.subCells
+        // Every drawn cell states its membership positively — a
+        // fully-shared cell wears every path's segment, which is the plain
+        // "used in both" statement, and a subset cell wears only its own.
         const membershipFor = (
           subCell: MergedSubCell,
         ): CompareCellPathMembership[] | undefined => {

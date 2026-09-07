@@ -88,11 +88,10 @@ export function CompareCellBlock({
   flushBottom?: boolean
   selectionContext?: BlueprintCellSelectionContext
   storyboardPictures?: Array<{ frame: string; label: string }>
-  /** `steps.summary` — captions the storyboard frame. */
   /** Every cell in a tech slot — one per touchpoint since the split. */
+  slotCells?: BlueprintCell[]
   /** Unbuilt cells wear a dashed, drained face — see BlueprintCellButton. */
   status?: BlueprintCell['status']
-  slotCells?: BlueprintCell[]
   /** Member paths of this rendered cell — one outline segment each. */
   pathMembership?: readonly CompareCellPathMembership[]
 }) {
@@ -188,6 +187,10 @@ export function CompareCellBlock({
               key={`${slotCell?.id ?? 'anon'}-${item}-${index}`}
               item={item}
               nameOnly={nameOnly}
+              className={
+                hasMembershipOutline ? 'compare-membership-outline' : undefined
+              }
+              aria-describedby={ariaDescribedBy}
               // Identity is the split's point: each touchpoint carries its own
               // cell in the selection it hands to the panel and the picker.
               selectionContext={
@@ -209,10 +212,6 @@ export function CompareCellBlock({
                 index === 0 || slotCell?.id !== all[index - 1]?.slotCell?.id
               }
               status={slotCell?.status ?? status}
-              className={
-                hasMembershipOutline ? 'compare-membership-outline' : undefined
-              }
-              aria-describedby={ariaDescribedBy}
             />
           ) : (
             <BlueprintTouchpointCell
@@ -244,7 +243,6 @@ export function CompareCellBlock({
         className={cn(
           'flex-none overflow-hidden',
           hasMembershipOutline && 'compare-membership-outline',
-          compact ? 'h-24 min-h-24 max-h-24' : 'h-32 min-h-32 max-h-32',
         )}
         style={{
           height: narrativeHeight,
@@ -275,11 +273,9 @@ export function CompareCellBlock({
       }
     >
       {hasMembershipOutline ? (
-        <>
-          <span id={membershipDescriptionId} className="sr-only">
-            {`Used in paths: ${pathMembership!.map((membership) => membership.pathName).join(', ')}`}
-          </span>
-        </>
+        <span id={membershipDescriptionId} className="sr-only">
+          {`Used in paths: ${pathMembership!.map((membership) => membership.pathName).join(', ')}`}
+        </span>
       ) : null}
       {innerContent}
     </div>
