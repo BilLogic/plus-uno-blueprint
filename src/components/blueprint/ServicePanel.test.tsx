@@ -19,6 +19,11 @@ const SERVICE = {
   id: 'svc-1',
   name: 'Home Retrofit',
   summary: 'We insulate homes.',
+  // An author's view: this reader is signed in, so the business model came
+  // back with the service. A signed-out reader gets `businessModelVisible:
+  // false` and no commercial section at all — the claim
+  // `serviceSpecReaderTier.test.tsx` pins (#442).
+  businessModelVisible: true,
   funding: '',
   pricing: '',
   deliveryCost: '',

@@ -68,6 +68,8 @@ vi.mock('@/contexts/SupabaseProvider', () => ({
     isDevAuthoring: false,
     isEditPreview: false,
     canAgent: false,
+    // Signed out, so the read never names `business_models` (#442).
+    canReadPrivate: false,
   }),
 }))
 
@@ -506,7 +508,6 @@ function fakeSupabase() {
         id: 'svc-1',
         name: 'Ecoeled',
         summary: 'Rooftop solar, end to end.',
-        business_models: null,
       },
     ],
     phases: [{ id: 'phase-1', scenarios: [{ id: 'scenario-1' }] }],
