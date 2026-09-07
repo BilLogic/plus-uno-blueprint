@@ -351,6 +351,11 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/hooks/useTouchpointToneResolver.ts',
     'src/lib/blueprintTechPictures.ts',
     'src/lib/orderedNamedRows.ts',
+    'src/components/blueprint/BlueprintPathBand.tsx',
+    'src/components/blueprint/MergedCompareGrid.tsx',
+    'src/components/blueprint/RoleSelect.tsx',
+    'src/components/blueprint/PlacementResourcesList.tsx',
+    'src/lib/utils.ts',
   ])
 })
 
