@@ -322,6 +322,18 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/motion.test.ts',
     'src/lib/tailwindColorReset.test.ts',
     'src/lib/compatLayer.test.ts',
+    'src/lib/agent/placement.ts',
+    'src/lib/agent/settings.ts',
+    'src/lib/agent/settings.scope.test.ts',
+    'src/lib/agent/tools/referenceNames.ts',
+    'src/lib/mobilePathMemory.ts',
+    'src/lib/sideBySideCompareLayout.ts',
+    'src/lib/blueprintLayout.ts',
+    'src/components/blueprint/ResizableComparePanel.tsx',
+    'src/components/blueprint/StackedCompareGrid.tsx',
+    'src/components/editor/EditorLoadingSkeletons.tsx',
+    'src/components/cover/coverInline.tsx',
+    'src/components/editor/AgentMarkdown.tsx',
   ])
 })
 
