@@ -42,7 +42,6 @@ import { isBlueprintStoryboardWalkthroughEnabled } from '@/lib/blueprintDisplayF
 import { buildStoryboardWalkthroughSession } from '@/lib/storyboardWalkthrough'
 import type { BlueprintData, BlueprintStep } from '@/types/blueprint'
 
-
 /**
  * How one band is placed inside its parent grid.
  *
