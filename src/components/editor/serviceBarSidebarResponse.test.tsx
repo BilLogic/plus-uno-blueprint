@@ -32,6 +32,8 @@ import { SlideStickyHeader } from '@/components/editor/SlideStickyHeader'
 import { EntityDetailProvider } from '@/contexts/EntityDetailContext'
 import { PathSelectionProvider } from '@/contexts/PathSelectionContext'
 import type { NavItem } from '@/types/nav'
+import { ORG_NAME } from '@/config'
+import { coverContent } from '@/content/coverContent'
 import { QUERY_DEFAULTS } from '@/lib/queryClient'
 
 const supabase = vi.hoisted(() => ({ client: null as unknown, calls: 0 }))
@@ -49,7 +51,16 @@ vi.mock('@/contexts/SupabaseProvider', () => ({
   }),
 }))
 
-const SERVICE_NAME = 'Ecoeled'
+// A fixture service, deliberately not any installation's own: the file is
+// shared, and a real name in it reads as data rather than as a stand-in.
+const SERVICE_NAME = 'Rooftop Retrofit'
+/**
+ * The wordmark the navbar prints, resolved the way the navbar resolves it —
+ * not the string this installation happens to use. A literal here is one
+ * installation's name written into a shared file, and it is wrong the moment
+ * the file is read anywhere else.
+ */
+const WORDMARK = coverContent.title ?? ORG_NAME
 const SERVICE_SUMMARY = 'Rooftop solar, end to end.'
 
 type Result = { data: unknown; error: { message: string } | null }
@@ -220,7 +231,7 @@ describe('the floating navbar', () => {
 
     const toggle = screen.getByLabelText('Expand sidebar')
     for (const after of [
-      screen.getByText('Uno Blueprint'),
+      screen.getByText(WORDMARK),
       screen.getByText(SERVICE_NAME),
     ]) {
       // The sidebar returns at the left edge, so the control that summons it
