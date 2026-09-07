@@ -7,23 +7,22 @@ import {
  * What colour a touchpoint's face is drawn in.
  *
  * A touchpoint's colour is a product fact chosen by whoever owns the blueprint
- * — "Zoom is blue" — and not a palette one. It is now stored where a product
- * fact belongs: `touchpoints.tone` carries the family, `touchpoints.aliases`
- * carries the other spellings that mean the same row, and both arrived in
- * `20260905110000` and `20260905120000`. This module is the machinery that
- * reads them, and #396 Q48 is the decision that split the two: the resolution
- * — aliases, case folding, the deterministic fallback for a name nobody has
- * chosen for — is generic and belongs to every deployment; the twenty-odd
- * names that used to sit in the literal below belong to one university
- * tutoring service and do not (#326).
+ * — "our scheduling tool is blue" — and not a palette one. It is stored where a
+ * product fact belongs: `touchpoints.tone` carries the family and
+ * `touchpoints.aliases` carries the other spellings that mean the same row.
+ * This module is the machinery that reads them, and #396 Q48 is the decision
+ * that split the two: the resolution — aliases, case folding, the
+ * deterministic fallback for a name nobody has chosen for — is generic and
+ * belongs to every deployment; the tool names any one service happens to use
+ * do not (#326).
  *
  * Three answers, in order, and each one is narrower than the one under it:
  *
  * 1. THE REGISTRY — what this deployment's own rows say. Loaded once by
  *    `TouchpointRegistryProvider` and held here rather than in context,
  *    because the one component that must read it is `TouchpointCellFace`,
- *    which is the template's file and takes only a label (ADR 0005: state
- *    non-React code has to read lives in a module store).
+ *    which takes a label and nothing else (ADR 0005: state non-React code has
+ *    to read lives in a module store).
  * 2. THE SEED — `TOUCHPOINT_COLORS`, below. Generic tools any service might
  *    use, so that a deployment with an empty registry still opens with a board
  *    that reads deliberately rather than randomly.
@@ -102,8 +101,8 @@ const NO_TONES: ReadonlyMap<string, TouchpointTone> = new Map()
  * The loaded registry, as two lookups keyed on a lowercased label.
  *
  * A module store rather than context, and the reason is specific rather than
- * general: `TouchpointCellFace` is enrolled in `scripts/reconciled-files.mjs`,
- * so it is the template's file byte for byte, and it resolves its own tone
+ * general: `TouchpointCellFace` is a shared file, held identical in the
+ * template and in the deployments built on it, and it resolves its own tone
  * from a label with no hook and no prop to carry a value in. Threading a tone
  * prop to it would fork the file; a store lets it stay identical and still ask
  * this deployment's question. `useTouchpointToneResolver` is what makes a
@@ -133,8 +132,9 @@ let toneResolver: TouchpointToneResolver = (label, chosen) =>
 const KNOWN_TONES = new Set<string>(TOUCHPOINT_TONES)
 
 function asTone(raw: string | null): TouchpointTone | null {
-  // The column carries no CHECK constraint, deliberately — `20260905110000`
-  // explains why the tone vocabulary must not be copied into the schema. That
+  // The column carries no CHECK constraint, deliberately — the migration that
+  // adds it explains why the tone vocabulary, which belongs to the token
+  // model, must not be copied into the schema as a second list. That
   // makes validating it the reader's job, and a value outside the seven
   // families is treated as no preference rather than as a crash or as a
   // `data-blueprint-tone` attribute no stylesheet answers.
@@ -153,12 +153,13 @@ function sameMap<T>(a: ReadonlyMap<string, T>, b: ReadonlyMap<string, T>) {
  * Publish the deployment's rows.
  *
  * NAMES BEAT ALIASES, and an alias that collides with a name already claimed
- * is dropped. Nothing in the schema forbids either collision —
- * `20260905120000` says so, and says the rule belongs to the resolver, which
- * is here. A render must not fail on data, so a collision resolves silently
- * and predictably instead of throwing: the identity a row was given (ADR 0014)
- * outranks a spelling some other row remembers, and among aliases the first
- * row in the order the query returned wins.
+ * is dropped. Nothing in the schema forbids either collision — the migration
+ * that adds `aliases` says so, and says the rule belongs to the resolver,
+ * which is here. A render must not fail on data, so a collision resolves
+ * silently and predictably instead of throwing: a touchpoint's `name` is its
+ * identity, unique deployment-wide, so it outranks a spelling some other row
+ * remembers, and among aliases the first row in the order the query returned
+ * wins.
  *
  * The snapshot is replaced only on a REAL change, which is the
  * reference-stability contract ADR 0005 puts on every store here: a
