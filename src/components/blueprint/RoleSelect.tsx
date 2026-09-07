@@ -17,7 +17,7 @@ const OPTIONS = TOUCHPOINT_ROLE_OPTIONS.map((option) => ({
 /**
  * Core, peripheral, or left alone.
  *
- * The same control as `StatusSelect` (#256) over a three-word vocabulary.
+ * The same control as `StatusSelect` over a three-word vocabulary.
  *
  * The unmarked option is FIRST and is a real choice rather than a placeholder.
  * A select whose empty state is an unselectable prompt teaches that

@@ -57,7 +57,7 @@ function sent(rows: readonly Row[]): PlacementResourceDraft[] {
 }
 
 /**
- * One list for everything a placement points at (#273).
+ * One list for everything a placement points at.
  *
  * The top of the list is what the placement LEADS with — its preview and
  * its buttons — each with an unset control; the list under it is every
@@ -74,11 +74,11 @@ function sent(rows: readonly Row[]): PlacementResourceDraft[] {
  * transaction, and waiting for a Save would leave the top of the list
  * showing a state the database does not hold.
  *
- * A file is a third way in (#274): it goes to the bucket at once — the
- * object's URL is what the row carries, so there is no row to draft until
- * the upload has answered — and then joins the list as an `attachment` row
- * saved like any other. "Replace…" on the preview uploads the same way and
- * swaps that row's URL; the old object stays in the bucket, deliberately.
+ * A file is a third way in: it goes to the bucket at once — the object's URL
+ * is what the row carries, so there is no row to draft until the upload has
+ * answered — and then joins the list as an `attachment` row saved like any
+ * other. "Replace…" on the preview uploads the same way and swaps that row's
+ * URL; the old object stays in the bucket, deliberately.
  */
 export function PlacementResourcesList({
   placement,

@@ -10,6 +10,7 @@ import {
   PANEL_TEXTAREA_CLASS,
 } from '@/components/blueprint/panelShell'
 import { OwnerTagSelect } from '@/components/blueprint/OwnerTagSelect'
+import { usePanelFooterHost } from '@/hooks/usePanelFooterHost'
 import { invalidateCanvasBlueprintsForPath } from '@/hooks/useCanvasBlueprints'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useBlueprintCell } from '@/hooks/useBlueprintCell'
@@ -292,11 +293,7 @@ function CellPanelEditorForm({
     audiencesResult.status === 'ready' ? audiencesResult.data : []
   // The footer host mounts in the same commit as this form; looked up once
   // after mount so the portal lands below the scroll region.
-  const [footerHost, setFooterHost] = useState<HTMLElement | null>(null)
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot DOM lookup of the portal host; it only exists after the panel's first commit
-    setFooterHost(document.getElementById(CELL_PANEL_FOOTER_ID))
-  }, [])
+  const footerHost = usePanelFooterHost(CELL_PANEL_FOOTER_ID)
   /*
     Frozen at mount (state initializer, never re-set). The props keep
     tracking the live query — a ⌘Z revert of this same cell refetches it
