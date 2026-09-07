@@ -50,66 +50,32 @@ const PRE_SESSION_ID = 'a0000000-0000-4000-8000-000000000103'
 const IN_SESSION_ID = 'a0000000-0000-4000-8000-000000000104'
 const POST_SESSION_ID = 'a0000000-0000-4000-8000-000000000105'
 
-export const APPLICATION_PHASE_ID = 'a0000000-0000-4000-8000-000000000101'
-export const ONBOARDING_PHASE_ID = 'a0000000-0000-4000-8000-000000000102'
-export const PRE_SESSION_PHASE_ID = 'a0000000-0000-4000-8000-000000000103'
-export const IN_SESSION_PHASE_ID = 'a0000000-0000-4000-8000-000000000104'
-export const POST_SESSION_PHASE_ID = 'a0000000-0000-4000-8000-000000000105'
-
-const OVERVIEW_PHASE_FLOW_TRANSITIONS: ReadonlyArray<{
-  fromId: string
-  toId: string
-  fromLabel: string
-  toLabel: string
-}> = [
-  {
-    fromId: APPLICATION_PHASE_ID,
-    toId: ONBOARDING_PHASE_ID,
-    fromLabel: 'Application',
-    toLabel: 'Onboarding',
-  },
-  {
-    fromId: ONBOARDING_PHASE_ID,
-    toId: PRE_SESSION_PHASE_ID,
-    fromLabel: 'Onboarding',
-    toLabel: 'Pre-session',
-  },
-  {
-    fromId: PRE_SESSION_PHASE_ID,
-    toId: IN_SESSION_PHASE_ID,
-    fromLabel: 'Pre-session',
-    toLabel: 'In-session',
-  },
-  {
-    fromId: IN_SESSION_PHASE_ID,
-    toId: POST_SESSION_PHASE_ID,
-    fromLabel: 'In-session',
-    toLabel: 'Post-session',
-  },
-]
-
-/** Whether the service overview canvas should draw a flow arrow between two phases. */
+/**
+ * The service overview draws a flow arrow between consecutive main phases.
+ * Purely positional — no phase-ID or display-label heuristics, so it works
+ * for any org's ids and any language. A missing `toPhase` is the last phase
+ * in the service, which has nothing to point at.
+ */
 export function shouldShowOverviewPhaseFlowArrow(
-  fromPhase: NavItem,
+  _fromPhase: NavItem,
   toPhase: NavItem | undefined,
 ): boolean {
-  if (!toPhase) return false
-
-  return OVERVIEW_PHASE_FLOW_TRANSITIONS.some(
-    ({ fromId, toId, fromLabel, toLabel }) =>
-      (fromPhase.id === fromId && toPhase.id === toId) ||
-      (fromPhase.label === fromLabel && toPhase.label === toLabel),
-  )
+  return Boolean(toPhase)
 }
 
-/** Horizontal anchor for overview flow arrows (Application phase center). */
-export function isOverviewFlowArrowAnchorPhase(phase: NavItem): boolean {
-  return (
-    phase.id === APPLICATION_PHASE_ID || phase.label === 'Application'
-  )
+/**
+ * Horizontal anchor for overview flow arrows: the FIRST main phase, whose
+ * centre every arrow in the column aligns to. Positional rather than named,
+ * so an org's own first phase anchors its own canvas.
+ */
+export function isOverviewFlowArrowAnchorPhase(
+  phase: NavItem,
+  slides: NavItem[] = FALLBACK_NAV,
+): boolean {
+  return getMainSlides(slides)[0]?.id === phase.id
 }
 
-/** Lifecycle loop arrow between main phases on the overview canvas. */
+/** Service loop arrow between main phases on the overview canvas. */
 export function shouldShowOverviewPostToPreLoopArrow(
   phases: NavItem[],
 ): boolean {
