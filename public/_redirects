@@ -1,0 +1,19 @@
+# The single-page fallback, and why it is not optional.
+#
+# The app routes by service slug (#335): the first path segment names the
+# active service, so `/plus-tutoring?cell=<id>` is a real address that
+# `serviceRoute.ts` reads on load and `urlViewState.ts` reads alongside it.
+# Netlify serves the build directory as static files, and there is no
+# `plus-tutoring/index.html` in it — so without this rule every such address
+# is a 404 on a fresh load. Only the bare `/` worked, and only because it is
+# the one file that does exist.
+#
+# That was live: `/` answered 200 and `/plus-tutoring` answered 404, while the
+# app itself rewrote the URL to `/plus-tutoring` the moment it booted. A reader
+# who bookmarked what the address bar showed them, or reloaded the page they
+# were on, got Netlify's 404 for a route the app owns.
+#
+# 200 rather than 301: the browser keeps the address it asked for, so the app
+# still reads the slug and the query params out of it. A redirect would throw
+# both away.
+/*    /index.html   200
