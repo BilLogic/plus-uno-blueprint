@@ -722,4 +722,38 @@ export const RECONCILED_FILES = [
   'src/lib/motion.test.ts',
   'src/lib/tailwindColorReset.test.ts',
   'src/lib/compatLayer.test.ts',
+
+  // asb 1.9.0 adopt. Three slices land at once, and each earns its files a
+  // different way.
+  //
+  // #325 S2 declared the two fork seams. `referenceDocs.ts` holds where the
+  // agent's reference documents resolve from and `storageNamespace.ts` holds
+  // the localStorage prefix, so the files that used to carry those differences
+  // no longer do. `placement.ts` had NOTHING else dividing it — one string —
+  // which is why the seam was worth the two modules it cost. `sessions.ts` is
+  // not here: it is one hunk away, a doc comment where each repo kept history
+  // the other dropped, and neither is the superset.
+  'src/lib/agent/placement.ts',
+  'src/lib/agent/settings.ts',
+  'src/lib/agent/settings.scope.test.ts',
+  'src/lib/agent/tools/referenceNames.ts',
+  'src/lib/mobilePathMemory.ts',
+
+  // #358 S2-S4 reconciled the compare layout. `sideBySideCompareLayout.ts`
+  // converged by SUBTRACTION — the template dropped
+  // `COMPARE_HEADER_WRAP_EXTRA_INSET`, because the step-header row stays
+  // outside the path frame. `blueprintLayout.ts` needed only the template's
+  // wording: three of its comments named things only this deployment has.
+  'src/lib/sideBySideCompareLayout.ts',
+  'src/lib/blueprintLayout.ts',
+  'src/components/blueprint/ResizableComparePanel.tsx',
+  'src/components/blueprint/StackedCompareGrid.tsx',
+
+  // #327 S2 converted the template's last style guard onto the token model.
+  // These three came with it: the widening the conversion forced held their
+  // radius, z-index and font-size call sites to rungs `theme.css` already
+  // declared, and both copies came out the same.
+  'src/components/editor/EditorLoadingSkeletons.tsx',
+  'src/components/cover/coverInline.tsx',
+  'src/components/editor/AgentMarkdown.tsx',
 ]
