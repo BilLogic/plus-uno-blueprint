@@ -119,7 +119,7 @@ export const BLUEPRINT_CONTRACT = {
     phases: ['id', 'name', 'summary', 'position'],
     scenarios: ['id', 'name', 'summary', 'position'],
     steps: ['id', 'name'],
-    paths: ['id', 'name', 'summary'],
+    paths: ['id', 'name', 'summary', 'status'],
     lanes: ['name', 'owner_team', 'kpis'],
     cells: [
       'id',
