@@ -44,6 +44,23 @@ type SupabaseContextValue = {
   isEditPreview: boolean
   /** Any signed-in session may open the agent (viewers chat read-only). */
   canAgent: boolean
+  /**
+   * Whether a read from this client may name a table outside the contract's
+   * `publicReadTables`.
+   *
+   * `anon` holds no SELECT on `business_models` — the service's commercial
+   * spec — and PostgREST refuses the WHOLE select when one names it, so every
+   * signed-out visitor saw `permission denied for table business_models` above
+   * the board (#442). A read that wants such a table has to ask this first and
+   * do without when the answer is no.
+   *
+   * Distinct from `canWrite`, which is about the service tier, and from
+   * `canAgent`, which happens to share this predicate today for an unrelated
+   * reason. Reads reach the database as `authenticated` for any signed-in
+   * session — the tier gates writing, not reading — and as `service_role` on a
+   * dev server holding the authoring key, which is wider still.
+   */
+  canReadPrivate: boolean
 }
 
 const SupabaseContext = createContext<SupabaseContextValue | null>(null)
@@ -193,6 +210,7 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
       isDevAuthoring,
       isEditPreview,
       canAgent: configured && (session !== null || isDevAuthoring),
+      canReadPrivate: configured && (session !== null || isDevAuthoring),
     }),
     [
       client,
