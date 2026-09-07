@@ -51,10 +51,10 @@ export function phasesToSlides(phases: PhaseRow[]): NavItem[] {
         // three hardcoded PLUS scenario ids (#326 S6, #396 Q38).
         note: scenario.note,
         parentId: phase.id,
-        // One vocabulary. The column now holds client tokens
-        // (`single | stacked`), so there is no seam to cross — but a row
-        // outside the CHECK still falls back rather than rendering nothing.
-        viewType: asSlideViewType(scenario.layout),
+        // One vocabulary: the column holds the client's own tokens, so there
+        // is no seam to cross — but a row outside the CHECK still falls back
+        // rather than rendering nothing.
+        layout: asSlideViewType(scenario.layout),
       })
     })
   })

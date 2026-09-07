@@ -74,7 +74,7 @@ export type DependencyKind = 'leads_to' | 'enables'
 
 /** What `scenarios.layout` may hold — the same two tokens the header toggle
  *  offers, because since #280 the toggle writes the column. */
-export type ViewType = SlideViewType
+export type Layout = SlideViewType
 
 // ---------------------------------------------------------------------------
 // The call seam.
@@ -263,7 +263,7 @@ export function createScenario(
   input: {
     phaseId: string
     name: string
-    viewType?: ViewType
+    layout?: Layout
     laneSourcePathId?: string | null
     laneSet?: LaneSetEntry[]
     stepCount?: number
@@ -273,7 +273,7 @@ export function createScenario(
   return call<CreatedScenario>(client, 'create_scenario', {
     phase_id: input.phaseId,
     name: input.name,
-    layout: input.viewType ?? 'stacked',
+    layout: input.layout ?? 'stacked',
     lane_source_path_id: input.laneSourcePathId ?? null,
     lane_set: input.laneSet ?? [],
     step_count: input.stepCount ?? 5,
@@ -350,8 +350,8 @@ export function updateScenarioLayout(
   client: Client,
   input: {
     scenarioId: string
-    layout: ViewType
-    previousLayout?: ViewType
+    layout: Layout
+    previousLayout?: Layout
   },
 ): Promise<void> {
   return call<void>(

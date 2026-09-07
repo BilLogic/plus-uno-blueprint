@@ -408,7 +408,7 @@ function ServiceOverviewViewImpl({
     blueprintsByPathId,
     loading: blueprintsLoading,
     progress: blueprintsProgress,
-    viewType: overviewViewType,
+    layout: overviewViewType,
     resolveSelectedPathIds,
     resolveHappyPathIds,
   } = usePhaseBlueprintFilters({
@@ -1172,6 +1172,7 @@ function ServiceOverviewViewImpl({
                             )}
                             isFlowArrowAnchor={isOverviewFlowArrowAnchorPhase(
                               phase,
+                              slides,
                             )}
                             isLoopArrowFrom={
                               phase.id === postToPreLoop?.fromPhaseId

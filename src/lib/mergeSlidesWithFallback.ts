@@ -15,29 +15,29 @@ function mergeSlideFromFallback(slide: NavItem, fallback: NavItem | undefined): 
       ? slide.summary
       : fallback.summary
 
-  const viewType =
-    hasBlueprintFallback(slide.id) && fallback.viewType
-      ? fallback.viewType
-      : slide.viewType
+  const layout =
+    hasBlueprintFallback(slide.id) && fallback.layout
+      ? fallback.layout
+      : slide.layout
 
   const loopToId = slide.loopToId ?? fallback?.loopToId
 
   if (
     summary === slide.summary &&
-    viewType === slide.viewType &&
+    layout === slide.layout &&
     loopToId === slide.loopToId
   ) {
     return slide
   }
 
-  return { ...slide, summary, viewType, loopToId }
+  return { ...slide, summary, layout, loopToId }
 }
 
 /**
  * When Supabase returns phases without locally-defined scenario subsides (e.g.
  * Application before seed/migration), keep blueprint-ready fallback scenarios.
- * Also fills missing phase/scenario descriptions from local fallbacks when the
- * database row predates a description migration.
+ * Also fills missing phase/scenario summaries from local fallbacks when the
+ * database row predates a summary migration.
  */
 export function mergeSlidesWithFallback(
   dbSlides: NavItem[],
