@@ -1029,6 +1029,13 @@ function BlueprintCellDetailPanelBody() {
   // A featured attachment is the placement's picture (#272); the frame is
   // the cell's. The stock logo ahead of both is the touchpoint's own
   // `icon_url` (#326) — the nine-name table this used to consult is gone.
+  //
+  // Read off the placement this panel is about, so the classifier below can
+  // ask "is this picture the registry's icon?" rather than guessing from the
+  // url. `resolveCellDetailImages` puts that icon first and says so, but the
+  // list it returns is bare strings, and the answer was thrown away between
+  // the two.
+  const techLogoUrl = selectedPlacement?.iconUrl?.trim() || null
   const showImages = Boolean(
     (featured.preview || detailImages?.length) && !isStoryboardLane,
   )
@@ -1141,8 +1148,17 @@ function BlueprintCellDetailPanelBody() {
     <div className="flex w-full flex-col items-center gap-3">
       {(() => {
         const images = detailImages ?? []
-        // A picture is a logo by the filename convention the stock assets
-        // under `public/touchpoint-logos` follow, and by nothing else.
+        // A picture is a logo when it IS the touchpoint's registry icon; the
+        // filename convention under `public/touchpoint-logos` stays a
+        // fallback, for a logo carried as a placement attachment rather than
+        // as the registry row's own `icon_url`.
+        //
+        // The convention alone was the whole test until #324's S3. Every
+        // seeded `icon_url` happens to end in `-logo.png`, so nothing on
+        // today's board draws differently — but the column is free text, and
+        // an icon hosted anywhere that does not spell the convention would
+        // have been filed as a screenshot, then hidden outright behind a
+        // featured preview.
         //
         // Four touchpoint names used to be listed here by hand — a deployment's
         // own tools, matched case-insensitively — and every picture on such a
@@ -1153,6 +1169,7 @@ function BlueprintCellDetailPanelBody() {
         // hint, if one is ever wanted, is data on the registry row next to
         // `icon_url` — not four strings in a component.
         const isTechLogo = (src: string) =>
+          (techLogoUrl != null && src === techLogoUrl) ||
           src.includes('-logo.') ||
           src.includes('/logo/')
         const logos = images.filter(isTechLogo)

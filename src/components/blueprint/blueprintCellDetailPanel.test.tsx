@@ -13,11 +13,15 @@
  * panel's appearance — a test that asserted the layout wholesale would fail on
  * every ordinary edit and teach the next author to delete it.
  *
- *   - **Q29.** A picture is a logo by the filename convention the stock assets
- *     follow, and by nothing else. Four touchpoint names used to be listed in
- *     the component, and every picture on such a cell was drawn as a small
- *     logo whatever it actually was. The assertion is that an authored frame
- *     on one of those very names now draws in the ordinary picture frame.
+ *   - **Q29.** No touchpoint gets a picture size because of its NAME. Four
+ *     touchpoint names used to be listed in the component, and every picture
+ *     on such a cell was drawn as a small logo whatever it actually was. The
+ *     assertion is that an authored frame on one of those very names now draws
+ *     in the ordinary picture frame.
+ *   - **The registry icon is a logo because the row says so** (#324 S3). The
+ *     filename convention under `public/touchpoint-logos` is the fallback, not
+ *     the rule: `touchpoints.icon_url` is free text, and an icon hosted
+ *     somewhere that does not spell `-logo.` was being filed as a screenshot.
  *   - **Q26.** The panel elects no url as "the design". A cell carrying a
  *     figma.com resource gets no hover overlay and no "View in Figma" link —
  *     that affordance was deleted in #272 and stays deleted, with the featured
@@ -107,6 +111,15 @@ const AUTHORED_FRAME =
 
 /** A stock logo, named by the convention `public/touchpoint-logos` follows. */
 const STOCK_LOGO = '/touchpoint-logos/zoom-logo.png'
+
+/**
+ * A registry icon whose url says nothing about being one.
+ *
+ * All six seeded `icon_url`s happen to end in `-logo.png`, so the filename
+ * convention answers for every row on today's board and this case is the one
+ * the column allows but the data has not yet produced.
+ */
+const OFF_CONVENTION_ICON = 'https://cdn.example.com/brand/assets/8842.svg'
 
 function placement(
   name: string,
@@ -204,6 +217,26 @@ describe('the pictures a cell panel draws', () => {
     const logo = pictureFor(STOCK_LOGO)
     expect(logo.className).toContain('size-32')
     // Not in a 4:3 frame — a logo is drawn at its own size, unframed.
+    expect(logo.closest('[class*="aspect-"]')).toBeNull()
+  })
+
+  /*
+    The registry row decides, not the url (#324 S3).
+
+    `resolveCellDetailImages` puts the touchpoint's `icon_url` first and says
+    in its own comment that the panel draws it as the logo — but it returns
+    bare strings, and the panel used to re-derive "is this a logo?" from the
+    filename alone. An icon hosted off-convention was therefore filed as a
+    screenshot, and on a cell that also has a featured attachment the
+    screenshot branch does not render at all, so the logo vanished outright.
+  */
+  it('draws the touchpoint’s registry icon as the logo whatever its url looks like', async () => {
+    await open(
+      selectionFor({ touchpointName: 'Zoom', iconUrl: OFF_CONVENTION_ICON }),
+    )
+
+    const logo = pictureFor(OFF_CONVENTION_ICON)
+    expect(logo.className).toContain('size-32')
     expect(logo.closest('[class*="aspect-"]')).toBeNull()
   })
 
