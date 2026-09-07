@@ -140,8 +140,8 @@ function DesktopEditorShell() {
   } = useEditor()
   const { activeTab, activateTab, openTab, closeTab } = useViewState()
   const { canAgent } = useSupabase()
-  // `?cell=` boot deep link — the receiving end of the share link uno-bot
-  // hands back with a cited cell (docs/connectors/plus-uno.md). Mounted here because it needs the editor's
+  // `?cell=` boot deep link — the receiving end of the share link the agent
+  // hands back with a cited cell. Mounted here because it needs the editor's
   // navigation and the boot URL state, and both live at this level.
   useCellDeepLink()
   /*
