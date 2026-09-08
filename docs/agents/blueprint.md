@@ -167,12 +167,12 @@ Audit / whatif / import-sweep outputs. Written by skills (IDE service key or can
 | `created_at` | — |
 | `fingerprint` | check_key + sorted cell_keys hash. Dedupe/reopen identity across runs. |
 | `id` | — |
-| `summary` | The finding itself, in one line. It was `note`, which read as an aside about a finding rather than as the finding. |
 | `run_id` | Audit-run identity. Intentionally FK-less — no runs table by design. |
 | `service_id` | — |
 | `severity` | — |
 | `source` | — |
 | `status` | — |
+| `summary` | The finding itself, in one line. It was `note`, which read as an aside about a finding rather than as the finding. |
 | `updated_at` | — |
 
 ### `authoring_changes`
@@ -231,25 +231,27 @@ One touchpoint used at one cell: its own summary and role at this moment. Named 
 ### `cells`
 Content at lane × step intersection, within one path.
 
-10 of 17 columns described.
+12 of 19 columns described.
 
 | Column | Meaning |
 |---|---|
+| `cell_key` | THE STATEMENT OF RECORD for the cell-key format. Five slugified segments, service/scenario/path/lane/step — e.g. plus-application/before-students-join/happy-path/back-stage-actions/open-session. A phase is NOT a segment. Written by the import pipeline for origin=import, minted by upsert_cell for origin=app. Survives re-import; slides.cell_keys matches against it. |
 | `content` | THE ONE DELIBERATE EXCEPTION to the name/title/summary vocabulary (#177): a cell's text is a sentence somebody wrote about a moment, not a name for the cell and not a one-line summary of something longer. It is the cell's own words, as typed into the grid. Renaming it to any of the three would have described the column less well than the word it already had. |
 | `created_at` | — |
-| `summary` | Optional longer cell description (detail panel, not grid label) |
 | `form` | Spec: communication/look/feel/sound (what it must convey). |
+| `frame` | One image for one cell — the frame. A step's frames across the lanes are its STRIP, and the storyboard cell in that step draws the strip rather than an image of its own. A cell outside the storyboard holds at most one frame. Holds a URL or a storage reference. The retired name is not repeated here on purpose: a comment is a swept prose surface, so naming the old word would leave the residue this file removes. |
 | `function` | Spec: role/responsibility/requirements of this cell (what it must do). |
 | `id` | — |
 | `lane_id` | — |
-| `status` | How far along the thing this cell describes is. Defaults to live — a current-state blueprint documents what is in use. |
+| `origin` | Where this cell came from: import (the pipeline) or app (created in the canvas). A cell minted by upsert_cell is app; one written by the import pipeline is import, and its cell_key is the pipeline's. |
 | `owner` | Actual owning team/party for this cell. |
 | `path_id` | — |
 | `perceived_owner` | Who the customer believes owns this moment (mismatch = deception risk). |
-| `frame` | One image for one cell — the frame. A step's frames across the lanes are its STRIP, and the storyboard cell in that step draws the strip rather than an image of its own. A cell outside the storyboard holds at most one frame. Holds a URL or a storage reference. The retired name is not repeated here on purpose: a comment is a swept prose surface, so naming the old word would leave the residue this file removes. |
-| `search_tsv` | Generated FTS vector over the cell's own prose + spec columns, with a slash-stripped copy appended so "Zoom/Pencil"-style compounds match their parts (the parser treats a/b as a filename and indexes it whole). Consumed by public.search_blueprint. |
 | `position` | — |
+| `search_tsv` | Generated FTS vector over the cell's own prose + spec columns, with a slash-stripped copy appended so "Zoom/Pencil"-style compounds match their parts (the parser treats a/b as a filename and indexes it whole). Consumed by public.search_blueprint. |
+| `status` | How far along the thing this cell describes is. Defaults to live — a current-state blueprint documents what is in use. |
 | `step_id` | — |
+| `summary` | Optional longer cell description (detail panel, not grid label) |
 | `updated_at` | — |
 | `value_props` | Array of {for, value} — value generated per beneficiary (user, business, actor). |
 
@@ -288,7 +290,7 @@ cell_id -> evidence row count. Public: powers the assumption lens without exposi
 ### `lanes`
 Blueprint row (e.g. Users, Front Stage Employees)
 
-4 of 11 columns described.
+5 of 12 columns described.
 
 | Column | Meaning |
 |---|---|
@@ -297,11 +299,12 @@ Blueprint row (e.g. Users, Front Stage Employees)
 | `kpis` | String array: metrics this lane's team is measured on. |
 | `lane_role` | Semantic role key that drives rendering (pill cells, storyboard rows, divider anchoring), deliberately separate from the free-form display name. Canonical values: customer_actions, frontstage_actions, backstage_actions, partner_actions, frontstage_touchpoints, backstage_touchpoints, support_actions, storyboard. Null = generic swimlane (e.g. actor lanes), and is permitted on purpose. Constrained by lanes_lane_role_check — a custom role is no longer allowed, because an unconstrained column is how 36 support lanes went unclassified. |
 | `name` | — |
+| `origin` | Where this lane came from: import (the pipeline) or app (created in the canvas). The same two values services and its five other sibling tables carry. |
 | `owner_team` | Team that staffs/owns this lane (feeds KPI-alignment audit). |
 | `path_id` | — |
 | `position` | — |
-| `tools` | String array: systems/tools this lane's actors use. |
 | `stakeholder_id` | — |
+| `tools` | String array: systems/tools this lane's actors use. |
 | `updated_at` | — |
 
 ### `path_steps`
@@ -311,33 +314,34 @@ Steps included on a path and their column order
 
 | Column | Meaning |
 |---|---|
-| `position` | Blueprint column index for this step on this path |
 | `created_at` | — |
 | `path_id` | — |
+| `position` | Blueprint column index for this step on this path |
 | `step_id` | — |
 | `updated_at` | — |
 
 ### `paths`
 One route through a scenario: happy, variant or exception (kind), and how far along it is (status). Nothing connects across paths; a path is a detour, not a stage.
 
-4 of 9 columns described.
+5 of 10 columns described.
 
 | Column | Meaning |
 |---|---|
 | `created_at` | — |
-| `summary` | Optional summary of what this path variant represents |
 | `id` | — |
+| `kind` | How this route relates to the scenario's main one: happy (it IS the main route), variant (equally normal, chosen by condition), exception (a rule or a failure diverts it). How far along the route is does not belong here: paths.status carries that, on the entity_status domain — proposed, planned, built, live, at_risk, deprecated. |
 | `name` | — |
 | `note` | Optional path note shown alongside path metadata (e.g. parallel scenario context) |
-| `kind` | How this route relates to the scenario's main one: happy (it IS the main route), variant (equally normal, chosen by condition), exception (a rule or a failure diverts it). How far along the route is does not belong here: paths.status carries that, on the entity_status domain — proposed, planned, built, live, at_risk, deprecated. |
-| `status` | How far along this route is. Defaults to live. Replaces the "Prototype: " / "Planned: " name prefixes, which said the same thing where nothing could query it. |
+| `origin` | Where this path came from: import (the pipeline) or app (created in the canvas). The same two values services and its five other sibling tables carry. |
 | `scenario_id` | — |
+| `status` | How far along this route is. Defaults to live. Replaces the "Prototype: " / "Planned: " name prefixes, which said the same thing where nothing could query it. |
+| `summary` | Optional summary of what this path variant represents |
 | `updated_at` | — |
 
 ### `phases`
 Ordered phase of the service, in time order.
 
-3 of 10 columns described.
+4 of 11 columns described.
 
 | Column | Meaning |
 |---|---|
@@ -347,6 +351,7 @@ Ordered phase of the service, in time order.
 | `loops_to_phase_id` | When set, UI shows a return transition from this phase to the target phase |
 | `name` | — |
 | `operational_requirements` | Process / system / people / legal requirements for this phase. |
+| `origin` | Where this phase came from: import (the pipeline) or app (created in the canvas). The same two values services and its five other sibling tables carry. |
 | `position` | — |
 | `service_id` | — |
 | `summary` | — |
@@ -374,19 +379,20 @@ Things a cell, or one touchpoint placement, points at. A link is one kind of res
 ### `scenarios`
 Scenario within a phase
 
-2 of 9 columns described.
+3 of 10 columns described.
 
 | Column | Meaning |
 |---|---|
 | `created_at` | — |
 | `id` | — |
+| `layout` | How the board is drawn: the paths stacked as bands on a shared step axis, or merged into one grid where the paths agree and split where they diverge. A display setting rather than a kind, which is why it is `layout` and not `kind`. Written by the header toggle through update_scenario_layout, so a scenario left merged opens merged. A one-path scenario is stacked with one band. |
 | `name` | — |
 | `note` | An aside about the scenario, beside the summary that says what it is: most often what else may be running at the same time ("this scenario can run in parallel with Goal Setting and Help Request"). Blueprint data, not app configuration — it replaces a Record keyed on hardcoded scenario ids in src/lib/scenarioParallelInfo.ts (#326 S2, Decision D4). A scenario's fact, held once, rather than the same sentence copied onto each of its paths through paths.note. Free prose in the author's own language rather than a structured flag the renderer would have to compose a sentence from. |
-| `position` | — |
+| `origin` | Where this scenario came from: import (the pipeline) or app (created in the canvas). The same two values services and its five other sibling tables carry. |
 | `phase_id` | — |
+| `position` | — |
 | `summary` | — |
 | `updated_at` | — |
-| `layout` | How the board is drawn: the paths stacked as bands on a shared step axis, or merged into one grid where the paths agree and split where they diverge. A display setting rather than a kind, which is why it is `layout` and not `kind`. Written by the header toggle through update_scenario_layout, so a scenario left merged opens merged. A one-path scenario is stacked with one band. |
 
 ### `services`
 The service this board describes. One row. Renamed from service_lifecycles on 2026-08-21 — a service cannot contain several lifecycles, so the word named a level that does not exist.
@@ -396,12 +402,12 @@ The service this board describes. One row. Renamed from service_lifecycles on 20
 | Column | Meaning |
 |---|---|
 | `created_at` | — |
-| `summary` | What this service is, in the words a newcomer needs. The one field above the business model in the service panel. |
+| `entity_examples` | Per-service authored examples, one free-text value per core kind (service, phase, scenario, path, step, lane), shown under each kind's definition to ground it in this deployment. Blueprint data, not app config: it rides the service block so a re-map round-trips it. A jsonb object with no CHECK — the six-key shape is the app's, and an unwritten key simply does not render. |
 | `id` | — |
 | `name` | — |
-| `slug` | A service's stable route slug: `/<slug>` opens it (#303/#341). Its own identity, not derived from the name — a rename does not move the URL, and the unique constraint stops two services colliding. Backfilled from the name-derived slug (public.key_slug) when re-added; nullable so a cleared slug falls back to the name-derived route in the app. Editable by the deployer through a later panel write, which adds the UPDATE grant then. |
 | `origin` | Where this service came from: import (the pipeline) or app (created in the canvas). The same two values its six sibling tables carry. |
-| `entity_examples` | Per-service authored examples, one free-text value per core kind (service, phase, scenario, path, step, lane), shown under each kind's definition to ground it in this deployment. Blueprint data, not app config: it rides the service block so a re-map round-trips it. A jsonb object with no CHECK — the six-key shape is the app's, and an unwritten key simply does not render. |
+| `slug` | A service's stable route slug: `/<slug>` opens it (#303/#341). Its own identity, not derived from the name — a rename does not move the URL, and the unique constraint stops two services colliding. Backfilled from the name-derived slug (public.key_slug) when re-added; nullable so a cleared slug falls back to the name-derived route in the app. Editable by the deployer through a later panel write, which adds the UPDATE grant then. |
+| `summary` | What this service is, in the words a newcomer needs. The one field above the business model in the service panel. |
 | `updated_at` | — |
 
 ### `slices`
@@ -412,17 +418,17 @@ Saved 1D cuts through the blueprint grid. Reference cells only — never copy or
 | Column | Meaning |
 |---|---|
 | `actor` | — |
+| `authorship` | Who wrote this slice, and whether a regeneration may overwrite it: generated = safe to regenerate; customized = human-edited, regeneration must confirm; human = authored outright. Deliberately NOT called origin: every origin column in this schema answers "import or app", which is a different question with a different vocabulary. |
 | `created_at` | — |
 | `created_by` | — |
-| `summary` | — |
 | `id` | — |
+| `kind` | How the cut was made: journey (experience closure for an actor) \| step (one column) \| lane (one lane across the whole service) \| cell (single-cell spec) \| custom. |
 | `locale` | — |
-| `authorship` | Who wrote this slice, and whether a regeneration may overwrite it: generated = safe to regenerate; customized = human-edited, regeneration must confirm; human = authored outright. Deliberately NOT called origin: every origin column in this schema answers "import or app", which is a different question with a different vocabulary. |
 | `position` | — |
 | `service_id` | — |
-| `kind` | How the cut was made: journey (experience closure for an actor) \| step (one column) \| lane (one lane across the whole service) \| cell (single-cell spec) \| custom. |
-| `title` | — |
 | `stakeholder_id` | — |
+| `summary` | — |
+| `title` | — |
 | `updated_at` | — |
 
 ### `slides`
@@ -432,7 +438,6 @@ One slide of a slice. It shows the FRAMES of the cells it references — that st
 
 | Column | Meaning |
 |---|---|
-| `title` | The words at the top of the slide, as somebody wrote them. A title rather than a name because a slide is authored content a reader reads, which is the rule #177 settled; it was `caption`. |
 | `cell_ids` | SOFT refs to cells (no FK — must survive scenario re-import). Same order as cell_keys. Their frames are this slide's strip. |
 | `cell_keys` | IR key-paths paired with cell_ids for orphan recovery after key renames. |
 | `created_at` | — |
@@ -441,12 +446,13 @@ One slide of a slice. It shows the FRAMES of the cells it references — that st
 | `narrative` | — |
 | `position` | — |
 | `slice_id` | — |
+| `title` | The words at the top of the slide, as somebody wrote them. A title rather than a name because a slide is authored content a reader reads, which is the rule #177 settled; it was `caption`. |
 | `updated_at` | — |
 
 ### `stakeholders`
 Deployment-level cast list: one pool of actors a lane picks from, unique by name across the deployment. A lane references a stakeholder; no service owns one (ADR 0014). The unscoped read this registry always did is now correct.
 
-3 of 7 columns described.
+4 of 8 columns described.
 
 | Column | Meaning |
 |---|---|
@@ -455,19 +461,21 @@ Deployment-level cast list: one pool of actors a lane picks from, unique by name
 | `id` | — |
 | `kind` | What sort of party this is. staff/recipient/partner/provider are ACTORS — they can be a lane's stakeholder. team is an accountable group — it can be a lane's owner_team and never its stakeholder. |
 | `name` | The identity: unique across the deployment, so the same actor recurs across services by name rather than as one row per service. |
+| `parent_id` | The party this one is part of. Design's four sub-teams point at Design, so "what does Design own?" rolls them up while a lane can still name the specific one. |
 | `summary` | What this party IS, in one line — a definition, not an aside. The lane panel and the owner badge read it; a lane never copies it, because one stakeholder owns many lanes and 37 copies is 37 chances to disagree. |
 | `updated_at` | — |
 
 ### `steps`
 Blueprint column (journey step) scoped to a service scenario
 
-2 of 6 columns described.
+3 of 7 columns described.
 
 | Column | Meaning |
 |---|---|
 | `created_at` | — |
 | `id` | — |
 | `name` | — |
+| `origin` | Where this step came from: import (the pipeline) or app (created in the canvas). The same two values services and its five other sibling tables carry. |
 | `scenario_id` | Scenario that owns this canonical step |
 | `summary` | What this moment is, across every lane — the one sentence that makes the column legible without reading five cells. Shown as the caption under the step's strip, which is the frames of its cells read across the lanes. |
 | `updated_at` | — |
