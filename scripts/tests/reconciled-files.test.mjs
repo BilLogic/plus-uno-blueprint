@@ -443,8 +443,12 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
 
     'src/lib/blueprintCellConnections.ts',
     'src/components/blueprint/cellDependencyWhyLine.test.tsx',
+    'src/lib/sliceValidation.ts',
+    'src/lib/cellSpecMutations.ts',
+    'src/lib/optimisticConcurrency.ts',
 
     'src/styles/colors.css',
+    'src/styles/semantic.css',
   ])
 })
 
