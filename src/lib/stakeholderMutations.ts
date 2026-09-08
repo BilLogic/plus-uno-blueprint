@@ -10,10 +10,10 @@ export type StakeholderInput = {
   name: string
   kind: string
   /**
-   * What this party IS, in one line. A DEFINITION, not an aside — the
-   * column was called `note` until 20260830170000 and every row in it was
-   * already a definition, which is how eighteen of them ended up written
-   * into a column no reader had any reason to look in.
+   * What this party IS, in one line. A DEFINITION, not an aside — which is
+   * why the column is `summary` and not `note`: an aside is the author's
+   * working state and belongs where a reader can ignore it, and this is the
+   * sentence the badge shows every reader who asks who a party is.
    */
   summary: string | null
   aliases: string[]
@@ -25,8 +25,9 @@ export type StakeholderInput = {
  * Deliberately rare: the registry is reference data, and the seed already
  * holds everyone this blueprint names. A new row means a new actor, not a new
  * spelling of an existing one — those go in `aliases`. The cast is the
- * deployment's, not a service's (ADR 0014), so no service is named on insert;
- * `name` is unique across the whole deployment.
+ * deployment's, not a service's — the registry is scoped to the deployment by
+ * decision, so no service is named on insert; `name` is unique across the
+ * whole deployment.
  */
 export async function createStakeholder(
   client: Client,
@@ -52,9 +53,15 @@ export async function createStakeholder(
 }
 
 /**
- * Edit one. Renaming rewrites `slices.actor` on every linked slice through a
- * database trigger — the registry owns that text once a slice is linked, so a
- * rename cannot leave a slice quoting the old spelling.
+ * Edit one.
+ *
+ * A rename lands on this row and nowhere else. `slices.actor` is free text a
+ * slice carries for itself and no trigger rewrites it, so renaming a party
+ * here leaves any slice that quoted the old spelling still quoting it —
+ * `aliases` is where that spelling belongs, and is why the column exists.
+ * Every surface that reads the cast by `stakeholder_id` — the lane picker,
+ * the badge — follows the rename immediately, because they read the name from
+ * this row rather than copying it.
  */
 export async function updateStakeholder(
   client: Client,

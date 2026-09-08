@@ -410,6 +410,15 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/placementResourceMutations.ts',
     'src/lib/resourcePresentation.ts',
     'src/lib/serviceSlug.ts',
+    'src/components/blueprint/featuredResources.test.tsx',
+    'src/components/mobile/mobileTopBar.test.tsx',
+    'src/lib/compareReviewStore.test.ts',
+    'src/lib/placementResourceMutations.test.ts',
+    'src/lib/resourcePresentation.test.ts',
+    'src/lib/blueprintStoryboardPlaceholder.ts',
+    'src/lib/stakeholderMutations.ts',
+    'src/lib/touchpointMutations.ts',
+    'src/lib/cssCascadeLayerContract.test.ts',
   ])
 })
 

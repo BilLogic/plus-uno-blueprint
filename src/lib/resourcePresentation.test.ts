@@ -8,7 +8,7 @@ import type { CellResource } from '@/types/blueprint'
 
 const resource = (over: Partial<CellResource> & { url: string }): CellResource => ({
   id: over.url,
-  name: 'PLUS App',
+  name: 'Intake portal',
   kind: 'link',
   placementId: null,
   featured: false,
@@ -59,13 +59,13 @@ describe('featuredPresentation', () => {
   const rows = [
     resource({ url: 'https://tracker.dev/1', name: 'Ticket' }),
     resource({
-      url: '/blueprint-images/plus-app/step-05.png',
+      url: '/blueprint-images/intake-portal/step-05.png',
       kind: 'attachment',
       placementId: 'placement-1',
       featured: true,
     }),
     resource({
-      url: 'https://www.figma.com/design/W0/plus-app',
+      url: 'https://www.figma.com/design/W0/intake-portal',
       placementId: 'placement-1',
       featured: true,
     }),
@@ -80,8 +80,8 @@ describe('featuredPresentation', () => {
   it('leads with the placement’s featured attachment', () => {
     const { preview } = featuredPresentation({ placementId: 'placement-1', resources: rows })
     expect(preview).toEqual({
-      url: '/blueprint-images/plus-app/step-05.png',
-      name: 'PLUS App',
+      url: '/blueprint-images/intake-portal/step-05.png',
+      name: 'Intake portal',
       medium: 'image',
     })
   })
