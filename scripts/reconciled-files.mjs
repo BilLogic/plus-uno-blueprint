@@ -1291,7 +1291,29 @@ export const RECONCILED_FILES = [
   // repository even though the panel around it is a fork here.
   'src/components/blueprint/cellDependencyWhyLine.test.tsx',
 
-  // DECLINED by #522. Two judgements and one boundary.
+  // Enrolled at the 1.13.2 pin, and each was won upstream rather than here.
+  //
+  // `sliceValidation.ts` carried the last of the three citations #307
+  // measured: a comment explaining that `slices.authorship` was renamed from
+  // `origin`, naming the migration that did it. Both halves are true in both
+  // repositories and only the filename was unportable, so the sentence went
+  // upstream stated without one — pointing at the rename map, which is where
+  // a reader goes for the history — and this copy takes it verbatim.
+  //
+  // `cellSpecMutations.ts` and `optimisticConcurrency.ts` were the template
+  // raising `new Error(error.message)` where this deployment translates. Both
+  // now translate, so a refused write is phrased for a person whichever
+  // module raised it, and the database's own text stays on `.raw` for the
+  // console. The second was a stated position upstream rather than drift —
+  // the error was left to the caller "which knows whether it wants
+  // `toAuthoringError`" — and it was settled by its owner, not by whichever
+  // side was edited last.
+
+  'src/lib/sliceValidation.ts',
+  'src/lib/cellSpecMutations.ts',
+  'src/lib/optimisticConcurrency.ts',
+
+  // DECLINED by #522. One judgement that still stands.
   //
   // `src/components/blueprint/pathPickerColumns.test.ts` — declined a second
   //   time, after re-reading the sentence rather than the earlier decision.
@@ -1305,25 +1327,6 @@ export const RECONCILED_FILES = [
   //   the second thing, and adopting it would put a false account of a fixed
   //   bug in this tree to buy a line on this list. A comment that is wrong
   //   about what happened costs more than a file that is merely unheld.
-  //
-  // `src/lib/sliceValidation.ts` — the difference is a four-line comment this
-  //   repository has and the template has not, on `SLICE_AUTHORSHIPS`: that
-  //   `slices.authorship` was renamed from `origin`, and that every other
-  //   `origin` column in the schema answers a different question, taking
-  //   `import` or `app` rather than naming who wrote it. Both halves are true
-  //   in both repositories. Only the migration filename it cites is
-  //   unportable, and the template has no sentence to adopt in its place — so
-  //   enrolling means DELETING the comment, which trades a standing warning
-  //   for an allowlist line. The right move is to send the sentence upstream
-  //   as its own change, which cannot be made from here. Until it is, this
-  //   file stays out and keeps its meaning.
-  //
-  // `src/styles/colors.css` — on the same measurement, prose-only-different
-  //   and enrollable on the same terms as the three above. It is left
-  //   undecided on purpose: everything under `src/styles/` belongs to #491,
-  //   including whether this file and `semantic.css` are enrolled, and two
-  //   tickets deciding one file is how a decision gets made twice and
-  //   recorded once.
 
   // ── The derivation layer, and the primitives under it ──
   //
@@ -1351,15 +1354,15 @@ export const RECONCILED_FILES = [
   // on their own fill. Every other custom property under `src/styles`
   // resolves to the same string in both themes.
   //
-  // NOT enrolled: `src/styles/semantic.css`, and the second promise this list
-  // makes is what holds it off. The template's copy says "Sidebar selection
-  // language (nav plan D8)", and D8 is a row of
-  // `docs/plans/2026-07-30-002-feat-sidebar-navigation-model-plan.md` — an
-  // address in THIS repository's docs tree, which travelled upstream with the
-  // port and resolves to nothing there. Byte-identity and that promise cannot
-  // both be kept while the shared text carries it, and the fix is one line in
-  // the template naming the decision instead of its plan row. The entry is a
-  // one-line append here once a release carries that.
+  // `src/styles/semantic.css` is enrolled here rather than declined, which is
+  // the append that paragraph promised. The template's copy said "Sidebar
+  // selection language (nav plan D8)" — D8 a row of
+  // `docs/plans/2026-07-30-002-feat-sidebar-navigation-model-plan.md`, an
+  // address in THIS repository's docs tree that travelled upstream with the
+  // port and resolved to nothing there. Byte-identity and this list's second
+  // promise could not both be kept while the shared text carried it. The
+  // sentence now states the decision instead of its plan row, and 1.13.2
+  // carries that, so the file that was already identical is finally held.
   //
   // `colors.css` had a smaller story and no such blocker: nothing but prose
   // separated the two copies, and the one number in it was ours and wrong —
@@ -1367,4 +1370,5 @@ export const RECONCILED_FILES = [
   // values, which it was before the brand family was removed from it. It is
   // 204 in both files, which is what the template's copy already said.
   'src/styles/colors.css',
+  'src/styles/semantic.css',
 ]
