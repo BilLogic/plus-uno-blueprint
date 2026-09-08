@@ -9,14 +9,25 @@
  * `--primary-hue` and `--radius` all sat here as well. The rule that is
  * actually true, and that `themeDials.test.ts` holds:
  *
- *   - a derivation is declared HERE and nowhere else;
- *   - a dial both themes turn is declared in BOTH theme files (parity, so the
+ *   - a derivation is declared HERE and nowhere else (`--primary-hue`, which
+ *     is `var(--hue)` rather than a number);
+ *   - an authored dial is declared in BOTH theme files, at each theme's own
+ *     value — the SAME value in each when no theme turns it (parity, so the
  *     `:root` in light's selector list cannot hand dark a value it never
- *     asked for — that was the warm-brown defect);
- *   - a dial only one theme turns has its other value HERE (`--field-alpha`);
- *   - a dial neither theme turns is not a dial, and lives HERE (`--radius`).
+ *     asked for; that was the warm-brown defect, and it is the whole reason a
+ *     mode-invariant dial is written twice rather than once);
+ *   - a dial only one theme turns has its other value HERE (`--field-alpha`).
  *
- * What is forbidden is the fourth combination: a value declared here AND in
+ * `--radius`, `--primary-lightness`, `--primary-chroma` and `--ring-lightness`
+ * were the standing exception to the second rule, on a fourth bullet reading
+ * "a dial neither theme turns is not a dial, and lives HERE". #459 retired it:
+ * the axis that decides the home is authored versus derived, not mode-varying
+ * versus mode-invariant. All four are literals a deployment picks, this file
+ * is the layer that derives, and leaving them here is what stopped it from
+ * being reconcilable with the template's copy. They are now declared in both
+ * theme files, at one value.
+ *
+ * What is forbidden is the remaining combination: a value declared here AND in
  * every theme file. Light's block matches bare `:root` and imports after this
  * file, so such a declaration can never win under either theme — it is a
  * default that reads like a fallback and is not one. `--surface-hue` was
@@ -49,55 +60,15 @@
    * a theme can run a warm-grey surface against a cool brand without the two
    * being locked together.
    *
-   * Only `--primary-hue` is declared here, and it is here because no theme
-   * turns it: both run the brand at `--hue`, and the split exists so that one
-   * of them could stop. `--surface-hue` is the opposite case — both themes
-   * turn it (34 in light, back onto `--hue` in dark), so a third declaration
-   * on this block is unreachable under both, and it sat here unreachable
-   * until 2026-08-26. See the invariant at the top of this file.
+   * Only `--primary-hue` is declared here, and it belongs here because it is
+   * a derivation and not a number: `var(--hue)`, so both modes run the brand
+   * at whatever the themes set, and the split exists so that one of them could
+   * stop. `--surface-hue` is the opposite case — both themes turn it (34 in
+   * light, back onto `--hue` in dark), so a third declaration on this block is
+   * unreachable under both, and it sat here unreachable until 2026-08-26. See
+   * the invariant at the top of this file.
    */
   --primary-hue: var(--hue);
-
-  /*
-   * The radius dial. Mode-invariant by design — a corner does not flip with
-   * the theme — so it is declared here rather than in a theme file. It lived
-   * in `themes/light.css` and reached dark mode only because that file's
-   * selector list starts with bare `:root`; the same accident that ran dark
-   * surfaces at light's `--surface-hue`, benign in this case and load-bearing
-   * in that one. `theme.css` derives every `--radius-*` rung from it.
-   */
-  --radius: 0.625rem;
-
-  /*
-   * The filled control's two dials, and the focus ring's one.
-   *
-   * The template carries these three in its theme files, where a neutral fill
-   * inverts between modes — near-black at L 0.205 in light, near-white at
-   * L 0.922 in dark — and the ring takes 0.58 on the white canvas and 0.62 on
-   * the black one. Their absence here was read as a deletion (#412). The
-   * history says otherwise: this deployment's theme files were written on
-   * 2026-08-04 (65a94b66) and never carried them, the template introduced them
-   * on 2026-08-18 (a3b54922), and the only thing joining the two histories is
-   * fbb4b249, a `-s ours` graft whose tree is byte-identical to its first
-   * parent and which imports nothing. Nothing was ever removed here.
-   *
-   * They are dials all the same, and until now they were literals — `0.83` and
-   * `0.135` inside `--primary`, a bare `0.58` inside the ring's relative
-   * colour — which is precisely what made the filled control and the focus
-   * ring untunable without rewriting a derivation. Naming them is #412's
-   * answer. The values are exactly the literals they replace, so nothing
-   * repaints; the tuning history that argues for them is at `--primary` below.
-   *
-   * They live HERE and not in `themes/`, by the invariant at the top of this
-   * file: this deployment runs one brand fill in both modes, so neither theme
-   * turns any of the three, and a dial neither theme turns is not a dial a
-   * theme owns — the same rule that moved `--radius` out on 2026-08-26. Should
-   * a later pass want a darker fill on the dark canvas, the dial moves into
-   * BOTH theme files together, which is what `themeDials.test.ts` holds.
-   */
-  --primary-lightness: 0.83;
-  --primary-chroma: 0.135;
-  --ring-lightness: 0.58;
 
   /* --- Contrast ---------------------------------------------------------
    * Global knob, 0–1. 0.5 is the baseline: foreground lands exactly on
@@ -289,10 +260,12 @@
    * browser's chroma reduction is already the behaviour we want.
    *
    * The L and the C this whole history argues about are the
-   * `--primary-lightness` and `--primary-chroma` dials declared at the top of
-   * this block (#412). They were spelled out here as literals until then; the
-   * numbers did not move, only their home did, and this comment is still where
-   * a retune has to be argued. */
+   * `--primary-lightness` and `--primary-chroma` dials, and `--ring`'s is
+   * `--ring-lightness`. All three were spelled out here as literals until
+   * #412 named them, and were declared on this block until #459 moved them
+   * into both theme files where the other authored dials live. The numbers
+   * have not moved through either change; this comment is still where a
+   * retune has to be argued, and both theme files are where it lands. */
   --primary: oklch(
     var(--primary-lightness) var(--primary-chroma) var(--primary-hue)
   );

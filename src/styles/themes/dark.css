@@ -28,11 +28,18 @@
      declares; `themeDials.test.ts` now holds that for every dial. */
   --surface-hue: var(--hue);
   --chroma: 0.005;
-  /* `--primary-lightness`, `--primary-chroma` and `--ring-lightness` are not
-     here for the same reason they are not in `themes/light.css`: this
-     deployment runs one brand fill in both modes, so neither theme turns them
-     and all three live in `semantic.css`. The note in the light theme carries
-     the history. #412. */
+  /* The four authored knobs, at the same values `themes/light.css` declares —
+     one brand fill and one corner in both modes. Same value, declared twice, on
+     purpose: a mode-invariant dial written only into the light file reaches
+     this theme through the bare `:root` at the head of that file's selector
+     list rather than through anything this file says, which is the shape the
+     `--surface-hue` defect above had. `themeDials.test.ts` fails if the two
+     files ever disagree. The reasoning is written out beside the same four in
+     `themes/light.css`. #459. */
+  --radius: 0.625rem;
+  --primary-lightness: 0.83;
+  --primary-chroma: 0.135;
+  --ring-lightness: 0.58;
   --surface: 0.19;
   --elevation-step: 0.025;
   --contrast: 0.5;
