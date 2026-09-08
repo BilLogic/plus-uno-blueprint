@@ -9,13 +9,7 @@ import {
 import { getPathKindArrowColor } from '@/lib/pathKindTheme'
 import type { PathKind } from '@/types/database'
 
-const PATH_TYPES: PathKind[] = [
-  'happy',
-  'exception',
-  'exception',
-  'variant',
-  'variant',
-]
+const PATH_KINDS: PathKind[] = ['happy', 'variant', 'exception']
 
 type BlueprintArrowMarkerDefsProps = {
   markerIds: Record<string, string>
@@ -101,16 +95,16 @@ export function blueprintArrowPathProps(
 }
 
 /** Default path-type markers for legacy callers. */
-export function defaultPathTypeMarkerIds(markerIdPrefix: string): Record<string, string> {
+export function defaultPathKindMarkerIds(markerIdPrefix: string): Record<string, string> {
   return Object.fromEntries(
-    PATH_TYPES.map((type) => [type, `${markerIdPrefix}-arrow-${type}`]),
+    PATH_KINDS.map((type) => [type, `${markerIdPrefix}-arrow-${type}`]),
   )
 }
 
-export function defaultPathTypeMarkerColors(): Record<string, string> {
+export function defaultPathKindMarkerColors(): Record<string, string> {
   return Object.fromEntries(
-    PATH_TYPES.map((type) => [type, getPathKindArrowColor(type)]),
+    PATH_KINDS.map((type) => [type, getPathKindArrowColor(type)]),
   )
 }
 
-export const BLUEPRINT_ARROW_PATH_TYPES = PATH_TYPES
+export const BLUEPRINT_ARROW_PATH_KINDS = PATH_KINDS

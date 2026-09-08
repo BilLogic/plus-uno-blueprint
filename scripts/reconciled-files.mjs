@@ -1173,4 +1173,24 @@ export const RECONCILED_FILES = [
   // the whole argument for enrolling it: the difference was the spelling of a
   // classifier, never behaviour.
   'src/lib/sliceKind.ts',
+
+  // ── The same classifier, one table over ──
+  //
+  // `paths.path_type` became `paths.kind` and the generated type followed; two
+  // constants did not. The roster the create-version dialog renders its Kind
+  // picker from still said TYPES, and so did the arrow file's own copy of that
+  // roster, along with the three names hanging off it. Renaming them is the
+  // whole of the arrow file's difference from the template's copy. The dialog
+  // also had its `errorMessage` import a line below where the template keeps
+  // it — nothing at all, until it is the last thing standing between two files
+  // that are otherwise the same.
+  //
+  // The arrow roster also held five entries for three kinds, `exception` and
+  // `variant` each twice, left behind when the retired kinds were rewritten
+  // onto kinds already listed. `Object.fromEntries` absorbs a repeat, so
+  // nothing rendered wrong and nothing was in a position to notice. An array is
+  // the one shape of this vocabulary that no `Record<PathKind, …>` is guarding;
+  // the gate is what guards it now.
+  'src/components/blueprint/BlueprintArrowMarkerDefs.tsx',
+  'src/components/editor/CreateVersionDialog.tsx',
 ]

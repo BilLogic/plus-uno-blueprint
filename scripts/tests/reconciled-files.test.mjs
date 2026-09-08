@@ -426,6 +426,8 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'tsconfig.node.json',
     'vite.config.ts',
     'src/lib/sliceKind.ts',
+    'src/components/blueprint/BlueprintArrowMarkerDefs.tsx',
+    'src/components/editor/CreateVersionDialog.tsx',
   ])
 })
 
