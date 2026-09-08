@@ -113,8 +113,15 @@ export const ONE_SPELLING = Object.freeze([
   },
 ])
 
-/** The two columns this ticket drops outright, with nothing taking their place. */
-export const DROPPED = Object.freeze(['cell_dependencies.note', 'evidence.note'])
+/**
+ * The column this ticket drops outright, with nothing taking its place.
+ *
+ * `cell_dependencies.note` was dropped here too, and came back: an edge can now
+ * say why it exists, and `20260908200000` adds the column for it. The word is
+ * not retired — `paths.note`, `scenarios.note` and this one are all asides, in
+ * the sense `scripts/retired-vocabulary.mjs` reserves the word for.
+ */
+export const DROPPED = Object.freeze(['evidence.note'])
 
 /** The column that keeps a word of its own, and the reason it is allowed to. */
 export const DOCUMENTED_EXCEPTION = 'cells.content'
@@ -167,7 +174,7 @@ test('the check goes red on a schema that never did the rename', () => {
       ['business_model', { name: 'business_model', columns: new Map() }],
       ['slices', { name: 'slices', columns: new Map([['description', {}], ['slice_type', {}], ['origin', {}]]) }],
       ['cells', { name: 'cells', columns: new Map([['description', {}]]) }],
-      ['cell_dependencies', { name: 'cell_dependencies', columns: new Map([['label', {}], ['note', {}]]) }],
+      ['cell_dependencies', { name: 'cell_dependencies', columns: new Map([['label', {}]]) }],
       ['paths', { name: 'paths', columns: new Map([['path_type', {}]]) }],
       ['scenarios', { name: 'scenarios', columns: new Map([['view_type', {}]]) }],
       ['evidence', { name: 'evidence', columns: new Map([['note', {}]]) }],
@@ -179,7 +186,7 @@ test('the check goes red on a schema that never did the rename', () => {
   assert.equal(found.length, ONE_SPELLING.length * 2 + DROPPED.length)
   assert.ok(found.some((one) => /^findings still exists/.test(one)))
   assert.ok(found.some((one) => /^audit_findings does not exist/.test(one)))
-  assert.ok(found.some((one) => /^cell_dependencies\.note still exists/.test(one)))
+  assert.ok(found.some((one) => /^evidence\.note still exists/.test(one)))
 
   // And red the other way: the rename read as a drop, with nothing arriving.
   const dropped = { tables: new Map() }
