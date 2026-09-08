@@ -202,6 +202,10 @@ export type BlueprintCellDependency = {
   kind?: 'leads_to' | 'enables'
   /** The word on the arrow, e.g. a channel tag like "Email". */
   name?: string | null
+  /** Why the edge exists, in the author's own words. `name` says what the edge
+   *  is called; this says why it is there. Null is no stated reason, which is
+   *  not the same as no reason. */
+  note?: string | null
 }
 
 export type BlueprintData = {

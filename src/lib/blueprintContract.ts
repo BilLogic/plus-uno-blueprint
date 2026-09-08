@@ -91,7 +91,10 @@ export const BLUEPRINT_CONTRACT = {
    * were found asking for columns this app had renamed: `description` (now
    * `summary`) on four tables, `order_position` (now `position`),
    * `cell_dependencies.label` (now `name`), and `cells.links` and
-   * `cell_dependencies.note`, both dropped. The oldest had been broken since
+   * `cell_dependencies.note`, both dropped at the time. `note` is a live
+   * column again since 20260908200000 — the why-line an edge can carry — and
+   * it is read through the panel's own select, not this one, so the list
+   * below still names four columns. The oldest had been broken since
    * 2026-08-20. The bot's keyword fallback — its safety net for a search the
    * RPC misses — had in practice been `steps` alone for eleven days.
    *

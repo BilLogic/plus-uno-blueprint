@@ -441,6 +441,9 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/mobile/MobileNavSheet.tsx',
     'src/lib/findingFingerprint.ts',
 
+    'src/lib/blueprintCellConnections.ts',
+    'src/components/blueprint/cellDependencyWhyLine.test.tsx',
+
     'src/styles/colors.css',
   ])
 })

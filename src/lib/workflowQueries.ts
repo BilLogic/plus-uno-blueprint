@@ -98,7 +98,8 @@ export const PATH_BLUEPRINT_SELECT = `
       id,
       target_cell_id,
       kind,
-      name
+      name,
+      note
     )
   )
 `
