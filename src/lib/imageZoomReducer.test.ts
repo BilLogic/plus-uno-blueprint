@@ -14,6 +14,7 @@ import {
   zoomImageToScale,
   IMAGE_CLICK_DRAG_THRESHOLD_PX,
   IMAGE_ZOOM_MAX_NATURAL_MULTIPLE,
+  IMAGE_ZOOM_MIN_VISIBLE_STEP,
   type ImageZoomViewport,
   type ImagePoint,
   type ImageSize,
@@ -337,5 +338,116 @@ describe('degenerate sizes', () => {
     expect(zoomImageByFactor(unmeasured, Number.NaN, CENTRE)).toEqual(
       unmeasured,
     )
+  })
+})
+
+describe('the click ladder', () => {
+  // 880px of authored artwork fits ABOVE 1 on any desktop, which is the shape
+  // that exposes a relative step paired with an absolute ceiling: the wider
+  // the viewport, the higher fit sits and the less of the range is left over
+  // for the last rung. A fixture that fits at 0.5 never meets it.
+  const COVER_ART = { width: 880, height: 660 }
+
+  /** Viewports a reader actually has, from a laptop to a wide display. */
+  const desktop = (width: number): ImageSize => ({
+    width,
+    height: Math.round(width * 0.75),
+  })
+
+  const DESKTOP_WIDTHS = [1000, 1100, 1200, 1253, 1400, 1600, 1800, 2000]
+
+  const middleOf = (viewport: ImageSize): ImagePoint => ({
+    x: viewport.width / 2,
+    y: viewport.height / 2,
+  })
+
+  /** Every scale a reader clicking from fit lands on, before one comes back. */
+  const clickLadder = (viewport: ImageSize): number[] => {
+    const anchor = middleOf(viewport)
+    let state = fitImageZoom(viewport, COVER_ART)
+    const stops = [state.scale]
+    for (let step = 0; step < 12; step += 1) {
+      const next = clickZoomImage(state, anchor)
+      if (next.scale <= state.scale) return stops
+      stops.push(next.scale)
+      state = next
+    }
+    throw new Error(`the ladder at ${viewport.width}px never came back to fit`)
+  }
+
+  it('never moves the scale by less than a visible step, at any width', () => {
+    const invisible = DESKTOP_WIDTHS.flatMap((width) => {
+      const stops = clickLadder(desktop(width))
+      return stops
+        .slice(1)
+        .map((scale, index) => ({
+          width,
+          from: stops[index],
+          ratio: scale / stops[index],
+        }))
+        .filter(({ ratio }) => ratio < IMAGE_ZOOM_MIN_VISIBLE_STEP)
+    })
+    expect(invisible).toEqual([])
+  })
+
+  it('ends on the ceiling wherever a visible step of range exists', () => {
+    for (const width of DESKTOP_WIDTHS) {
+      const viewport = desktop(width)
+      const fit = fitImageZoom(viewport, COVER_ART)
+      // Every width in the sweep has room for at least one visible step, so
+      // the ceiling is something a click is owed rather than merely allowed.
+      expect(
+        IMAGE_ZOOM_MAX_NATURAL_MULTIPLE / fit.scale,
+      ).toBeGreaterThanOrEqual(IMAGE_ZOOM_MIN_VISIBLE_STEP)
+      expect(clickLadder(viewport).at(-1)).toBe(IMAGE_ZOOM_MAX_NATURAL_MULTIPLE)
+    }
+  })
+
+  it('comes back to fit from the ceiling at every width', () => {
+    for (const width of DESKTOP_WIDTHS) {
+      const viewport = desktop(width)
+      const anchor = middleOf(viewport)
+      const fit = fitImageZoom(viewport, COVER_ART)
+      const ceiling = zoomImageToScale(
+        fit,
+        IMAGE_ZOOM_MAX_NATURAL_MULTIPLE,
+        anchor,
+      )
+      expect(clickZoomImage(ceiling, anchor)).toEqual(fit)
+    }
+  })
+
+  it('says zoom-out exactly where a click returns to fit', () => {
+    // Across scales a wheel can leave a reader on, not only the ones a click
+    // can reach: the cursor is the viewer's only running explanation of what
+    // the next click does, so it has to be true off the rungs as well as on.
+    const disagreements = DESKTOP_WIDTHS.flatMap((width) => {
+      const viewport = desktop(width)
+      const anchor = middleOf(viewport)
+      const fit = fitImageZoom(viewport, COVER_ART)
+      return [1, 1.2, 1.5, 1.8, 2, 2.4, 2.85, 2.99, 3]
+        .map((scale) => zoomImageToScale(fit, scale, anchor))
+        .map((state) => ({
+          width,
+          scale: state.scale,
+          cursor: resolveImageZoomCursor(state),
+          returnsToFit: clickZoomImage(state, anchor).scale === fit.scale,
+        }))
+        .filter((row) => (row.cursor === 'zoom-out') !== row.returnsToFit)
+    })
+    expect(disagreements).toEqual([])
+  })
+
+  it('leaves the scale alone where the whole range is under one step', () => {
+    // 880px of artwork on a 2400px display fits at 2.73, a tenth under the
+    // ceiling. There is no visible zoom left to offer, and a tenth of a step
+    // would read as a broken click rather than as an answer.
+    const viewport = desktop(2400)
+    const anchor = middleOf(viewport)
+    const fit = fitImageZoom(viewport, COVER_ART)
+    expect(fit.scale).toBeGreaterThan(
+      IMAGE_ZOOM_MAX_NATURAL_MULTIPLE / IMAGE_ZOOM_MIN_VISIBLE_STEP,
+    )
+    expect(clickZoomImage(fit, anchor).scale).toBe(fit.scale)
   })
 })
