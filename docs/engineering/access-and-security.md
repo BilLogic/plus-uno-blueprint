@@ -318,8 +318,20 @@ What the wrappers buy, and why bypassing them is never acceptable:
   `src/lib/authoringLog.ts`): the same entry, written to the database, so
   closing the tab stops erasing the record of what changed. It carries the
   operation, its arguments, its inverse, the author, and the agent session
-  when an agent made the write. **Audit-only** — nothing replays the stored
-  inverse; the ledger above is still what undo reads. The log has two writers
+  when an agent made the write. **Audit-only, and enforced rather than
+  described** — nothing replays the stored inverse; the ledger above is still
+  what undo reads. That matters because the stored rows are not one shape and
+  the table has no way to make them one: `record_authoring_change` validates
+  the operation name and takes `args` and `revert` as free jsonb. One row on
+  production proves it — an `update_cell_content` inverse carrying `content`
+  where every build since 2026-08-04 has carried a nested `update`, written by
+  a caller that is not this app. Replaying it would throw or half-apply.
+  `executeRevert` therefore takes a `SessionEntry` — a branded type only
+  `recordChange` mints — and `src/lib/revertBoundaryContract.test.ts` refuses
+  the cast, the widened signature and the hydrated stack that would each get a
+  stored row past it. Versioning the record was considered and declined: a
+  version column speaks only for writers that stamp it, and the writer that
+  produced the divergence stamps nothing. The log has two writers
   and they must not overlap: the five delete RPCs and `remove_lanes` archive
   their own row, payload included, inside the transaction that destroys the
   rows, and the client skips its append for exactly those six
@@ -330,8 +342,10 @@ What the wrappers buy, and why bypassing them is never acceptable:
   `requireRowsWritten` (`src/lib/optimisticConcurrency.ts`) turns that
   into an error. Keep it on any new mutation.
 - **Reverts are identity-keyed** and pass `record: false` so undoing an
-  edit never logs a new edit. Read `authoringSession.ts` and
-  `revertChange.ts` before touching reverts or deletes.
+  edit never logs a new edit. Their input comes off the session stack and
+  never out of the database — see the durable log above. Read
+  `authoringSession.ts` and `revertChange.ts` before touching reverts or
+  deletes.
 - **A failed write is said out loud.** `reportWriteFailure`
   (`src/lib/writeFailures.ts`) is the one surface for a failure whose
   control is already gone — a cell delete closes its own menu, ⌘Z has no
