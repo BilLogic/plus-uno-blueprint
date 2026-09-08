@@ -74,7 +74,7 @@ type SliceViewProps = {
 export function SliceView({ sliceId, onPresent }: SliceViewProps) {
   // The provider sits above the surface, not inside the viewport, because the
   // slice tab itself has to know the mode: in Design mode the tab *is* the
-  // editor, so the slide strip and the picker mount here rather than behind a
+  // editor, so the frame strip and the picker mount here rather than behind a
   // separate Edit button.
   return (
     <CanvasModeProvider>
@@ -167,10 +167,10 @@ function SliceSurface({ sliceId, onPresent }: SliceViewProps) {
         holdKey={skeletonHoldKey}
         skeleton={
           <div className="h-full" role="status" aria-label="Loading slice">
-            {/* Plan 2026-08-17-001 U3: the slice waterfall's stages, over
-                the same skeleton session the whole chain shares — and
-                inside the CANVAS rectangle, which is where it stays for
-                every phase below and for the embedded canvas after them. */}
+            {/* The slice waterfall's stages, over the same skeleton session
+                the whole chain shares — and inside the CANVAS rectangle,
+                which is where it stays for every phase below and for the
+                embedded canvas after them. */}
             <SliceTabLoadingSkeleton>
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                 <CanvasLoadProgress

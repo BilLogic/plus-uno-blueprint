@@ -7,13 +7,14 @@
  * document card. Both have a default, because a map that refuses an unknown
  * host is a button that goes missing the day someone links a new tool.
  *
- * Stored nowhere on purpose (#272). A `host` column would be a second copy
+ * Stored nowhere on purpose. A `host` column would be a second copy
  * of the url's own host, wrong the moment the url is edited; and "what kind
  * of file is this" is a property of the bytes at the other end, which the
- * url already names. The one Figma special case the panel carried —
- * `isFigmaUrl`, so that only a Figma link could be "the design" — retires
- * with this file: a placement's link is a featured resource now, and every
- * featured link gets a button, whatever it points at.
+ * url already names. Every featured link gets a button, whatever it points
+ * at. The one Figma special case the panel carried — `isFigmaUrl`, so that
+ * only a Figma link could be "the design" — retires with this file: a
+ * placement's link is a featured resource now, and electing one vendor's
+ * url as the design was a deployment's policy written into a renderer.
  */
 import { hostOf } from '@/lib/cellResources'
 import type { CellResource } from '@/types/blueprint'
@@ -99,9 +100,10 @@ export type FeaturedPresentation = {
  * What the panel leads with for one placement at one cell.
  *
  * The placement's featured attachment is the preview; every featured link,
- * the placement's and then the cell's own, is a button. The placement's own
- * `url` column used to count as a link here too; #276 dropped it, and the
- * featured link 20260902130000 made from it is the one this reads.
+ * the placement's and then the cell's own, is a button. A placement's own
+ * `url` column still exists and has not yet been folded into these rows as
+ * a featured link; the panel reads that column separately for now, and this
+ * reads only rows.
  */
 export function featuredPresentation(input: {
   placementId: string | null

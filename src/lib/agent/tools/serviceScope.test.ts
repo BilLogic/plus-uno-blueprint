@@ -14,8 +14,9 @@ import { __resetActiveServiceIdCache } from '@/lib/service'
  * single-service cache: a read scopes to the active service by default, a
  * filter narrows to one or widens to all, and a single-service deployment
  * collapses every scope to the same set so it behaves exactly as before. The
- * catalog helpers assert the OTHER half of ADR 0014 — that a service's cast is
- * derived by JOIN through its journey, never a `service_id` on the catalog.
+ * catalog helpers assert the OTHER half of the decision that a service owns
+ * its journey and shares the catalog — that a service's cast is derived by
+ * JOIN through its journey, never a `service_id` on the catalog.
  */
 
 type Rec = { table: string; filters: Array<[string, ...unknown[]]>; select?: string }
@@ -188,7 +189,7 @@ describe('serviceStakeholderIds — the implicit-membership JOIN', () => {
 
     // The membership walk is phases → scenarios → paths → lanes. The catalog
     // table is NEVER queried, and nothing is filtered by a stakeholder
-    // service_id — the column is gone; membership is the join.
+    // service_id — there is no such column; membership is the join.
     const tables = log.map((r) => r.table)
     expect(tables).toEqual(['phases', 'scenarios', 'paths', 'lanes'])
     expect(tables).not.toContain('stakeholders')
