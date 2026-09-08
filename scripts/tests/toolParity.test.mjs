@@ -158,3 +158,140 @@ test('every dispatch case has a tool spec', () => {
     `registry.ts dispatches tools that no longer exist in TOOL_SPECS: ${orphans.join(', ')}`,
   )
 })
+
+/**
+ * The names on the wire, in both directions.
+ *
+ * A tool spec is a contract with a model. The model can only send the
+ * properties the schema declares, and the handler can only read the keys it
+ * asks for by name — nothing connects the two, and nothing fails when they
+ * disagree. A handler reading a key the schema never offers gets `undefined`
+ * on every call and reports success; a schema offering a property no handler
+ * reads takes an argument from the model and throws it away. Both are silent,
+ * and both look exactly like working software from the outside.
+ *
+ * This is not hypothetical. The template's `create_slice` advertises
+ * `description` and reads `summary`, so a model that fills in the field the
+ * schema asked for writes an empty summary and is told the slice was created;
+ * its `update_slice` keeps the old summary and reports the edit as done. That
+ * is filed upstream — the point here is that no test on either side could see
+ * it, because every test asserted about one file or the other.
+ *
+ * The declarations are IMPORTED rather than parsed: specs.ts is pure data and
+ * loads in Node. registry.ts is still read as text, because it imports
+ * supabase-js and Vite `?raw` markdown and cannot be loaded without a bundler.
+ */
+const TOOL_SPECS = (await import('@/lib/agent/tools/specs')).TOOL_SPECS
+
+/**
+ * The argument keys a dispatch case reads.
+ *
+ * A case runs to the next `case '...':`, which covers both shapes registry.ts
+ * uses — the braced block and the single-expression arm. The four forms it
+ * looks for are the four the file uses: `need(args, 'x')` for a required
+ * string, `s(args, 'x')` for an optional one, and `args.x` / `args['x']` for
+ * everything typed by hand.
+ */
+function argKeysByCase(source) {
+  const marks = [...source.matchAll(/case '([a-z_]+)':/g)]
+  return new Map(
+    marks.map((mark, index) => {
+      const start = mark.index + mark[0].length
+      const end = index + 1 < marks.length ? marks[index + 1].index : source.length
+      const body = source.slice(start, end)
+      const keys = [
+        ...body.matchAll(
+          /(?:need|s)\(args, '([a-z_]+)'\)|args\.([a-z_]+)|args\['([a-z_]+)'\]/g,
+        ),
+      ].map((m) => m[1] ?? m[2] ?? m[3])
+      return [mark[1], new Set(keys)]
+    }),
+  )
+}
+
+/**
+ * Argument names a handler still accepts and the schema no longer offers.
+ *
+ * A rename on this wire cannot be a swap. Anything pinned to an older
+ * description of these tools keeps sending the old word, and a handler that
+ * stopped reading it turns a working call into a refusal. So the schema moves
+ * first and the handler keeps accepting both for a release.
+ *
+ * Every entry is asserted below to still be READ, so an alias whose handler
+ * dropped it loses its exemption instead of leaving a carve-out behind for the
+ * next rename to slip through. Deleting an entry is how the alias retires:
+ * remove the fallback in registry.ts and the line here together.
+ */
+const ACCEPTED_ALIASES = [
+  {
+    tool: 'create_slice',
+    alias: 'slice_type',
+    now: 'kind',
+    because:
+      'the column is slices.kind, and nothing in the pinned template names slice_type any more',
+  },
+  {
+    tool: 'update_slice',
+    alias: 'slice_type',
+    now: 'kind',
+    because: 'same rename, same tool pair',
+  },
+]
+
+const isAlias = (tool, key) =>
+  ACCEPTED_ALIASES.some((entry) => entry.tool === tool && entry.alias === key)
+
+test('every accepted alias is still read, or it has stopped being one', () => {
+  const read = argKeysByCase(registry)
+  const dead = ACCEPTED_ALIASES.filter(
+    (entry) => !read.get(entry.tool)?.has(entry.alias),
+  ).map((entry) => `${entry.tool}.${entry.alias}`)
+  assert.deepEqual(
+    dead,
+    [],
+    `Exempted as an accepted alias but no longer read by registry.ts: ${dead.join(', ')}. ` +
+      'The alias has retired — delete the entry rather than leaving a dead carve-out.',
+  )
+})
+
+test('every argument a handler reads is one the schema offers', () => {
+  const declared = new Map(
+    TOOL_SPECS.map((spec) => [
+      spec.name,
+      new Set(Object.keys(spec.parameters?.properties ?? {})),
+    ]),
+  )
+  const undeclared = []
+  for (const [name, keys] of argKeysByCase(registry)) {
+    const offered = declared.get(name)
+    // A case with no spec is the previous test's failure, not this one's.
+    if (!offered) continue
+    for (const key of keys) {
+      if (offered.has(key) || isAlias(name, key)) continue
+      undeclared.push(`${name}.${key}`)
+    }
+  }
+  assert.deepEqual(
+    undeclared.sort(),
+    [],
+    `registry.ts reads arguments no model can send, so they are always undefined: ${undeclared.join(', ')}`,
+  )
+})
+
+test('every argument the schema offers is one a handler reads', () => {
+  const read = argKeysByCase(registry)
+  const ignored = []
+  for (const spec of TOOL_SPECS) {
+    const keys = read.get(spec.name)
+    // Tools dispatched elsewhere are out of this file's reach.
+    if (!keys) continue
+    for (const key of Object.keys(spec.parameters?.properties ?? {})) {
+      if (!keys.has(key)) ignored.push(`${spec.name}.${key}`)
+    }
+  }
+  assert.deepEqual(
+    ignored.sort(),
+    [],
+    `TOOL_SPECS offers arguments registry.ts never reads, so a model filling them in is ignored: ${ignored.join(', ')}`,
+  )
+})
