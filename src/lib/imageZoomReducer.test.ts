@@ -16,6 +16,7 @@ import {
   IMAGE_ZOOM_MAX_NATURAL_MULTIPLE,
   type ImageZoomViewport,
   type ImagePoint,
+  type ImageSize,
 } from '@/lib/imageZoomReducer'
 
 const VIEWPORT = { width: 1000, height: 800 }
@@ -194,6 +195,51 @@ describe('toggleImageZoom', () => {
   it('lands on natural size from anywhere in between', () => {
     const between = zoomImageToScale(opened(), 2.4, CENTRE)
     expect(toggleImageZoom(between, CENTRE).scale).toBe(1)
+  })
+
+  // 880px of authored artwork in a 1200px box fits at 1.36, so natural
+  // size — scale 1 — is under the floor and cannot be reached. That is every
+  // cover figure on every desktop, and a fixture that fits at 0.5 never
+  // meets it.
+  const WIDE_VIEWPORT = { width: 1200, height: 900 }
+  const COVER = { width: 880, height: 660 }
+  const WIDE_CENTRE = { x: 600, y: 450 }
+
+  /** How far past fit the toggle goes, as a multiple of fit. */
+  const stopAsMultipleOfFit = (viewport: ImageSize) => {
+    const fit = fitImageZoom(viewport, COVER)
+    const centre = { x: viewport.width / 2, y: viewport.height / 2 }
+    return toggleImageZoom(fit, centre).scale / fit.scale
+  }
+
+  it('still moves when the fit floor has swallowed natural size', () => {
+    const fit = fitImageZoom(WIDE_VIEWPORT, COVER)
+    expect(fit.scale).toBeGreaterThan(1)
+    expect(toggleImageZoom(fit, WIDE_CENTRE).scale).toBeGreaterThan(fit.scale)
+  })
+
+  it('comes back to fit from the stop it moved to', () => {
+    const fit = fitImageZoom(WIDE_VIEWPORT, COVER)
+    const closer = toggleImageZoom(fit, WIDE_CENTRE)
+    expect(toggleImageZoom(closer, WIDE_CENTRE)).toEqual(fit)
+  })
+
+  it('steps the same multiple of fit whatever the viewport', () => {
+    // The stop is stated relative to fit rather than as an absolute scale,
+    // so a narrower screen gets the same gesture rather than a different one.
+    const narrow = stopAsMultipleOfFit({ width: 1000, height: 750 })
+    expect(narrow).toBeGreaterThan(1)
+    expect(narrow).toBeCloseTo(stopAsMultipleOfFit(WIDE_VIEWPORT), 9)
+  })
+
+  it('never offers a stop below fit', () => {
+    const fit = fitImageZoom(WIDE_VIEWPORT, COVER)
+    const above = zoomImageToScale(fit, 2.9, WIDE_CENTRE)
+    for (const from of [fit, above]) {
+      expect(toggleImageZoom(from, WIDE_CENTRE).scale).toBeGreaterThanOrEqual(
+        fit.scale,
+      )
+    }
   })
 })
 

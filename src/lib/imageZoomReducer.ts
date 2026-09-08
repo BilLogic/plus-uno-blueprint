@@ -295,23 +295,51 @@ export function clickZoomImage(
 }
 
 /**
- * A double-click: fit and natural size, either way round.
+ * A double-click: fit and one scale closer in, either way round.
  *
- * From anywhere in between it lands on natural size, because that is the
- * scale a reader cannot reach by stepping and the one where a screenshot's
- * text is drawn at the size it was captured.
+ * Closer in means natural size wherever natural size can be reached, because
+ * that is the scale a reader cannot arrive at by stepping and the one where a
+ * screenshot's text is drawn at the size it was captured. From anywhere in
+ * between, the toggle lands there.
+ *
+ * It cannot always be reached. Scale is measured against natural size, so
+ * natural size is scale 1, and the floor of the range is the fit scale: an
+ * image narrower than its viewport fits at more than 1, the clamp pulls scale
+ * 1 up to that floor, and the toggle finds itself already standing on its own
+ * target. That is not a rare shape — it is every cover figure on a desktop,
+ * where 880px of artwork in a 1200px box fits at 1.36.
+ *
+ * The floor is not the mistake; letting a diagram shrink into the middle of
+ * an empty screen would be worse than a dead gesture. The mistake is naming
+ * the second stop as an ABSOLUTE scale when the first is a RELATIVE one: fit
+ * moves with the viewport, natural size does not, and on a wide screen the
+ * two cross. So where natural size has gone under the floor, the second stop
+ * is stated relative to fit instead — one click's worth in, capped by the
+ * ceiling, so the click and the double-click agree about what closer means. A
+ * desktop and a phone then get one gesture rather than a live one and a dead
+ * one.
+ *
+ * One image is still left with nowhere to go: the postage stamp whose floor
+ * and ceiling coincide, which is pinned at a single scale by `imageScaleBounds`
+ * and has no detail left to reveal at any other.
  */
 export function toggleImageZoom(
   state: ImageZoomViewport,
   anchor: ImagePoint,
 ): ImageZoomViewport {
-  // Scale is measured against natural size, so natural size is scale 1 —
-  // clamped, because a small image's fit floor can sit above it.
+  const { min: fit } = imageScaleBounds(state.viewport, state.natural)
   const naturalScale = clampImageScale(1, state.viewport, state.natural)
-  if (sameScale(state.scale, naturalScale)) {
+  const target = sameScale(naturalScale, fit)
+    ? clampImageScale(
+        fit * IMAGE_ZOOM_CLICK_STEP,
+        state.viewport,
+        state.natural,
+      )
+    : naturalScale
+  if (sameScale(state.scale, target)) {
     return fitImageZoom(state.viewport, state.natural)
   }
-  return zoomImageToScale(state, naturalScale, anchor)
+  return zoomImageToScale(state, target, anchor)
 }
 
 /** The image follows the pointer, as far as the clamp allows. */

@@ -240,8 +240,12 @@ whole gesture set; the cover figure is its first adopter, and the panels follow.
 
 **Once open, the image is operated rather than dismissed.** The wheel and a
 trackpad pinch zoom toward the pointer, a click zooms a step in at the point
-clicked, a double-click toggles fit and natural size, and a drag pans once past
-fit. At the ceiling — three times natural size — one more click returns to fit,
+clicked, a double-click toggles between fit and a closer look, and a drag pans
+once past fit. That closer look is natural size where natural size is inside the
+scale range, and a step above fit where it is not: fit moves with the viewport
+and natural size does not, so on a wide screen the two cross and a stop fixed at
+natural size would be a gesture that does nothing. At the ceiling — three times
+natural size — one more click returns to fit,
 so no gesture is a dead end. The cursor is the viewer's running explanation of
 which of those is next: zoom-in at fit, grab and grabbing while panning,
 zoom-out at the top.
