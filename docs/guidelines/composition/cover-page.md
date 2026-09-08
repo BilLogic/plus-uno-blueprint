@@ -96,19 +96,19 @@ AA.
 
 The whole image is the trigger — a diagram this dense benefits from a big hit
 target — and the cursor stays a plain pointer, because the corner hint already
-says "this expands". The opened figure has a second zoom step to authored pixel
-size, with zoom cursors on the image only; everything else in the popup closes,
-with a plain cursor. There is no close button: every square inch that is not the
-diagram already closes it. Reopening always starts fit-to-viewport — the
-zoomed-in step is a per-visit choice, not a remembered preference.
+says "this expands". What opens is the shared image viewer, whose contract lives
+in `dialogs-sheets-and-forms.md`: zoom toward the pointer, pan past fit, three
+exits, and a diagram that is operated rather than dismissed. The figure passes
+it no siblings, because a cover figure has none.
 
-One implementation note that will look like a mistake and is not: the expanded
-size is an **inline pixel width**, not a utility class. These SVGs are authored
-with a `viewBox` and no root `width`/`height`, so the browser's intrinsic-size
-detection reports the UA default inside a flex popup and CSS `auto` follows
-*that*, not the HTML attributes. An explicit pixel width is the one way to get
-the authored size deterministically rather than arguing with SVG intrinsic-size
-edge cases.
+**That reverses what this page used to say**, which was that the opened figure
+was inert and that every square inch of the popup — the diagram included —
+closed it. It was a coherent decision while fit-to-viewport was all the popup
+had to offer. But fit is exactly the scale at which a diagram authored at 880px
+still hides the labels the reader opened it to read, so the popup being the end
+of the interaction restated the problem rather than solving it. Reopening still
+starts at fit: the zoom a reader builds up is a per-visit choice, not a
+remembered preference.
 
 The first figure decodes eagerly; the rest are lazy.
 

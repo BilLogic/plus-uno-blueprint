@@ -1,7 +1,6 @@
-import { useState } from 'react'
-import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 import { Expand } from 'lucide-react'
 import type { CoverFigure as CoverFigureModel } from '@/components/cover/coverModel'
+import { ZoomableImage } from '@/components/blueprint/ZoomableImage'
 import { COVER_MEASURE } from '@/components/cover/coverMeasure'
 import { cn } from '@/lib/utils'
 
@@ -32,10 +31,24 @@ import { cn } from '@/lib/utils'
  * expands", and having both say it a second way read as two competing
  * signals for one action rather than reinforcement.
  *
- * The opened figure fills the popup fit-to-viewport, and every click closes
- * it — the empty margin, the backdrop, and the diagram itself. There is no
- * separate close button and no further zoom step: the image ignores pointer
- * events, so a click on it reaches the close target beneath.
+ * The opened figure is now a viewer, and this file's earlier decision that
+ * there is deliberately no second zoom step is REVERSED. It was the right
+ * call while the popup was the end of the interaction: fit-to-viewport was
+ * everything the popup had to offer, so the image was inert and every click
+ * on it fell through to a close catcher. But fit-to-viewport is exactly the
+ * scale at which the labels this figure was opened FOR are still too small,
+ * so the popup being the end of the interaction was the defect. Past fit
+ * the reader zooms toward the pointer, pans, and closes on the margin, on
+ * Escape, or on a corner button that never leaves — and a click on the
+ * diagram zooms rather than dismisses, because the diagram is now the thing
+ * being operated. The reasoning about the trigger's plain pointer above is
+ * untouched by that: it is about the closed state, where the corner hint is
+ * still the only signal needed.
+ *
+ * Everything below the trigger belongs to `ZoomableImage`, which owns the
+ * popup and the gestures for every openable image in the app. This is its
+ * first adopter; it carries no sibling stepping, because a cover figure has
+ * no siblings.
  */
 export function CoverFigure({
   figure,
@@ -47,63 +60,41 @@ export function CoverFigure({
   eager?: boolean
   className?: string
 }) {
-  const [open, setOpen] = useState(false)
-
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
-      <DialogPrimitive.Trigger
-        type="button"
-        aria-label={`Expand: ${figure.alt}`}
-        className={cn(
-          'group/cover-figure relative block w-full cursor-pointer',
-          COVER_MEASURE,
-          className,
-        )}
+    <ZoomableImage
+      src={figure.src}
+      alt={figure.alt}
+      // The authored size, which the browser cannot be asked for: these
+      // figures are `viewBox`-only SVGs with no intrinsic size at all.
+      naturalWidth={figure.width}
+      naturalHeight={figure.height}
+      triggerLabel={`Expand: ${figure.alt}`}
+      triggerClassName={cn(
+        'group/cover-figure relative block w-full cursor-pointer',
+        COVER_MEASURE,
+        className,
+      )}
+    >
+      <img
+        src={figure.src}
+        alt={figure.alt}
+        width={figure.width}
+        height={figure.height}
+        loading={eager ? 'eager' : 'lazy'}
+        decoding="async"
+        data-cover-figure
+        // One measure with the prose and the tables — see COVER_MEASURE.
+        // This was `max-w-3xl` against the prose's `max-w-2xl`, so every
+        // figure overhung the column it belonged to and the page
+        // zig-zagged.
+        className="h-auto w-full object-contain"
+      />
+      <span
+        aria-hidden
+        className="absolute right-3 bottom-3 flex size-8 items-center justify-center rounded-full bg-foreground/70 text-background opacity-0 backdrop-blur-sm transition-opacity duration-(--motion-fade) ease-out group-hover/cover-figure:opacity-100 group-focus-visible/cover-figure:opacity-100 max-sm:opacity-100"
       >
-        <img
-          src={figure.src}
-          alt={figure.alt}
-          width={figure.width}
-          height={figure.height}
-          loading={eager ? 'eager' : 'lazy'}
-          decoding="async"
-          data-cover-figure
-          // One measure with the prose and the tables — see COVER_MEASURE.
-          // This was `max-w-3xl` against the prose's `max-w-2xl`, so every
-          // figure overhung the column it belonged to and the page
-          // zig-zagged.
-          className="h-auto w-full object-contain"
-        />
-        <span
-          aria-hidden
-          className="absolute right-3 bottom-3 flex size-8 items-center justify-center rounded-full bg-foreground/70 text-background opacity-0 backdrop-blur-sm transition-opacity duration-(--motion-fade) ease-out group-hover/cover-figure:opacity-100 group-focus-visible/cover-figure:opacity-100 max-sm:opacity-100"
-        >
-          <Expand className="size-4" aria-hidden />
-        </span>
-      </DialogPrimitive.Trigger>
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Backdrop className="fixed inset-0 z-50 cursor-pointer bg-black/70 transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0" />
-        <DialogPrimitive.Popup
-          aria-label={figure.alt}
-          className="fixed inset-4 z-50 flex items-center justify-center outline-none transition duration-200 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 sm:inset-10"
-        >
-          {/* Fills the popup behind the image. The image is inert to pointer
-              events, so every click — margin or diagram — reaches this and
-              closes the popup. */}
-          <DialogPrimitive.Close
-            aria-label="Close"
-            className="absolute inset-0 cursor-pointer"
-            render={<button type="button" tabIndex={-1} />}
-          />
-          <img
-            src={figure.src}
-            alt={figure.alt}
-            width={figure.width}
-            height={figure.height}
-            className="pointer-events-none max-h-full max-w-full rounded-xl object-contain shadow-2xl"
-          />
-        </DialogPrimitive.Popup>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+        <Expand className="size-4" aria-hidden />
+      </span>
+    </ZoomableImage>
   )
 }

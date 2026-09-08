@@ -285,9 +285,9 @@ const ABSOLUTE_EXEMPT_FILES: ReadonlyArray<{ file: string; because: string }> = 
       'the play glyph sits on a video poster frame, not on a themed surface — its ground is whatever the author uploaded, so absolute white plus a drop shadow is the only ink that holds in both themes',
   },
   {
-    file: 'components/cover/CoverFigure.tsx',
+    file: 'components/blueprint/ZoomableImage.tsx',
     because:
-      'a modal scrim darkens rather than inverts; `bg-foreground/70` — which this same file uses two elements up, for a control — would turn the backdrop pale in dark mode, and the vendored overlays it sits beside are all `bg-black/N`',
+      'a modal scrim darkens rather than inverts; `bg-foreground/70` — which this same file uses on the close button — would turn the backdrop pale in dark mode, and the vendored overlays it sits beside are all `bg-black/N`. Moved here with the scrim itself when the image viewer took the popup off `CoverFigure.tsx` (#453); the colour and the reason are unchanged',
   },
   {
     file: 'components/cover/CoverSections.tsx',
