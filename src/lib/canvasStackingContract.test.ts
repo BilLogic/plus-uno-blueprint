@@ -39,9 +39,9 @@ const phaseSection = source('../components/editor/CanvasPhaseSection.tsx')
 const phaseLoop = source('../components/editor/PhaseOverviewPhaseLoopArrow.tsx')
 const viewport = source('../components/editor/ZoomPanViewport.tsx')
 
-/** The `lane === 'forward' ? <a> : <b>` z pair a connector renderer picks. */
+/** The `layer === 'forward' ? <a> : <b>` z pair a connector renderer picks. */
 function connectorBands(file: string): { forward: number; back: number } {
-  const match = /lane === 'forward' \? 'z-(\d+)' : 'z-(\d+)'/.exec(file)
+  const match = /layer === 'forward' \? 'z-(\d+)' : 'z-(\d+)'/.exec(file)
   if (!match) throw new Error('no forward/back z ternary in this renderer')
   return { forward: Number(match[1]), back: Number(match[2]) }
 }

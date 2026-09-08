@@ -6,7 +6,7 @@ import {
   ARROW_MARKER_REF_Y,
   ARROW_STROKE_WIDTH,
 } from '@/lib/blueprintArrowGeometry'
-import { getPathTypeArrowColor } from '@/lib/pathTypeTheme'
+import { getPathKindArrowColor } from '@/lib/pathKindTheme'
 import type { PathKind } from '@/types/database'
 
 const PATH_TYPES: PathKind[] = [
@@ -109,7 +109,7 @@ export function defaultPathTypeMarkerIds(markerIdPrefix: string): Record<string,
 
 export function defaultPathTypeMarkerColors(): Record<string, string> {
   return Object.fromEntries(
-    PATH_TYPES.map((type) => [type, getPathTypeArrowColor(type)]),
+    PATH_TYPES.map((type) => [type, getPathKindArrowColor(type)]),
   )
 }
 

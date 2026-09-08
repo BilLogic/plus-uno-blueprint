@@ -73,7 +73,7 @@ type BlueprintPathBandProps = {
   scrollContainerRef?: RefObject<HTMLDivElement | null>
   scenarioName?: string
   phaseName?: string
-  showPathTypeBadge?: boolean
+  showPathKindBadge?: boolean
 }
 
 /**
@@ -91,7 +91,7 @@ export function BlueprintPathBand({
   scrollContainerRef,
   scenarioName,
   phaseName,
-  showPathTypeBadge = false,
+  showPathKindBadge = false,
 }: BlueprintPathBandProps) {
   const bandRef = useRef<HTMLDivElement>(null)
   const fallbackScrollRef = useRef<HTMLDivElement>(null)
@@ -154,7 +154,7 @@ export function BlueprintPathBand({
       <ComparePathSectionFrame
         blueprint={blueprint}
         compact={compact}
-        showPathTypeBadge={showPathTypeBadge}
+        showPathKindBadge={showPathKindBadge}
         excludeLabelRail={arrangement.kind === 'row'}
       />
       {arrangement.kind === 'row' ? (
@@ -205,7 +205,7 @@ export function BlueprintPathBand({
         </>
       ) : null}
       <IntegratedDependencyArrows
-        lane="forward"
+        layer="forward"
         dependencies={arrowData.dependencies}
         cells={arrowData.cells}
         steps={arrowData.steps}
@@ -231,7 +231,7 @@ export function BlueprintPathBand({
         />
       ))}
       <IntegratedDependencyArrows
-        lane="wrap"
+        layer="wrap"
         dependencies={arrowData.dependencies}
         cells={arrowData.cells}
         steps={arrowData.steps}
