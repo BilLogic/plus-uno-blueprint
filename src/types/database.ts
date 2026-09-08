@@ -23,15 +23,21 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * privilege the CLI lacks and needs neither, so it is the path that works
  * today — and the one to use again.
  *
- * TWO LAYERS ARE RE-APPLIED BY HAND, deliberately, and they are the whole of
+ * THREE LAYERS ARE RE-APPLIED BY HAND, deliberately, and they are the whole of
  * what is not the generator's:
  *
- *  1. `cells.status` and `paths.status` are typed `EntityStatus`, and
- *     `PathKind` is declared, rather than the generator's `string`. All three
- *     are text columns with check constraints, and a constraint is the one
- *     thing the generator cannot see; narrowing here is what makes an invalid
- *     value a type error at the call site instead of a Postgres error at
- *     runtime.
+ *  1. `paths.kind` is typed `PathKind`, rather than the generator's `string`.
+ *     The column carries a check constraint naming exactly those three values,
+ *     and a constraint is the one thing the generator cannot see; narrowing
+ *     here is what makes an invalid value a type error at the call site
+ *     instead of a Postgres error at runtime.
+ *
+ *     `cells.status` and `paths.status` are typed `EntityStatus` on the same
+ *     reasoning, but WITHOUT the same backing: both are `text not null default
+ *     'live'` and no migration constrains them. The narrowing is a promise the
+ *     application keeps, not one the database enforces, so a row written by
+ *     anything else can hold a value this type says is impossible. Making it
+ *     true is a migration, not an edit here.
  *  2. The row aliases at the foot of the file — `Cell`, `Lane`, `Path` and the
  *     rest — are this app's vocabulary over the generated shapes and have no
  *     generated equivalent.
@@ -637,7 +643,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          kind: string
+          kind: PathKind
           name: string
           note: string | null
           origin: string
@@ -649,7 +655,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          kind: string
+          kind: PathKind
           name: string
           note?: string | null
           origin?: string
@@ -661,7 +667,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          kind?: string
+          kind?: PathKind
           name?: string
           note?: string | null
           origin?: string
