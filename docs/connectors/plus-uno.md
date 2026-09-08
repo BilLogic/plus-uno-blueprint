@@ -135,10 +135,17 @@ change to what the contract is FOR, not a rename.
 
 The skills package is the third side of this. `agentic-service-blueprinting`
 is a git-URL dependency pinned to a tag, so a fix there goes upstream and
-arrives here as a version bump — which has to happen in the same window. Two
-retired spellings are still on that side: `agents/auditor.md` asks the model
-for `check_name`, and `slice_tools.py` writes `origin` on slices, which is
-`authorship` here.
+arrives here as a version bump — which has to happen in the same window. One
+retired spelling is still on that side: `slice_tools.py` writes `origin` on
+slices, which is `authorship` here. That one is a schema difference rather
+than a stale word, so it is settled as part of the convergence and not by a
+rename.
+
+`agents/auditor.md` was the other, and asked the model for `check_name` and
+`note` after both columns had moved. It is fixed upstream, and the class is
+now checked there rather than trusted: a fenced row shape is bound to a
+relation and held against the schema dump, so the next rename cannot leave a
+document behind the way this one did.
 
 `slice_type` is the one that finished. Nothing in the pinned package names it
 any more — the template's own tool schema says `kind`, and `slice_tools.py`

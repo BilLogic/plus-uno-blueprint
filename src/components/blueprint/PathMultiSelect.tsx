@@ -28,12 +28,12 @@ export type PathOption = {
 
 const MAX_PATHS_PER_COLUMN = 2
 
-const PRIMARY_COLUMN_PATH_TYPES = new Set<PathKind>([
+const PRIMARY_COLUMN_PATH_KINDS = new Set<PathKind>([
   'happy',
   'variant',
   'variant',
 ])
-const SECONDARY_COLUMN_PATH_TYPES = new Set<PathKind>(['exception', 'exception'])
+const SECONDARY_COLUMN_PATH_KINDS = new Set<PathKind>(['exception', 'exception'])
 
 export function formatPathPickerLabel(name: string): string {
   return name.replace(/^Warm-Up\s+/i, '')
@@ -49,14 +49,14 @@ function chunkPaths<T>(items: T[], size: number): T[][] {
 
 /** Happy/alternate paths stack in the left column(s); sad/exception paths go to the right. */
 export function groupPathsIntoColumns(paths: PathOption[]): PathOption[][] {
-  const primary = paths.filter((path) => PRIMARY_COLUMN_PATH_TYPES.has(path.kind))
+  const primary = paths.filter((path) => PRIMARY_COLUMN_PATH_KINDS.has(path.kind))
   const secondary = paths.filter((path) =>
-    SECONDARY_COLUMN_PATH_TYPES.has(path.kind),
+    SECONDARY_COLUMN_PATH_KINDS.has(path.kind),
   )
   const other = paths.filter(
     (path) =>
-      !PRIMARY_COLUMN_PATH_TYPES.has(path.kind) &&
-      !SECONDARY_COLUMN_PATH_TYPES.has(path.kind),
+      !PRIMARY_COLUMN_PATH_KINDS.has(path.kind) &&
+      !SECONDARY_COLUMN_PATH_KINDS.has(path.kind),
   )
 
   return [

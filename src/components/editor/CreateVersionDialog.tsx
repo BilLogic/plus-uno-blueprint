@@ -15,8 +15,8 @@ import { useSupabase } from '@/contexts/SupabaseProvider'
 import { invalidateStructure } from '@/hooks/useSupabaseQuery'
 import { createPath, duplicatePath } from '@/lib/authoringRpc'
 import {
-  PATH_TYPES,
-  PATH_TYPE_LABELS,
+  PATH_KINDS,
+  PATH_KIND_LABELS,
   describeVersionOutcome,
   validateDraftVersion,
   type DraftVersion,
@@ -138,7 +138,7 @@ export function CreateVersionDialog({
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-foreground">Kind</span>
             <div className="flex flex-wrap gap-1.5">
-              {PATH_TYPES.map((type) => (
+              {PATH_KINDS.map((type) => (
                 <Button
                   key={type}
                   type="button"
@@ -147,7 +147,7 @@ export function CreateVersionDialog({
                   className="h-7 text-xs"
                   onClick={() => set('pathKind', type as PathKind)}
                 >
-                  {PATH_TYPE_LABELS[type]}
+                  {PATH_KIND_LABELS[type]}
                 </Button>
               ))}
             </div>

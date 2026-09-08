@@ -82,7 +82,7 @@ function canonicalKey(row) {
   const parts = [
     slug(row.service),
     slug(row.scenario),
-    slug(row.pathName) ?? slug(row.pathType),
+    slug(row.pathName) ?? slug(row.pathKind),
     slug(row.lane),
     slug(row.step),
   ]
@@ -104,7 +104,7 @@ async function loadCells() {
       id: row.id,
       service: service.name,
       scenario: scenario.name,
-      pathType: path.kind,
+      pathKind: path.kind,
       pathName: path.name,
       lane: row.lane?.name,
       step: row.step?.name,

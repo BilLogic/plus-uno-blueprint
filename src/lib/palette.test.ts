@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { CELL_STEP } from '@/lib/blueprintCellStyle'
 import {
-  PATH_TYPE_COLORS,
+  PATH_KIND_COLORS,
   getPathColor,
   getPathDashArray,
   PATH_IDENTITY_PERIOD,
@@ -229,7 +229,7 @@ describe('blueprint cells', () => {
  * not have caught it.
  */
 describe('path badges', () => {
-  const paths = Object.entries(PATH_TYPE_COLORS)
+  const paths = Object.entries(PATH_KIND_COLORS)
 
   describe.each(['light', 'dark'] as const)('%s', (theme) => {
     it.each(paths)('%s pairs with legible derived ink', (_type, token) => {
@@ -410,7 +410,7 @@ describe('lane roles and touchpoint tones stay disjoint', () => {
 
   it('has exactly one path type sharing a lane family, and names it', () => {
     const lanes = familiesIn('lane')
-    const overlapping = Object.entries(PATH_TYPE_COLORS)
+    const overlapping = Object.entries(PATH_KIND_COLORS)
       .filter(([, token]) => lanes.has(/--color-([a-z]+)-/.exec(token)![1]))
       .map(([type]) => type)
     expect(overlapping).toEqual(KNOWN_LANE_OVERLAP)
@@ -424,7 +424,7 @@ describe('lane roles and touchpoint tones stay disjoint', () => {
     for (const type of KNOWN_LANE_OVERLAP) {
       const step = Number(
         /--color-[a-z]+-(\d+)/.exec(
-          PATH_TYPE_COLORS[type as keyof typeof PATH_TYPE_COLORS],
+          PATH_KIND_COLORS[type as keyof typeof PATH_KIND_COLORS],
         )![1],
       )
       expect(step).toBeGreaterThan(laneFill)

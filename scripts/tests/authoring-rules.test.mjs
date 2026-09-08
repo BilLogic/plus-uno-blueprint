@@ -88,7 +88,7 @@ test('the same pair may hold both a leads_to and an enables', () => {
 const version = (patch) => ({
   mode: 'blank',
   name: 'Escalation',
-  pathType: 'alternative',
+  pathKind: 'alternative',
   sourcePathId: null,
   copyCells: true,
   copyDependencies: true,
