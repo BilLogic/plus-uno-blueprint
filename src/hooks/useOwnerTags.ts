@@ -5,9 +5,9 @@ import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
  * The owner vocabulary: every distinct value currently used by any cell's
  * `owner` or `perceived_owner`.
  *
- * One list for both fields on purpose — "Tutor Ops" is the same team whether
+ * One list for both fields on purpose — "Field Ops" is the same team whether
  * it is accountable or merely perceived, and two vocabularies would drift
- * into `Tutor Ops` / `TutorOps` / `tutor ops`, which is exactly the mess the
+ * into `Field Ops` / `FieldOps` / `field ops`, which is exactly the mess the
  * dropdown exists to prevent.
  */
 export function useOwnerTags(): QueryResult<string[]> {

@@ -916,4 +916,22 @@ export const RECONCILED_FILES = [
   // bite, and this file follows upstream rather than being repaired twice.
   'src/lib/readLifetime.test.ts',
   'src/lib/service.test.ts',
+
+  // The prose that was this deployment's, generalised. Three of these hooks
+  // illustrated their arguments in this deployment's vocabulary — a team name,
+  // a lane name, this deployment's bot and channel and a `docs/connectors/`
+  // path — where the template's copies say the same thing in neutral words.
+  // Nothing here is wrong; it is unshareable, because `check:standalone`
+  // upstream refuses prose that names a deployment, so a file carrying it can
+  // never be byte-identical. This is the one class where the template is ahead
+  // and this repository comes to it.
+  //
+  // `useStakeholders.ts` is deliberately NOT here. It has the same vocabulary
+  // swaps AND cites the shared-catalog decision as `ADR 0014` where the
+  // template cites `ADR 0003` — the same decision, numbered per repository. A
+  // shared file cannot carry both, and which way that resolves is a convention
+  // question rather than a rename (#457).
+  'src/hooks/useOwnerTags.ts',
+  'src/hooks/useLaneSpec.ts',
+  'src/hooks/useCellDeepLink.ts',
 ]

@@ -379,6 +379,9 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/hooks/useSliceScenarioId.ts',
     'src/lib/readLifetime.test.ts',
     'src/lib/service.test.ts',
+    'src/hooks/useOwnerTags.ts',
+    'src/hooks/useLaneSpec.ts',
+    'src/hooks/useCellDeepLink.ts',
   ])
 })
 
