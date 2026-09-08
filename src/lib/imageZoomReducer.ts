@@ -40,6 +40,18 @@ export const IMAGE_ZOOM_MAX_NATURAL_MULTIPLE = 3
 export const IMAGE_ZOOM_CLICK_STEP = 2
 
 /**
+ * The smallest change of scale worth making a reader watch.
+ *
+ * A ratio, not a scale and not a number of pixels, because every rule the
+ * click ladder is built from has to hold at every viewport width. The step is
+ * relative and the ceiling is absolute, so the range a ladder has to divide —
+ * the ceiling over fit — shrinks as the viewport grows, and only a rule
+ * stated as a ratio survives that. A quarter again as large is a change the
+ * eye reads as a change; five percent reads as a click that did nothing.
+ */
+export const IMAGE_ZOOM_MIN_VISIBLE_STEP = 1.25
+
+/**
  * How far a pointer may travel between press and release and still be a
  * click. A distance, not a timer: a timer punishes a slow deliberate click,
  * and it would force a fake clock into every test of this file.
@@ -277,7 +289,50 @@ export function zoomImageByGesture(
 }
 
 /**
- * A click on the image: one step in, or back to fit from the ceiling.
+ * Where a click goes from here: a scale, or `null` for "back to fit".
+ *
+ * The step is relative and the ceiling is absolute, so the range a ladder has
+ * to divide — the ceiling over fit — is not a fixed thing. An 880px figure
+ * fits at 1.14 on a laptop and at 2.18 on a wide display, leaving 2.6 times
+ * of room in the first and 1.4 in the second, and a doubling divides neither
+ * evenly. What will not divide lands on the LAST rung, where it is worst: a
+ * reader who has clicked to the top of the ladder gets a final click worth
+ * five percent, which reads as a broken control rather than as "you are at
+ * maximum".
+ *
+ * Two rules, both stated as ratios so that a wide display and a phone get one
+ * ladder rather than two different ones:
+ *
+ * - a stop that would leave less than a visible step below the ceiling is not
+ *   a stop. The click takes the ceiling instead, so the remainder is absorbed
+ *   into the rung above rather than saved up to be the last one.
+ * - a click with no visible step left above it has nothing to offer, so it
+ *   goes back to fit — which is what a click at the ceiling has always done,
+ *   now said in terms of what the reader can see rather than of one exact
+ *   scale a wheel can stop just short of.
+ *
+ * Between them, every click that changes the scale changes it by at least
+ * `IMAGE_ZOOM_MIN_VISIBLE_STEP`, at every viewport width. The one image with
+ * nothing to offer is the one whose whole range is under a single step —
+ * artwork blown up until fitting alone nearly touches the ceiling — and there
+ * a click stays where it is rather than nudging.
+ *
+ * The double-click's second stop is deliberately NOT absorbed the same way.
+ * It is a two-stop toggle rather than a ladder, so it has no last rung to
+ * leave over, and #474 gave it a stop that is a FIXED multiple of fit;
+ * absorbing that into the ceiling would make it a different multiple on every
+ * viewport, which is the property that fix exists to hold.
+ */
+function clickZoomTarget(state: ImageZoomViewport): number | null {
+  const { max } = imageScaleBounds(state.viewport, state.natural)
+  const stepped = Math.min(max, state.scale * IMAGE_ZOOM_CLICK_STEP)
+  const target = max / stepped < IMAGE_ZOOM_MIN_VISIBLE_STEP ? max : stepped
+  return target >= state.scale * IMAGE_ZOOM_MIN_VISIBLE_STEP ? target : null
+}
+
+/**
+ * A click on the image: one visible step in, or back to fit when there is no
+ * visible step left to take.
  *
  * The wrap is what keeps the gesture from becoming a dead end. A reader who
  * has clicked their way to the top and clicks again gets the whole image
@@ -287,11 +342,9 @@ export function clickZoomImage(
   state: ImageZoomViewport,
   anchor: ImagePoint,
 ): ImageZoomViewport {
-  const { max } = imageScaleBounds(state.viewport, state.natural)
-  if (sameScale(state.scale, max)) {
-    return fitImageZoom(state.viewport, state.natural)
-  }
-  return zoomImageToScale(state, state.scale * IMAGE_ZOOM_CLICK_STEP, anchor)
+  const target = clickZoomTarget(state)
+  if (target === null) return fitImageZoom(state.viewport, state.natural)
+  return zoomImageToScale(state, target, anchor)
 }
 
 /**
@@ -376,10 +429,16 @@ export function isImageClick(from: ImagePoint, to: ImagePoint): boolean {
  * what the next gesture does, so the reader does not have to find the
  * gestures by accident.
  *
- * The ceiling outranks the grab because at the top of the range the click is
- * the interesting affordance: it is the way back to the whole image. The
- * drag is still available there; a reader mid-drag is told so by `grabbing`,
- * which outranks everything.
+ * The top of the range outranks the grab because there the click is the
+ * interesting affordance: it is the way back to the whole image. The drag is
+ * still available there; a reader mid-drag is told so by `grabbing`, which
+ * outranks everything.
+ *
+ * "At the top" is asked of the click itself rather than measured against the
+ * ceiling a second time here, so the two cannot come to disagree. A reader a
+ * wheel notch short of the ceiling is at the top as far as a click is
+ * concerned, and is told so, instead of being shown a `grab` that says "drag
+ * me" at the moment a click is the only thing left.
  */
 export function resolveImageZoomCursor(
   state: ImageZoomViewport,
@@ -387,7 +446,7 @@ export function resolveImageZoomCursor(
 ): ImageZoomCursor {
   if (options.dragging) return 'grabbing'
   const { min, max } = imageScaleBounds(state.viewport, state.natural)
-  if (max > min && sameScale(state.scale, max)) return 'zoom-out'
+  if (max > min && clickZoomTarget(state) === null) return 'zoom-out'
   if (canPanImage(state)) return 'grab'
   return 'zoom-in'
 }
