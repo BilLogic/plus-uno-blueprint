@@ -44,6 +44,19 @@ that comment when you write the code; a reviewer asking "why is this like
 this" means the comment is missing. Never leave a comment that restates
 the line below it.
 
+**A comment in a shared file names no deployment and cites no ADR number.**
+Shared means enrolled in the reconciled set, or headed for it — the same bytes
+have to read correctly in both repositories, so a comment that is merely
+accurate here is not enough. It names no organisation, team, product, lane or
+channel of this instance's, because the template's standalone check refuses
+prose that does and a file carrying it can never be enrolled. And it cites no
+ADR **number**, because ADRs are numbered per repository and the numbers
+collide: the shared-catalog decision is ADR 0014 here and ADR 0003 upstream, so
+a citation that resolves correctly in one repo points at an unrelated record in
+the other. Name the decision instead, in the words of its own title — a name
+survives the boundary, and survives a renumbering on either side of it.
+`src/hooks/useStakeholders.ts` is the case that settled it (#457).
+
 ## Testing
 
 **How to run**: `npm test` (vitest) collects `src/**/*.test.ts` and
