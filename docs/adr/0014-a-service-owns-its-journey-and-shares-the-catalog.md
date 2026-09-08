@@ -125,3 +125,12 @@ shared catalog without reshaping it — so implicit now is the deferral, not a c
 - **The name-collision authoring nicety** — guiding an author who names a new tool
   with a name the deployment already uses for a different one — is UX, not model, and
   needs no record until it is built.
+
+## How a shared file cites this
+
+`src/hooks/useStakeholders.ts` is held byte-identical with the template's copy by
+the drift gate, and each repository numbers its own ADRs — this decision is 14
+here and 3 upstream. A shared file therefore **names the decision and never
+numbers it**: "the decision that a service owns its journey and shares the
+catalog", not an ADR number that is right in at most one of the two copies. The
+rule holds for every ADR citation that reaches a shared file, not only this one.

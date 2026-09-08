@@ -918,13 +918,16 @@ export const RECONCILED_FILES = [
   'src/hooks/useScenarioPaths.ts',
   'src/hooks/useSliceScenarioId.ts',
 
-  // The two tests came with them. `readLifetime.test.ts` is enrolled knowing its
-  // `query cancellation` block does not test our cancellation — it drives a raw
-  // `QueryObserver` and so passes with or without the signal (#468). Enrolling
-  // it is what makes that fixable ONCE: the template now has the test that does
-  // bite, and this file follows upstream rather than being repaired twice.
+  // The two tests came with them. `readLifetime.test.ts` was enrolled knowing
+  // its `query cancellation` block did not test our cancellation — it drove a
+  // raw `QueryObserver` and so passed with or without the signal (#468).
+  // Enrolling it is what made that fixable ONCE: the block is gone upstream and
+  // its coverage moved to `useSupabaseQuery.test.tsx`, which drives the wrapper
+  // and fails when the signal is taken away. This repository took both at asb
+  // 1.12.3 rather than being repaired twice.
   'src/lib/readLifetime.test.ts',
   'src/lib/service.test.ts',
+  'src/hooks/useSupabaseQuery.test.tsx',
 
   // The prose that was this deployment's, generalised. Three of these hooks
   // illustrated their arguments in this deployment's vocabulary — a team name,
@@ -935,12 +938,15 @@ export const RECONCILED_FILES = [
   // never be byte-identical. This is the one class where the template is ahead
   // and this repository comes to it.
   //
-  // `useStakeholders.ts` is deliberately NOT here. It has the same vocabulary
-  // swaps AND cites the shared-catalog decision as `ADR 0014` where the
-  // template cites `ADR 0003` — the same decision, numbered per repository. A
-  // shared file cannot carry both, and which way that resolves is a convention
-  // question rather than a rename (#457).
+  // `useStakeholders.ts` joins them at asb 1.12.3. It had the same vocabulary
+  // swaps AND cited the shared-catalog decision as `ADR 0014` where the
+  // template cited `ADR 0003` — the same decision, numbered per repository, so
+  // no single line could be right in both copies. The citation now names the
+  // decision instead of numbering it, which is the rule for every ADR citation
+  // that reaches a shared file; ADR 0014 records it where a reader chasing the
+  // citation lands (#457).
   'src/hooks/useOwnerTags.ts',
   'src/hooks/useLaneSpec.ts',
   'src/hooks/useCellDeepLink.ts',
+  'src/hooks/useStakeholders.ts',
 ]
