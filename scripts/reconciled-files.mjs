@@ -58,6 +58,11 @@ export const RECONCILED_FILES = [
   // only these two pure files are held byte-identical.
   'src/lib/blueprintArrowGeometry.ts',
   'src/lib/arrowAnchorSlots.ts',
+  // NOT enrolled yet, though it came down with the same-column fix and is
+  // byte-identical today: `blueprintArrowGeometry.sameColumnDetour.test.ts`
+  // opens by citing a bare issue number, which means a different ticket in
+  // each repository — the gate's second promise refuses it, correctly.
+  // Neutralising that citation upstream is asb#257; enrol at the bump after.
 
   // The panel writers (#357): asb ported uno's entity panel editors wholesale,
   // so the code a panel saves through is one implementation living in two
