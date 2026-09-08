@@ -3,7 +3,7 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * Supabase database types for the `public` schema.
  *
  * @see supabase/DATABASE.md — full schema, RLS, and connection docs
- * @see docs/erd.mmd — entity relationship diagram
+ * @see docs/reference/erd.mmd — entity relationship diagram
  *
  * GENERATED, 2026-09-08, from the production project through the Supabase
  * connector. Every hand-edited block this file carried is gone: the two
