@@ -15,11 +15,11 @@ import { CoverFigure } from '@/components/cover/CoverFigure'
   the end of the interaction a defect rather than a decision.
 
   So the opened figure is now a viewer, and the assertions below say what it
-  does: zoom toward the pointer on the wheel, a step in on a click, a toggle
-  on a double click, pan past fit, and a cursor that says which of those is
-  next. What survives unchanged is the CLOSED state — a plain pointer on the
-  trigger, the corner expand hint — because that reasoning was about a
-  different question and is still correct.
+  does: zoom toward the pointer on the wheel, a toggle between two stops on a
+  click, pan past fit, and a cursor that says which of those is next. What
+  survives unchanged is the CLOSED state — a plain pointer on the trigger,
+  the corner expand hint — because that reasoning was about a different
+  question and is still correct.
 
   This is also the one component test the whole viewer gets. `ZoomableImage`
   is exercised through its first adopter rather than through a bare harness,
@@ -99,8 +99,8 @@ function viewport(image: HTMLElement) {
  *
  * The browser sends both clicks and then `dblclick`; `fireEvent.doubleClick`
  * sends only the last of them. Spelling the sequence out is the only way to
- * exercise the part that is actually interesting — that the single click
- * arriving first does not spoil the toggle.
+ * exercise the part that is actually interesting — that the second click of
+ * the pair does not undo the first.
  */
 function doubleClick(image: HTMLElement, at: typeof CENTRE) {
   fireEvent.click(image, { ...at, detail: 1 })
@@ -155,13 +155,13 @@ describe('CoverFigure, open', () => {
   it('fits the size the figure was authored at, not the browser default box', () => {
     const { image } = open()
     // Believing `naturalWidth` here would fit a 300px picture — and, since
-    // fitting one blows past the ceiling, pin it there three times too small.
+    // fitting one blows past the guard, hold it there three times too small.
     expect(image.style.width).toBe(`${NATURAL.width}px`)
     expect(image.style.height).toBe(`${NATURAL.height}px`)
     expect(viewport(image).scale).toBe(0.5)
   })
 
-  it('zooms a step in on a click, anchored where the click landed', () => {
+  it('zooms to the stop above fit on a click, anchored where the click landed', () => {
     const { image } = open()
     fireEvent.click(image, { ...OFF_CENTRE, detail: 1 })
     const { scale, offset } = viewport(image)
@@ -172,22 +172,22 @@ describe('CoverFigure, open', () => {
     expect(offset.y).toBeLessThan(0)
   })
 
-  it('returns to fit on one more click at the ceiling, so no gesture is a dead end', () => {
+  it('returns to fit on the next click, so no gesture is a dead end', () => {
     const { image } = open()
-    // 0.5 → 1 → 2 → 3, the ceiling at three times natural size.
+    // Two stops and nothing between them: 0.5 and, since natural size here
+    // is exactly twice fit, natural size.
     fireEvent.click(image, { ...CENTRE, detail: 1 })
-    fireEvent.click(image, { ...CENTRE, detail: 1 })
-    fireEvent.click(image, { ...CENTRE, detail: 1 })
-    expect(viewport(image).scale).toBe(3)
+    expect(viewport(image).scale).toBe(1)
 
     fireEvent.click(image, { ...CENTRE, detail: 1 })
     expect(viewport(image)).toEqual({ scale: 0.5, offset: { x: 0, y: 0 } })
   })
 
-  it('toggles fit and natural size on a double click, both ways round', () => {
+  it('lands a double click on the same stop a single click does, rather than undoing it', () => {
     const { image } = open()
     doubleClick(image, CENTRE)
-    // Natural size is scale 1: the size a screenshot's text was captured at.
+    // The second click of the pair is stepped over; with one stop above fit
+    // it could only take the reader back where they started.
     expect(viewport(image).scale).toBe(1)
 
     doubleClick(image, CENTRE)
@@ -239,7 +239,11 @@ describe('CoverFigure, open', () => {
     const { image } = open()
     expect(image.className).toContain('cursor-zoom-in')
 
-    fireEvent.click(image, { ...CENTRE, detail: 1 })
+    // Between the two stops, which is where only a wheel can leave a reader.
+    fireEvent.wheel(image, { deltaY: -40, deltaMode: 0, ...CENTRE })
+    const between = viewport(image).scale
+    expect(between).toBeGreaterThan(0.5)
+    expect(between).toBeLessThan(1)
     expect(image.className).toContain('cursor-grab')
 
     fireEvent.pointerDown(image, { ...CENTRE, button: 0, pointerId: 1 })
@@ -249,9 +253,11 @@ describe('CoverFigure, open', () => {
     // The browser's click after a release, which a drag has spent.
     fireEvent.click(image, { ...CENTRE, detail: 1 })
 
+    // Back to fit, then up to the stop, where the click is the way back and
+    // is the thing worth advertising.
     fireEvent.click(image, { ...CENTRE, detail: 1 })
     fireEvent.click(image, { ...CENTRE, detail: 1 })
-    expect(viewport(image).scale).toBe(3)
+    expect(viewport(image).scale).toBe(1)
     expect(image.className).toContain('cursor-zoom-out')
   })
 })
@@ -279,11 +285,13 @@ describe('CoverFigure, leaving', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 
-  it('keeps the corner button reachable at every scale, including the ceiling', () => {
+  it('keeps the corner button reachable at every scale, including the guard', () => {
     const { dialog, image, box } = open()
-    fireEvent.click(image, { ...CENTRE, detail: 1 })
-    fireEvent.click(image, { ...CENTRE, detail: 1 })
-    fireEvent.click(image, { ...CENTRE, detail: 1 })
+    // The wheel, not the click: the click has two stops and the top of the
+    // range is above both of them.
+    for (let push = 0; push < 40; push += 1) {
+      fireEvent.wheel(image, { deltaY: -100, deltaMode: 0, ...CENTRE })
+    }
     expect(viewport(image).scale).toBe(3)
 
     const close = within(dialog).getByRole('button', { name: 'Close' })
@@ -304,8 +312,7 @@ describe('CoverFigure, leaving', () => {
   it('reopens at fit rather than remembering the last zoom', () => {
     const { image, dialog } = open()
     fireEvent.click(image, { ...OFF_CENTRE, detail: 1 })
-    fireEvent.click(image, { ...OFF_CENTRE, detail: 1 })
-    expect(viewport(image).scale).toBe(2)
+    expect(viewport(image).scale).toBe(1)
     expect(viewport(image).offset).not.toEqual({ x: 0, y: 0 })
     fireEvent.keyDown(dialog, { key: 'Escape' })
 

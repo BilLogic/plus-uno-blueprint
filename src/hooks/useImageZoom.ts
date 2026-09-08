@@ -16,7 +16,6 @@ import {
   isImageClick,
   panImageBy,
   resolveImageZoomCursor,
-  toggleImageZoom,
   zoomImageByFactor,
   zoomImageByGesture,
   zoomImageByWheel,
@@ -124,7 +123,6 @@ export type UseImageZoomResult = {
     onPointerUp: (event: ReactPointerEvent<HTMLImageElement>) => void
     onPointerCancel: (event: ReactPointerEvent<HTMLImageElement>) => void
     onClick: (event: ReactMouseEvent<HTMLImageElement>) => void
-    onDoubleClick: (event: ReactMouseEvent<HTMLImageElement>) => void
   }
 }
 
@@ -149,7 +147,7 @@ export function useImageZoom({
    * built for. An SVG authored with a `viewBox` and no root `width`/`height`
    * has no intrinsic size, and the browser answers with its default box —
    * Chrome reports 300 wide for an 880px diagram — which the reducer then
-   * correctly fits and correctly pins at the ceiling, to a picture three
+   * correctly fits and correctly holds at the guard, to a picture three
    * times too small. Where an adopter carries the authored numbers, they are
    * the truth and `naturalWidth` is a guess; where it does not, a raster
    * screenshot reports its own size honestly and the guess is the truth.
@@ -192,11 +190,6 @@ export function useImageZoom({
   const dragRef = useRef<DragState | null>(null)
   /** Set on release when the press panned: the click that follows is not one. */
   const draggedRef = useRef(false)
-  /**
-   * The state as it stood before the single click that may turn out to be
-   * the first half of a double click. See `onDoubleClick`.
-   */
-  const beforeClickRef = useRef<ImageZoomViewport | null>(null)
   /**
    * Every touch contact currently down on the image, by pointer id.
    *
@@ -281,7 +274,6 @@ export function useImageZoom({
       ) {
         return
       }
-      beforeClickRef.current = null
       stateRef.current = fitImageZoom(viewport, natural)
       setAnimated(false)
       setState(stateRef.current)
@@ -339,7 +331,6 @@ export function useImageZoom({
     if (!popupNode) return
     const onWheel = (event: WheelEvent) => {
       event.preventDefault()
-      beforeClickRef.current = null
       const anchor = anchorAt(event.clientX, event.clientY)
       apply((current) => zoomImageByWheel(current, event, anchor), false)
     }
@@ -387,7 +378,6 @@ export function useImageZoom({
       )
       const from = previousScale
       if (Number.isFinite(gesture.scale)) previousScale = nextScale
-      beforeClickRef.current = null
       apply(
         (current) => zoomImageByGesture(current, from, nextScale, anchor),
         false,
@@ -470,7 +460,6 @@ export function useImageZoom({
           if (pinch && from != null && from > 0 && pinch.distance > 0) {
             pinchDistanceRef.current = pinch.distance
             const anchor = anchorAt(pinch.centre.x, pinch.centre.y)
-            beforeClickRef.current = null
             // Continuous, so untweened — the same rule the wheel follows.
             apply(
               (current) =>
@@ -491,7 +480,6 @@ export function useImageZoom({
       }
       const delta = { x: point.x - drag.last.x, y: point.y - drag.last.y }
       drag.last = point
-      beforeClickRef.current = null
       apply((current) => panImageBy(current, delta), false)
     },
     [anchorAt, apply],
@@ -552,13 +540,17 @@ export function useImageZoom({
   )
 
   /**
-   * A click on the image: one step in, or back to fit from the ceiling.
+   * A click on the image: the stop above fit, or back to fit from anywhere
+   * that is not fit.
    *
-   * The second click of a double click is stepped over rather than applied —
-   * `detail` is 2 there, and `onDoubleClick` is about to speak for it. The
-   * FIRST click is not stepped over, because nothing yet says a second is
-   * coming; a timer would be the only way to know, and this viewer refuses
-   * timers for the same reason the reducer does.
+   * The second click of a double click is stepped over rather than applied.
+   * `detail` is 2 there, and with a single stop above fit a second toggle
+   * would only undo the first, so a double click would zoom in and back out
+   * under the reader's hand. Stepping it over is what makes a double click
+   * land where the single click did rather than nowhere. The FIRST click is
+   * not stepped over, because nothing yet says a second is coming; a timer
+   * would be the only way to know, and this viewer refuses timers for the
+   * same reason the reducer does.
    *
    * A TAP does not zoom. Every fullscreen image on a phone has taught the
    * reader that a tap dismisses, and a viewer that zoomed instead would
@@ -575,34 +567,7 @@ export function useImageZoom({
       if (touchPressRef.current) return
       if (event.detail >= 2) return
       const anchor = anchorAt(event.clientX, event.clientY)
-      beforeClickRef.current = stateRef.current
       apply((current) => clickZoomImage(current, anchor), true)
-    },
-    [anchorAt, apply],
-  )
-
-  /**
-   * A double click toggles fit and natural size — from where the reader was
-   * BEFORE the single click that came with it.
-   *
-   * Without that snapshot the toggle is not one: the first click has already
-   * moved off fit, so every double click reads as "not at natural yet" and
-   * the way back to fit never fires. Taking the state the press started from
-   * makes the double click mean what it says, at the cost of one step being
-   * visible on the way.
-   */
-  const onDoubleClick = useCallback(
-    (event: ReactMouseEvent<HTMLImageElement>) => {
-      if (draggedRef.current) {
-        draggedRef.current = false
-        return
-      }
-      // A double TAP is two taps, and neither of them zooms.
-      if (touchPressRef.current) return
-      const anchor = anchorAt(event.clientX, event.clientY)
-      const base = beforeClickRef.current ?? stateRef.current
-      beforeClickRef.current = null
-      apply(() => toggleImageZoom(base, anchor), true)
     },
     [anchorAt, apply],
   )
@@ -639,7 +604,6 @@ export function useImageZoom({
       onPointerUp: endDrag,
       onPointerCancel: endDrag,
       onClick,
-      onDoubleClick,
     },
   }
 }

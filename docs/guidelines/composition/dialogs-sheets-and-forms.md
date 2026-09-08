@@ -286,16 +286,25 @@ applying both would square every step. That is the same gate, and the same
 reason, the canvas found.
 
 **Once open, the image is operated rather than dismissed.** The wheel and a
-trackpad pinch zoom toward the pointer, a click zooms a step in at the point
-clicked, a double-click toggles between fit and a closer look, and a drag pans
-once past fit. That closer look is natural size where natural size is inside the
-scale range, and a step above fit where it is not: fit moves with the viewport
-and natural size does not, so on a wide screen the two cross and a stop fixed at
-natural size would be a gesture that does nothing. At the ceiling — three times
-natural size — one more click returns to fit,
-so no gesture is a dead end. The cursor is the viewer's running explanation of
-which of those is next: zoom-in at fit, grab and grabbing while panning,
-zoom-out at the top.
+trackpad pinch zoom toward the pointer, continuously and free of any stop; a
+drag pans once past fit; and **a click toggles between two stops and nothing
+in between** — fit, and `max(natural size, twice fit)`. A click from anywhere
+that is not fit returns to fit, so no gesture is a dead end.
+
+The stop above fit is stated that way because natural size is the meaningful
+place to stop — it is the scale a screenshot's text was captured at — while
+fit is whatever the viewport makes it, and on a wide display the two cross:
+880px of artwork fits at 2.18 there, and a stop fixed at natural size would
+sit below the scale the viewer opened at. Taking whichever is higher keeps the
+meaning where it can be had and keeps the gesture visible everywhere else.
+Three stops is what this replaced, and the pairing of a relative first stop
+with an absolute second one produced three separate defects before it was
+removed; a free gesture is still guarded at three times natural size, but that
+guard is not where a click goes. The cursor is the viewer's running
+explanation of which gesture is next — zoom-in at fit, grab and grabbing while
+panning, zoom-out at the stop and above it — and it is derived by asking the
+click where it would go rather than by restating the rule, which is how one of
+those three defects got in.
 
 **Names come from the site that renders the picture.** A lane name, a resource
 name, an illustration's own alt text — every adopter had one to hand except a
@@ -317,8 +326,8 @@ drifted into the empty margin still zooms; a gesture that dies over part of the
 surface reads as broken. The popup is `modal`, which both inerts and
 scroll-locks the page behind it for as long as the viewer is open.
 
-**Motion splits by input class.** Discrete steps — click-zoom, double-click, the
-snap back to fit — tween over `--motion-micro`. Continuous gestures do not,
+**Motion splits by input class.** Discrete steps — the click-zoom and the snap
+back to fit — tween over `--motion-micro`. Continuous gestures do not,
 because a tween on a gesture the hand is still making reads as lag. Reduced
 motion drops the tween in both cases. No duration was minted for any of this.
 
