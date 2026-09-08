@@ -700,8 +700,17 @@ export const RECONCILED_FILES = [
   // `semantic.css` differs over where the primary and ring dials live. All
   // three are Q42 — the brand seam, which turns out not to be confined to
   // `themes/*.css` the way that question assumed. `blueprint.css` is the
-  // genuine fourth: #323 still owns half of it, and it carries a
-  // `partner-action` lane role the template's schema has no value for.
+  // genuine fourth: #323 still owns half of it, and every lane rule here
+  // states five cell state properties where the template's states seven.
+  //
+  // The `partner-action` half of that reason is spent. This note used to say
+  // the file carried a lane role the template's schema had no value for; the
+  // template took the role at 1.12.1, so what remains is the property count,
+  // and that difference runs the other way. Nothing here reads
+  // `--background-blueprint-cell-origin` or `--ring-blueprint-cell-soft`, and
+  // two tests hold their absence — `palette.test.ts` requires exactly the five
+  // on every block, and `blueprintDomainTokens.test.ts` refuses two properties
+  // carrying one value. Whether the template keeps them is its own question.
   //
   // The four non-stylesheet files come with the sheets rather than after them.
   // `motion.ts` and `motion.test.ts` moved together because converging
