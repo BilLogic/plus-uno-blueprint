@@ -256,6 +256,7 @@ export const RECONCILED_FILES = [
   // dev catalog: the arrow-situation catalog page, its test, and the
   // snapshot the test pins — a dev-only surface, still shared byte-for-byte.
   'src/dev/ArrowSituationCatalogPage.tsx',
+  'src/dev/arrowSituationCatalog.ts',
   'src/dev/arrowSituationCatalog.test.tsx',
   'src/dev/__snapshots__/arrowSituationCatalog.test.tsx.snap',
 

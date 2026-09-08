@@ -416,11 +416,11 @@ test('every var() ramp exemption is still a file that needs one', () => {
  * theme, which is the one thing a reference held against a golden snapshot
  * must not do.
  *
- * `arrowSituationCatalog.ts` carries no colour at all. Its four matches are
- * `(#348)` and `(#349)` — issue references inside the `note:` prose of the
- * fixtures, in a string rather than a comment, so comment-stripping cannot
- * reach them and a three-digit hex pattern cannot tell them from `#fff`. The
- * page has two of the same, in JSX text.
+ * The fixture module beside it needed the same carve-out while its `note:`
+ * strings still cited issue numbers, which a three-digit hex pattern cannot
+ * tell from `#fff`. Those citations are gone — a comment names the decision
+ * rather than numbering it, because a number means different work in each
+ * repository — so the file carries no colour at all and holds no exemption.
  *
  * Every entry is asserted below to still match something, so a file that stops
  * needing its exemption loses it instead of leaving a dead carve-out behind
@@ -430,12 +430,7 @@ const HEX_EXEMPT_FILES: ReadonlyArray<{ file: string; because: string }> = [
   {
     file: 'dev/ArrowSituationCatalogPage.tsx',
     because:
-      'dev-only /proto/arrows instrument, dropped from production builds; its colours are calibration, not vocabulary — plus two (#NNN) issue references in prose',
-  },
-  {
-    file: 'dev/arrowSituationCatalog.ts',
-    because:
-      'no colours at all — four (#NNN) issue references inside fixture note: strings, which the hex pattern cannot distinguish from #fff',
+      'dev-only /proto/arrows instrument, dropped from production builds; its colours are calibration, not vocabulary',
   },
 ]
 
