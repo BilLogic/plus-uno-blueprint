@@ -32,6 +32,7 @@ claims:
   - src/components/blueprint/StoryboardWalkthroughShell.tsx
   - src/components/blueprint/TouchpointCellFace.tsx
   - src/components/editor/AnnotationCaptureMenu.tsx
+  - src/components/editor/BoardAddressSync.tsx
   - src/components/editor/CanvasAnnotationLayer.tsx
   - src/components/editor/CanvasAnnotationToolbar.tsx
   - src/components/editor/CanvasCellContextMenu.tsx
@@ -119,6 +120,28 @@ owner**: the ✕, Escape, a toggling click, and the agent all go through the
 same `closePanel`; nothing else holds an "is it open" fact. Any new
 affordance that opens or closes the panel calls the owner — a second source
 of truth here is the bug class this rule killed.
+
+## The board's address
+
+A board is a place, and the address bar says which one. Phase, scenario, path
+selection and view mode ride in the query string beside the service slug in the
+path, so a board can be sent to someone, survives a reload, and can be stepped
+through with back and forward.
+
+- **Two classes of state, two history calls.** The board **pushes** — back
+  steps to the board you came from. The open cell panel **replaces** — a panel
+  opens and closes many times while one board is read, and pushing those would
+  fill the history with panel opens. The address stays complete either way;
+  only the entry is withheld.
+- **Absent means "as this board says".** No `view` is the layout the scenario
+  remembers, no `paths` is its happy-path default. A param appears only where
+  the reader diverged, so a link written before anyone chose anything does not
+  overrule an editor who later re-lays the board out.
+- **A name that no longer resolves degrades to the nearest valid board** — a
+  dead scenario to its phase, a dead phase to the overview, a renamed path to
+  the ones that do resolve. Never an error page, never a blank one.
+
+`BoardAddressSync` is the seam and `lib/boardAddress.ts` is the vocabulary.
 
 ## Camera
 
