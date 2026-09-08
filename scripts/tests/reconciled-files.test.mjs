@@ -384,6 +384,18 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/hooks/useLaneSpec.ts',
     'src/hooks/useCellDeepLink.ts',
     'src/hooks/useStakeholders.ts',
+    'src/components/blueprint/BlueprintColumnHandles.tsx',
+    'src/components/blueprint/DefinitionCard.tsx',
+    'src/components/blueprint/EntityDefinitionPopover.tsx',
+    'src/components/blueprint/StakeholderSelect.tsx',
+    'src/components/editor/SliceHeaderBand.tsx',
+    'src/contexts/cellPickContext.ts',
+    'src/lib/blueprintCellStyle.ts',
+    'src/lib/canvasCellQuery.ts',
+    'src/lib/filterToolbarButton.ts',
+    'src/lib/openCellStore.ts',
+    'src/lib/serviceRoute.ts',
+    'src/lib/touchpointRole.ts',
   ])
 })
 

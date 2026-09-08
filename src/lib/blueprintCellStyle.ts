@@ -3,17 +3,18 @@ import { cn } from '@/lib/utils'
 /*
  * Blueprint colour vocabulary — two sets, deliberately disjoint.
  *
- * A LANE ROLE says what a swim lane *is*: evidence, actor, frontstage tech. Not
+ * A LANE ROLE says what a swim lane *is*: evidence, actor, frontstage touchpoint. Not
  * what colour it is. Naming lanes after hues is what made this hard to reason
  * about — `chartreuse` told you nothing about a blueprint, and stopped even
  * being true once fills became scale steps. A role survives a repalette.
  *
  * A TOUCHPOINT TONE is the colour someone picked for a tool. That one really is
- * a colour choice — "Zoom is blue" is the blueprint owner's decision — so
+ * a colour choice — "our scheduling tool is blue" is the blueprint owner's
+ * decision — so
  * naming it after the hue is honest here where it was not for lanes.
  *
- * The two sets share no family, so a touchpoint can never be mistaken for the lane it
- * sits in, whichever tone is picked.
+ * The two sets share no family, so a touchpoint can never be mistaken for the
+ * lane it sits in, whichever tone is picked.
  *
  * Which family each maps to lives in blueprint.css, keyed on
  * `data-blueprint-lane` / `data-blueprint-tone`. Nothing here assigns a colour.
@@ -23,7 +24,7 @@ export type BlueprintLaneRole =
   | 'storyboard'
   /** Physical evidence: what the customer can see or hold. */
   | 'evidence'
-  /** Customer and tutor actions — the people the service is for. */
+  /** Customer and staff actions — the people the service runs through. */
   | 'actor'
   /** Touchpoints the customer meets directly. */
   | 'frontstage-touchpoint'
@@ -38,6 +39,14 @@ export type BlueprintLaneRole =
   /** A party outside the service, acting where the customer can see them. */
   | 'partner-action'
 
+/**
+ * The same roles as a list, for the one question the union cannot answer: the
+ * union constrains what `blueprintLaneAttrs` may write into the attribute, and
+ * says nothing about which `[data-blueprint-lane]` rules blueprint.css
+ * declares. `palette.test.ts` compares the two, so a rule missing from the
+ * stylesheet — or a selector renamed out of the vocabulary — fails there
+ * rather than rendering an unstyled row.
+ */
 export const BLUEPRINT_LANE_ROLES = [
   'storyboard',
   'evidence',

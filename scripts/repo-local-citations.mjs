@@ -51,7 +51,20 @@ const PATTERNS = [
   // A migration filename. The two repositories do not share a migration
   // series, so one that resolves here resolves to nothing — or to something
   // else — there.
-  ['migration', /\b\d{14}_[a-z0-9_]+/g],
+  // A migration, by filename or by its bare timestamp. The bare form was
+  // missed at first and found the hard way: `touchpointMutations.ts` cites
+  // `21000113000000` in backticks with no `_name` after it, and a pattern that
+  // required the suffix walked straight past it.
+  //
+  // The year prefix and the digit/decimal-point guards are both load-bearing.
+  // A bare `\d{14}` matches the tail of an OKLCH literal — `0.47058823529411`
+  // in `global.css` produced four confident findings on a stylesheet that
+  // cites nothing. Both series begin `20` or `21`, and neither a digit nor a
+  // decimal point may sit on either side.
+  // The trailing guard applies only to the BARE form — put it after an
+  // optional `_name` and it backtracks the filename by a character, since
+  // `…_derived_layer` is followed by the `.` of `.sql`.
+  ['migration', /(?<![\d.])(?:20|21)\d{12}(?:_[a-z0-9_]+|(?![\d.]))/g],
   // Any other `docs/` path. Both repositories have a `docs/` tree and they
   // agree on almost nothing inside it.
   ['docs-path', /\bdocs\/[a-z0-9_\-.]+(?:\/[a-z0-9_\-.]+)*/g],

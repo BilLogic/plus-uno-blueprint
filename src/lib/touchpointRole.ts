@@ -41,8 +41,8 @@ export type TouchpointRoleValue = TouchpointRole | null
  * The badge's words.
  *
  * "at this step" and not "Core", because the bare word is the misreading this
- * column exists to avoid: a reader who sees `Core` on a PLUS App placement
- * reads "PLUS App is a core tool", which is a claim about the catalog. The
+ * column exists to avoid: a reader who sees `Core` on an intake-portal placement
+ * reads "the portal is a core tool", which is a claim about the catalog. The
  * phrase puts the judgement back where the column put it.
  */
 export const TOUCHPOINT_ROLE_LABEL: Record<TouchpointRole, string> =
