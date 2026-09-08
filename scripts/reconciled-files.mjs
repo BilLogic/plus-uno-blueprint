@@ -1193,4 +1193,18 @@ export const RECONCILED_FILES = [
   // the gate is what guards it now.
   'src/components/blueprint/BlueprintArrowMarkerDefs.tsx',
   'src/components/editor/CreateVersionDialog.tsx',
+
+  // ── The rule that would have caught the duplicate, once it stopped naming
+  //    an address ──
+  //
+  // The template has always held that roster to one entry per member. The file
+  // could not be adopted, because its header cited the migration that folded
+  // the retired kinds — a filename in one repository and nothing in the next,
+  // which is exactly the second promise this list makes. It now states the
+  // CHECK constraint and that `variant` is a fold destination, and hands the
+  // history to the rename map, which is read against the migrations that ran
+  // HERE. That matters more than it sounds: `unhappy` became `exception` in
+  // this database and `variant` in the template's, so WHICH spelling went
+  // where is not a fact these two files can share.
+  'src/lib/pathKindContract.test.ts',
 ]
