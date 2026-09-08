@@ -218,6 +218,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/editor/SegmentedControl.tsx',
     'src/components/editor/SlideNav.tsx',
     'src/dev/ArrowSituationCatalogPage.tsx',
+    'src/dev/arrowSituationCatalog.ts',
     'src/dev/arrowSituationCatalog.test.tsx',
     'src/dev/__snapshots__/arrowSituationCatalog.test.tsx.snap',
     'src/hooks/usePathSelection.ts',
