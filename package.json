@@ -45,6 +45,7 @@
     "check:proof-footprint": "node scripts/check-proof-footprint.mjs",
     "check:new-table-grants": "node scripts/check-new-table-grants.mjs",
     "check:migration-ledger:live": "node scripts/check-migration-ledger.mjs",
+    "check:database-types:live": "node scripts/check-database-types.mjs",
     "apply:pending": "node scripts/apply-pending.mjs",
     "replay:migrations": "node scripts/replay-migrations.mjs",
     "check:seed-load": "node scripts/check-seed-loads.mjs",
