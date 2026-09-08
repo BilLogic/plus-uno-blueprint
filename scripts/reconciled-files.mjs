@@ -88,11 +88,14 @@ export const RECONCILED_FILES = [
   // only these two pure files are held byte-identical.
   'src/lib/blueprintArrowGeometry.ts',
   'src/lib/arrowAnchorSlots.ts',
-  // NOT enrolled yet, though it came down with the same-column fix and is
-  // byte-identical today: `blueprintArrowGeometry.sameColumnDetour.test.ts`
-  // opens by citing a bare issue number, which means a different ticket in
-  // each repository — the gate's second promise refuses it, correctly.
-  // Neutralising that citation upstream is asb#257; enrol at the bump after.
+  // NOT enrolled: `blueprintArrowGeometry.sameColumnDetour.test.ts`. It was
+  // held back by a bare issue number in its opening line, which means a
+  // different ticket in each repository. That is fixed upstream now, and this
+  // copy still carries `#450` — but the citation is no longer the thing
+  // keeping the file off: the template's copy has since grown cases this one
+  // does not have, so the two differ by well over a hundred lines of code.
+  // What would take it off this note is a convergence ticket, not a comment
+  // edit.
 
   // The panel writers (#357): asb ported uno's entity panel editors wholesale,
   // so the code a panel saves through is one implementation living in two
@@ -1054,29 +1057,21 @@ export const RECONCILED_FILES = [
   'src/lib/serviceRoute.ts',
   'src/lib/touchpointRole.ts',
 
-  // ── asb 1.12.7: fourteen files the citation sweep unblocked ──
+  // ── A citation blocks a file, from either side ──
   //
-  // These were code-identical with the template all along and blocked on
-  // prose alone — every one of them carried an issue number, an ADR number, a
-  // migration filename or a plan slug on one side or the other, so enrolling
-  // them would have enrolled a citation the check forbids. The sweep that
-  // cleared the template's copies is what unblocked them; the deployment's
-  // copies take the template's wording under the same tie-break as the batch
-  // above.
+  // These were code-identical with the template all along and blocked on prose
+  // alone: each carried an issue number, an ADR number, a migration filename
+  // or a plan slug on one side or the other, and enrolling one would have
+  // enrolled a citation the check forbids. Clearing the citation is what takes
+  // a file off this blocked list — and it can be cleared on either side, which
+  // is why some of these waited on the template rather than on anything here.
   //
-  // `canvasHeaderStyle.ts` is the one worth reading. Its comment told the ⓘ
-  // mark's history as a sequence of three ticket numbers, which named nothing
-  // to a reader in the other repository; it now tells the same three steps by
-  // what each one did — always-on, then removed as clutter, then returned for
-  // the reader who cannot hover. The history survived the citations.
-  //
-  // `blueprintStoryboardPlaceholder.ts` was a candidate and is again NOT
-  // taken, for the reason the batch above gives: this repo's copy carries the
-  // warning that the asset filename is a VALUE in applied migrations, and the
-  // template's one-liner does not. That sentence goes up before the file comes
-  // down. `stakeholderMutations.ts` and `touchpointMutations.ts` are blocked
-  // the other way — the template's own copies still cite an ADR number and two
-  // migration filenames, so there is nothing clean to converge on yet.
+  // `canvasHeaderStyle.ts` is the one worth reading, because it shows what
+  // clearing a citation costs and does not cost. Its comment told the ⓘ mark's
+  // history as a sequence of three ticket numbers, which named nothing to a
+  // reader in the other repository; it now tells the same three steps by what
+  // each one did — always-on, then removed as clutter, then returned for the
+  // reader who cannot hover. The history survived the citations.
   'scripts/always-loaded.mjs',
   'src/components/blueprint/ServicePanel.test.tsx',
   'src/components/editor/SliceView.tsx',
@@ -1092,7 +1087,7 @@ export const RECONCILED_FILES = [
   'src/lib/resourcePresentation.ts',
   'src/lib/serviceSlug.ts',
 
-  // ── asb 1.12.8: five fixtures, the last three prose holdouts, and a guard ──
+  // ── A fixture's noun is arbitrary; an identity file's noun is the answer ──
   //
   // The FIXTURES named the deployment where the template's copies name nobody:
   // `PLUS App`, `Warm-Up` and `warm-up` as a resource name, a slide title and a
@@ -1108,14 +1103,18 @@ export const RECONCILED_FILES = [
   // identity file's noun is the answer, and a scan for the noun cannot tell
   // them apart.
   //
-  // The last three were the tie-break's own exceptions and are exceptions no
-  // longer. `blueprintStoryboardPlaceholder.ts` was held back because this
-  // repo's copy carried the warning that the asset filename is a VALUE in
-  // applied migrations and the template's did not — that sentence went up
-  // first, and the file comes down now that the template says it too.
-  // `stakeholderMutations.ts` and `touchpointMutations.ts` were held back from
-  // the other side: the template's copies still cited an ADR number and two
-  // migration filenames. `--enrollable` now reports nothing at all.
+  // Three of these were blocked prose holdouts and are not blocked any more,
+  // which is the citation rule running in both directions.
+  // `blueprintStoryboardPlaceholder.ts` was held back because this repo's copy
+  // carried the warning that the asset filename is a VALUE in applied
+  // migrations and the template's did not: the sentence went upstream, and the
+  // file followed. `stakeholderMutations.ts` and `touchpointMutations.ts` were
+  // held back from the other side, by an ADR number and two migration
+  // filenames in the template's own copies.
+  //
+  // Neither is an exception any more, so nothing here should read as though
+  // one is. A note saying a file is held back is worth keeping only while it
+  // would still stop somebody enrolling it.
   //
   // `cssCascadeLayerContract.test.ts` is not a convergence — this repo did not
   // have it. A browser drops an unknown at-rule together with its whole block,
@@ -1133,7 +1132,7 @@ export const RECONCILED_FILES = [
   'src/lib/touchpointMutations.ts',
   'src/lib/cssCascadeLayerContract.test.ts',
 
-  // ── asb 1.12.9: what the errorMessage sweep left byte-identical ──
+  // ── Where two copies differ only in wording, the template's wording wins ──
   //
   // The template's copies of seventeen files stopped inlining
   // `x instanceof Error ? x.message : String(x)` and started calling the
