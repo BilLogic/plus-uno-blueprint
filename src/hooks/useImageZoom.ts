@@ -10,12 +10,14 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from 'react'
 import {
+  canPanImage,
   clickZoomImage,
   fitImageZoom,
   isImageClick,
   panImageBy,
   resolveImageZoomCursor,
   toggleImageZoom,
+  zoomImageByFactor,
   zoomImageByGesture,
   zoomImageByWheel,
   type ImagePoint,
@@ -23,6 +25,7 @@ import {
   type ImageZoomCursor,
   type ImageZoomViewport,
 } from '@/lib/imageZoomReducer'
+import { shouldApplyGestureZoom } from '@/lib/canvasGestureZoom'
 import { prefersReducedMotion } from '@/lib/motion'
 
 /**
@@ -49,6 +52,33 @@ import { prefersReducedMotion } from '@/lib/motion'
 const UNMEASURED: ImageSize = { width: 0, height: 0 }
 
 /**
+ * How far a press must travel sideways before it is a swipe to a sibling.
+ *
+ * Comfortably clear of `IMAGE_CLICK_DRAG_THRESHOLD_PX`, which is four: the
+ * two thresholds answer different questions on the same gesture, and a
+ * number close to the click threshold would turn every slightly-dragged
+ * press at fit into a step. A layout number, so it is stated here in
+ * TypeScript rather than hidden in a media query (ADR 0002).
+ */
+const IMAGE_SWIPE_STEP_THRESHOLD_PX = 48
+
+/**
+ * The spread between two contacts, and the point half way between them.
+ *
+ * Module scope because it closes over nothing: defined in the component it
+ * would be rebuilt every render and captured by callbacks that do not list
+ * it, which reads as a stale closure even where it cannot be one.
+ */
+function pinchOf(points: ImagePoint[]) {
+  const [a, b] = points
+  if (!a || !b) return null
+  return {
+    distance: Math.hypot(b.x - a.x, b.y - a.y),
+    centre: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+  }
+}
+
+/**
  * WebKit's pinch, which no `lib.dom` type describes.
  *
  * Safari alone ships `gesturestart`/`gesturechange`/`gestureend`, and on a
@@ -70,6 +100,15 @@ export type UseImageZoomResult = {
   imageRef: (node: HTMLImageElement | null) => void
   /** Re-reads both boxes; the image's `load` is the event that needs it. */
   measure: () => void
+  /**
+   * Returns the view to fit whether or not either box changed size.
+   *
+   * `measure` deliberately does nothing when both boxes measure the same,
+   * and a step from one sibling to the next usually IS the same: a row of
+   * lane frames is a row of screenshots at one size. Stepping has to reset
+   * the scale and the pan regardless, so it has its own way in.
+   */
+  reset: () => void
   /** Which CSS cursor this state implies, straight from the reducer. */
   cursor: ImageZoomCursor
   /**
@@ -101,6 +140,7 @@ type DragState = {
 export function useImageZoom({
   naturalWidth,
   naturalHeight,
+  onSwipeStep,
 }: {
   /**
    * The image's authored size, when the caller knows it.
@@ -116,6 +156,19 @@ export function useImageZoom({
    */
   naturalWidth?: number
   naturalHeight?: number
+  /**
+   * A horizontal swipe, as a step through whatever the caller's siblings
+   * are: `1` forward, `-1` back. This hook has no idea a group exists — it
+   * reports the gesture and `ZoomableImage` decides what it means.
+   *
+   * Only ever called AT FIT, so the swipe cannot steal the pan gesture from
+   * a zoomed image. `canPanImage` is the gate, and it is exactly the right
+   * one rather than an approximation of the scale: pan limits are zero on
+   * both axes precisely when the image overflows neither, which is true at
+   * or below fit and false at every scale above it. So "there is no pan to
+   * steal here" and "this is fit" are the same sentence.
+   */
+  onSwipeStep?: (step: 1 | -1) => void
 } = {}): UseImageZoomResult {
   const [popupNode, setPopupNode] = useState<HTMLElement | null>(null)
   const [viewportNode, setViewportNode] = useState<HTMLElement | null>(null)
@@ -144,6 +197,32 @@ export function useImageZoom({
    * the first half of a double click. See `onDoubleClick`.
    */
   const beforeClickRef = useRef<ImageZoomViewport | null>(null)
+  /**
+   * Every touch contact currently down on the image, by pointer id.
+   *
+   * The canvas keeps the same map for the same reason: two fingers are a
+   * pinch, and a pinch is not something the single-pointer drag path above
+   * can express. It is also the gate on Safari's `gesture*` events — see the
+   * gesture effect, which now has a second pinch mechanism to collide with
+   * where it once had none.
+   */
+  const touchPoints = useRef(new Map<number, ImagePoint>())
+  /** The finger spread this pinch was last measured at, in CSS pixels. */
+  const pinchDistanceRef = useRef<number | null>(null)
+  /**
+   * Whether the press in flight came from a finger.
+   *
+   * A tap must not zoom: on touch, tap-to-zoom fights the tap-to-dismiss
+   * habit every other fullscreen image on the device has taught. `click` and
+   * `dblclick` are `MouseEvent`s and carry no `pointerType` of their own, so
+   * the answer is recorded on the way down and read on the way out.
+   */
+  const touchPressRef = useRef(false)
+  /** Held in a ref so an inline callback from the adopter is not a dependency. */
+  const swipeRef = useRef(onSwipeStep)
+  useEffect(() => {
+    swipeRef.current = onSwipeStep
+  }, [onSwipeStep])
 
   const apply = useCallback(
     (next: (current: ImageZoomViewport) => ImageZoomViewport, tween: boolean) => {
@@ -170,35 +249,48 @@ export function useImageZoom({
    * the new box is more honest than carrying a scale that was chosen for the
    * old one. It is also what resets the viewer between openings: on close the
    * nodes go, the boxes measure zero, and the next opening starts at fit.
+   *
+   * `force` is what a sibling step needs. Two frames of one step are usually
+   * the same size, so a step would measure identical boxes, take the early
+   * return, and hand the reader the next picture at the scale and pan they
+   * had built up on the last one — which is precisely what stepping is
+   * specified NOT to do.
    */
-  const measure = useCallback(() => {
-    const viewport: ImageSize = viewportNode
-      ? { width: viewportNode.clientWidth, height: viewportNode.clientHeight }
-      : UNMEASURED
-    const authored =
-      naturalWidth && naturalHeight
-        ? { width: naturalWidth, height: naturalHeight }
-        : null
-    const measured = imageNode
-      ? { width: imageNode.naturalWidth, height: imageNode.naturalHeight }
-      : UNMEASURED
-    // Only while the popup is mounted: on close the nodes go, and an
-    // authored size that outlived them would keep the viewer measured.
-    const natural: ImageSize = imageNode ? (authored ?? measured) : UNMEASURED
-    const current = stateRef.current
-    if (
-      current.viewport.width === viewport.width &&
-      current.viewport.height === viewport.height &&
-      current.natural.width === natural.width &&
-      current.natural.height === natural.height
-    ) {
-      return
-    }
-    beforeClickRef.current = null
-    stateRef.current = fitImageZoom(viewport, natural)
-    setAnimated(false)
-    setState(stateRef.current)
-  }, [imageNode, naturalHeight, naturalWidth, viewportNode])
+  const fitToBoxes = useCallback(
+    (force: boolean) => {
+      const viewport: ImageSize = viewportNode
+        ? { width: viewportNode.clientWidth, height: viewportNode.clientHeight }
+        : UNMEASURED
+      const authored =
+        naturalWidth && naturalHeight
+          ? { width: naturalWidth, height: naturalHeight }
+          : null
+      const measured = imageNode
+        ? { width: imageNode.naturalWidth, height: imageNode.naturalHeight }
+        : UNMEASURED
+      // Only while the popup is mounted: on close the nodes go, and an
+      // authored size that outlived them would keep the viewer measured.
+      const natural: ImageSize = imageNode ? (authored ?? measured) : UNMEASURED
+      const current = stateRef.current
+      if (
+        !force &&
+        current.viewport.width === viewport.width &&
+        current.viewport.height === viewport.height &&
+        current.natural.width === natural.width &&
+        current.natural.height === natural.height
+      ) {
+        return
+      }
+      beforeClickRef.current = null
+      stateRef.current = fitImageZoom(viewport, natural)
+      setAnimated(false)
+      setState(stateRef.current)
+    },
+    [imageNode, naturalHeight, naturalWidth, viewportNode],
+  )
+
+  const measure = useCallback(() => fitToBoxes(false), [fitToBoxes])
+  const reset = useCallback(() => fitToBoxes(true), [fitToBoxes])
 
   /**
    * Measured in a layout effect so the first painted frame is already fitted,
@@ -258,10 +350,16 @@ export function useImageZoom({
   /**
    * Safari's pinch — prevented on the page, applied to the picture.
    *
-   * The canvas gates this on its touch-pointer count, because on iOS its own
-   * pointer map pinches too and scale would land twice. This viewer has no
-   * second pinch mechanism to collide with, so there is nothing to gate: the
-   * gesture is always ours.
+   * Gated on the touch-pointer count, exactly as the canvas gates it, and
+   * for the reason the canvas discovered. On macOS a trackpad pinch produces
+   * gesture events and nothing else, so without this handler there is no
+   * pinch at all; on iOS the same pinch is ALSO a pair of touch pointers,
+   * and the map below zooms from them — applying both would square every
+   * step. `shouldApplyGestureZoom` is the one place that judgement lives.
+   *
+   * This gate is new in this slice. Slice two's version of this comment said
+   * there was nothing to gate, and it was right: the viewer had no second
+   * pinch mechanism until the touch path below was added for the phone.
    *
    * Bound on the window in capture and filtered by containment, as the canvas
    * binds it — `gesture*` reach the window whatever they are dispatched on.
@@ -279,6 +377,7 @@ export function useImageZoom({
     const onGestureChange = (event: Event) => {
       if (!inPopup(event)) return
       event.preventDefault()
+      if (!shouldApplyGestureZoom(touchPoints.current.size)) return
       const gesture = event as WebKitGestureEvent
       const nextScale = gesture.scale ?? previousScale
       const box = popupNode.getBoundingClientRect()
@@ -318,6 +417,21 @@ export function useImageZoom({
     (event: ReactPointerEvent<HTMLImageElement>) => {
       if (event.button !== 0) return
       const point = { x: event.clientX, y: event.clientY }
+      touchPressRef.current = event.pointerType === 'touch'
+      if (event.pointerType === 'touch') {
+        touchPoints.current.set(event.pointerId, point)
+        if (touchPoints.current.size >= 2) {
+          // A second finger: whatever the first one was doing, this is a
+          // pinch now. The drag is abandoned rather than finished, so the
+          // pinch does not also pan by the midpoint's drift.
+          const pinch = pinchOf([...touchPoints.current.values()])
+          pinchDistanceRef.current = pinch?.distance ?? null
+          dragRef.current = null
+          draggedRef.current = true
+          setDragging(false)
+          return
+        }
+      }
       dragRef.current = {
         pointerId: event.pointerId,
         start: point,
@@ -342,6 +456,31 @@ export function useImageZoom({
    */
   const onPointerMove = useCallback(
     (event: ReactPointerEvent<HTMLImageElement>) => {
+      if (
+        event.pointerType === 'touch' &&
+        touchPoints.current.has(event.pointerId)
+      ) {
+        touchPoints.current.set(event.pointerId, {
+          x: event.clientX,
+          y: event.clientY,
+        })
+        if (touchPoints.current.size >= 2) {
+          const pinch = pinchOf([...touchPoints.current.values()])
+          const from = pinchDistanceRef.current
+          if (pinch && from != null && from > 0 && pinch.distance > 0) {
+            pinchDistanceRef.current = pinch.distance
+            const anchor = anchorAt(pinch.centre.x, pinch.centre.y)
+            beforeClickRef.current = null
+            // Continuous, so untweened — the same rule the wheel follows.
+            apply(
+              (current) =>
+                zoomImageByFactor(current, pinch.distance / from, anchor),
+              false,
+            )
+          }
+          return
+        }
+      }
       const drag = dragRef.current
       if (!drag || drag.pointerId !== event.pointerId) return
       const point = { x: event.clientX, y: event.clientY }
@@ -355,16 +494,45 @@ export function useImageZoom({
       beforeClickRef.current = null
       apply((current) => panImageBy(current, delta), false)
     },
-    [apply],
+    [anchorAt, apply],
   )
 
+  /**
+   * The release, which is also where a swipe is finally recognisable.
+   *
+   * It cannot be decided on the way in: a press that travels sideways is a
+   * pan on a zoomed image and a step on a fitted one, and the only thing
+   * that separates a step from a wobble is how far it got by the end.
+   */
   const endDrag = useCallback(
     (event: ReactPointerEvent<HTMLImageElement>) => {
+      if (event.pointerType === 'touch') {
+        touchPoints.current.delete(event.pointerId)
+        if (touchPoints.current.size < 2) pinchDistanceRef.current = null
+      }
       const drag = dragRef.current
       if (!drag || drag.pointerId !== event.pointerId) return
       dragRef.current = null
       draggedRef.current = drag.panning
       setDragging(false)
+
+      const travel = {
+        x: event.clientX - drag.start.x,
+        y: event.clientY - drag.start.y,
+      }
+      if (
+        swipeRef.current &&
+        // At fit, and only at fit: above it this same press was the pan.
+        !canPanImage(stateRef.current) &&
+        Math.abs(travel.x) >= IMAGE_SWIPE_STEP_THRESHOLD_PX &&
+        // Sideways, not merely far. A diagonal flick that travelled further
+        // down than across is not a reader asking for the next sibling.
+        Math.abs(travel.x) > Math.abs(travel.y)
+      ) {
+        // Dragging left brings the next sibling in from the right, the
+        // direction every carousel on the device already means by it.
+        swipeRef.current(travel.x < 0 ? 1 : -1)
+      }
       // `releasePointerCapture` throws `NotFoundError` for an id the element
       // no longer holds, and mid-drag that is ordinary rather than a bug: a
       // `pointercancel` from an OS edge swipe releases capture on the way out,
@@ -391,6 +559,12 @@ export function useImageZoom({
    * FIRST click is not stepped over, because nothing yet says a second is
    * coming; a timer would be the only way to know, and this viewer refuses
    * timers for the same reason the reducer does.
+   *
+   * A TAP does not zoom. Every fullscreen image on a phone has taught the
+   * reader that a tap dismisses, and a viewer that zoomed instead would
+   * spend that habit on the one gesture it cannot afford to surprise anyone
+   * with. Pinch, drag and swipe are the touch gesture set; the tap is left
+   * meaning nothing here rather than made to mean two things.
    */
   const onClick = useCallback(
     (event: ReactMouseEvent<HTMLImageElement>) => {
@@ -398,6 +572,7 @@ export function useImageZoom({
         draggedRef.current = false
         return
       }
+      if (touchPressRef.current) return
       if (event.detail >= 2) return
       const anchor = anchorAt(event.clientX, event.clientY)
       beforeClickRef.current = stateRef.current
@@ -422,6 +597,8 @@ export function useImageZoom({
         draggedRef.current = false
         return
       }
+      // A double TAP is two taps, and neither of them zooms.
+      if (touchPressRef.current) return
       const anchor = anchorAt(event.clientX, event.clientY)
       const base = beforeClickRef.current ?? stateRef.current
       beforeClickRef.current = null
@@ -452,6 +629,7 @@ export function useImageZoom({
     viewportRef: setViewportNode,
     imageRef: setImageNode,
     measure,
+    reset,
     cursor: resolveImageZoomCursor(state, { dragging }),
     animated,
     imageStyle,
