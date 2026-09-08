@@ -206,7 +206,21 @@ export function ZoomableImage({
         {children}
       </DialogPrimitive.Trigger>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/70 transition-opacity duration-(--motion-fade) data-ending-style:opacity-0 data-starting-style:opacity-0" />
+        {/*
+          `forceRender` because Base UI suppresses a NESTED dialog's backdrop,
+          and whether this viewer is nested is decided by whatever opened it:
+          from the cover page it is the only dialog on the stack, from a cell
+          detail panel it is the second, and the component cannot see the
+          difference. Suppression is the right default for a stack of dialogs
+          that each darken the last — this is not that. The scrim is what says
+          the picture is now the thing being operated, so it is wanted most in
+          the nested case, over a panel that would otherwise stay fully lit.
+        */}
+        <DialogPrimitive.Backdrop
+          forceRender
+          data-image-zoom-scrim
+          className="fixed inset-0 z-50 bg-black/70 transition-opacity duration-(--motion-fade) data-ending-style:opacity-0 data-starting-style:opacity-0"
+        />
         {/*
           Full-bleed rather than inset, so the wheel reaches every pixel a
           reader might have their pointer over. The visual margin is the
