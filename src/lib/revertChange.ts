@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { toAuthoringError } from '@/lib/authoringErrors'
-import type { ChangeEntry } from '@/lib/authoringSession'
+import type { SessionEntry } from '@/lib/authoringSession'
 import {
   restoreCellTouchpoints,
   updateCellContent,
@@ -100,10 +100,53 @@ function optionalStringArg(args: Record<string, unknown>, key: string): string {
  * The caller removes the entry (`forgetChange`) and re-reads the grid —
  * every revert is structural or content-bearing, and pessimistic re-read is
  * the house rule for both.
+ *
+ * ── WHERE THE INPUT MAY COME FROM ─────────────────────────────────────────
+ *
+ * A `SessionEntry`, and nothing else. That type is minted only by
+ * `recordChange`, so the entry handed in here was assembled by the build that
+ * is now reading it — never fetched, never deserialised, never older than the
+ * code applying it. `public.authoring_changes` keeps the same information
+ * durably and is not a source for this function: a row out of it is a
+ * `ChangeEntry`-shaped object at best and will not type-check as a
+ * `SessionEntry`. `revertBoundaryContract.test.ts` is the rest of that wall —
+ * it refuses a cast that would mint the brand anywhere but the session module,
+ * and refuses a signature here that widens the parameter back out.
+ *
+ * ── WHY THE CAPTURED PAYLOADS ARE READ THROUGH CASTS ──────────────────────
+ *
+ * `RevertSpec.args` is a `Record<string, unknown>`, so every case below has to
+ * say what it expects. Ten of them do it with a bare `as`, and the boundary
+ * above is the whole justification: each captured `update` was written into
+ * the ledger by a mutation module in THIS build, out of a parameter already
+ * typed as the thing being cast to, so the cast restates a fact the compiler
+ * verified at the other end of the same session. Each site names its capture
+ * point so the claim can be checked rather than taken.
+ *
+ * It is worth being exact about what the boundary is protecting against,
+ * because it is not hypothetical. The ledger holds an `update_cell_content`
+ * revert, written 2026-09-02, whose args are `{cell_id, content,
+ * removed_placements}` with `content` a plain string; this build records
+ * `{cell_id, update, removed_placements}` with `update` nested. Replaying that
+ * row would read `revert.args.update` as `undefined`, cast it to a
+ * `CellContentUpdate`, and throw inside `updateCellContent` on `.content`.
+ *
+ * And it is not an older version of this file's counterpart. The nested shape
+ * has been recorded since 2026-08-04 and the flat one has never been recorded
+ * at all; `record_authoring_change` accepts `args` and `revert` as free jsonb,
+ * so the row came from a caller that is not this app and that no version
+ * column would have made legible. Which is why the input is walled off rather
+ * than parsed: a parse would still have to decide what an unrecognised shape
+ * means, and the set of shapes is open by construction.
+ *
+ * Two of the ten do NOT rest on that argument alone, and are marked where they
+ * sit: `update_evidence` and `update_finding` capture their payload from a
+ * fresh read of the row they are about to write, so the object's *shape* is
+ * this build's and its *values* are the database's.
  */
 export async function executeRevert(
   client: Client,
-  entry: ChangeEntry,
+  entry: SessionEntry,
 ): Promise<void> {
   const revert = entry.revert
   if (!revert) {
@@ -113,6 +156,11 @@ export async function executeRevert(
   switch (revert.fn) {
     case 'update_cell_content': {
       const cellId = stringArg(revert.args, 'cell_id')
+      // Captured by `updateCellContent`'s `previous: CellContentUpdate`, and
+      // only when `previous.content` was non-empty — so under the boundary
+      // this is that parameter, not a maybe. It is also the one operation the
+      // ledger holds a foreign shape for; see the header for that row and what
+      // reading it would do here.
       const update = revert.args.update as CellContentUpdate
       await updateCellContent(client, cellId, update, undefined, {
         record: false,
@@ -155,6 +203,7 @@ export async function executeRevert(
     }
     case 'update_cell_spec': {
       const cellId = stringArg(revert.args, 'cell_id')
+      // Captured by `updateCellSpec`'s `previous: CellSpecUpdate`.
       const update = revert.args.update as CellSpecUpdate
       await updateCellSpec(client, cellId, update, undefined, { record: false })
       return
@@ -168,6 +217,7 @@ export async function executeRevert(
       if (!Array.isArray(laneIds) || laneIds.length === 0) {
         throw new Error("This change's revert is missing its lane ids.")
       }
+      // Captured by `updateLaneSpec`'s `previous: LaneSpecUpdate`.
       const update = revert.args.update as LaneSpecUpdate
       await updateLaneSpec(client, laneIds as string[], update, undefined, {
         record: false,
@@ -177,6 +227,7 @@ export async function executeRevert(
     case 'update_phase_spec': {
       // Self-inverse, like update_cell_spec.
       const phaseId = stringArg(revert.args, 'phase_id')
+      // Captured by `updatePhaseSpec`'s `previous: PhaseSpecUpdate`.
       const update = revert.args.update as PhaseSpecUpdate
       await updatePhaseSpec(client, phaseId, update, undefined, {
         record: false,
@@ -198,6 +249,9 @@ export async function executeRevert(
     }
     case 'update_stakeholder': {
       const stakeholderId = stringArg(revert.args, 'stakeholder_id')
+      // Captured by `updateStakeholder`'s `previous: StakeholderInput` — the
+      // same type its `input` parameter takes, which is what makes the write
+      // self-inverse.
       const update = revert.args.update as StakeholderInput
       await updateStakeholder(client, stakeholderId, update, undefined, {
         record: false,
@@ -214,6 +268,7 @@ export async function executeRevert(
     }
     case 'update_path_spec': {
       const pathId = stringArg(revert.args, 'path_id')
+      // Captured by `updatePathSpec`'s `previous: PathSpecUpdate`.
       const update = revert.args.update as PathSpecUpdate
       await updatePathSpec(client, pathId, update, undefined, {
         record: false,
@@ -251,6 +306,17 @@ export async function executeRevert(
       // Undo of "edited a source": write the captured prior values back.
       // Self-inverse, like update_cell_spec — the captured payload IS an
       // update, so the same function serves both directions.
+      //
+      // One of the two casts the boundary does not fully answer for.
+      // `updateEvidence` builds this payload inline from its own `select` of
+      // the row it is about to write, and narrows the raw column with
+      // `before.kind as EvidenceKind`. So the boundary proves the OBJECT is
+      // this build's — the four keys are there, at the JS types the compiler
+      // saw — while `kind`'s membership of the union is the database's word,
+      // not ours. A parse here would be the wrong instrument: the value is
+      // going straight back to the column it came out of, so refusing a kind
+      // this build does not enumerate would block a legitimate round trip in
+      // the name of a type the column does not enforce.
       const evidenceId = stringArg(revert.args, 'evidence_id')
       const update = revert.args.update as EvidenceUpdate
       await updateEvidence(client, evidenceId, update, { record: false })
@@ -374,6 +440,16 @@ export async function executeRevert(
       // that would silence a finding — resolved, dismissed — are human triage
       // decisions, not inverses. A created finding records with no revert and
       // shows no revert control.
+      //
+      // The other cast the boundary does not fully answer for, for the same
+      // reason as `update_evidence` and with three narrowings rather than one:
+      // `updateFinding` assembles `previous: FindingUpdate` from a fresh read,
+      // through `before.severity as FindingSeverity`, `before.source as
+      // FindingSource` and `before.status as FindingStatus`. The keys present
+      // are exactly the columns the forward write touched, which IS this
+      // build's doing; the values in them are the row's. Same conclusion: it
+      // goes back where it came from, so a parse would only be able to refuse
+      // the restore.
       const findingId = stringArg(revert.args, 'finding_id')
       const update = revert.args.update as FindingUpdate
       await updateFinding(client, findingId, update, { record: false })
@@ -393,6 +469,7 @@ export async function executeRevert(
     }
     case 'update_business_model': {
       const serviceId = stringArg(revert.args, 'service_id')
+      // Captured by `updateBusinessModel`'s `previous: BusinessModelUpdate`.
       const update = revert.args.update as BusinessModelUpdate
       await updateBusinessModel(client, serviceId, update, undefined, {
         record: false,
@@ -404,6 +481,8 @@ export async function executeRevert(
       // `services` update, so the previous map is handed straight back rather
       // than dispatched to an RPC that does not exist.
       const serviceId = stringArg(revert.args, 'service_id')
+      // Captured by `updateServiceEntityExamples`'s
+      // `previous: EntityExamplesUpdate`.
       const update = revert.args.update as EntityExamplesUpdate
       await updateServiceEntityExamples(client, serviceId, update, undefined, {
         record: false,

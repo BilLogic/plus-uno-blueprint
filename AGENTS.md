@@ -48,6 +48,9 @@ newer; say so and follow the code.
   rather than leaving it to convention. In a mutation module: capture the
   previous value as the inverse **before** the write, write with `.select()` so
   a zero-row update fails loudly, then `recordChange`. Deletes are human-only.
+  Undo takes its input from the session ledger alone —
+  `public.authoring_changes` accepts any shape, and holds more than one;
+  `src/lib/revertBoundaryContract.test.ts` holds that.
   The two exemptions, and why each is deliberate:
   `docs/engineering/access-and-security.md` § Authoring writes.
 

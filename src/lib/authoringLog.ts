@@ -20,6 +20,18 @@ import type { Database, Json } from '@/types/database'
  * AUDIT-ONLY. Nothing here replays an inverse. `revert` travels so a row can
  * SAY what would undo it; replaying it against a database that has moved on is
  * a different problem and #172 puts it out of scope.
+ *
+ * That is now enforced rather than described, and the reason is the table's
+ * own write surface. `record_authoring_change` validates the operation name
+ * and treats `args` and `revert` as free jsonb, so this module is one writer
+ * among however many hold the grant — and the log already carries an
+ * `update_cell_content` row in a shape no build of this app has emitted. A
+ * replay that consumed it would throw, or half-apply. `executeRevert`
+ * therefore accepts only a `SessionEntry`, minted by `recordChange` and by
+ * nothing else, and `revertBoundaryContract.test.ts` refuses the casts and the
+ * signature changes that would let a row from here reach it. The direction of
+ * travel is one-way by construction: entries leave the session for this table,
+ * and the return trip has no route.
  */
 
 /** One row of `public.authoring_changes`, as `record_authoring_change` takes it. */

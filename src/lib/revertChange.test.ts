@@ -6,6 +6,7 @@ import {
   recordChange,
   sessionSnapshot,
   type ChangeEntry,
+  type SessionEntry,
 } from '@/lib/authoringSession'
 import { executeRevert } from '@/lib/revertChange'
 import type { Database } from '@/types/database'
@@ -101,13 +102,21 @@ describe('reverting a placement edit recorded before #276', () => {
  * thing three times rather than once: the empty string is the value, and the
  * write that clears the column actually runs.
  */
-const revertEntry = (fn: string, args: Record<string, unknown>): ChangeEntry => ({
-  id: 'change-1',
-  fn: fn as ChangeEntry['fn'],
-  args: {},
-  at: 0,
-  revert: { fn, args },
-})
+/**
+ * Built through `recordChange` rather than as an object literal.
+ *
+ * `executeRevert` takes a `SessionEntry`, which only the session stack mints,
+ * so an entry assembled here by hand would need a cast — and a test that cast
+ * its way past the boundary would be exercising a path the app cannot reach.
+ * Going through the stack costs one line and keeps the fixture honest.
+ */
+const revertEntry = (
+  fn: string,
+  args: Record<string, unknown>,
+): SessionEntry => {
+  recordChange(fn as ChangeEntry['fn'], {}, { fn, args })
+  return sessionSnapshot().at(-1)!
+}
 
 describe('executeRevert restores an empty summary', () => {
   it('clears a service summary back to nothing', async () => {

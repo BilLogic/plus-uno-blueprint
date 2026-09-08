@@ -21,7 +21,23 @@
  * `public.authoring_changes` through `authoringLog.ts` (#176), which is what
  * survives the refresh this list does not. The two are deliberately different
  * things: this one is positional, small and fast, and is what undo reads; that
- * one is append-only, permanent, and is read by nobody in this app.
+ * one is append-only, permanent, and nothing stored in it is ever replayed.
+ *
+ * That last clause used to read "and is read by nobody in this app", and it
+ * was already false when it was written. `public.trash` is a view over the
+ * deletion rows of that same table, and `useArchiveAvailable` reads it on
+ * every session to decide whether a delete affordance may ship at all. What
+ * it reads is `select id limit 1` — the question is whether the relation is
+ * there, not what is in it — so no stored payload has ever been handed back
+ * to the app. That is the claim worth making, and the difference matters:
+ * a table something already reads is a table the next person reaches into
+ * for the payload as well.
+ *
+ * Which is why the claim is now a wall instead of a habit. `executeRevert`
+ * takes a `SessionEntry`, a type only `recordChange` below can mint, so a row
+ * selected out of `public.authoring_changes` cannot be handed to the undo
+ * path — not because nobody has tried, but because it does not compile.
+ * `revertBoundaryContract.test.ts` holds the rest of the argument.
  */
 
 import { appendToAuthoringLog } from '@/lib/authoringLog'
@@ -119,6 +135,40 @@ export type ChangeEntry = {
   agentSessionId?: string
 }
 
+declare const SESSION_ORIGIN: unique symbol
+
+/**
+ * A change entry that came off THIS build's stack — the only thing
+ * `executeRevert` accepts.
+ *
+ * The brand is phantom: `SESSION_ORIGIN` is a declared symbol with no runtime
+ * existence, so a `SessionEntry` IS a `ChangeEntry` at run time and nothing is
+ * added to the object. What it buys is that the type cannot be satisfied from
+ * anywhere else. A row selected out of `public.authoring_changes` has every
+ * field in the right place and is still not one, so feeding the durable log
+ * to the inverse-applier does not type-check.
+ *
+ * It exists because the stored rows are not one shape, and because the table
+ * has no way to make them one. `record_authoring_change` takes `args` and
+ * `revert` as free jsonb — it checks that the operation is named and nothing
+ * about what is under it — so the ledger holds an `update_cell_content` row
+ * whose payload puts `content` where this app has only ever put a nested
+ * `update`. That row was written by something other than this app, which is
+ * the point: the shapes in there are the writers' business, one per caller,
+ * and no version column could speak for a caller that stamps none.
+ *
+ * `revertChange.ts` reads every captured payload through an unchecked cast,
+ * and those casts are sound for exactly one reason: their input was built by
+ * the build that reads it. Before this type that reason held by habit.
+ * Nothing in the code, the schema or the tests would have failed if someone
+ * had wired a read of the log into the undo path; it would have compiled, and
+ * then thrown on the row above.
+ *
+ * `recordChange` is the only mint, and `revertBoundaryContract.test.ts` holds
+ * it to that — a cast to `SessionEntry` anywhere else in `src/` fails there.
+ */
+export type SessionEntry = ChangeEntry & { readonly [SESSION_ORIGIN]: true }
+
 /**
  * While set, recorded changes are attributed to the agent. Set around the
  * agent's tool dispatch only. A human save landing during an in-flight
@@ -155,7 +205,7 @@ const DESTRUCTIVE = new Set([
   'remove_lane',
 ])
 
-let entries: ChangeEntry[] = []
+let entries: SessionEntry[] = []
 let listeners: Array<() => void> = []
 let counter = 0
 
@@ -171,7 +221,7 @@ export function subscribeToSession(listener: () => void): () => void {
 }
 
 /** Stable snapshot — `useSyncExternalStore` compares by identity. */
-export function sessionSnapshot(): ChangeEntry[] {
+export function sessionSnapshot(): SessionEntry[] {
   return entries
 }
 
@@ -191,7 +241,12 @@ export function recordChange(
       ? { author: 'agent' as const, agentSessionId: agentAttribution.sessionId }
       : {}),
   }
-  entries = [...entries, entry]
+  // The one mint of a `SessionEntry`, and the reason the type is worth
+  // having: an entry is branded here, after `recordChange` has assembled it
+  // from arguments this build's own mutation modules passed in. Nothing that
+  // arrived over the wire can acquire the brand, so nothing that arrived over
+  // the wire can reach `executeRevert`.
+  entries = [...entries, entry as SessionEntry]
   emit()
   // The durable half (#176). Here and not at the call sites for the same
   // reason the array is filled here: one funnel, so the record and the list
@@ -430,10 +485,14 @@ export function describeChange(entry: ChangeEntry): string {
  * next to each other with nothing to tell them apart — the same defect as an
  * arrow picker offering three identical rows.
  */
-export function groupChanges(
-  list: readonly ChangeEntry[],
-): Array<{ pathId: string | null; entries: ChangeEntry[] }> {
-  const groups: Array<{ pathId: string | null; entries: ChangeEntry[] }> = []
+export function groupChanges<Entry extends ChangeEntry>(
+  list: readonly Entry[],
+): Array<{ pathId: string | null; entries: Entry[] }> {
+  // Generic in the entry rather than fixed to `ChangeEntry`: the sheet groups
+  // the session's own rows and then offers a revert on each, so a signature
+  // that widened them on the way through would strip the brand exactly where
+  // it is needed and force the caller to cast it back on.
+  const groups: Array<{ pathId: string | null; entries: Entry[] }> = []
   for (const entry of list) {
     // The order is narrowest-first: a call that names a path belongs with that
     // path, and only a call that names none falls back to its scenario.
