@@ -22,6 +22,8 @@ import checkObsoleteSource from 'agentic-service-blueprinting/skills/audit/refer
 import slicePlaybook from 'agentic-service-blueprinting/skills/slice/references/slice-playbook.md?raw'
 import sliceTemplates from 'agentic-service-blueprinting/skills/slice/references/slice-templates.md?raw'
 
+import { registeredReferenceDocs } from '@/lib/agent/tools/referenceRegistry'
+
 /**
  * WHERE the rulebook's documents come from — a DECLARED FORK SEAM
  * (#325 S2, #396 Q19), and one of exactly two places where convergence with
@@ -57,8 +59,17 @@ import sliceTemplates from 'agentic-service-blueprinting/skills/slice/references
  * deployment-only), and — upstream — the path in the template's
  * `scripts/check-reference-paths.mjs`. `read.ts` throws at module init if the
  * first two disagree.
+ *
+ * There is a THIRD way in, and it belongs to nobody who edits this file: a
+ * module imported before the app calls `registerReferenceDocs`, and its
+ * documents are merged over these below. Nothing in this repository does that
+ * yet — it is the seam a host uses, and this repository is still the app
+ * rather than a host of it. The merge is here anyway because
+ * `referenceNames.ts` already splices the registered NAMES into the shared
+ * vocabulary, and a record that ignored what the vocabulary published would
+ * fail `read.ts`'s module-init assertion the first time anyone used it.
  */
-export const REFERENCE_DOCS: Record<string, string> = {
+const DEPLOYMENT_REFERENCE_DOCS: Record<string, string> = {
   'canvas-adapter': canvasAdapter,
   blueprint: blueprintAccount,
   'lane-roles': laneRoles,
@@ -78,4 +89,15 @@ export const REFERENCE_DOCS: Record<string, string> = {
   'check-obsolete-source': checkObsoleteSource,
   'slice-playbook': slicePlaybook,
   'slice-templates': sliceTemplates,
+}
+
+/**
+ * What `read.ts` serves: this deployment's own documents, with a registered
+ * host's merged over them. Nothing registers here, so this IS
+ * `DEPLOYMENT_REFERENCE_DOCS` — and the registry freezes on this read, which
+ * is the whole reason registration has to precede the app's import.
+ */
+export const REFERENCE_DOCS: Record<string, string> = {
+  ...DEPLOYMENT_REFERENCE_DOCS,
+  ...registeredReferenceDocs(),
 }
