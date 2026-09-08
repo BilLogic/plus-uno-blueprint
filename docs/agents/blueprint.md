@@ -198,7 +198,7 @@ Append-only record of every authoring write. Audit-only: the in-memory stack in 
 ### `cell_dependencies`
 Dependency from one cell to another
 
-2 of 7 columns described.
+3 of 8 columns described.
 
 | Column | Meaning |
 |---|---|
@@ -206,6 +206,7 @@ Dependency from one cell to another
 | `id` | — |
 | `kind` | leads_to = temporal (this cell makes the other happen; drawn as an arrow); enables = functional (the other must already be in place). enables renders in the panel only. |
 | `name` | The word on the arrow, e.g. a channel tag like "Email". A name because it is what a reader navigates the dependency by; it was `label`, which said how it renders rather than what it is. |
+| `note` | Why this edge exists, in the author's own words — rendered as the why-line under the dependency row, revealed on hover. Distinct from name, which is the word ON the arrow (a channel, a hand-off): name says what the edge is called, note says why it is there. Null means no stated reason, which is not the same as no reason. |
 | `source_cell_id` | — |
 | `target_cell_id` | — |
 | `updated_at` | — |
