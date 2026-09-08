@@ -49,8 +49,16 @@
      the wrong axis: what decides the home is authored versus derived, and
      these are literals a deployment picks. `theme.css` derives every
      `--radius-*` rung from `--radius`; `--primary` and `--ring` in
-     `semantic.css` read the control's three, and the retune history that
-     argues for their values is the long comment beside `--primary` there. */
+     `semantic.css` read the control's three.
+
+     THE RETUNE THAT ARGUES FOR THESE NUMBERS is
+     `docs/guidelines/foundations/color.md` § The `--primary` retune — the
+     dated passes, the ratio the chroma is set as a fraction of, and what each
+     derived token measures. It is not in `semantic.css`, and cannot be: that
+     file is the template's copy verbatim, and every one of those numbers is
+     false there. A comment is for the reader of the next line; a
+     dated narrative with a measurement table is documentation. Change a dial
+     here and in `themes/dark.css`, then add a row there. */
   --radius: 0.625rem;
   --primary-lightness: 0.83;
   --primary-chroma: 0.135;

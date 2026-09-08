@@ -1309,4 +1309,47 @@ export const RECONCILED_FILES = [
   //   including whether this file and `semantic.css` are enrolled, and two
   //   tickets deciding one file is how a decision gets made twice and
   //   recorded once.
+
+  // ── The derivation layer, and the primitives under it ──
+  //
+  // `semantic.css` is where a role's colour is DERIVED from a handful of
+  // dials, and a derivation is not a place a deployment has an opinion: the
+  // dials are ours, the arithmetic over them is not. Its copy here is now the
+  // template's, byte for byte. Six differences stood between the two and five
+  // were wording — a test named rather than filed, a parenthetical carrying
+  // this deployment's `--surface-hue` values, a ring comment naming a token
+  // that exists on one side only, and a census ("forty-four times, in eleven
+  // spellings") that counts differently in each repository.
+  //
+  // The sixth was the `--primary` retune log: dates, a measurement table and a
+  // narrative of walked-back tuning passes, every number of it true here and
+  // false upstream, and citing two issue numbers besides. It was not deletable
+  // reasoning, it was misplaced reasoning — documentation wearing a comment's
+  // clothes — and it now lives in `docs/guidelines/foundations/color.md`,
+  // where a reader looking for why the fill is this teal will look. The theme
+  // files carry the pointer, because that is where a retune lands.
+  //
+  // Two values moved with the adoption. `--primary-foreground` takes the hard
+  // flip, which replaces an ink that is correct only while the accent stays
+  // light; and `--brand-foreground`, which this copy still derived at the
+  // blueprint cell's clamp bounds, takes the brand pair's. Both stay past AAA
+  // on their own fill. Every other custom property under `src/styles`
+  // resolves to the same string in both themes.
+  //
+  // NOT enrolled: `src/styles/semantic.css`, and the second promise this list
+  // makes is what holds it off. The template's copy says "Sidebar selection
+  // language (nav plan D8)", and D8 is a row of
+  // `docs/plans/2026-07-30-002-feat-sidebar-navigation-model-plan.md` — an
+  // address in THIS repository's docs tree, which travelled upstream with the
+  // port and resolves to nothing there. Byte-identity and that promise cannot
+  // both be kept while the shared text carries it, and the fix is one line in
+  // the template naming the decision instead of its plan row. The entry is a
+  // one-line append here once a release carries that.
+  //
+  // `colors.css` had a smaller story and no such blocker: nothing but prose
+  // separated the two copies, and the one number in it was ours and wrong —
+  // this copy said the palette it declines to duplicate for print is 216
+  // values, which it was before the brand family was removed from it. It is
+  // 204 in both files, which is what the template's copy already said.
+  'src/styles/colors.css',
 ]
