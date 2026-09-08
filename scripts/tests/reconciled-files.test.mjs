@@ -419,6 +419,9 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/stakeholderMutations.ts',
     'src/lib/touchpointMutations.ts',
     'src/lib/cssCascadeLayerContract.test.ts',
+    'src/components/editor/CreatePhaseDialog.tsx',
+    'src/components/editor/DeleteStructureDialog.tsx',
+    'src/components/editor/SliceSlideComposer.tsx',
   ])
 })
 

@@ -24,7 +24,7 @@ import { errorMessage } from '@/lib/utils'
  * with its own consequences, and it is not what "add a phase" means. This
  * appends, which is always safe.
  *
- * Only a name is asked for. The description shows under the phase title and is
+ * Only a name is asked for. The summary shows under the phase title and is
  * worth having, but it is the kind of sentence that gets written properly on
  * the second pass; demanding it up front is how placeholder text ends up in a
  * blueprint.
