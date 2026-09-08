@@ -2,53 +2,55 @@ import { BRAND, type Brand } from '@/config'
 import { hexToRgb, oklchFromSrgb } from '@/lib/oklch'
 
 /**
- * The reader for `brand.accent` (#411).
+ * The reader for `brand.accent` (#214).
  *
- * The seam offered the field and nothing read it: the accent that actually
- * painted this deployment was the `--hue` dial written into
- * `styles/themes/light.css` and `dark.css`, so a second deployment could set
- * `brand.accent` and watch nothing happen. This module closes that by writing
- * the accent's own hue onto the root element as `--hue` — the one dial the
- * theme files call "the one place it is declared" — before the first render.
- * An inline custom property on `documentElement` outranks every stylesheet
- * selector, so it wins under `:root`, under `.dark`, and under the print
- * override too.
+ * The seam offered the field and nothing read it, which is worse than not
+ * offering it: a deployment could set an accent and watch nothing happen. This
+ * module closes that by writing the accent's own hue onto the root element as
+ * `--hue` — the one dial `styles/themes/*.css` call "the single knob" — before
+ * the first paint. An inline custom property on `documentElement` outranks
+ * every stylesheet selector, so it wins under `:root`, under `.dark`, and
+ * under the print override too.
  *
- * WHAT THE ACCENT MOVES, precisely, because a seam that overstates its reach
- * is the same defect one layer along. `--hue` feeds `--primary-hue`, and from
- * there the filled control, its hairline, its ink, the focus ring and the
- * sidebar selection chrome that derives from the ring; it also feeds
- * `--surface-hue` in dark mode, where `--chroma: 0.005` makes it faintly
- * visible on every surface, and the status-hue harmony pull that leans
- * warning / destructive / info a fraction of the way toward the brand.
+ * ── WHAT THE ACCENT ACTUALLY MOVES, AND WHY THAT DEPENDS ON THE STYLESHEET ──
  *
- * WHAT IT DOES NOT MOVE: the `--brand-*` ramp. Those steps are per-theme HSL
- * literals authored in the theme files, and Q42 of #396 settled that the theme
- * files stay each deployment's own — so a deployment that sets an accent off
- * its ramp gets the 2026-08-06 defect back, the filled button wearing a
- * different hue from every other brand surface. The contract is therefore the
- * template's documented one: the accent is the hue of your ramp, and rebranding
- * is this field plus the ramp beside it. `palette.test.ts` holds the two
- * together for the accent this deployment actually ships.
+ * `--hue` feeds `--primary-hue` and `--surface-hue`, and from there the filled
+ * control, its hairline, its ink, the focus ring, the sidebar selection chrome
+ * derived from the ring, and — through the harmony pull in `semantic.css` —
+ * the status hues, which lean a fraction of the way toward the brand.
  *
- * Only the HUE is taken. The accent's own lightness and chroma are deliberately
+ * Every one of those except the last is multiplied by a CHROMA, and THIS KIT
+ * SHIPS EVERY CHROMA AT ZERO. `themes/light.css` and `themes/dark.css` set
+ * `--chroma: 0` and `--primary-chroma: 0`, and the `--brand-*` ramp beside them
+ * is greyscale HSL literals that no hue dial touches. So against the template's
+ * own stylesheet, unchanged, setting an accent repaints NOTHING on the brand
+ * surfaces. What it does move is `--expressive-chroma: 0.14`: warning,
+ * destructive and info rotate 15% of the distance from `--brand-hue-reference`
+ * and would drift off their anchors while the brand stayed grey.
+ *
+ * That is not a defect in this module, it is the contract the theme files
+ * already state: "`--hue` must stay the OKLCH hue of that ramp". An accent is a
+ * DIAL ON A RAMP, not a paint job, and rebranding is this field plus the ramp
+ * beside it. A deployment that mounts this package imports the kit's
+ * `styles.css` and then layers its own theme file over it — its `--chroma`,
+ * its `--primary-chroma`, its `--brand-*` steps — and `brand.accent` is the
+ * hue those steps are drawn at. Set the field alone and the only visible effect
+ * is the status drift above, which is why this is said here and in
+ * `deploymentConfig.ts` rather than left to be discovered.
+ *
+ * Only the HUE is taken. An accent's own lightness and chroma are deliberately
  * ignored: `--primary-lightness` and `--primary-chroma` are a tuning decision
- * with three walked-back passes recorded above `--primary` in `semantic.css`,
- * not a brand fact. Taking them from the hex would paint PLUS's control at
- * L 0.874 / C 0.1025 — exactly the pastel-badge fill that tuning walked away
- * from.
+ * the theme files own, not a brand fact, and reading them off a hex would
+ * override tuning a deployment never asked to change.
  */
 
 /** The dial an accent is read as. */
 export const BRAND_ACCENT_DIAL = '--hue'
 
 /**
- * The precision `themes/*.css` author the dial at, one decimal place.
- *
- * Rounding to it is what makes reading this deployment's own accent provably a
- * no-op rather than a sub-degree nudge: `#85ECD5` measures 177.6345°, the
- * theme files declare 177.6, and at one decimal the reader writes back the
- * value that was already there.
+ * The precision `themes/*.css` author the dial at, one decimal place. Rounding
+ * to it is what makes reading an accent that already matches the sheet a
+ * provable no-op rather than a sub-degree nudge.
  */
 const DIAL_PRECISION = 10
 
@@ -58,10 +60,10 @@ export type StyleTarget = { style: Pick<CSSStyleDeclaration, 'setProperty'> }
 /**
  * The `--hue` an accent implies.
  *
- * Throws on a value it cannot read. A deployment's accent is authored code
- * that the type-check and the suite both see before a browser does, so a
- * malformed hex is a bug to hear about rather than a field to quietly ignore —
- * quietly ignoring the field is the whole of what #411 is about.
+ * Throws on a value it cannot read. A deployment's accent is authored code that
+ * the type-check and the suite both see before a browser does, so a malformed
+ * hex is a bug to hear about rather than a field to quietly ignore — quietly
+ * ignoring the field is the whole of what this module is about.
  */
 export function brandAccentHue(accent: string): number {
   const [, , hue] = oklchFromSrgb(hexToRgb(accent))
@@ -69,17 +71,25 @@ export function brandAccentHue(accent: string): number {
 }
 
 /**
- * Write the deployment's accent onto the root, and report the hue written.
+ * Write a deployment's accent onto the root, and report the hue written.
  *
  * Returns `undefined` and writes nothing when the brand block sets no accent,
- * which leaves the theme files' own dial standing — the case the assertion in
- * `brandAccent.test.ts` calls "a deployment that sets no accent".
+ * which leaves the theme files' own dial standing — the standalone template's
+ * case, and the case of any deployment that brands through its stylesheet
+ * alone.
  *
  * It takes the whole brand block rather than the accent string, so that "no
  * accent" is a block without the field. A defaulted `accent?: string`
  * parameter cannot express it: passing `undefined` explicitly would fall
- * through to the default and paint PLUS's own accent, which is the same class
- * of silently-wrong as the field this ticket is about.
+ * through to the default and paint the template's own dial, which is the same
+ * class of silently-wrong as the unread field this replaces.
+ *
+ * The BLOCK does default, to `BRAND` — the installation's own, from
+ * `config.ts` — so a caller holding no config can ask for the accent this
+ * build is branded on: a host's bootstrap, running before React exists, is the
+ * case (#230). That default is not the trap above, because it is reached only
+ * by omitting the argument. A block that carries the field as `undefined`
+ * still means no accent, and still writes nothing.
  */
 export function applyBrandAccent(
   root: StyleTarget,

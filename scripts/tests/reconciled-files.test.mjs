@@ -365,6 +365,8 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/scenarioLayout.ts',
     'src/lib/overviewFlowArrowAnchor.test.ts',
     'src/types/slideViewType.test.ts',
+    'src/deploymentConfig.ts',
+    'src/lib/brandAccent.ts',
   ])
 })
 

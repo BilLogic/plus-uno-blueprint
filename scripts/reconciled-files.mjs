@@ -831,11 +831,9 @@ export const RECONCILED_FILES = [
   //
   // The seam's CONTEXT is the template's file unchanged — `App` hands it a
   // config, the tree reads the resolved value by hook, and `useWorkspaceTitle`
-  // throws outside the provider rather than returning an inert value. What
-  // forks is `deploymentConfig.ts`, the default that context resolves against,
-  // which holds this deployment's own values the way `storageNamespace.ts`
-  // holds `'uno-'`. Machinery shared, values forked, and the two editor tests
-  // upstream wrapped in the provider stay byte-identical because of it.
+  // throws outside the provider rather than returning an inert value. The two
+  // editor tests upstream wrapped in the provider stay byte-identical because
+  // of it.
   'src/contexts/DeploymentConfigContext.tsx',
 
   // The host half of the reference-doc seam. It imports nothing at all, which
@@ -862,4 +860,27 @@ export const RECONCILED_FILES = [
   'src/lib/scenarioLayout.ts',
   'src/lib/overviewFlowArrowAnchor.test.ts',
   'src/types/slideViewType.test.ts',
+
+  // asb 1.12.1 adopt. The fork this repository declared at 1.12.0 was avoidable
+  // and is gone (BilLogic/agentic-service-blueprinting#230).
+  //
+  // `deploymentConfig.ts` forked here for two literals: the wordmark and the
+  // accent. The template inlined one and omitted the other, so changing them
+  // meant forking the whole module. It now reads both through constants —
+  // `brand.accent` from `BRAND`, `content.workspaceTitle` from
+  // `coverContent.title` — and nothing repainted upstream, because that
+  // repository's cover omits its title on purpose and its brand seam is
+  // deliberately neutral, so both resolve to `undefined` and are dropped.
+  //
+  // The same file therefore says `'PLUS'`, `'#85ECD5'` and `'Uno Blueprint'`
+  // here and the template's own values there, because the imports resolve
+  // locally. The values fork; the module does not. `config.ts` is where a
+  // deployment's values were always meant to live, and already holds
+  // `ORG_NAME` for the same reason.
+  //
+  // `brandAccent.ts` came with it: the two copies differed only in how the
+  // brand argument defaults, which a shared `Brand`/`BRAND` is what was
+  // missing.
+  'src/deploymentConfig.ts',
+  'src/lib/brandAccent.ts',
 ]
