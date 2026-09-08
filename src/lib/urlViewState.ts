@@ -12,10 +12,18 @@
  * slice tab is a different reading of the blueprint, so `slice` wins and `cell`
  * is dropped when both appear rather than opening a panel behind a tab.
  *
+ * The base view also carries the BOARD — which phase, scenario, path selection
+ * and view mode the reader is looking at. Those params and their meaning are
+ * `boardAddress.ts`; this module only makes sure they survive, because every
+ * write of the search goes through `serializeUrlViewState` and a serializer
+ * that rebuilt the search from the tab alone would blank the board out of the
+ * address bar each time a cell panel opened.
+ *
  * The cross-repo relationship: docs/connectors/plus-uno.md.
  */
 
 import { BLUEPRINT_CONTRACT } from '@/lib/blueprintContract'
+import { appendBoardParams, getBoardAddress } from '@/lib/boardAddress'
 
 // Param names come from the cross-repo contract (uno-bot builds links with
 // the same constants, vendored from blueprintContract.ts).
@@ -76,6 +84,10 @@ export function serializeUrlViewState(state: UrlViewState): string {
   switch (state.kind) {
     case 'blueprint':
       if (state.cellId) params.set(PARAMS.cell, state.cellId)
+      // The board rides the base view only, for the reason `cell` does: a
+      // slice tab is a different reading of the blueprint, and a board behind
+      // one is a place the link would not open on.
+      appendBoardParams(params, getBoardAddress())
       break
     case 'slice':
       params.set(PARAMS.slice, state.sliceId)

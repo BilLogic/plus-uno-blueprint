@@ -1,6 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from 'next-themes'
 import { EditorErrorBoundary } from '@/components/EditorErrorBoundary'
+import { BoardAddressSync } from '@/components/editor/BoardAddressSync'
 import { EditorShell } from '@/components/editor/EditorShell'
 import { ScenarioPathSelectionReset } from '@/components/editor/ScenarioPathSelectionReset'
 import { WriteFailureNotices } from '@/components/editor/WriteFailureNotices'
@@ -86,6 +87,13 @@ function App({ config }: { config?: DeploymentConfig | null }) {
                          * whose navigation it watches.
                          */}
                         <ScenarioPathSelectionReset />
+                        {/*
+                         * The board reaches the address bar here, beside the
+                         * reset, and for the same reason: it joins navigation,
+                         * the path selection and the tab state, and none of
+                         * those three providers may learn about the other two.
+                         */}
+                        <BoardAddressSync />
                         <TooltipProvider delay={200}>
                           <EditorErrorBoundary>
                             <EditorShell />
