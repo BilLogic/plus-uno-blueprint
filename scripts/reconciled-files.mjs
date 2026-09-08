@@ -883,4 +883,37 @@ export const RECONCILED_FILES = [
   // missing.
   'src/deploymentConfig.ts',
   'src/lib/brandAccent.ts',
+
+  // asb 1.12.2 adopt. The read lifetime went upstream, and it took twelve files
+  // with it (BilLogic/agentic-service-blueprinting#232).
+  //
+  // This was one unported feature wearing twelve small diffs. Every fetcher here
+  // is `async (client, signal)` ending in `.abortSignal(signal)`, because
+  // `useSupabaseQuery` hands it one; the template's could not, so about eighty
+  // of the hundred-odd lines separating the two `src/hooks/` trees were this
+  // single contract appearing once per file. Nothing converged file by file
+  // because nothing could: a signal in one hook, with no wrapper supplying it,
+  // changes nothing.
+  //
+  // The four contract files are the feature itself — the wrapper, the deadline
+  // that aborts rather than races, the retry policy that keys off its error, and
+  // `awaitOrAbort` for the shared lookups. The six hooks are what they unblock.
+  'src/hooks/useSupabaseQuery.ts',
+  'src/lib/supabaseFetchTimeout.ts',
+  'src/lib/queryClient.ts',
+  'src/lib/service.ts',
+  'src/hooks/useEvidence.ts',
+  'src/hooks/usePhaseSpec.ts',
+  'src/hooks/useScenarioSpec.ts',
+  'src/hooks/useStepSpec.ts',
+  'src/hooks/useScenarioPaths.ts',
+  'src/hooks/useSliceScenarioId.ts',
+
+  // The two tests came with them. `readLifetime.test.ts` is enrolled knowing its
+  // `query cancellation` block does not test our cancellation — it drives a raw
+  // `QueryObserver` and so passes with or without the signal (#468). Enrolling
+  // it is what makes that fixable ONCE: the template now has the test that does
+  // bite, and this file follows upstream rather than being repaired twice.
+  'src/lib/readLifetime.test.ts',
+  'src/lib/service.test.ts',
 ]
