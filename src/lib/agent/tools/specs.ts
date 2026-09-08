@@ -19,19 +19,24 @@ export { REFERENCE_NAMES }
  *
  * `create_cell_dependency(label)` writes `cell_dependencies.name`;
  * `create_finding(check_name, note)` writes `audit_findings.check_key` and
- * `.summary`; `create_slice(slice_type, description)` writes `slices.kind` and
- * `.summary`. The mapping happens in `registry.ts` and the columns are the
- * ones #177 renamed.
+ * `.summary`; `create_slice(kind, description)` writes `slices.kind` and
+ * `.summary`. The mapping happens in `registry.ts`.
  *
- * They stay because this surface is a PINNED CROSS-REPO CONTRACT, not app
- * internals. `agentic-service-blueprinting` is a git-URL dependency fixed to a
- * tag, and its skills name these arguments in prose the model reads —
- * `skills/audit/SKILL.md` and `references/audit-playbook.md` both say
- * `check_name`. Renaming here without a matching release upstream means a
- * skill telling the model to send an argument this app rejects, which is a
- * worse failure than a name that reads a little behind the schema. AGENTS.md
- * states the direction: a fix goes upstream and arrives here as a version
- * bump.
+ * The ones that remain stay because this surface is a PINNED CROSS-REPO
+ * CONTRACT, not app internals. `agentic-service-blueprinting` is a git-URL
+ * dependency fixed to a tag, and its skills name these arguments in prose the
+ * model reads — `agents/auditor.md` still says `check_name`. Renaming here
+ * without a matching release upstream means a skill telling the model to send
+ * an argument this app rejects, which is a worse failure than a name that
+ * reads a little behind the schema. AGENTS.md states the direction: a fix goes
+ * upstream and arrives here as a version bump.
+ *
+ * `slice_type` went the other way, and how it went is the pattern. Nothing in
+ * the pinned package names it any more — the template's own tool schema says
+ * `kind` and no skill mentions the retired word — so the schema here says
+ * `kind` too, and `registry.ts` still ACCEPTS `slice_type` from anything that
+ * has not caught up. The alias is asserted live in
+ * `scripts/tests/toolParity.test.mjs`: it has to keep being read, or it goes.
  */
 
 /**
@@ -707,7 +712,7 @@ export const TOOL_SPECS: ToolSpec[] = [
       properties: {
         title: str('Slice title'),
         description: str('One-line description; omit for none'),
-        slice_type: {
+        kind: {
           type: 'string',
           enum: ['journey', 'lane', 'step', 'custom'],
           description: 'Kind of cut',
@@ -719,7 +724,7 @@ export const TOOL_SPECS: ToolSpec[] = [
           items: { type: 'string' },
         },
       },
-      required: ['title', 'slice_type', 'cell_ids'],
+      required: ['title', 'kind', 'cell_ids'],
     },
   },
   {
@@ -732,7 +737,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         title: str('omit to keep'),
         description: str('omit to keep'),
         actor: str('omit to keep'),
-        slice_type: { type: 'string', enum: ['journey', 'lane', 'step', 'custom'], description: 'omit to keep' },
+        kind: { type: 'string', enum: ['journey', 'lane', 'step', 'custom'], description: 'omit to keep' },
       },
       required: ['slice_id'],
     },

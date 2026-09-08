@@ -134,11 +134,20 @@ recorded here rather than fixed because adding them to the contract is a
 change to what the contract is FOR, not a rename.
 
 The skills package is the third side of this. `agentic-service-blueprinting`
-still writes the retired `slice_type` and `check_name` spellings, and `origin`
-on slices, from its own `slice_tools.py`
-and documents them in `skills/audit/SKILL.md` and the playbooks. It is a
-git-URL dependency pinned to a tag, so the fix goes upstream and arrives here
-as a version bump — which has to happen in the same window.
+is a git-URL dependency pinned to a tag, so a fix there goes upstream and
+arrives here as a version bump — which has to happen in the same window. Two
+retired spellings are still on that side: `agents/auditor.md` asks the model
+for `check_name`, and `slice_tools.py` writes `origin` on slices, which is
+`authorship` here.
+
+`slice_type` is the one that finished. Nothing in the pinned package names it
+any more — the template's own tool schema says `kind`, and `slice_tools.py`
+inserts `kind` — so this app's schema says `kind` too. The retired word is
+still ACCEPTED by `create_slice` and `update_slice`, because a rename on this
+wire cannot be a swap: anything pinned to an older description of these tools
+keeps sending the old word, and refusing it would turn a working call into an
+error. The alias is asserted live in `scripts/tests/toolParity.test.mjs` and
+goes when a release confirms nothing sends it.
 
 ## What checks the contract
 

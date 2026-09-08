@@ -631,11 +631,21 @@ export async function dispatchTool(
           : []
         if (cellIds.length === 0)
           throw new Error('cell_ids must be a non-empty array of existing cell ids.')
+        // The schema offers `kind`, after the column. `slice_type` was the
+        // argument name until the vocabulary fold reached this wire, and it is
+        // still ACCEPTED so that anything pinned to an older description of
+        // these tools keeps working — a caller sending the retired word gets
+        // the slice it asked for rather than a refusal. Nothing in the pinned
+        // template names it any more, so the pair goes as soon as a release
+        // confirms nothing sends it; `scripts/tests/toolParity.test.mjs`
+        // asserts the alias is still read, which is what will say so.
+        const kind = s(args, 'kind') ?? s(args, 'slice_type')
+        if (!kind) throw new Error('kind is required.')
         const slice = await createSlice(client, {
           serviceId: await resolveActiveServiceId(client),
           title: need(args, 'title'),
           summary: s(args, 'description') ?? '',
-          sliceType: need(args, 'slice_type') as SliceType,
+          sliceType: kind as SliceType,
           actor: s(args, 'actor') ?? '',
           cellIds,
         })
@@ -653,7 +663,7 @@ export async function dispatchTool(
         const outcome = await updateSliceMeta(client, sliceId, asUpdatedAtToken(data.updated_at), {
           title: s(args, 'title') ?? data.title,
           summary: s(args, 'description') ?? data.summary ?? '',
-          sliceType: (s(args, 'slice_type') ?? data.kind) as SliceType,
+          sliceType: (s(args, 'kind') ?? s(args, 'slice_type') ?? data.kind) as SliceType,
           actor: s(args, 'actor') ?? data.actor ?? '',
           authorship: data.authorship,
         })
