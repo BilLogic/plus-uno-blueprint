@@ -234,7 +234,13 @@ export const RECONCILED_FILES = [
   'src/components/blueprint/NotionPropertyRow.tsx',
   'src/components/blueprint/PhasePanel.tsx',
   'src/components/blueprint/ScenarioSlideFilters.tsx',
-  'src/components/blueprint/StakeholderSelect.test.tsx',
+  // `StakeholderSelect.test.tsx` was enrolled here and is not any more. This
+  // deployment's `stakeholders` table has a `parent_id` the template's does
+  // not, so the row type this fixture builds has a field the template's row
+  // type has not, and no single file satisfies both compilers. It was green
+  // only because the types file was missing the column too. It comes back when
+  // the template's schema takes `parent_id` — one of the schema ports the
+  // convergence already lists.
   'src/components/blueprint/StoryboardWalkthroughShell.tsx',
   'src/contexts/StoryboardWalkthroughContext.tsx',
   'src/contexts/ViewStateContext.tsx',

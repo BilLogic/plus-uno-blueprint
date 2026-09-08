@@ -26,18 +26,25 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * TWO LAYERS ARE RE-APPLIED BY HAND, deliberately, and they are the whole of
  * what is not the generator's:
  *
- *  1. `cells.status` and `paths.status` are typed `EntityStatus` rather than
- *     the generator's `string`. The column is a text column with a check
- *     constraint, which the generator cannot see; narrowing it here is what
- *     makes an invalid status a type error at the call site instead of a
- *     Postgres error at runtime.
+ *  1. `cells.status` and `paths.status` are typed `EntityStatus`, and
+ *     `PathKind` is declared, rather than the generator's `string`. All three
+ *     are text columns with check constraints, and a constraint is the one
+ *     thing the generator cannot see; narrowing here is what makes an invalid
+ *     value a type error at the call site instead of a Postgres error at
+ *     runtime.
  *  2. The row aliases at the foot of the file — `Cell`, `Lane`, `Path` and the
  *     rest — are this app's vocabulary over the generated shapes and have no
  *     generated equivalent.
+ *  3. An argument whose SQL default is NULL is typed `?: T | null`, not the
+ *     generator's `?: T`. Postgres accepts NULL for those and call sites pass
+ *     it — `record_authoring_change(agent_session_id)` and
+ *     `set_placement_touchpoint(p_touchpoint_id, p_name)` are the ones that
+ *     bite immediately. The rule is mechanical: read the defaults out of
+ *     `pg_get_function_arguments` and widen the ones that say `DEFAULT NULL`.
  *
- * Re-apply both after any regeneration, or the app silently loses a check it
- * had. Nothing else in this file is hand-written; if a third layer appears,
- * it belongs in this list or it does not belong at all.
+ * Re-apply all three after any regeneration, or the app silently loses a check
+ * it had — or stops compiling. Nothing else in this file is hand-written; if a
+ * fourth layer appears, it belongs in this list or it does not belong at all.
  *
  * Regenerate after schema changes:
  *   npm run supabase:types           (needs a linked project)
@@ -55,6 +62,12 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[]
+
+/**
+ * The path kinds this app draws. Hand-written: `paths.kind` is a text column
+ * with a check constraint, and the generator cannot see a constraint.
+ */
+export type PathKind = 'happy' | 'variant' | 'exception'
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
@@ -1146,15 +1159,15 @@ export type Database = {
     Functions: {
       add_lane: {
         Args: {
-          at_position?: number
-          lane_role?: string
+          at_position?: number | null
+          lane_role?: string | null
           name: string
           scenario_id: string
         }
         Returns: string[]
       }
       add_step: {
-        Args: { at_position?: number; name: string; path_id: string }
+        Args: { at_position?: number | null; name: string; path_id: string }
         Returns: string
       }
       cell_natural_key: { Args: { cell_id: string }; Returns: string }
@@ -1165,20 +1178,20 @@ export type Database = {
       create_path: {
         Args: {
           kind?: string
-          lane_source_path_id?: string
+          lane_source_path_id?: string | null
           name: string
           scenario_id: string
         }
         Returns: string
       }
       create_phase: {
-        Args: { name: string; service_id: string; summary?: string }
+        Args: { name: string; service_id: string; summary?: string | null }
         Returns: string
       }
       create_scenario: {
         Args: {
           lane_set?: Json
-          lane_source_path_id?: string
+          lane_source_path_id?: string | null
           layout?: string
           name: string
           path_name?: string
@@ -1191,7 +1204,7 @@ export type Database = {
       delete_path: { Args: { path_id: string }; Returns: string }
       delete_scenario: { Args: { scenario_id: string }; Returns: string }
       deletion_impact: {
-        Args: { kind: string; scope_id?: string; target_id: string }
+        Args: { kind: string; scope_id?: string | null; target_id: string }
         Returns: Json
       }
       duplicate_path: {
@@ -1217,11 +1230,11 @@ export type Database = {
       owns_agent_session: { Args: { session_owner: string }; Returns: boolean }
       record_authoring_change: {
         Args: {
-          agent_session_id?: string
+          agent_session_id?: string | null
           args?: Json
           author?: string
           fn: string
-          revert?: Json
+          revert?: Json | null
         }
         Returns: string
       }
@@ -1286,16 +1299,16 @@ export type Database = {
       }
       search_blueprint: {
         Args: {
-          embed_model?: string
-          filter_lane_role?: string
-          filter_path_kind?: string
-          filter_phase?: string
-          filter_scenario?: string
+          embed_model?: string | null
+          filter_lane_role?: string | null
+          filter_path_kind?: string | null
+          filter_phase?: string | null
+          filter_scenario?: string | null
           granularity?: string[]
           include?: string[]
           match_count?: number
-          q?: string
-          query_embedding?: string
+          q?: string | null
+          query_embedding?: string | null
           rrf_k?: number
         }
         Returns: {
@@ -1320,7 +1333,7 @@ export type Database = {
       set_cell_dependency: {
         Args: {
           kind?: string
-          name?: string
+          name?: string | null
           source_cell_id: string
           target_cell_id: string
         }
@@ -1336,9 +1349,9 @@ export type Database = {
       }
       set_placement_touchpoint: {
         Args: {
-          p_name?: string
+          p_name?: string | null
           p_placement_id: string
-          p_touchpoint_id?: string
+          p_touchpoint_id?: string | null
         }
         Returns: Json
       }
