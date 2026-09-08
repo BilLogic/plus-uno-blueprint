@@ -38,6 +38,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { RECONCILED_FILES } from './reconciled-files.mjs'
+import { installMismatch } from './template-pin.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '')
 const DEFAULT_REF = 'template/upstream-main'
@@ -159,6 +160,13 @@ function reportEnrollable() {
       `${PACKAGE} is not installed, so there is nothing to compare against.\n` +
         'Run `npm ci` to install the pinned template, then re-run this.',
     )
+    process.exit(1)
+  }
+
+  // A stale install compares the wrong tree and says nothing about it (#510).
+  const stale = installMismatch(ROOT, packageRoot)
+  if (stale) {
+    console.error(stale)
     process.exit(1)
   }
 

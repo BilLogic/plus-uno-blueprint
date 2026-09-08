@@ -120,6 +120,7 @@ import { fileURLToPath } from 'node:url'
 
 import { RECONCILED_FILES } from './reconciled-files.mjs'
 import { sweptDocs } from './swept-docs.mjs'
+import { installMismatch } from './template-pin.mjs'
 
 const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url))
 
@@ -262,6 +263,13 @@ function main() {
         '  -> run `npm ci` and re-run this check. There is always a subject here, so a ' +
         'missing template is a failure and never a quiet pass.',
     )
+    process.exit(1)
+  }
+
+  // A stale install compares the wrong tree and says nothing about it (#510).
+  const stale = installMismatch(REPO_ROOT, packageRoot)
+  if (stale) {
+    console.error(stale)
     process.exit(1)
   }
 

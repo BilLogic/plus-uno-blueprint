@@ -36,6 +36,7 @@ import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { RECONCILED_FILES } from './reconciled-files.mjs'
 import { repoLocalCitations, describeCitation } from './repo-local-citations.mjs'
+import { installMismatch } from './template-pin.mjs'
 
 const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url))
 const PACKAGE = 'node_modules/agentic-service-blueprinting'
@@ -118,6 +119,16 @@ function main() {
         `${PACKAGE} is not installed, so their byte-identity cannot be checked.\n` +
         'Run `npm ci` to install the pinned template, then re-run this check.',
     )
+    process.exit(1)
+  }
+
+  // Before comparing anything: is the installed copy the one we pin? A pin
+  // bump without a matching install makes every enrolled file look drifted,
+  // and the message below would then tell the reader to reconcile or drop
+  // files nobody touched. That is #510, and it is a different failure.
+  const stale = installMismatch(REPO_ROOT, packageRoot)
+  if (stale) {
+    console.error(stale)
     process.exit(1)
   }
 

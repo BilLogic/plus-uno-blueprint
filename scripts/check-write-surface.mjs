@@ -58,6 +58,7 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { installMismatch } from './template-pin.mjs'
 
 const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url))
 
@@ -412,6 +413,15 @@ function migrationDocs(root) {
 
 function main() {
   const root = REPO_ROOT
+
+  // The pinned package's rosters are what this compares against, so a stale
+  // install compares the wrong rulebook (#510).
+  const stale = installMismatch(root, join(root, PACKAGE))
+  if (stale) {
+    console.error(stale)
+    process.exit(1)
+  }
+
   const result = compare({
     read: (path) => readFileSync(join(root, path), 'utf8'),
     referenceDocs: servedReferenceDocs(root),
