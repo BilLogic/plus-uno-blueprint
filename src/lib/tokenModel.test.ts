@@ -9,6 +9,7 @@ import {
   sourceMatching,
   stripComments,
   stylesheet,
+  stylesheetMatching,
 } from '@/lib/tokenModel'
 
 /**
@@ -98,5 +99,42 @@ describe('the source reader', () => {
     const stripped = stripComments('const a = 1 /* text-red-500 */\nconst b = 2\n')
     expect(stripped).not.toContain('text-red-500')
     expect(stripped.split('\n')).toHaveLength(3)
+  })
+})
+
+/**
+ * The stylesheet reader's own guard, for the property that decides how wide a
+ * stylesheet rule can be: a stylesheet's prose is not a use of what it names.
+ *
+ * This codebase writes a paragraph above almost every block, and those
+ * paragraphs quote the names they explain. `colors.css`'s header spells
+ * `var(--color-amber-100)` twice to explain the Tailwind namespace split, and a
+ * raw-text scan reports both — which would have made the first `var()` rule
+ * fail on a file that paints nothing, and taught the next reader that the rule
+ * cannot be trusted. Matching declared VALUES rather than text is what avoids
+ * that, and it is worth asserting rather than assuming.
+ */
+describe('the stylesheet reader', () => {
+  it('reads a value, not the prose that names it', () => {
+    const prose = stylesheetMatching(/var\(--color-amber-100\)/g).filter(
+      (use) => use.file === 'colors.css',
+    )
+    expect(prose).toEqual([])
+  })
+
+  it('reports a match at the line it sits on in the file on disk', () => {
+    const matches = stylesheetMatching(/var\(--color-blue-900\)/g)
+    expect(matches.length).toBeGreaterThan(0)
+    for (const use of matches) {
+      const line = stylesheet(use.file).text.split('\n')[use.line - 1]
+      expect(line).toContain(use.match)
+    }
+  })
+
+  it('carries the layer, so a rule can scope itself by tier rather than by filename', () => {
+    const registered = stylesheetMatching(/var\(--color-amber-100\)/g)
+    expect(registered.map((use) => `${use.file}:${use.layer}`)).toContain(
+      'theme.css:registry',
+    )
   })
 })

@@ -289,6 +289,54 @@ export function namesIn(file: string): Set<string> {
   return new Set(declarationsIn(file).map((entry) => entry.name))
 }
 
+export type StyleUse = {
+  /** The matched text, e.g. `var(--color-slate-500)`. */
+  match: string
+  /** The property whose value carries it, e.g. `background-color`. */
+  property: string
+  /** The selector list that declaration sits under. */
+  selector: string
+  /** Path relative to `src/styles`. */
+  file: string
+  line: number
+  layer: TokenLayer
+}
+
+/**
+ * Every declared value in every stylesheet that matches a pattern.
+ *
+ * The stylesheet counterpart of `sourceMatching`, and the reason the guard can
+ * read a stylesheet at all: every rule this model backed until now sampled
+ * `src/**.tsx` and stopped there, so a stylesheet was free to consume a name at
+ * a tier the same rule forbade a component to touch. Widening the model once
+ * widens it for every rule that asks (ADR 0001).
+ *
+ * Declared VALUES rather than raw text, for two reasons a raw-text scan gets
+ * wrong. Comments are already blanked upstream, so the two `var(--color-amber-100)`
+ * in `colors.css`'s header prose — which explain the Tailwind namespace split
+ * and paint nothing — are not uses. And `layer` comes along, so a rule can say
+ * which tier a match sits in rather than naming the files that happen to hold
+ * one today.
+ *
+ * The pattern must carry `g`; `sourceMatching` asks the same.
+ */
+export function stylesheetMatching(pattern: RegExp): StyleUse[] {
+  const out: StyleUse[] = []
+  for (const entry of allDeclarations()) {
+    for (const match of entry.value.matchAll(pattern)) {
+      out.push({
+        match: match[0],
+        property: entry.name,
+        selector: entry.selector,
+        file: entry.file,
+        line: entry.line,
+        layer: entry.layer,
+      })
+    }
+  }
+  return out
+}
+
 // ---------------------------------------------------------------------------
 // Cascade
 // ---------------------------------------------------------------------------
