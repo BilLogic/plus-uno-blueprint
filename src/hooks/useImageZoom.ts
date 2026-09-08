@@ -56,8 +56,9 @@ const UNMEASURED: ImageSize = { width: 0, height: 0 }
  * Comfortably clear of `IMAGE_CLICK_DRAG_THRESHOLD_PX`, which is four: the
  * two thresholds answer different questions on the same gesture, and a
  * number close to the click threshold would turn every slightly-dragged
- * press at fit into a step. A layout number, so it is stated here in
- * TypeScript rather than hidden in a media query (ADR 0002).
+ * press at fit into a step. A layout number, and TypeScript owns this
+ * project's layout numbers, so it is stated here rather than hidden in a
+ * media query.
  */
 const IMAGE_SWIPE_STEP_THRESHOLD_PX = 48
 
