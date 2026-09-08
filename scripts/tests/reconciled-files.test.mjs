@@ -356,6 +356,17 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/blueprint/RoleSelect.tsx',
     'src/components/blueprint/PlacementResourcesList.tsx',
     'src/lib/utils.ts',
+    'src/contexts/DeploymentConfigContext.tsx',
+    'src/lib/agent/tools/referenceRegistry.ts',
+    'src/components/editor/WriteFailureNotices.tsx',
+    'src/lib/writeFailures.ts',
+    'src/components/editor/CanvasCellContextMenu.tsx',
+    'src/lib/mergeSlidesWithFallback.ts',
+    'src/lib/scenarioLayout.ts',
+    'src/lib/overviewFlowArrowAnchor.test.ts',
+    'src/types/slideViewType.test.ts',
+    'src/deploymentConfig.ts',
+    'src/lib/brandAccent.ts',
   ])
 })
 

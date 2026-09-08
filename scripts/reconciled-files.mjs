@@ -825,4 +825,62 @@ export const RECONCILED_FILES = [
   'src/components/blueprint/RoleSelect.tsx',
   'src/components/blueprint/PlacementResourcesList.tsx',
   'src/lib/utils.ts',
+
+  // asb 1.12.0 adopt. The deployment seam, and four files the pin bump made
+  // free (BilLogic/agentic-service-blueprinting#214).
+  //
+  // The seam's CONTEXT is the template's file unchanged — `App` hands it a
+  // config, the tree reads the resolved value by hook, and `useWorkspaceTitle`
+  // throws outside the provider rather than returning an inert value. The two
+  // editor tests upstream wrapped in the provider stay byte-identical because
+  // of it.
+  'src/contexts/DeploymentConfigContext.tsx',
+
+  // The host half of the reference-doc seam. It imports nothing at all, which
+  // is the whole of its contract: `referenceNames.ts` reads it, `specs.ts`
+  // reads that, and the eval harness bundles `specs.ts` with no `?raw` loader.
+  // Nothing in this repository registers a document — the seam belongs to a
+  // host that mounts the package — but `referenceNames.ts` is byte-held and
+  // cannot be without this file beside it.
+  'src/lib/agent/tools/referenceRegistry.ts',
+
+  // Free from the TEMPLATE's side. asb 1.12.0 took the write-failure notice
+  // and its store wholesale — one of the four behaviours `App.tsx` records the
+  // template as simply having been missing — and the canvas context menu came
+  // with them, being the caller that reports a failed delete.
+  'src/components/editor/WriteFailureNotices.tsx',
+  'src/lib/writeFailures.ts',
+  'src/components/editor/CanvasCellContextMenu.tsx',
+
+  // Free from BOTH sides, and touched by neither for identity's sake. #438 and
+  // #439 renamed a scenario's layout to `layout` and anchored the overview's
+  // flow arrow on the phases actually loaded; the same two changes are in the
+  // template, and these four came out identical on their own.
+  'src/lib/mergeSlidesWithFallback.ts',
+  'src/lib/scenarioLayout.ts',
+  'src/lib/overviewFlowArrowAnchor.test.ts',
+  'src/types/slideViewType.test.ts',
+
+  // asb 1.12.1 adopt. The fork this repository declared at 1.12.0 was avoidable
+  // and is gone (BilLogic/agentic-service-blueprinting#230).
+  //
+  // `deploymentConfig.ts` forked here for two literals: the wordmark and the
+  // accent. The template inlined one and omitted the other, so changing them
+  // meant forking the whole module. It now reads both through constants —
+  // `brand.accent` from `BRAND`, `content.workspaceTitle` from
+  // `coverContent.title` — and nothing repainted upstream, because that
+  // repository's cover omits its title on purpose and its brand seam is
+  // deliberately neutral, so both resolve to `undefined` and are dropped.
+  //
+  // The same file therefore says `'PLUS'`, `'#85ECD5'` and `'Uno Blueprint'`
+  // here and the template's own values there, because the imports resolve
+  // locally. The values fork; the module does not. `config.ts` is where a
+  // deployment's values were always meant to live, and already holds
+  // `ORG_NAME` for the same reason.
+  //
+  // `brandAccent.ts` came with it: the two copies differed only in how the
+  // brand argument defaults, which a shared `Brand`/`BRAND` is what was
+  // missing.
+  'src/deploymentConfig.ts',
+  'src/lib/brandAccent.ts',
 ]
