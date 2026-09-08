@@ -1276,6 +1276,21 @@ export const RECONCILED_FILES = [
   'src/components/mobile/MobileNavSheet.tsx',
   'src/lib/findingFingerprint.ts',
 
+  // Enrolled by #220. The one difference that was not prose: the template
+  // rendered a dependency why-line backed by `linkNote`, and this deployment
+  // had no column to put behind it. `cell_dependencies.note` closes that, so
+  // the two copies say the same thing again. The remaining differences were
+  // import order and one comment citing a local plan document where the
+  // template's says the same thing without an address.
+
+  'src/lib/blueprintCellConnections.ts',
+
+  // The same change's test, arriving byte-identical. It exercises the panel
+  // through its props and asserts the three readers who have no hover — a
+  // keyboard, a touch screen, a screen reader — so it holds in either
+  // repository even though the panel around it is a fork here.
+  'src/components/blueprint/cellDependencyWhyLine.test.tsx',
+
   // DECLINED by #522. Two judgements and one boundary.
   //
   // `src/components/blueprint/pathPickerColumns.test.ts` — declined a second
