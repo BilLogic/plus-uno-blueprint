@@ -97,8 +97,8 @@ export function describeCell(id: string): { label: string; lane: string } {
   if (!element) return { label: 'Cell', lane: '' }
 
   // Overlays live *inside* the cell button, so `textContent` swallows them:
-  // the pick badge turned "Regular Tutor" into "1Regular Tutor", and a lane of
-  // touchpoints into "2Slack2Email2Zoom". Clone and strip them rather than
+  // the pick badge turned "Field Crew" into "1Field Crew", and a lane of
+  // touchpoints into "2Slack2Email2Phone". Clone and strip them rather than
   // regexing digits off the front — a cell whose text genuinely starts with a
   // number is a real cell, and stripping it would be a worse bug than the one
   // being fixed.

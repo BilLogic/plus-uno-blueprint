@@ -14,15 +14,6 @@ type Step = { id: string; name: string }
 type Column = { left: number; width: number }
 
 /**
- * Half the hit zone for an insert boundary.
- *
- * The line drawn is 1px; the target is 16. That gap is the whole difference
- * between an affordance people use and one they fight, and it is what Figma's
- * row/column inserts do — the visible mark is a hairline, the thing you have
- * to hit is a finger's width.
- */
-
-/**
  * Column handles above the grid, in Design mode only.
  *
  * The blueprint has never rendered step names as a header row — steps exist

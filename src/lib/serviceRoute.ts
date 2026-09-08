@@ -2,12 +2,12 @@
  * The service route — the one module that owns how a service slug lives in the
  * URL path.
  *
- * The app routes by service slug (#335): the first path segment names the
- * active service (`/plus-tutoring`), and the view query params
- * (`urlViewState.ts` — `?cell=`, `?slice=`, …) ride alongside it. The two are
- * orthogonal: this module reads and writes the PATH, `urlViewState` reads and
- * writes the SEARCH, so a deep link like `/plus-tutoring?cell=<id>` carries
- * both the service and the cell.
+ * A deployment routes by service slug: the first path segment names the active
+ * service (`/support-desk`), and the view query params (`urlViewState.ts` —
+ * `?cell=`, `?slice=`, …) ride alongside it. The two are orthogonal: this
+ * module reads and writes the PATH, `urlViewState` reads and writes the SEARCH,
+ * so a deep link like `/support-desk?cell=<id>` carries both the service and
+ * the cell.
  *
  * Deliberately hand-rolled, no router dependency — it mirrors how
  * `urlViewState`/`viewStateStore` already own the URL by hand, and keeps the

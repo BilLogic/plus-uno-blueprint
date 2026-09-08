@@ -984,4 +984,36 @@ export const RECONCILED_FILES = [
   'src/hooks/useLaneSpec.ts',
   'src/hooks/useCellDeepLink.ts',
   'src/hooks/useStakeholders.ts',
+
+  // Prose-only differences, resolved by the tie-break the convergence review
+  // settled: where two copies differ ONLY in the words of a comment, the
+  // template's sentence wins. Not a judgement per file — a rule, so that a
+  // dozen files do not become a dozen small arguments about whose comment
+  // reads better. Every one of these was code-identical once comments were
+  // stripped; `measure-template-divergence.mjs --enrollable` is what found
+  // them.
+  //
+  // Two candidates were deliberately NOT taken, and the reasons are the
+  // tie-break's own exceptions. `touchpointMutations.ts` is not a wording
+  // difference at all: the two comments state different FACTS about the same
+  // code ("the four detail columns" here, "the two" upstream — and upstream is
+  // right, this repo's own test asserts two), and taking it would also revert
+  // the registry/catalog rename this repo made. `blueprintStoryboardPlaceholder.ts`
+  // is the materially-better case: this repo's copy warns that the asset
+  // filename keeps a retired word because it is a VALUE written into applied
+  // migrations, so renaming the file would turn every placeholder on the board
+  // into a real frame. The template's one-line version has no such warning.
+  // That sentence goes UP as its own change; it does not get overwritten here.
+  'src/components/blueprint/BlueprintColumnHandles.tsx',
+  'src/components/blueprint/DefinitionCard.tsx',
+  'src/components/blueprint/EntityDefinitionPopover.tsx',
+  'src/components/blueprint/StakeholderSelect.tsx',
+  'src/components/editor/SliceHeaderBand.tsx',
+  'src/contexts/cellPickContext.ts',
+  'src/lib/blueprintCellStyle.ts',
+  'src/lib/canvasCellQuery.ts',
+  'src/lib/filterToolbarButton.ts',
+  'src/lib/openCellStore.ts',
+  'src/lib/serviceRoute.ts',
+  'src/lib/touchpointRole.ts',
 ]

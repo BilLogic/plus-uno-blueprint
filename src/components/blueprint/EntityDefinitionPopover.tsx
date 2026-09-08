@@ -33,8 +33,7 @@ type EntityDefinitionPopoverProps = {
   showDescription?: boolean
   /**
    * A further note about THIS instance — the parallel-scenario aside is the
-   * only one. It used to hang off an ⓘ inside the badge, which made ⓘ mean two
-   * things; it is a fact about the same label, so it rides in the same card.
+   * only one. It is a fact about the same label, so it rides in the same card.
    */
   note?: string | null
   children: ReactElement
@@ -42,7 +41,7 @@ type EntityDefinitionPopoverProps = {
   /** False for a `<span>` or a `<Badge>` trigger — Base UI warns otherwise. */
   nativeButton?: boolean
   className?: string
-  /** Controlled open — for a header whose whole block owns the hover (#306). */
+  /** Controlled open — for a header whose whole block owns the hover. */
   open?: boolean
   onOpenChange?: (open: boolean) => void
   /** Point the card at this element rather than the trigger. */
@@ -62,21 +61,13 @@ const EXAMPLE_EYEBROW = 'Example'
 /**
  * What this kind of thing IS, hung off the label that names one of them.
  *
- * It is a `DefinitionCard` and nothing else since #243: this component's only
- * job is to turn a kind, an instance and an aside into SECTIONS. It used to
- * own the card's markup, and owning it is how the instance half drifted into a
- * plain medium-weight name while the category half wore a small-caps eyebrow —
- * two heading treatments in one card, on the three surfaces that render both.
+ * It is a `DefinitionCard` and nothing else: this component's only job is to
+ * turn a kind, an instance and an aside into SECTIONS.
  *
  * Several facts in one card, which is allowed: the KIND, then THIS INSTANCE,
  * then an aside. The standing prohibition is two mechanisms for one fact, not
  * one mechanism for several — and splitting them would put the definition of
  * "path" somewhere other than on the word "path".
- *
- * It was `PathDescriptionTooltip`. The name was already wrong before that
- * change — `ScenarioTitleBadge` and `PathLabelBadge` both funnel through it,
- * so it served phases and scenarios as well as paths — and it is wrong twice
- * over now that it is not a tooltip.
  */
 export function EntityDefinitionPopover({
   kind,
@@ -99,8 +90,8 @@ export function EntityDefinitionPopover({
   const noteText = note?.trim() || null
 
   // This deployment's own example for this kind, read from the service once and
-  // picked by kind (#302). Absent outside a provider — a test, the path menu —
-  // where the map is empty.
+  // picked by kind. Absent outside a provider — a test, the path menu — where
+  // the map is empty.
   const exampleText = useEntityExamples()[kind]?.trim() || null
   const editing = useCanvasModeValue() === 'design'
 
@@ -111,8 +102,7 @@ export function EntityDefinitionPopover({
   /*
     The instance section needs a NAME, because its eyebrow IS the name. A
     caller asking for a description with nothing to head it would get a
-    headless section, which is the second heading treatment this card was
-    flattened to remove — so it draws nothing instead.
+    headless section, so it draws nothing instead.
   */
   if (showDescription && trimmedName) {
     sections.push({
@@ -123,11 +113,11 @@ export function EntityDefinitionPopover({
   }
 
   /*
-    The example grounds the generic rule in something on THIS reader's board
-    (#302). A written one shows to everyone; a blank one renders nothing for a
-    reader and, only in design mode, the same unwritten placeholder the
-    instance section uses — the prompt goes to the deployer who can act on it,
-    never to a viewer who cannot.
+    The example grounds the generic rule in something on THIS reader's board.
+    A written one shows to everyone; a blank one renders nothing for a reader
+    and, only in design mode, the same unwritten placeholder the instance
+    section uses — the prompt goes to the deployer who can act on it, never to
+    a viewer who cannot.
   */
   if (exampleText) {
     sections.push({ eyebrow: EXAMPLE_EYEBROW, body: exampleText })

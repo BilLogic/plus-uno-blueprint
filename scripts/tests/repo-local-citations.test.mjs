@@ -33,9 +33,14 @@ describe('what the rule catches', () => {
     ])
   })
 
-  it('catches a migration filename, since the two series are separate', () => {
+  it('catches a migration, by filename or by its bare timestamp', () => {
     expect(texts('src/a.ts', '// `20260729120000_derived_layer.sql` narrowed it')).toEqual([
       '20260729120000_derived_layer',
+    ])
+    // The bare form is the one that got away first: a citation in backticks
+    // with no `_name` after it walked past a pattern that required the suffix.
+    expect(texts('src/a.ts', '// outside the grant (`21000113000000`)')).toEqual([
+      '21000113000000',
     ])
   })
 
@@ -82,6 +87,14 @@ describe('what the rule leaves alone', () => {
       [],
     )
     expect(repoLocalCitations('src/a.ts', '// Plan the anchor slots for one band.')).toEqual([])
+  })
+
+  it('leaves an OKLCH literal alone — a decimal tail is not a timestamp', () => {
+    // Four confident findings on a stylesheet that cites nothing is how the
+    // unanchored version announced itself. Both series begin `20` or `21`, and
+    // neither a digit nor a decimal point may sit on either side.
+    expect(repoLocalCitations('src/a.css', '  --x: oklch(0.47058823529411 0 0);')).toEqual([])
+    expect(repoLocalCitations('src/a.ts', 'const n = 120260729120000')).toEqual([])
   })
 
   it('leaves a two-digit number alone — neither repository is back at #99', () => {

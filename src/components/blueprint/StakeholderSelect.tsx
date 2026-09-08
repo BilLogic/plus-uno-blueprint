@@ -41,17 +41,15 @@ export function StakeholderSelect({
   /*
     Read-only is the OWNER BADGE, not the prose it used to be.
 
-    The name was already here; what was missing was any way to find out who
-    that party is. The registry has held a one-line definition of all 18 of
-    them since August and no screen selected it — `stakeholders.summary`, and
-    it was called `note` until 20260830160000, which is how it stayed
-    unreadable long enough to be worth a ticket. Hanging it on the badge is
-    the mechanism `docs/reference/panel-affordances.md` names for exactly this
-    — a value from a governed vocabulary the reader learns by seeing it repeat,
+    The name alone left a reader knowing WHICH party owns the lane and with
+    no way to find out who that party is. The registry holds a one-line
+    definition of every one of them — `stakeholders.summary` — and hanging it
+    on the badge is the mechanism this panel family uses for exactly this: a
+    value from a governed vocabulary the reader learns by seeing it repeat,
     whose meaning belongs on its own hover.
 
     The kind stays beside the badge as text rather than joining it: a badge
-    says one thing, and "Regular Tutor" and "Staff" are two.
+    says one thing, and "Blueprint owner" and "Staff" are two.
   */
   if (disabled) {
     /*

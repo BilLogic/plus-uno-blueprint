@@ -11,12 +11,10 @@ import { useSyncExternalStore } from 'react'
  *
  * Why the URL needs it at all: `?cell=` is the share link. A person who opens a
  * cell and copies the address bar should hand over the cell, not the homepage —
- * the same link uno-bot builds when it cites that cell in Slack.
+ * the same link the agent builds when it cites that cell.
  *
  * Deliberately just the id. The panel can show a touchpoint inside a cell, a
  * draft, or the compare ledger; none of those are a stable thing to link to.
- *
- * The cross-repo relationship: docs/connectors/plus-uno.md.
  */
 
 let openCellId: string | null = null

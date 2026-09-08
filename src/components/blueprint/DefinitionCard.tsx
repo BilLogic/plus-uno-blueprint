@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
  * One part of a definition: the word, and what it means.
  *
  * `eyebrow` is a category ("Path", "Staff", "Live") or an instance's own name
- * ("Happy Path", "Regular Tutor"). Both are set the same way, which is the
+ * ("Happy Path", "Blueprint owner"). Both are set the same way, which is the
  * whole point — see `DefinitionCard`.
  */
 export type DefinitionSection = {
@@ -30,13 +30,9 @@ export type DefinitionSection = {
  * One section is a term and its meaning. Two is a category then an instance —
  * PATH over what a path is, then this path's name over its own description.
  *
- * Three shapes shipped before #243 and this replaces all of them. The card
- * itself headed its category with a small-caps eyebrow and its instance with a
- * plain medium-weight name, which is two heading treatments inside one card
- * and is why it read as a one-off rather than as a pattern. `PanelTermLabel`,
- * `Field`'s hint and `PanelKindBadge`'s description opened a bare sentence
- * with no heading at all. `StatusBadge` used a Tooltip, which never opens on
- * touch.
+ * The card heads every section the same way: a small-caps eyebrow over a body.
+ * One heading treatment, so the card reads as a pattern rather than as a
+ * one-off — the category half and the instance half are typeset identically.
  *
  * The `data-definition-*` attributes are the seam `definitionCard.test.tsx`
  * reads: "every section is typeset the same" is a claim about the rendered
@@ -84,20 +80,20 @@ export function DefinitionCard({ sections }: { sections: DefinitionSection[] }) 
  * A POPOVER and never a `Tooltip`, and that is a bug fix rather than a
  * preference. Base UI's `Tooltip` is `mouseOnly` with no press to fall back
  * on, so a definition put there is invisible on a phone — and this app has a
- * real phone posture (`useMobileShell`, a full-width bottom sheet). `Popover`
- * takes `openOnHover` for the pointer and keeps its own press for everyone
- * else: one mechanism reaching both readers.
+ * real phone posture (a full-width bottom sheet). `Popover` takes `openOnHover`
+ * for the pointer and keeps its own press for everyone else: one mechanism
+ * reaching both readers.
  *
  * The trigger supplies `tabIndex`, so every definition is reachable by
  * keyboard focus. That is what makes the ⓘ removable: the icon was never what
- * made a definition reachable (#243).
+ * made a definition reachable.
  *
  * Uncontrolled and hover-driven by default, which is every caller but the grid
  * headers. Those own the hover themselves — the definition surfaces from a
  * hover ANYWHERE on the header block, not just over the trigger — so they drive
  * `open` and point the card at the block through `anchor` while turning the
  * trigger's own hover off. The touch ⓘ stays the trigger, so a tap and a
- * keyboard press still open the card the ordinary way (#306).
+ * keyboard press still open the card the ordinary way.
  */
 export function DefinitionPopover({
   sections,
