@@ -28,17 +28,32 @@
      `--chroma` is 0, but it is what a tinted light theme would turn. */
   --surface-hue: 34;
   --chroma: 0;
-  /* The three dials the template keeps beside this one — `--primary-lightness`,
-     `--primary-chroma` and `--ring-lightness` — are deliberately NOT in this
-     file, and were never removed from it: they arrived upstream on 2026-08-18,
-     after these theme files were written, and reached this repo only through a
-     `-s ours` history graft that imports nothing. All three are declared in
-     `semantic.css`, at the values its `--primary` and `--ring` used to spell
-     out inline, because this deployment runs one brand fill in both modes:
-     neither theme turns them, and by the invariant at the top of that file a
-     dial neither theme turns is not a dial a theme owns. The day one of them
-     needs a different value on the dark canvas it moves into BOTH theme files
-     together, which is what `themeDials.test.ts` holds. #412. */
+  /* The four knobs this deployment authors rather than derives: the corner
+     radius, the filled control's lightness and chroma, and the focus ring's
+     lightness. `themes/dark.css` declares all four at these same values, and
+     `themeDials.test.ts` holds the two files to it — this deployment runs one
+     brand fill and one corner in both modes.
+
+     Writing an identical value twice is the point, not an oversight. `--hue`
+     above is the standing example: a mode-invariant value declared here alone
+     would still reach dark, because this block opens on bare `:root` and
+     `:root` matches `<html class="dark">` — so dark would be running a dial it
+     never declared, at whatever this file happened to say. That is exactly how
+     `--surface-hue: 34` ran every dark surface at this theme's warm grey for
+     months, silently, under a comment in `themes/dark.css` claiming the
+     opposite. Declared in both files, the leak has nothing left to carry.
+
+     All four lived in `semantic.css` until #459, on the argument that a dial
+     neither theme turns is not a dial a theme owns. That argument reads the
+     wrong axis: what decides the home is authored versus derived, and these
+     are literals a deployment picks. `theme.css` derives every `--radius-*`
+     rung from `--radius`; `--primary` and `--ring` in `semantic.css` read the
+     other three, and the retune history that argues for their values is the
+     long comment beside `--primary` there. */
+  --radius: 0.625rem;
+  --primary-lightness: 0.83;
+  --primary-chroma: 0.135;
+  --ring-lightness: 0.58;
   /*
    * Near-white canvas. Raised surfaces round up against L=1, so in light mode
    * elevation is carried by the translucent `--muted` / `--accent` /

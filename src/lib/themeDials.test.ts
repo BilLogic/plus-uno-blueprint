@@ -39,20 +39,47 @@ const PRINT = 'print.css'
  * Empty on purpose. It is not decoration: the assertion below re-derives each
  * listed name under both themes and fails if it is not actually invariant, so
  * a wrong exemption is caught rather than trusted. `--radius` used to belong
- * here and now lives in `semantic.css` instead — a value that is the same in
- * both themes is not a dial, and the honest home for it is the layer that
- * neither theme owns.
+ * here, and then spent a month in `semantic.css`; it is now declared in both
+ * theme files at one value, which is what a mode-invariant dial looks like
+ * once parity rather than a leak is what carries it into dark (#459).
  */
 const MODE_INVARIANT_IN_LIGHT: string[] = []
+
+/**
+ * The dials this deployment authors at one value for both modes.
+ *
+ * They are inputs, not derivations, so `semantic.css` is the wrong home for
+ * them however invariant they are — that file is the derivation layer, and a
+ * literal sitting in it is the only thing keeping it from being byte-identical
+ * with the template's copy.
+ *
+ * Both files, same value, is the mechanism and not merely tidiness. A
+ * mode-invariant value written into `themes/light.css` alone reaches dark
+ * through the bare `:root` at the head of that file's selector list — the
+ * identical leak that ran every dark surface at light's warm grey for months,
+ * silently, under a comment claiming otherwise. Written into both, there is
+ * nothing for the leak to carry, and the assertions below make the two
+ * impossible to drift apart. #459.
+ */
+const AUTHORED_IN_BOTH = [
+  '--radius',
+  '--primary-lightness',
+  '--primary-chroma',
+  '--ring-lightness',
+]
+
+/** What one theme file declares a name as, or `ABSENT`. */
+const valueIn = (file: string, name: string) =>
+  declarationsIn(file).find((entry) => entry.name === name)?.value ?? 'ABSENT'
 
 /**
  * Dials `print.css` need not restate.
  *
  * `--helpers-os-appearance` is a string ("Light" / "Dark"), not a colour
  * input, and nothing reads it — Supabase ships it for a helper we did not
- * fork. Everything else in the light dial set has to be restated, because
- * print's block overrides `.dark` at the same scope and a dial it skips keeps
- * dark's value on white paper.
+ * fork. Every other dial whose dark value differs from its light one has to be
+ * restated, because print's block overrides `.dark` at the same scope and a
+ * dial it skips keeps dark's value on white paper.
  */
 const NOT_PRINTED = ['--helpers-os-appearance']
 
@@ -99,6 +126,37 @@ describe('theme dials', () => {
     )
     expect(homes).toEqual(darkOnly.map((name) => `${name} <- semantic.css`))
   })
+
+  it('declares every authored knob in both theme files, at one value', () => {
+    const absent = AUTHORED_IN_BOTH.filter(
+      (name) => valueIn(LIGHT, name) === 'ABSENT',
+    )
+    expect(absent).toEqual([])
+    // Compared as a whole list rather than knob by knob so a failure names the
+    // one that drifted, and without pinning the numbers — a retune of the
+    // filled control is allowed to move them, together.
+    const declared = AUTHORED_IN_BOTH.map(
+      (name) => `${name}: ${valueIn(LIGHT, name)} / ${valueIn(DARK, name)}`,
+    )
+    expect(declared).toEqual(
+      AUTHORED_IN_BOTH.map(
+        (name) => `${name}: ${valueIn(LIGHT, name)} / ${valueIn(LIGHT, name)}`,
+      ),
+    )
+  })
+
+  it('declares the authored knobs nowhere else', () => {
+    // All four sat in `semantic.css` until #459, and a copy left behind there
+    // would be unreachable rather than a fallback: light's block opens on
+    // `:root` and imports after it. `print.css` must not restate them either —
+    // print exists to override a dark value with the light one, and there is
+    // no dark value here to override.
+    const strays = declarations()
+      .filter((entry) => AUTHORED_IN_BOTH.includes(entry.name))
+      .filter((entry) => entry.file !== LIGHT && entry.file !== DARK)
+      .map((entry) => `${entry.file}:${entry.line} ${entry.name}`)
+    expect(strays).toEqual([])
+  })
 })
 
 describe('the print override', () => {
@@ -112,10 +170,16 @@ describe('the print override', () => {
    * The Radix ramps in `colors.css` do not need this because their dark block
    * is already `@media screen`. The theme files' ramps are not.
    */
-  it('restates every dial the light theme declares', () => {
+  it('restates every dial whose dark value differs from its light one', () => {
     const missing = [...namesIn(LIGHT)]
       .filter((name) => !namesIn(PRINT).has(name))
       .filter((name) => !NOT_PRINTED.includes(name))
+      // A dial both themes declare identically has nothing for print to
+      // override: whichever theme is on the root, the value on paper is
+      // already light's. Stated as the property rather than as a growing
+      // exemption list, so the day one of them stops being invariant this
+      // asks for the restatement on its own.
+      .filter((name) => resolveValue(name, 'light') !== resolveValue(name, 'dark'))
       .sort()
     expect(missing).toEqual([])
   })
@@ -207,12 +271,18 @@ describe('what the dials resolve to', () => {
     expect(unreachable).toEqual([])
   })
 
-  it('keeps the radius dial out of the theme files entirely', () => {
-    // A corner does not flip with the theme, so `--radius` is not a dial a
-    // theme owns. It reached dark mode only through the `:root` leak above.
-    expect(namesIn(LIGHT).has('--radius')).toBe(false)
-    expect(namesIn(DARK).has('--radius')).toBe(false)
-    expect(winningDeclaration('--radius', 'dark')?.file).toBe('semantic.css')
+  it('carries the radius dial into dark by parity, not by the `:root` leak', () => {
+    // A corner does not flip with the theme, so `--radius` is the same value
+    // in both files — and writing it in both is exactly what makes that safe.
+    // Written in `themes/light.css` alone it would still reach dark, through
+    // the bare `:root` at the head of that file's selector list; dark would be
+    // running a value it never declared, which is the shape the warm-grey
+    // defect had. Declared in both, dark's radius is dark's own, and the
+    // parity assertion above is what stops the two from drifting apart.
+    expect(namesIn(LIGHT).has('--radius')).toBe(true)
+    expect(namesIn(DARK).has('--radius')).toBe(true)
+    expect(winningDeclaration('--radius', 'light')?.file).toBe(LIGHT)
+    expect(winningDeclaration('--radius', 'dark')?.file).toBe(DARK)
     expect(resolveValue('--radius', 'dark')).toBe(resolveValue('--radius', 'light'))
   })
 })
