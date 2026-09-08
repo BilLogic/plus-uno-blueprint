@@ -429,6 +429,17 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/blueprint/BlueprintArrowMarkerDefs.tsx',
     'src/components/editor/CreateVersionDialog.tsx',
     'src/lib/pathKindContract.test.ts',
+    'src/components/blueprint/CellInSlicesFooter.tsx',
+    'src/components/blueprint/ZoomableImage.tsx',
+    'src/components/blueprint/zoomableImage.test.tsx',
+    'src/components/cover/CoverFigure.tsx',
+    'src/components/cover/coverFigure.test.tsx',
+    'src/hooks/useImageZoom.ts',
+    'src/lib/imageZoomReducer.ts',
+    'src/lib/imageZoomReducer.test.ts',
+    'src/components/editor/AnnotationCaptureMenu.tsx',
+    'src/components/mobile/MobileNavSheet.tsx',
+    'src/lib/findingFingerprint.ts',
   ])
 })
 
