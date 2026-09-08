@@ -1054,4 +1054,45 @@ export const RECONCILED_FILES = [
   'src/lib/placementResourceMutations.ts',
   'src/lib/resourcePresentation.ts',
   'src/lib/serviceSlug.ts',
+
+  // ── asb 1.12.8: five fixtures, the last three prose holdouts, and a guard ──
+  //
+  // The FIXTURES named the deployment where the template's copies name nobody:
+  // `PLUS App`, `Warm-Up` and `warm-up` as a resource name, a slide title and a
+  // slide id. The code under test was identical and nothing asserts on the
+  // vocabulary — these strings have to be some word, and the template's word is
+  // the neutral one.
+  //
+  // This is not the same judgement as an identity file. `index.html`,
+  // `supabase/config.toml` and `docs/agents/issue-tracker.md` also differ from
+  // the template by a deployment noun alone, and they are RIGHT to: the browser
+  // tab's title, the Supabase project id and the repository the issue queue
+  // lives in are this deployment's answers. A fixture's noun is arbitrary; an
+  // identity file's noun is the answer, and a scan for the noun cannot tell
+  // them apart.
+  //
+  // The last three were the tie-break's own exceptions and are exceptions no
+  // longer. `blueprintStoryboardPlaceholder.ts` was held back because this
+  // repo's copy carried the warning that the asset filename is a VALUE in
+  // applied migrations and the template's did not — that sentence went up
+  // first, and the file comes down now that the template says it too.
+  // `stakeholderMutations.ts` and `touchpointMutations.ts` were held back from
+  // the other side: the template's copies still cited an ADR number and two
+  // migration filenames. `--enrollable` now reports nothing at all.
+  //
+  // `cssCascadeLayerContract.test.ts` is not a convergence — this repo did not
+  // have it. A browser drops an unknown at-rule together with its whole block,
+  // in silence, and a repo-wide rename of a domain word once rewrote `@layer`
+  // to `@lane` in eight places upstream with every downstream test still
+  // green. Enrolled rather than copied, so the guard cannot drift from the one
+  // the accident taught.
+  'src/components/blueprint/featuredResources.test.tsx',
+  'src/components/mobile/mobileTopBar.test.tsx',
+  'src/lib/compareReviewStore.test.ts',
+  'src/lib/placementResourceMutations.test.ts',
+  'src/lib/resourcePresentation.test.ts',
+  'src/lib/blueprintStoryboardPlaceholder.ts',
+  'src/lib/stakeholderMutations.ts',
+  'src/lib/touchpointMutations.ts',
+  'src/lib/cssCascadeLayerContract.test.ts',
 ]

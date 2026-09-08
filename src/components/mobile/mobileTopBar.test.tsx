@@ -3,7 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MobileTopBar } from '@/components/mobile/MobileTopBar'
 
-// Pins the Phase-3 top bar (plan 2026-08-16-002): the stateful menu toggle
+// Pins the mobile top bar: the stateful menu toggle
 // (☰ ⇄ ✕, aria-expanded, one control opens AND closes) and the bar being
 // navigation-only — the agent enters through the FAB, never this bar.
 
@@ -13,7 +13,7 @@ function renderBar(over: Partial<Parameters<typeof MobileTopBar>[0]> = {}) {
   const onToggleNav = vi.fn()
   render(
     <MobileTopBar
-      title="Warm-Up"
+      title="Intake Call"
       navOpen={false}
       onToggleNav={onToggleNav}
       {...over}
@@ -48,6 +48,6 @@ describe('MobileTopBar', () => {
   it('renders the contextual right slot the shell provides', () => {
     renderBar({ rightSlot: <span>Happy Path</span> })
     expect(screen.getByText('Happy Path')).toBeDefined()
-    expect(screen.getByText('Warm-Up')).toBeDefined()
+    expect(screen.getByText('Intake Call')).toBeDefined()
   })
 })

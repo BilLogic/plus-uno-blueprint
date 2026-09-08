@@ -18,7 +18,7 @@ function fakeClient(reply: unknown = null, error: unknown = null) {
 }
 
 const row = (over: Partial<CellResource> & { id: string; url: string }): CellResource => ({
-  name: 'PLUS App',
+  name: 'Intake portal',
   kind: 'link',
   placementId: 'placement-1',
   featured: false,
@@ -40,7 +40,7 @@ describe('updatePlacementResources', () => {
       { id: 'placement-1', cellId: 'cell-1' },
       existing,
       [
-        { id: 'r-2', kind: 'attachment', name: 'PLUS App', url: '/blueprint-images/a.png' },
+        { id: 'r-2', kind: 'attachment', name: 'Intake portal', url: '/blueprint-images/a.png' },
         { id: 'r-1', kind: 'link', name: '', url: 'https://www.figma.com/design/W0' },
         { id: null, kind: 'link', name: '', url: 'youtu.be/walkthrough' },
       ],
@@ -49,7 +49,7 @@ describe('updatePlacementResources', () => {
     expect(rpc).toHaveBeenCalledWith('sync_placement_resources', {
       p_placement_id: 'placement-1',
       p_rows: [
-        { id: 'r-2', kind: 'attachment', name: 'PLUS App', url: '/blueprint-images/a.png' },
+        { id: 'r-2', kind: 'attachment', name: 'Intake portal', url: '/blueprint-images/a.png' },
         // A pasted link nobody named is named by its host, like the cell's list.
         { id: 'r-1', kind: 'link', name: 'figma.com', url: 'https://www.figma.com/design/W0' },
         { id: null, kind: 'link', name: 'youtu.be', url: 'https://youtu.be/walkthrough' },
@@ -64,8 +64,8 @@ describe('updatePlacementResources', () => {
           placement_id: 'placement-1',
           // The cell's own row is not this list's to restore.
           resources: [
-            { id: 'r-1', kind: 'link', name: 'PLUS App', url: 'https://www.figma.com/design/W0' },
-            { id: 'r-2', kind: 'attachment', name: 'PLUS App', url: '/blueprint-images/a.png' },
+            { id: 'r-1', kind: 'link', name: 'Intake portal', url: 'https://www.figma.com/design/W0' },
+            { id: 'r-2', kind: 'attachment', name: 'Intake portal', url: '/blueprint-images/a.png' },
           ],
         },
       },

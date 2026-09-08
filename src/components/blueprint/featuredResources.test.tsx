@@ -12,7 +12,7 @@ afterEach(cleanup)
 
 const row = (over: Partial<CellResource> & { url: string }): CellResource => ({
   id: over.url,
-  name: 'PLUS App',
+  name: 'Intake portal',
   kind: 'link',
   placementId: 'placement-1',
   featured: true,
@@ -24,8 +24,8 @@ describe('what a placement leads with', () => {
     const shown = featuredPresentation({
       placementId: 'placement-1',
       resources: [
-        row({ url: '/blueprint-images/plus-app/step-05.png', kind: 'attachment' }),
-        row({ url: 'https://www.figma.com/design/W0/plus-app' }),
+        row({ url: '/blueprint-images/intake-portal/step-05.png', kind: 'attachment' }),
+        row({ url: 'https://www.figma.com/design/W0/intake-portal' }),
         row({ url: 'https://youtu.be/walkthrough', placementId: null, name: 'Walkthrough' }),
       ],
     })
@@ -36,7 +36,7 @@ describe('what a placement leads with', () => {
       </>,
     )
     expect(container.querySelector('[data-featured-preview="image"] img')?.getAttribute('src')).toBe(
-      '/blueprint-images/plus-app/step-05.png',
+      '/blueprint-images/intake-portal/step-05.png',
     )
     const links = getAllByRole('link')
     expect(links.map((link) => link.textContent?.trim())).toEqual([
@@ -44,7 +44,7 @@ describe('what a placement leads with', () => {
       'Watch on YouTube',
     ])
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
-      'https://www.figma.com/design/W0/plus-app',
+      'https://www.figma.com/design/W0/intake-portal',
       'https://youtu.be/walkthrough',
     ])
     expect(links.every((link) => link.getAttribute('rel') === 'noopener noreferrer')).toBe(true)
