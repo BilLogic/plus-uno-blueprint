@@ -365,7 +365,20 @@ export function useImageZoom({
       dragRef.current = null
       draggedRef.current = drag.panning
       setDragging(false)
-      event.currentTarget.releasePointerCapture?.(event.pointerId)
+      // `releasePointerCapture` throws `NotFoundError` for an id the element
+      // no longer holds, and mid-drag that is ordinary rather than a bug: a
+      // `pointercancel` from an OS edge swipe releases capture on the way out,
+      // so the teardown that follows is giving back something already gone.
+      // The drag state above is cleared first, so a throw here would strand
+      // nothing — but this repository has been bitten twice by the bare call
+      // (`ResizableComparePanel`, then `CanvasAnnotationLayer`, which carries
+      // the long version of this note), and an uncaught throw out of an event
+      // handler is not the house style. Fourth site, same guard.
+      try {
+        event.currentTarget.releasePointerCapture(event.pointerId)
+      } catch {
+        // Already released, or never captured.
+      }
     },
     [],
   )
