@@ -7,14 +7,13 @@ import {
   isImageClick,
   panImageBy,
   resolveImageZoomCursor,
-  toggleImageZoom,
   zoomImageByFactor,
   zoomImageByGesture,
   zoomImageByWheel,
   zoomImageToScale,
   IMAGE_CLICK_DRAG_THRESHOLD_PX,
-  IMAGE_ZOOM_MAX_NATURAL_MULTIPLE,
-  IMAGE_ZOOM_MIN_VISIBLE_STEP,
+  IMAGE_ZOOM_GESTURE_MAX_NATURAL_MULTIPLE,
+  IMAGE_ZOOM_MIN_CLICK_STEP,
   type ImageZoomViewport,
   type ImagePoint,
   type ImageSize,
@@ -74,7 +73,7 @@ describe('scale bounds', () => {
     expect(state.scale).toBe(0.5)
   })
 
-  it('never zooms in past three times natural size', () => {
+  it('never pushes a free gesture past the guard', () => {
     let state = opened()
     for (let i = 0; i < 40; i += 1) {
       state = zoomImageByWheel(
@@ -83,20 +82,22 @@ describe('scale bounds', () => {
         CENTRE,
       )
     }
-    expect(state.scale).toBe(IMAGE_ZOOM_MAX_NATURAL_MULTIPLE)
+    expect(state.scale).toBe(IMAGE_ZOOM_GESTURE_MAX_NATURAL_MULTIPLE)
   })
 
-  it('caps the floor at the ceiling when fit already exceeds it', () => {
-    // A postage stamp in a fullscreen popup: it opens at three times natural
-    // and stays there, rather than stretching to fill the frame. Both bounds
-    // coincide, so there is nothing left to zoom in either direction.
+  it('opens a postage stamp at the guard, and still leaves it somewhere to go', () => {
+    // Fitting a 100px picture to a 1000px viewport would blow it up ten
+    // times, which is the mush the guard exists to prevent, so it opens at
+    // the guard instead. What it is no longer is PINNED there: the stop
+    // above fit is stated against the scale the image opened at, so a click
+    // on the smallest picture in the app still does something.
     const stamp = fitImageZoom(VIEWPORT, { width: 100, height: 100 })
-    expect(stamp.scale).toBe(IMAGE_ZOOM_MAX_NATURAL_MULTIPLE)
-    expect(zoomImageToScale(stamp, 1, CENTRE).scale).toBe(
-      IMAGE_ZOOM_MAX_NATURAL_MULTIPLE,
+    expect(stamp.scale).toBe(IMAGE_ZOOM_GESTURE_MAX_NATURAL_MULTIPLE)
+    expect(zoomImageToScale(stamp, 0.5, CENTRE).scale).toBe(
+      IMAGE_ZOOM_GESTURE_MAX_NATURAL_MULTIPLE,
     )
-    expect(zoomImageToScale(stamp, 8, CENTRE).scale).toBe(
-      IMAGE_ZOOM_MAX_NATURAL_MULTIPLE,
+    expect(clickZoomImage(stamp, CENTRE).scale).toBe(
+      stamp.scale * IMAGE_ZOOM_MIN_CLICK_STEP,
     )
   })
 
@@ -162,85 +163,41 @@ describe('continuous zoom', () => {
 })
 
 describe('clickZoomImage', () => {
-  it('doubles the scale about the point clicked', () => {
+  it('goes from fit to the stop above it, about the point clicked', () => {
     const state = opened()
     const before = imagePointUnder(state, OFF_CENTRE)
     const clicked = clickZoomImage(state, OFF_CENTRE)
+    // This fixture fits at 0.5, so natural size is exactly twice fit and the
+    // two halves of the stop agree on scale 1.
     expect(clicked.scale).toBe(1)
     const after = imagePointUnder(clicked, OFF_CENTRE)
     expect(after.x).toBeCloseTo(before.x, 9)
     expect(after.y).toBeCloseTo(before.y, 9)
   })
 
-  it('stops at the ceiling instead of overshooting it', () => {
-    const nearly = zoomImageToScale(opened(), 2, CENTRE)
-    expect(clickZoomImage(nearly, CENTRE).scale).toBe(3)
+  it('comes back to fit from the stop, centred again', () => {
+    const stop = clickZoomImage(opened(), OFF_CENTRE)
+    expect(clickZoomImage(stop, OFF_CENTRE)).toEqual(opened())
   })
 
-  it('returns to fit from the ceiling, so no click is a dead end', () => {
-    const ceiling = zoomImageToScale(opened(), 3, OFF_CENTRE)
-    expect(clickZoomImage(ceiling, OFF_CENTRE)).toEqual(opened())
-  })
-})
-
-describe('toggleImageZoom', () => {
-  it('goes from fit to natural size', () => {
-    expect(toggleImageZoom(opened(), CENTRE).scale).toBe(1)
-  })
-
-  it('goes from natural size back to fit', () => {
-    const natural = toggleImageZoom(opened(), OFF_CENTRE)
-    expect(toggleImageZoom(natural, OFF_CENTRE)).toEqual(opened())
-  })
-
-  it('lands on natural size from anywhere in between', () => {
-    const between = zoomImageToScale(opened(), 2.4, CENTRE)
-    expect(toggleImageZoom(between, CENTRE).scale).toBe(1)
-  })
-
-  // 880px of authored artwork in a 1200px box fits at 1.36, so natural
-  // size — scale 1 — is under the floor and cannot be reached. That is every
-  // cover figure on every desktop, and a fixture that fits at 0.5 never
-  // meets it.
-  const WIDE_VIEWPORT = { width: 1200, height: 900 }
-  const COVER = { width: 880, height: 660 }
-  const WIDE_CENTRE = { x: 600, y: 450 }
-
-  /** How far past fit the toggle goes, as a multiple of fit. */
-  const stopAsMultipleOfFit = (viewport: ImageSize) => {
-    const fit = fitImageZoom(viewport, COVER)
-    const centre = { x: viewport.width / 2, y: viewport.height / 2 }
-    return toggleImageZoom(fit, centre).scale / fit.scale
-  }
-
-  it('still moves when the fit floor has swallowed natural size', () => {
-    const fit = fitImageZoom(WIDE_VIEWPORT, COVER)
-    expect(fit.scale).toBeGreaterThan(1)
-    expect(toggleImageZoom(fit, WIDE_CENTRE).scale).toBeGreaterThan(fit.scale)
-  })
-
-  it('comes back to fit from the stop it moved to', () => {
-    const fit = fitImageZoom(WIDE_VIEWPORT, COVER)
-    const closer = toggleImageZoom(fit, WIDE_CENTRE)
-    expect(toggleImageZoom(closer, WIDE_CENTRE)).toEqual(fit)
-  })
-
-  it('steps the same multiple of fit whatever the viewport', () => {
-    // The stop is stated relative to fit rather than as an absolute scale,
-    // so a narrower screen gets the same gesture rather than a different one.
-    const narrow = stopAsMultipleOfFit({ width: 1000, height: 750 })
-    expect(narrow).toBeGreaterThan(1)
-    expect(narrow).toBeCloseTo(stopAsMultipleOfFit(WIDE_VIEWPORT), 9)
-  })
-
-  it('never offers a stop below fit', () => {
-    const fit = fitImageZoom(WIDE_VIEWPORT, COVER)
-    const above = zoomImageToScale(fit, 2.9, WIDE_CENTRE)
-    for (const from of [fit, above]) {
-      expect(toggleImageZoom(from, WIDE_CENTRE).scale).toBeGreaterThanOrEqual(
-        fit.scale,
-      )
+  it('comes back to fit from anywhere a wheel can leave a reader, not only from the stop', () => {
+    for (const scale of [0.6, 1, 1.7, 3]) {
+      const between = zoomImageToScale(opened(), scale, OFF_CENTRE)
+      expect(clickZoomImage(between, OFF_CENTRE)).toEqual(opened())
     }
+  })
+
+  it('has nothing between the two stops to land on, however many times it is clicked', () => {
+    // The third stop is what the old pairing produced and what a click could
+    // land on next to one of the others. Clicking round the loop, from
+    // wherever the anchor happens to be, visits two scales and no more.
+    let state = opened()
+    const visited = new Set<number>()
+    for (let click = 0; click < 6; click += 1) {
+      state = clickZoomImage(state, click % 2 === 0 ? OFF_CENTRE : CENTRE)
+      visited.add(state.scale)
+    }
+    expect([...visited].sort((a, b) => a - b)).toEqual([0.5, 1])
   })
 })
 
@@ -305,10 +262,10 @@ describe('resolveImageZoomCursor', () => {
     expect(resolveImageZoomCursor(opened())).toBe('zoom-in')
   })
 
-  it('offers a grab once panning is possible', () => {
-    expect(resolveImageZoomCursor(zoomImageToScale(opened(), 1, CENTRE))).toBe(
-      'grab',
-    )
+  it('offers a grab between the stops, which is where only a wheel can leave a reader', () => {
+    expect(
+      resolveImageZoomCursor(zoomImageToScale(opened(), 0.75, CENTRE)),
+    ).toBe('grab')
   })
 
   it('grabs while a drag is in progress', () => {
@@ -319,7 +276,11 @@ describe('resolveImageZoomCursor', () => {
     ).toBe('grabbing')
   })
 
-  it('offers a zoom out at the ceiling, where a click returns to fit', () => {
+  it('offers a zoom out at the stop, and above it, where a click returns to fit', () => {
+    expect(resolveImageZoomCursor(zoomImageToScale(opened(), 1, CENTRE))).toBe(
+      'zoom-out',
+    )
+    // Wheeled past the stop the click still has only fit to offer, and says so.
     expect(resolveImageZoomCursor(zoomImageToScale(opened(), 3, CENTRE))).toBe(
       'zoom-out',
     )
@@ -341,113 +302,167 @@ describe('degenerate sizes', () => {
   })
 })
 
-describe('the click ladder', () => {
-  // 880px of authored artwork fits ABOVE 1 on any desktop, which is the shape
-  // that exposes a relative step paired with an absolute ceiling: the wider
-  // the viewport, the higher fit sits and the less of the range is left over
-  // for the last rung. A fixture that fits at 0.5 never meets it.
-  const COVER_ART = { width: 880, height: 660 }
+describe('the two stops, over every shape a reader can hand the viewer', () => {
+  /*
+    Properties, not a table of scales.
 
-  /** Viewports a reader actually has, from a laptop to a wide display. */
-  const desktop = (width: number): ImageSize => ({
-    width,
-    height: Math.round(width * 0.75),
-  })
+    The pairing this replaced was found by a reader on one viewport at a
+    time, three times over, because what was asserted each time was the
+    number that viewport produced. A number is true until the next display
+    is wider than the last one. So every rule below is a RELATIONSHIP — a
+    ratio, an inequality, one function agreeing with another — asserted over
+    a sweep of viewports and image sizes rather than over the one fixture
+    the rest of this file uses.
+  */
+  const VIEWPORTS: ImageSize[] = [
+    { width: 320, height: 568 }, // a phone
+    { width: 768, height: 1024 }, // a tablet, upright
+    { width: 1000, height: 750 },
+    { width: 1253, height: 940 }, // an odd width, on purpose
+    { width: 1440, height: 900 },
+    { width: 2400, height: 1300 },
+    { width: 3840, height: 2160 }, // where fit outruns natural size entirely
+  ]
 
-  const DESKTOP_WIDTHS = [1000, 1100, 1200, 1253, 1400, 1600, 1800, 2000]
+  const NATURALS: ImageSize[] = [
+    { width: 880, height: 660 }, // a cover figure, authored at 880
+    { width: 2000, height: 1600 }, // a screenshot bigger than most viewports
+    { width: 8000, height: 4500 }, // a very large screenshot
+    { width: 100, height: 100 }, // a postage stamp, whose fit outruns the guard
+    { width: 2000, height: 1 }, // a one-pixel strip
+    { width: 1, height: 2000 }, // and the same strip stood on its end
+  ]
+
+  const SHAPES = VIEWPORTS.flatMap((viewport) =>
+    NATURALS.map((natural) => ({
+      viewport,
+      natural,
+      /** Named, so a failure says which shape rather than which index. */
+      shape:
+        `${viewport.width}x${viewport.height} viewport, ` +
+        `${natural.width}x${natural.height} image`,
+    })),
+  )
 
   const middleOf = (viewport: ImageSize): ImagePoint => ({
     x: viewport.width / 2,
     y: viewport.height / 2,
   })
 
-  /** Every scale a reader clicking from fit lands on, before one comes back. */
-  const clickLadder = (viewport: ImageSize): number[] => {
+  /** The two scales this shape offers a click, and where to aim it. */
+  const stopsOf = (viewport: ImageSize, natural: ImageSize) => {
     const anchor = middleOf(viewport)
-    let state = fitImageZoom(viewport, COVER_ART)
-    const stops = [state.scale]
-    for (let step = 0; step < 12; step += 1) {
-      const next = clickZoomImage(state, anchor)
-      if (next.scale <= state.scale) return stops
-      stops.push(next.scale)
-      state = next
-    }
-    throw new Error(`the ladder at ${viewport.width}px never came back to fit`)
+    const fit = fitImageZoom(viewport, natural)
+    return { anchor, fit, stop: clickZoomImage(fit, anchor) }
   }
 
-  it('never moves the scale by less than a visible step, at any width', () => {
-    const invisible = DESKTOP_WIDTHS.flatMap((width) => {
-      const stops = clickLadder(desktop(width))
-      return stops
-        .slice(1)
-        .map((scale, index) => ({
-          width,
-          from: stops[index],
-          ratio: scale / stops[index],
-        }))
-        .filter(({ ratio }) => ratio < IMAGE_ZOOM_MIN_VISIBLE_STEP)
+  /** How large a change a click made, as a ratio, whichever way it went. */
+  const jump = (from: number, to: number) => Math.max(from / to, to / from)
+
+  it('always moves the scale by a visible factor, in both directions', () => {
+    const invisible = SHAPES.flatMap(({ viewport, natural, shape }) => {
+      const { anchor, fit, stop } = stopsOf(viewport, natural)
+      const back = clickZoomImage(stop, anchor)
+      return [
+        { shape, going: 'in', ratio: jump(fit.scale, stop.scale) },
+        { shape, going: 'out', ratio: jump(stop.scale, back.scale) },
+      ].filter(({ ratio }) => ratio < IMAGE_ZOOM_MIN_CLICK_STEP)
     })
     expect(invisible).toEqual([])
   })
 
-  it('ends on the ceiling wherever a visible step of range exists', () => {
-    for (const width of DESKTOP_WIDTHS) {
-      const viewport = desktop(width)
-      const fit = fitImageZoom(viewport, COVER_ART)
-      // Every width in the sweep has room for at least one visible step, so
-      // the ceiling is something a click is owed rather than merely allowed.
-      expect(
-        IMAGE_ZOOM_MAX_NATURAL_MULTIPLE / fit.scale,
-      ).toBeGreaterThanOrEqual(IMAGE_ZOOM_MIN_VISIBLE_STEP)
-      expect(clickLadder(viewport).at(-1)).toBe(IMAGE_ZOOM_MAX_NATURAL_MULTIPLE)
-    }
+  it('never puts the stop below twice fit, at any viewport', () => {
+    const tooClose = SHAPES.filter(({ viewport, natural }) => {
+      const { fit, stop } = stopsOf(viewport, natural)
+      return stop.scale < fit.scale * IMAGE_ZOOM_MIN_CLICK_STEP
+    }).map(({ shape }) => shape)
+    expect(tooClose).toEqual([])
   })
 
-  it('comes back to fit from the ceiling at every width', () => {
-    for (const width of DESKTOP_WIDTHS) {
-      const viewport = desktop(width)
-      const anchor = middleOf(viewport)
-      const fit = fitImageZoom(viewport, COVER_ART)
-      const ceiling = zoomImageToScale(
-        fit,
-        IMAGE_ZOOM_MAX_NATURAL_MULTIPLE,
-        anchor,
-      )
-      expect(clickZoomImage(ceiling, anchor)).toEqual(fit)
-    }
+  it('puts the stop AT natural size wherever natural size is at least twice fit', () => {
+    const wrong = SHAPES.filter(({ viewport, natural }) => {
+      const { fit, stop } = stopsOf(viewport, natural)
+      // Scale is a multiple of natural size, so natural size is scale 1.
+      if (1 < fit.scale * IMAGE_ZOOM_MIN_CLICK_STEP) return false
+      return stop.scale !== 1
+    }).map(({ shape }) => shape)
+    expect(wrong).toEqual([])
+    // The premise is worth counting: a rule about the shapes where natural
+    // size is reachable says nothing if the sweep contains none of them.
+    const reachable = SHAPES.filter(
+      ({ viewport, natural }) =>
+        1 >= stopsOf(viewport, natural).fit.scale * IMAGE_ZOOM_MIN_CLICK_STEP,
+    )
+    expect(reachable.length).toBeGreaterThan(0)
   })
 
-  it('says zoom-out exactly where a click returns to fit', () => {
-    // Across scales a wheel can leave a reader on, not only the ones a click
-    // can reach: the cursor is the viewer's only running explanation of what
-    // the next click does, so it has to be true off the rungs as well as on.
-    const disagreements = DESKTOP_WIDTHS.flatMap((width) => {
-      const viewport = desktop(width)
-      const anchor = middleOf(viewport)
-      const fit = fitImageZoom(viewport, COVER_ART)
-      return [1, 1.2, 1.5, 1.8, 2, 2.4, 2.85, 2.99, 3]
+  it('returns to fit from the stop and from every scale between them', () => {
+    const stranded = SHAPES.flatMap(({ viewport, natural, shape }) => {
+      const { anchor, fit, stop } = stopsOf(viewport, natural)
+      const span = stop.scale - fit.scale
+      return [0.25, 0.5, 0.75, 1]
+        .map((part) => zoomImageToScale(fit, fit.scale + span * part, anchor))
+        .map((state) => ({
+          shape,
+          from: state.scale,
+          to: clickZoomImage(state, anchor).scale,
+        }))
+        .filter((row) => row.to !== fit.scale)
+    })
+    expect(stranded).toEqual([])
+  })
+
+  it('says zoom-in exactly where a click zooms in, and zoom-out only where one does not', () => {
+    const disagreements = SHAPES.flatMap(({ viewport, natural, shape }) => {
+      const { anchor, fit, stop } = stopsOf(viewport, natural)
+      const span = stop.scale - fit.scale
+      return [fit.scale, fit.scale + span / 2, stop.scale, stop.scale * 1.5]
         .map((scale) => zoomImageToScale(fit, scale, anchor))
         .map((state) => ({
-          width,
+          shape,
           scale: state.scale,
           cursor: resolveImageZoomCursor(state),
-          returnsToFit: clickZoomImage(state, anchor).scale === fit.scale,
+          zoomsIn: clickZoomImage(state, anchor).scale > state.scale,
         }))
-        .filter((row) => (row.cursor === 'zoom-out') !== row.returnsToFit)
+        .filter(
+          (row) =>
+            (row.cursor === 'zoom-in') !== row.zoomsIn ||
+            (row.cursor === 'zoom-out' && row.zoomsIn),
+        )
     })
     expect(disagreements).toEqual([])
   })
 
-  it('leaves the scale alone where the whole range is under one step', () => {
-    // 880px of artwork on a 2400px display fits at 2.73, a tenth under the
-    // ceiling. There is no visible zoom left to offer, and a tenth of a step
-    // would read as a broken click rather than as an answer.
-    const viewport = desktop(2400)
-    const anchor = middleOf(viewport)
-    const fit = fitImageZoom(viewport, COVER_ART)
-    expect(fit.scale).toBeGreaterThan(
-      IMAGE_ZOOM_MAX_NATURAL_MULTIPLE / IMAGE_ZOOM_MIN_VISIBLE_STEP,
-    )
-    expect(clickZoomImage(fit, anchor).scale).toBe(fit.scale)
+  it('leaves the wheel free-range: it passes the stops rather than snapping to them', () => {
+    const wrong = SHAPES.flatMap(({ viewport, natural, shape }) => {
+      const { anchor, fit, stop } = stopsOf(viewport, natural)
+      const notch = zoomImageByWheel(
+        fit,
+        { deltaX: 0, deltaY: -10, deltaMode: 0 },
+        anchor,
+      )
+      let pushed = fit
+      for (let push = 0; push < 200; push += 1) {
+        pushed = zoomImageByWheel(
+          pushed,
+          { deltaX: 0, deltaY: -100, deltaMode: 0 },
+          anchor,
+        )
+      }
+      const rows: { shape: string; wrong: string; scale: number }[] = []
+      const wrongly = (about: string, scale: number) =>
+        rows.push({ shape, wrong: about, scale })
+      if (!(notch.scale > fit.scale && notch.scale < stop.scale)) {
+        wrongly('one notch did not land between the stops', notch.scale)
+      }
+      if (pushed.scale < IMAGE_ZOOM_GESTURE_MAX_NATURAL_MULTIPLE) {
+        wrongly('the wheel stopped short of the guard', pushed.scale)
+      }
+      if (pushed.scale < stop.scale) {
+        wrongly('the wheel could not reach the click stop', pushed.scale)
+      }
+      return rows
+    })
+    expect(wrong).toEqual([])
   })
 })
