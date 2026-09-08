@@ -1164,4 +1164,14 @@ export const RECONCILED_FILES = [
   'eslint.config.js',
   'tsconfig.node.json',
   'vite.config.ts',
+
+  // ── One classifier word, one file ──
+  //
+  // The template folded `slice_type` into `kind` some releases ago and this
+  // deployment did not, so the same file was `sliceType.ts` on one side and
+  // `sliceKind.ts` on the other and the two could never be compared. Renaming
+  // the symbols here left the file byte-identical to the template's, which is
+  // the whole argument for enrolling it: the difference was the spelling of a
+  // classifier, never behaviour.
+  'src/lib/sliceKind.ts',
 ]

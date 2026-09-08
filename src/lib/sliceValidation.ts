@@ -10,8 +10,8 @@
  * the failure messages are user-facing copy, not stack traces.
  */
 
-export const SLICE_TYPES = ['journey', 'step', 'lane', 'cell', 'custom'] as const
-export type SliceType = (typeof SLICE_TYPES)[number]
+export const SLICE_KINDS = ['journey', 'step', 'lane', 'cell', 'custom'] as const
+export type SliceKind = (typeof SLICE_KINDS)[number]
 
 /** `slices.authorship` — who wrote it, and whether a regeneration may
  *  overwrite it. Renamed from `origin` in 20260830190000; every other origin
@@ -20,8 +20,8 @@ export type SliceType = (typeof SLICE_TYPES)[number]
 export const SLICE_AUTHORSHIPS = ['generated', 'customized', 'human'] as const
 export type SliceAuthorship = (typeof SLICE_AUTHORSHIPS)[number]
 
-export function isSliceType(value: string): value is SliceType {
-  return (SLICE_TYPES as readonly string[]).includes(value)
+export function isSliceKind(value: string): value is SliceKind {
+  return (SLICE_KINDS as readonly string[]).includes(value)
 }
 
 export function isSliceAuthorship(value: string): value is SliceAuthorship {
@@ -40,7 +40,7 @@ export type DraftSlide = {
 export type DraftSlice = {
   title: string
   summary: string
-  sliceType: SliceType
+  sliceKind: SliceKind
   actor: string
   slides: DraftSlide[]
 }
@@ -68,8 +68,8 @@ export function validateDraftSlice(draft: DraftSlice): ValidationProblem[] {
     problems.push({ message: `Title is longer than ${TITLE_MAX} characters.` })
   }
 
-  if (!isSliceType(draft.sliceType)) {
-    problems.push({ message: `Unknown slice type “${draft.sliceType}”.` })
+  if (!isSliceKind(draft.sliceKind)) {
+    problems.push({ message: `Unknown slice type “${draft.sliceKind}”.` })
   }
 
   if (draft.slides.length === 0) {

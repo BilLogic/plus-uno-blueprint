@@ -21,7 +21,7 @@ import {
   createStakeholder,
   updateStakeholder,
 } from '@/lib/stakeholderMutations'
-import type { SliceType } from '@/lib/sliceValidation'
+import type { SliceKind } from '@/lib/sliceValidation'
 import { asUpdatedAtToken } from '@/lib/optimisticConcurrency'
 import { setSharedCanvasMode } from '@/contexts/canvasModeContext'
 import {
@@ -645,7 +645,7 @@ export async function dispatchTool(
           serviceId: await resolveActiveServiceId(client),
           title: need(args, 'title'),
           summary: s(args, 'description') ?? '',
-          sliceType: kind as SliceType,
+          sliceKind: kind as SliceKind,
           actor: s(args, 'actor') ?? '',
           cellIds,
         })
@@ -663,7 +663,7 @@ export async function dispatchTool(
         const outcome = await updateSliceMeta(client, sliceId, asUpdatedAtToken(data.updated_at), {
           title: s(args, 'title') ?? data.title,
           summary: s(args, 'description') ?? data.summary ?? '',
-          sliceType: (s(args, 'kind') ?? s(args, 'slice_type') ?? data.kind) as SliceType,
+          sliceKind: (s(args, 'kind') ?? s(args, 'slice_type') ?? data.kind) as SliceKind,
           actor: s(args, 'actor') ?? data.actor ?? '',
           authorship: data.authorship,
         })

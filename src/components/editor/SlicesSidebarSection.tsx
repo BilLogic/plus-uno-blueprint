@@ -28,7 +28,7 @@ import { Input } from '@/components/ui/input'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { duplicateSlice, updateSliceMetaFromSeed } from '@/lib/sliceMutations'
 import { reportWriteFailure } from '@/lib/writeFailures'
-import { isSliceType } from '@/lib/sliceValidation'
+import { isSliceKind } from '@/lib/sliceValidation'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useViewState } from '@/contexts/viewStateStore'
@@ -38,10 +38,10 @@ import { errorMessage } from '@/lib/utils'
 /** Sidebar group order — unknown types fall into CUSTOM. */
 const SLICE_TYPE_GROUPS = ['journey', 'step', 'lane', 'cell', 'custom'] as const
 
-type SliceTypeGroup = (typeof SLICE_TYPE_GROUPS)[number]
+type SliceKindGroup = (typeof SLICE_TYPE_GROUPS)[number]
 
-function sliceTypeGroup(sliceType: string): SliceTypeGroup {
-  const type = sliceType.toLowerCase()
+function sliceKindGroup(sliceKind: string): SliceKindGroup {
+  const type = sliceKind.toLowerCase()
   return SLICE_TYPE_GROUPS.find((group) => group === type) ?? 'custom'
 }
 
@@ -152,7 +152,7 @@ export function SlicesSidebarSection() {
 
   const groups = SLICE_TYPE_GROUPS.map((type) => ({
     type,
-    slices: rows.filter((slice) => sliceTypeGroup(slice.kind) === type),
+    slices: rows.filter((slice) => sliceKindGroup(slice.kind) === type),
   })).filter((group) => group.slices.length > 0)
 
   if (groups.length === 0) {
@@ -301,7 +301,7 @@ export function RenameSliceDialog({
       outcome = await updateSliceMetaFromSeed(client, seed.id, seed, {
         title,
         summary: description,
-        sliceType: isSliceType(seed.kind) ? seed.kind : 'custom',
+        sliceKind: isSliceKind(seed.kind) ? seed.kind : 'custom',
         actor: seed.actor ?? '',
         authorship: seed.authorship ?? 'human',
       })
