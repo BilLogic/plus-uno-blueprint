@@ -428,6 +428,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/sliceKind.ts',
     'src/components/blueprint/BlueprintArrowMarkerDefs.tsx',
     'src/components/editor/CreateVersionDialog.tsx',
+    'src/lib/pathKindContract.test.ts',
   ])
 })
 
