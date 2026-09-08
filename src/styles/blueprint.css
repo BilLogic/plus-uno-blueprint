@@ -439,12 +439,14 @@
     --foreground-blueprint-cell: var(--color-orange-1200);
   }
 
-  /* support */
-/* partner-action — a body outside PLUS.
-     Gray is the only family neither a lane, a path nor a touchpoint tone
-     draws from (palette.test.ts holds all three disjoint), and it is the apt
-     one anyway: an external actor should not wear a colour that says it is
-     one of ours. */
+  /*
+   * partner-action — a body outside PLUS.
+   *
+   * Gray is the only family neither a lane, a path nor a touchpoint tone
+   * draws from (palette.test.ts holds all three disjoint), and it is the apt
+   * one anyway: an external actor should not wear a colour that says it is
+   * one of ours.
+   */
 [data-blueprint-lane='partner-action'] {
     --background-blueprint-cell: var(--color-gray-500);
     --background-blueprint-cell-hover: var(--color-gray-600);
@@ -453,7 +455,8 @@
     --foreground-blueprint-cell: var(--color-gray-1200);
   }
 
-  [data-blueprint-lane='support'] {
+  /* support */
+[data-blueprint-lane='support'] {
     --background-blueprint-cell: var(--color-amber-500);
     --background-blueprint-cell-hover: var(--color-amber-600);
     --background-blueprint-cell-pressed: var(--color-amber-700);
