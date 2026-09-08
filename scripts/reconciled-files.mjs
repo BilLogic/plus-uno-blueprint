@@ -1207,4 +1207,106 @@ export const RECONCILED_FILES = [
   // this database and `variant` in the template's, so WHICH spelling went
   // where is not a fact these two files can share.
   'src/lib/pathKindContract.test.ts',
+
+  // ── Eleven that matched, or matched but for a comment (#522) ──
+  //
+  // Measured at the 1.13.0 pin: 925 in-scope paths, 561 of them shared with
+  // the template, and 346 of those byte-identical against 338 enrolled. The
+  // gap is the whole of this entry. A file that HAPPENS to match and a file
+  // that is HELD to match read the same on any given day and behave nothing
+  // alike on the day one side moves — the second fails a build, the first
+  // parts company in silence. Eight of the eleven needed no edit at all;
+  // three needed one comment each.
+  //
+  // 338 rather than the 339 the checker prints, because
+  // `public/step-visual-placeholder.svg` is enrolled and `public/` is outside
+  // what the divergence measurement scopes. The two numbers count different
+  // things and are one apart for that reason alone.
+  //
+  // The eight are the image viewer and one panel footer, and they are
+  // identical because the template took them FROM here rather than the other
+  // way round. `ZoomableImage`, `useImageZoom`, `imageZoomReducer` and their
+  // tests went upstream whole, along with `CoverFigure`, the first adopter
+  // that motivated them, and the cell panel's "loading is not no matches"
+  // fix went with them. Convergence normally costs an edit on this side;
+  // this is the case where it cost one on that side, and enrolling is what
+  // stops the two copies parting again now that both repositories have one.
+  'src/components/blueprint/CellInSlicesFooter.tsx',
+  'src/components/blueprint/ZoomableImage.tsx',
+  'src/components/blueprint/zoomableImage.test.tsx',
+  'src/components/cover/CoverFigure.tsx',
+  'src/components/cover/coverFigure.test.tsx',
+  'src/hooks/useImageZoom.ts',
+  'src/lib/imageZoomReducer.ts',
+  'src/lib/imageZoomReducer.test.ts',
+
+  // The three that took the template's sentence, each one comment apart.
+  //
+  // `MobileNavSheet.tsx` named the plan and the phase the drawer was decided
+  // in. That is an address in this repository's plans tree and nothing at all
+  // in the template's, and the template's wording already omits it, so there
+  // was no meaning to weigh against the tie-break.
+  //
+  // `findingFingerprint.ts` cited a section number of the audit playbook.
+  // The template names the rule instead — the audit playbook's fingerprint
+  // rule — which is the form this list asks for and survives the day someone
+  // adds a section.
+  //
+  // `AnnotationCaptureMenu.tsx` did not need the tie-break, and it is worth
+  // saying so rather than resting on it. Its comments called the annotation
+  // overlay a "lane" — residue of the mechanical rename that turned `layers`
+  // into `lanes`, which is about blueprint ROWS and not about z-order. The
+  // code directly under the comment never moved: it is still `layerElement`,
+  // still querying `[data-canvas-annotation-layer]`, and `useImageZoom.ts` in
+  // the block above says "an annotation layer" in a file both repositories
+  // already share. So the template's wording is also the true one.
+  //
+  // `a-rename-leaves-no-mangled-english.test.mjs` is the guard for that
+  // family and could not have caught this one. It registers only residue that
+  // is impossible as English — the substituted word wedged inside a longer
+  // word, or standing where the design-token tier was meant — because that is
+  // what lets its subject be the whole tree with no exemption for ordinary
+  // prose. A scratch one and an annotation one are both perfectly possible
+  // English phrases about the wrong thing, so nothing was in a position to
+  // flag them. Holding the file to the template's copy is what catches the
+  // residue that guard is deliberately blind to. (Its patterns match this
+  // paragraph too, which is why the shapes are described here and not
+  // spelled.)
+  'src/components/editor/AnnotationCaptureMenu.tsx',
+  'src/components/mobile/MobileNavSheet.tsx',
+  'src/lib/findingFingerprint.ts',
+
+  // DECLINED by #522. Two judgements and one boundary.
+  //
+  // `src/components/blueprint/pathPickerColumns.test.ts` — declined a second
+  //   time, after re-reading the sentence rather than the earlier decision.
+  //   The remaining difference is the paragraph describing the defect the
+  //   test was written against, and the two repositories had different
+  //   defects. Here the two `Set`s were disjoint and each held a repeated
+  //   member — `variant` twice in the primary, `exception` twice in the
+  //   secondary — so every path was drawn exactly once and what was wrong
+  //   was the structure alone. Upstream one kind sat in BOTH sets and its
+  //   paths were drawn twice, once per column. The template's sentence says
+  //   the second thing, and adopting it would put a false account of a fixed
+  //   bug in this tree to buy a line on this list. A comment that is wrong
+  //   about what happened costs more than a file that is merely unheld.
+  //
+  // `src/lib/sliceValidation.ts` — the difference is a four-line comment this
+  //   repository has and the template has not, on `SLICE_AUTHORSHIPS`: that
+  //   `slices.authorship` was renamed from `origin`, and that every other
+  //   `origin` column in the schema answers a different question, taking
+  //   `import` or `app` rather than naming who wrote it. Both halves are true
+  //   in both repositories. Only the migration filename it cites is
+  //   unportable, and the template has no sentence to adopt in its place — so
+  //   enrolling means DELETING the comment, which trades a standing warning
+  //   for an allowlist line. The right move is to send the sentence upstream
+  //   as its own change, which cannot be made from here. Until it is, this
+  //   file stays out and keeps its meaning.
+  //
+  // `src/styles/colors.css` — on the same measurement, prose-only-different
+  //   and enrollable on the same terms as the three above. It is left
+  //   undecided on purpose: everything under `src/styles/` belongs to #491,
+  //   including whether this file and `semantic.css` are enrolled, and two
+  //   tickets deciding one file is how a decision gets made twice and
+  //   recorded once.
 ]
