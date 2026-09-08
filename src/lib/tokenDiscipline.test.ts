@@ -269,12 +269,14 @@ test('nothing outside the ramp-owning layers reaches a ramp step through var()',
  * entry is asserted to still match something, so an exemption cannot outlive
  * the offender it was written for.
  *
- * Two entries record a DEFERRAL rather than a justification, and say so:
- * `CanvasAnnotationLayer.tsx` and `styles/blueprint.css`'s panel chrome are
- * genuine tier violations whose fixes change rendered colour, and both are
- * owned by tickets this one unblocks (#462, #460). Writing them down as
- * deferred is the difference between a guard that records a debt and a guard
- * that hides one.
+ * One entry records a DEFERRAL rather than a justification, and says so:
+ * `styles/blueprint.css`'s panel chrome is a genuine tier violation whose fix
+ * changes rendered colour, and it is owned by a ticket this one unblocks
+ * (#460). Writing it down as deferred is the difference between a guard that
+ * records a debt and a guard that hides one. `CanvasAnnotationLayer.tsx` was
+ * the other, and #462 took it: the annotation chrome has an ink ladder to sit
+ * on now (`--foreground-annotation-chrome` and its rungs, `semantic.css`), so
+ * the carve-out went with the whites it covered.
  */
 const ABSOLUTE_EXEMPT_FILES: ReadonlyArray<{ file: string; because: string }> = [
   {
@@ -291,11 +293,6 @@ const ABSOLUTE_EXEMPT_FILES: ReadonlyArray<{ file: string; because: string }> = 
     file: 'components/cover/CoverSections.tsx',
     because:
       'the mat behind a `framed` cover image, which the variant exists to provide: that asset was authored on its own light ground, so the mat must stay white when the page does not',
-  },
-  {
-    file: 'components/editor/CanvasAnnotationLayer.tsx',
-    because:
-      'DEFERRED, not categorical — the floating annotation toolbars are white-on-dark on `bg-annotation-chrome`, the one surface that does not follow the theme (`semantic.css`) and the one with no ink name to sit on it. #462 mints that name and takes these; fixing them here would change rendered colour outside this ticket',
   },
   {
     file: 'components/ui/dialog.tsx',

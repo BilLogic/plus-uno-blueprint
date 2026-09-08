@@ -1,8 +1,8 @@
 ---
 audience: designers
-summary: The four color-token tiers, semantic-only consumption, dark mode as a class, the forced-colors stance, lane tints, and the agent-ink precedent.
+summary: The four color-token tiers, semantic-only consumption, dark mode as a class, the forced-colors stance, lane tints, the annotation chrome ink ladder, and the agent-ink precedent.
 sources: src/styles/colors.css, src/styles/semantic.css, src/styles/theme.css, src/styles/blueprint.css, src/styles/themes/, src/lib/canvasAnnotations.ts, src/config.ts, src/lib/brandAccent.ts
-last-reviewed: 2026-09-06
+last-reviewed: 2026-09-08
 ---
 
 # Color
@@ -109,6 +109,29 @@ swatch offers, so its marks read as the agent's — but it is still **a token**
 name** — `annotationSwatchName` returns "Red" to a screen reader, never
 "Custom". A color that can't meet both bars (tokenized, nameable) isn't ready
 to ship.
+
+## The annotation chrome's ink
+
+The floating annotation bars sit on `--background-annotation-chrome`, the one
+surface that does not follow the theme, and their foreground is a ladder that
+does not either: `--foreground-annotation-chrome` and its `-secondary` /
+`-tertiary` rungs, three `--border-annotation-chrome*` edges, two
+`--wash-annotation-chrome*` states, and `--ring-annotation-chrome`. Every rung
+is `--colors-white` at one alpha, declared beside the surface in
+`semantic.css`, and `annotationChromeInk.test.ts` measures each ink against the
+bar under both themes.
+
+It is a ladder rather than an alpha at each call site — the exception to the
+interaction-state rule in the tier table above — for the reason the neutral
+edge rungs exist: `CanvasAnnotationLayer` had ten unnamed strengths of one
+absolute white across forty-four call sites, which is a vocabulary nobody can
+reuse and the style guard had to carve out.
+
+These rungs have **no `@theme` entry**, so they are consumed as
+`text-(--foreground-annotation-chrome)` rather than a `text-*` utility. That is
+deliberate: tier 3 is `theme.css`, `theme.css` is on the reconciled allowlist,
+and a name only this deployment has cannot be minted there. A rung that the
+template adopts gets its utility when the template registers it.
 
 ## Adding a token
 
