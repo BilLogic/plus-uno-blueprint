@@ -14,7 +14,7 @@ import {
   updateSliceMeta,
 } from '@/lib/sliceMutations'
 import {
-  isSliceType,
+  isSliceKind,
   validateDraftSlice,
   type DraftSlide,
 } from '@/lib/sliceValidation'
@@ -62,7 +62,7 @@ export function SliceEditSession({
       validateDraftSlice({
         title: detail.slice.title,
         summary: detail.slice.summary ?? '',
-        sliceType: isSliceType(detail.slice.kind)
+        sliceKind: isSliceKind(detail.slice.kind)
           ? detail.slice.kind
           : 'custom',
         actor: detail.slice.actor ?? '',
@@ -131,7 +131,7 @@ export function SliceEditSession({
         {
           title: detail.slice.title,
           summary: detail.slice.summary ?? '',
-          sliceType: isSliceType(detail.slice.kind)
+          sliceKind: isSliceKind(detail.slice.kind)
             ? detail.slice.kind
             : 'custom',
           actor: detail.slice.actor ?? '',

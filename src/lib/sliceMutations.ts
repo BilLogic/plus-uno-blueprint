@@ -7,7 +7,7 @@ import {
   type UpdatedAtToken,
   type WriteOutcome,
 } from '@/lib/optimisticConcurrency'
-import { authorshipAfterEdit, type DraftSlide, type SliceType } from '@/lib/sliceValidation'
+import { authorshipAfterEdit, type DraftSlide, type SliceKind } from '@/lib/sliceValidation'
 import type { Database, Slice } from '@/types/database'
 
 type Client = SupabaseClient<Database>
@@ -93,7 +93,7 @@ export type NewSlice = {
   serviceId: string
   title: string
   summary: string
-  sliceType: SliceType
+  sliceKind: SliceKind
   actor: string
   /** Ordered cell ids; one slide per cell unless `slides` is given. */
   cellIds: readonly string[]
@@ -124,7 +124,7 @@ export async function createSlice(
       service_id: input.serviceId,
       title: input.title.trim(),
       summary: input.summary.trim() || null,
-      kind: input.sliceType,
+      kind: input.sliceKind,
       actor: input.actor.trim() || null,
       authorship: 'human',
     })
@@ -291,7 +291,7 @@ export async function duplicateSlice(
 export type SliceMetaUpdate = {
   title: string
   summary: string
-  sliceType: SliceType
+  sliceKind: SliceKind
   actor: string
   /** Current authorship; an edit promotes `generated` to `customized`. */
   authorship: string
@@ -340,7 +340,7 @@ export async function updateSliceMeta(
     .update({
       title: update.title.trim(),
       summary: update.summary.trim() || null,
-      kind: update.sliceType,
+      kind: update.sliceKind,
       actor: update.actor.trim() || null,
       authorship: authorshipAfterEdit(update.authorship),
       // updated_at is trigger-maintained — never set it here.

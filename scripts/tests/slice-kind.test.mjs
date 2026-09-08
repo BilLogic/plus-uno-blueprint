@@ -11,7 +11,7 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { deriveSliceType, describeSliceType } from '../../src/lib/sliceType.ts'
+import { deriveSliceType, describeSliceType } from '../../src/lib/sliceKind.ts'
 
 /** A fake grid: `id` is "step/lane". */
 const at = (id) => {

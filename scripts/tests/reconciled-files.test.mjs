@@ -425,6 +425,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'eslint.config.js',
     'tsconfig.node.json',
     'vite.config.ts',
+    'src/lib/sliceKind.ts',
   ])
 })
 
