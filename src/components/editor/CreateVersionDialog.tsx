@@ -14,15 +14,15 @@ import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { invalidateStructure } from '@/hooks/useSupabaseQuery'
 import { createPath, duplicatePath } from '@/lib/authoringRpc'
+import { errorMessage } from '@/lib/utils'
 import {
-  PATH_TYPES,
+  PATH_KINDS,
   PATH_KIND_LABELS,
   describeVersionOutcome,
   validateDraftVersion,
   type DraftVersion,
   type PathKind,
 } from '@/lib/versionValidation'
-import { errorMessage } from '@/lib/utils'
 
 export type ExistingVersion = { pathId: string; name: string }
 
@@ -138,7 +138,7 @@ export function CreateVersionDialog({
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-foreground">Kind</span>
             <div className="flex flex-wrap gap-1.5">
-              {PATH_TYPES.map((type) => (
+              {PATH_KINDS.map((type) => (
                 <Button
                   key={type}
                   type="button"

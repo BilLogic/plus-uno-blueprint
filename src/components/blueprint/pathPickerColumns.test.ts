@@ -4,7 +4,7 @@ import {
   PATH_COLUMN_BY_KIND,
   type PathOption,
 } from '@/components/blueprint/PathMultiSelect'
-import { PATH_TYPES } from '@/lib/versionValidation'
+import { PATH_KINDS } from '@/lib/versionValidation'
 import type { PathKind } from '@/types/database'
 
 /*
@@ -26,7 +26,7 @@ import type { PathKind } from '@/types/database'
   a migration and a decision — it should not also arrive as an edit here.
 */
 
-const VOCABULARY: readonly PathKind[] = PATH_TYPES
+const VOCABULARY: readonly PathKind[] = PATH_KINDS
 
 function option(kind: PathKind, index: number): PathOption {
   return {
