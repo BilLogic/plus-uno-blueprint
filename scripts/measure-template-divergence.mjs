@@ -19,12 +19,25 @@
  *   git fetch template 'refs/remotes/origin/main:refs/remotes/template/upstream-main'
  *   node scripts/measure-template-divergence.mjs                     # that ref
  *   node scripts/measure-template-divergence.mjs <ref> [--files]     # any ref
+ *   node scripts/measure-template-divergence.mjs --enrollable        # candidates
+ *
+ * `--enrollable` answers a different question and reads a different source, so
+ * it is worth saying why. It lists files that are NOT byte-identical but would
+ * be if prose were the only difference — the cheapest enrolments available,
+ * and the ones the citation sweep keeps producing. Enrolment is measured
+ * against the PINNED package, not the sibling checkout, because that is what
+ * `check:reconciled` compares against; a candidate measured against anything
+ * else is a candidate that reddens the gate on arrival. It reports and fails
+ * on nothing, like the rest of this script.
  *
  * Scope matches the inventory it corrects: src/, docs/, scripts/, hooks/ and
  * the root files. `supabase/` is excluded — it is quarantined wholesale and
  * comparing ~800 instance migrations against a dummy backend measures nothing.
  */
 import { execFileSync } from 'node:child_process'
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { RECONCILED_FILES } from './reconciled-files.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '')
 const DEFAULT_REF = 'template/upstream-main'
@@ -82,6 +95,98 @@ export function tally(ours, theirs) {
   return rows
 }
 
+/**
+ * A file's code, with its prose taken out: block comments, line comments,
+ * blank lines and indentation gone.
+ *
+ * Deliberately crude. A `//` inside a string literal — a URL, most often —
+ * is treated as a comment, so two files that differ only inside such a
+ * string can be reported as prose-only candidates. That is the right way for
+ * this to be wrong: the output is a list for a person to check before
+ * enrolling, and `check:reconciled` is the thing that actually refuses. A
+ * real parser here would buy precision nobody is relying on.
+ */
+export function stripProse(text) {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n')
+    .map((line) => line.replace(/\/\/.*$/, '').trim())
+    .filter(Boolean)
+    .join('\n')
+}
+
+/**
+ * Shared paths that differ only in prose: the enrolments available for the
+ * cost of agreeing on a comment. Already-enrolled paths are left out — they
+ * are byte-identical by definition, and `check:reconciled` owns them.
+ *
+ * @param {object} io
+ * @param {string[]} io.paths                          candidate repo-relative paths
+ * @param {(p: string) => string|null} io.readInstance this repo's text
+ * @param {(p: string) => string|null} io.readAsb      the template's text
+ */
+export function enrollableCandidates({ paths, readInstance, readAsb }) {
+  const enrolled = new Set(RECONCILED_FILES)
+  const candidates = []
+  for (const path of paths) {
+    if (enrolled.has(path)) continue
+    const ours = readInstance(path)
+    const theirs = readAsb(path)
+    if (ours === null || theirs === null) continue
+    if (ours === theirs) continue
+    if (stripProse(ours) === stripProse(theirs)) candidates.push(path)
+  }
+  return candidates
+}
+
+const PACKAGE = 'node_modules/agentic-service-blueprinting'
+
+/** Text at a path under `root`, or null when it is absent or not text. */
+const textReader = (root) => (path) => {
+  const full = join(root, path)
+  if (!existsSync(full)) return null
+  try {
+    return readFileSync(full, 'utf8')
+  } catch {
+    return null
+  }
+}
+
+function reportEnrollable() {
+  const packageRoot = join(ROOT, PACKAGE)
+  if (!existsSync(packageRoot)) {
+    console.error(
+      `${PACKAGE} is not installed, so there is nothing to compare against.\n` +
+        'Run `npm ci` to install the pinned template, then re-run this.',
+    )
+    process.exit(1)
+  }
+
+  const paths = [...tree('HEAD').keys()].filter(inScope)
+  const candidates = enrollableCandidates({
+    paths,
+    readInstance: textReader(ROOT),
+    readAsb: textReader(packageRoot),
+  })
+
+  if (candidates.length === 0) {
+    console.log('No shared file differs from the pinned template by prose alone.')
+    return
+  }
+
+  console.log(
+    `${candidates.length} shared file(s) differ from the pinned template by prose ` +
+      'alone. Each is one agreed comment away from being enrollable:\n',
+  )
+  for (const path of candidates) console.log(path)
+  console.log(
+    '\nThe template\'s wording is the tie-break, so a difference that is only two ' +
+      '\npeople writing the same comment resolves by taking the template\'s. A ' +
+      '\ndeployment sentence that is materially better goes upstream as its own ' +
+      '\nchange first, never sideways.',
+  )
+}
+
 function tree(ref) {
   const map = new Map()
   for (const line of git('ls-tree', '-r', ref).split('\n')) {
@@ -107,6 +212,7 @@ function resolve(ref) {
 
 function main() {
   const args = process.argv.slice(2)
+  if (args.includes('--enrollable')) return reportEnrollable()
   const showFiles = args.includes('--files')
   const ref = args.find((a) => !a.startsWith('--')) ?? DEFAULT_REF
   const sha = resolve(ref)

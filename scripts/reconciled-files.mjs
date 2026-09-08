@@ -20,6 +20,36 @@
  * Only enrol a path once its ticket has actually made the two copies
  * identical — a path added ahead of that reddens every branch until it is
  * true.
+ *
+ * ── WHAT A FILE ON THIS LIST MAY NOT SAY ──────────────────────────────────
+ *
+ * A file here is read from two repositories at once, so it CITES NO
+ * REPO-LOCAL IDENTITY: no issue or pull-request number, no ADR number, no
+ * migration filename, no `docs/` path, no plan or todo number. Each of those
+ * is an address in one repository and resolves to something else, or to
+ * nothing, in the other.
+ *
+ * This is measured, not feared. `#243` was "One definition card, and no icon
+ * anywhere" here and "Printing from dark mode renders the filled control at
+ * dark-theme lightness" upstream, and it appeared in eight enrolled files.
+ * `#305` does not exist upstream at all. Of the three ADR citations this list
+ * once carried, two named the wrong decision on one side or the other and the
+ * third matched by luck.
+ *
+ * Where a shared comment has to point at a decision, it NAMES the decision:
+ * "the decision that a service owns its journey and shares the catalog", never
+ * "ADR 3". `src/hooks/useStakeholders.ts` is the worked example, and ADR 0014
+ * carries the rule itself under "How a shared file cites this" — where a
+ * reader chasing a citation lands, rather than in a document they would have
+ * to know to look for.
+ *
+ * `check:reconciled` enforces this over everything on this list, whatever the
+ * extension. `measure-template-divergence.mjs --enrollable` reports the other
+ * side of it: shared files that differ by prose alone and are one agreed
+ * comment away from belonging here. Where the only difference is two people
+ * wording the same comment, the template's sentence is the tie-break; a
+ * deployment sentence that is materially better goes upstream as its own
+ * change first, never sideways.
  */
 export const RECONCILED_FILES = [
   // The arrow-routing engine (#351): the same data-driven geometry in both
