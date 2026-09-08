@@ -301,6 +301,21 @@ describe('ZoomableImage, on touch', () => {
   })
 })
 
+describe('ZoomableImage, the frame', () => {
+  it('clips to the shape the picture is cut to, so the corners survive a zoom', () => {
+    const { box, image } = open()
+    const shape = /(?:^|\s)(rounded-\S+)/.exec(image.className)?.[1]
+    expect(shape).toBeTruthy()
+
+    const carried = box.className.split(/\s+/)
+    // The box is the thing that does the cutting …
+    expect(carried).toContain('overflow-hidden')
+    // … so the box is the thing that has to carry the shape, whatever rung of
+    // the radius scale that shape is later retuned to.
+    expect(carried).toContain(shape)
+  })
+})
+
 /*
   Opened from inside a panel.
 
