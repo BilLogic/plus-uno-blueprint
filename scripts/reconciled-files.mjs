@@ -883,4 +883,55 @@ export const RECONCILED_FILES = [
   // missing.
   'src/deploymentConfig.ts',
   'src/lib/brandAccent.ts',
+
+  // asb 1.12.2 adopt. The read lifetime went upstream, and it took twelve files
+  // with it (BilLogic/agentic-service-blueprinting#232).
+  //
+  // This was one unported feature wearing twelve small diffs. Every fetcher here
+  // is `async (client, signal)` ending in `.abortSignal(signal)`, because
+  // `useSupabaseQuery` hands it one; the template's could not, so about eighty
+  // of the hundred-odd lines separating the two `src/hooks/` trees were this
+  // single contract appearing once per file. Nothing converged file by file
+  // because nothing could: a signal in one hook, with no wrapper supplying it,
+  // changes nothing.
+  //
+  // The four contract files are the feature itself — the wrapper, the deadline
+  // that aborts rather than races, the retry policy that keys off its error, and
+  // `awaitOrAbort` for the shared lookups. The six hooks are what they unblock.
+  'src/hooks/useSupabaseQuery.ts',
+  'src/lib/supabaseFetchTimeout.ts',
+  'src/lib/queryClient.ts',
+  'src/lib/service.ts',
+  'src/hooks/useEvidence.ts',
+  'src/hooks/usePhaseSpec.ts',
+  'src/hooks/useScenarioSpec.ts',
+  'src/hooks/useStepSpec.ts',
+  'src/hooks/useScenarioPaths.ts',
+  'src/hooks/useSliceScenarioId.ts',
+
+  // The two tests came with them. `readLifetime.test.ts` is enrolled knowing its
+  // `query cancellation` block does not test our cancellation — it drives a raw
+  // `QueryObserver` and so passes with or without the signal (#468). Enrolling
+  // it is what makes that fixable ONCE: the template now has the test that does
+  // bite, and this file follows upstream rather than being repaired twice.
+  'src/lib/readLifetime.test.ts',
+  'src/lib/service.test.ts',
+
+  // The prose that was this deployment's, generalised. Three of these hooks
+  // illustrated their arguments in this deployment's vocabulary — a team name,
+  // a lane name, this deployment's bot and channel and a `docs/connectors/`
+  // path — where the template's copies say the same thing in neutral words.
+  // Nothing here is wrong; it is unshareable, because `check:standalone`
+  // upstream refuses prose that names a deployment, so a file carrying it can
+  // never be byte-identical. This is the one class where the template is ahead
+  // and this repository comes to it.
+  //
+  // `useStakeholders.ts` is deliberately NOT here. It has the same vocabulary
+  // swaps AND cites the shared-catalog decision as `ADR 0014` where the
+  // template cites `ADR 0003` — the same decision, numbered per repository. A
+  // shared file cannot carry both, and which way that resolves is a convention
+  // question rather than a rename (#457).
+  'src/hooks/useOwnerTags.ts',
+  'src/hooks/useLaneSpec.ts',
+  'src/hooks/useCellDeepLink.ts',
 ]
