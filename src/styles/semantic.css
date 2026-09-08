@@ -551,9 +551,49 @@
    * ink light-on-light in dark mode.
    */
   --background-annotation-chrome: hsl(var(--colors-gray-dark-300));
+  /*
+   * The ink ladder for that bar, mode-invariant like the bar itself.
+   *
+   * The surface had a name and its foreground did not, so one component spelled
+   * absolute white forty-four times, in eleven spellings at nine alphas, none of
+   * which said what job it was doing. That is the defect the neutral-edge rung rule already
+   * names one plane along ("a strength with no name and no way to reuse it",
+   * `tokenDiscipline.test.ts`) — and it is why the file had to be exempted from
+   * the absolute-colour rule until this ladder existed.
+   *
+   * Every rung is that same white at the alpha the call site already carried,
+   * so this is a rename and not a retune. `--colors-white` is global.css's
+   * fixed primitive — the one `CanvasPenCursor` already takes for the same
+   * reason — so no rung can flip when the presentation stage goes `.dark`.
+   *
+   * Ink first, then edges weakest to strongest, then the two washes and the
+   * focus ring. `-secondary` is the resting ink of an icon-only control, which
+   * lifts to the primary on hover; `-tertiary` is a section caption or the word
+   * a control shows when nothing is chosen.
+   *
+   * `-overlay` and `--wash-annotation-chrome` land on the same alpha and are
+   * still two names: one is the edge of a floating menu (the mode-invariant
+   * twin of `--border-overlay` above), the other is the transient fill a
+   * control takes under the pointer. Sharing a value is not sharing a job.
+   */
+  --foreground-annotation-chrome: hsl(var(--colors-white));
+  --foreground-annotation-chrome-secondary: hsl(var(--colors-white) / 0.85);
+  --foreground-annotation-chrome-tertiary: hsl(var(--colors-white) / 0.55);
+  --border-annotation-chrome-overlay: hsl(var(--colors-white) / 0.1);
+  --border-annotation-chrome-divider: hsl(var(--colors-white) / 0.2);
+  --border-annotation-chrome-selected: hsl(var(--colors-white) / 0.25);
+  --border-annotation-chrome: hsl(var(--colors-white) / 0.3);
+  --wash-annotation-chrome: hsl(var(--colors-white) / 0.1);
+  --wash-annotation-chrome-strong: hsl(var(--colors-white) / 0.15);
+  --ring-annotation-chrome: hsl(var(--colors-white) / 0.4);
   /* Ink for a note drawn ON the board, not on the dark bar — the note's own
      fill comes from the annotation palette, so its ink is fixed too. */
   --foreground-annotation-plate: hsl(var(--colors-gray-dark-100));
+  /* And the paper under it: the backing behind text being edited, and the
+     resize handles on a selected note. Fixed for the same reason the ink is —
+     it sits on the board, whose cells carry every hue in the palette, not on a
+     surface that inverts. */
+  --background-annotation-plate: hsl(var(--colors-white));
   /*
    * The hairline separating a note from the board under it.
    *
