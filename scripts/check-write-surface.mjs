@@ -43,7 +43,9 @@
  *      this repository, so the override names it; this holds that list to
  *      what the installed package actually says, in both directions —
  *      the empty list included, once the package agrees (asb v1.0.0 did).
- *      See SUPERSESSION below.
+ *      See SUPERSESSION below. "What the installed package says" is only a
+ *      fact while the installed package is the pinned one, so the run
+ *      refuses first on an install behind the pin (#510).
  *
  * Deliberately text-parsed, like upstream and like
  * `scripts/tests/toolParity.test.mjs`: specs.ts is TypeScript behind a
@@ -59,6 +61,8 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { PACKAGE, refuseOnStaleInstall } from './template-pin.mjs'
+
 const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url))
 
 const ADAPTER = 'src/lib/agent/canvas-adapter.md'
@@ -68,7 +72,6 @@ const DOCS = 'src/lib/agent/tools/referenceDocs.ts'
 const HARNESS = 'scripts/agent-harness/run.mjs'
 const SCHEMA = 'supabase/schema.reference.sql'
 const MIGRATIONS = 'supabase/migrations'
-const PACKAGE = 'node_modules/agentic-service-blueprinting'
 
 /** The package specifier the override exists to displace. */
 const PACKAGE_ADAPTER = 'agentic-service-blueprinting/references/canvas-adapter.md'
@@ -412,6 +415,18 @@ function migrationDocs(root) {
 
 function main() {
   const root = REPO_ROOT
+
+  // Subject 4 reads the INSTALLED references, so an install behind the pin
+  // makes it audit the previous version's documents: the adapter would be
+  // accused of failing to warn about a reference that no longer teaches a
+  // retired kind, or of warning about one that has only just started to.
+  // Subjects 1-3 never open the package and would still be sound — but this
+  // refuses the whole run anyway, because the four subjects print as one
+  // verdict and a person reading "these are the problems" is owed a list that
+  // is entirely true. The wiring assertion is not lost, only deferred by the
+  // one command the message names (#510).
+  refuseOnStaleInstall(root)
+
   const result = compare({
     read: (path) => readFileSync(join(root, path), 'utf8'),
     referenceDocs: servedReferenceDocs(root),

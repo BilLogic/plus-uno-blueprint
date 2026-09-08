@@ -28,7 +28,12 @@
  * against the PINNED package, not the sibling checkout, because that is what
  * `check:reconciled` compares against; a candidate measured against anything
  * else is a candidate that reddens the gate on arrival. It reports and fails
- * on nothing, like the rest of this script.
+ * on nothing, like the rest of this script — with the one exception it shares
+ * with `check:reconciled`: an installed package behind the pin IS "anything
+ * else", so `--enrollable` refuses on one rather than proposing enrolments
+ * measured against a version nobody else is measuring against (#510). The
+ * default mode reads git refs and never opens `node_modules`, so it has
+ * nothing to check and asks nothing.
  *
  * Scope matches the inventory it corrects: src/, docs/, scripts/, hooks/ and
  * the root files. `supabase/` is excluded — it is quarantined wholesale and
@@ -38,6 +43,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { RECONCILED_FILES } from './reconciled-files.mjs'
+import { PACKAGE, refuseOnStaleInstall } from './template-pin.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '')
 const DEFAULT_REF = 'template/upstream-main'
@@ -139,8 +145,6 @@ export function enrollableCandidates({ paths, readInstance, readAsb }) {
   return candidates
 }
 
-const PACKAGE = 'node_modules/agentic-service-blueprinting'
-
 /** Text at a path under `root`, or null when it is absent or not text. */
 const textReader = (root) => (path) => {
   const full = join(root, path)
@@ -161,6 +165,12 @@ function reportEnrollable() {
     )
     process.exit(1)
   }
+
+  // An install behind the pin is a subtler version of the same emptiness: the
+  // candidates would be measured against a template nothing else is measured
+  // against, so every one of them reddens `check:reconciled` the moment it is
+  // enrolled — the opposite of what this list is for (#510).
+  refuseOnStaleInstall(ROOT)
 
   const paths = [...tree('HEAD').keys()].filter(inScope)
   const candidates = enrollableCandidates({

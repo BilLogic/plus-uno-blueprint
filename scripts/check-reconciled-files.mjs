@@ -29,6 +29,12 @@
  * with the command to fix it, never a green pass it cannot stand behind. An
  * empty allowlist needs no package and passes anyway.
  *
+ * An install that is present but BEHIND the pin is the same condition wearing
+ * a disguise, and `scripts/template-pin.mjs` unmasks it before any comparison
+ * happens. Drift is a claim about two edited copies; a version gap is a claim
+ * about npm, and telling the two apart is the difference between a one-command
+ * fix and an afternoon spent looking for a defect that is not there.
+ *
  *   node scripts/check-reconciled-files.mjs   (also: npm run check:reconciled)
  */
 import { readFileSync, existsSync } from 'node:fs'
@@ -36,9 +42,9 @@ import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { RECONCILED_FILES } from './reconciled-files.mjs'
 import { repoLocalCitations, describeCitation } from './repo-local-citations.mjs'
+import { PACKAGE, refuseOnStaleInstall } from './template-pin.mjs'
 
 const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url))
-const PACKAGE = 'node_modules/agentic-service-blueprinting'
 
 /**
  * A reader that returns a file's bytes as a Buffer, or null when it is absent.
@@ -120,6 +126,12 @@ function main() {
     )
     process.exit(1)
   }
+
+  // And an install that is PRESENT but behind the pin is compared against just
+  // as blindly, which is how this gate twice accused files nobody had touched
+  // (#510). It is answered before a single file is read, so no drift list ever
+  // prints underneath a diagnosis that already explains the whole run.
+  refuseOnStaleInstall(REPO_ROOT)
 
   const problems = auditReconciled({
     files: RECONCILED_FILES,
