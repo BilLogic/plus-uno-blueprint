@@ -538,10 +538,16 @@ function CellPanelEditorForm({
           autoFocus={cellId === null}
           onChange={(event) => set('content', event.target.value)}
         />
+        {/* Role ink on a neutral ground, which is the job this line has and
+            the one name the vocabulary was missing. It read a ramp step
+            before, at 3.05:1 on the card in light — under AA for body copy,
+            and this IS body copy. `--text-warning` is tuned for exactly this
+            ground: 13.08:1 light, 8.01:1 dark. Reached as `text-text-warning`
+            because `text-warning` still resolves to the solid fill. */}
         <p
           className={cn(
             'text-3xs',
-            overContentWarning ? 'text-warning-600' : 'text-muted-foreground',
+            overContentWarning ? 'text-text-warning' : 'text-muted-foreground',
           )}
           data-cell-content-guidance=""
         >

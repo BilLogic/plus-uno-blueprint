@@ -15,7 +15,7 @@ import {
 describe('path identity', () => {
   it('gives every non-happy path its own dash pattern', () => {
     // The dash belongs to the PATH, not to its type. It used to belong to the
-    // type — one entry in `PATH_TYPE_DASH` each — which was fine while a
+    // type — one entry in `PATH_KIND_DASH` each — which was fine while a
     // scenario held at most one path per type and wrong the moment Goal
     // Setting held five of one. Only `happy` keeps a type dash, because a
     // scenario can only ever have one.

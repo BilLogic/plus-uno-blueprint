@@ -28,11 +28,12 @@
      `--chroma` is 0, but it is what a tinted light theme would turn. */
   --surface-hue: 34;
   --chroma: 0;
-  /* The four knobs this deployment authors rather than derives: the corner
-     radius, the filled control's lightness and chroma, and the focus ring's
-     lightness. `themes/dark.css` declares all four at these same values, and
-     `themeDials.test.ts` holds the two files to it — this deployment runs one
-     brand fill and one corner in both modes.
+  /* The six knobs this deployment authors rather than derives: the corner
+     radius, the filled control's lightness and chroma, the identity fill's
+     lightness and chroma, and the focus ring's lightness. `themes/dark.css`
+     declares all six at these same values, and `themeDials.test.ts` holds the
+     two files to it — this deployment runs one brand fill and one corner in
+     both modes.
 
      Writing an identical value twice is the point, not an oversight. `--hue`
      above is the standing example: a mode-invariant value declared here alone
@@ -43,16 +44,31 @@
      months, silently, under a comment in `themes/dark.css` claiming the
      opposite. Declared in both files, the leak has nothing left to carry.
 
-     All four lived in `semantic.css` until #459, on the argument that a dial
-     neither theme turns is not a dial a theme owns. That argument reads the
-     wrong axis: what decides the home is authored versus derived, and these
-     are literals a deployment picks. `theme.css` derives every `--radius-*`
-     rung from `--radius`; `--primary` and `--ring` in `semantic.css` read the
-     other three, and the retune history that argues for their values is the
-     long comment beside `--primary` there. */
+     Four of them lived in `semantic.css` until #459, on the argument that a
+     dial neither theme turns is not a dial a theme owns. That argument reads
+     the wrong axis: what decides the home is authored versus derived, and
+     these are literals a deployment picks. `theme.css` derives every
+     `--radius-*` rung from `--radius`; `--primary` and `--ring` in
+     `semantic.css` read the control's three, and the retune history that
+     argues for their values is the long comment beside `--primary` there. */
   --radius: 0.625rem;
   --primary-lightness: 0.83;
   --primary-chroma: 0.135;
+  /* The identity fill, at the vividness the brand was authored at.
+     Its own pair rather than a reuse of the control's: `--primary` is the
+     accent tuned until a filled button reads as a control against this
+     canvas, and `--brand` is the accent as the identity wears it. Share one
+     pair and the two roles resolve to one colour and the distinction becomes
+     decoration.
+
+     These two are not a new colour. They are the ramp's `--brand-default`
+     step read in OKLCH — L 0.7600, C 0.1299, H 177.66 — rounded to the two
+     figures a dial is written in, so `bg-brand` renders what it always did
+     while the ramp behind it goes. The hue needs no dial of its own: it is
+     already `--hue`, to within a twentieth of a degree, which is what the
+     ramp was built to be. */
+  --brand-lightness: 0.76;
+  --brand-chroma: 0.13;
   --ring-lightness: 0.58;
   /*
    * Near-white canvas. Raised surfaces round up against L=1, so in light mode
@@ -77,33 +93,19 @@
   --success-lightness: 0.55;
 
   /*
-   * Stepped numeric scales — per-theme HSL literals, mapped to utilities in
-   * theme.css and consumed by colors.css via `hsl(var(--brand-N))`.
+   * How far a role's edge sits off that role's own tint, as a fraction of the
+   * signed canvas → ink span. Deliberately small: the edge is not what
+   * identifies an alert, so it stays a short step toward the role's ink rather
+   * than reading as a rule around the box. `semantic.css` carries the
+   * reasoning and the band; this is the number, and it is per theme because
+   * the span it is a fraction of is per theme — 0.895 here, 0.76 in dark.
    *
-   * The brand ramp is the Supabase ramp re-derived on our hue: each step is an
-   * OKLCH point at 177.6 converted to HSL, so the ramp stays perceptually even
-   * rather than drifting the way a raw hue-rotate would. 400 is the anchor.
-   * 500/600/link run dark enough to serve as text and links on the light canvas.
+   * Swept against this deployment's own teal rather than copied. Every role
+   * lands inside 1.21–1.34:1 against its own tint for any fraction from 0.07
+   * to 0.095; 0.08 sits in the middle of that window and puts the seven roles
+   * between 1.24 and 1.28 to one — the same interval the `-400`-on-`-200` ramp
+   * steps this replaces drew, which measured 1.21 for warning and 1.29 for
+   * destructive.
    */
-  --brand-link: 171.2deg 100% 26%;
-  --brand-default: 169.5deg 61.3% 49.5%;
-  --brand-600: 171.1deg 100% 24%;
-  --brand-500: 170.3deg 74.8% 41.1%;
-  --brand-400: 166.6deg 73% 72.4%;
-  --brand-300: 164.5deg 69.8% 86.5%;
-  --brand-200: 163.7deg 72.1% 93.1%;
-
-  /* Warning / destructive tint ramps, taken from Supabase's light theme:
-     200 = subtle surface, 500 = border, 600 = text. */
-  --warning-600: 30.3deg 80.3% 47.8%;
-  --warning-500: 36.3deg 85.7% 67.1%;
-  --warning-400: 41.9deg 100% 81.8%;
-  --warning-300: 44.3deg 100% 91.8%;
-  --warning-200: 40deg 81.8% 97.8%;
-  --destructive-default: 10.2deg 77.9% 53.9%;
-  --destructive-600: 9.9deg 82% 43.5%;
-  --destructive-500: 10.4deg 77.1% 79.4%;
-  --destructive-400: 7.1deg 91.3% 91%;
-  --destructive-300: 7.1deg 100% 96.7%;
-  --destructive-200: 0deg 100% 99.4%;
+  --role-edge-step: 0.08;
 }

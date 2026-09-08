@@ -25,7 +25,7 @@ export type VersionMode = 'blank' | 'duplicate'
 export const PATH_TYPES = ['happy', 'variant', 'exception'] as const
 export type PathKind = (typeof PATH_TYPES)[number]
 
-export const PATH_TYPE_LABELS: Record<PathKind, string> = {
+export const PATH_KIND_LABELS: Record<PathKind, string> = {
   happy: 'Happy',
   variant: 'Variant',
   exception: 'Exception',

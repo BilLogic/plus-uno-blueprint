@@ -24,7 +24,7 @@ import {
   getPathDashArrayFromKey,
   pathColorKeyToMarkerSuffix,
 } from '@/lib/pathColorTheme'
-import { getPathTypeArrowColor } from '@/lib/pathTypeTheme'
+import { getPathKindArrowColor } from '@/lib/pathKindTheme'
 import { cn } from '@/lib/utils'
 import type { BlueprintCellDependency } from '@/types/blueprint'
 import type { PathKind } from '@/types/database'
@@ -49,7 +49,7 @@ type BlueprintDependencyArrowsProps = {
   contentRef: RefObject<HTMLElement | null>
   scrollContainerRef: RefObject<HTMLElement | null>
   /** forward = in column gaps behind cells; wrap = loop overlay on top */
-  lane: ArrowLayer
+  layer: ArrowLayer
   /** Used when dependencies do not include pathKind (single-path grids). */
   pathKind?: PathKind
   /** When set with pathKind, arrows use the stable path identity color. */
@@ -96,7 +96,7 @@ export function BlueprintDependencyArrows({
   dependencies,
   contentRef,
   scrollContainerRef,
-  lane,
+  layer,
   pathKind = 'happy',
   pathName,
   mergeConfluences = true,
@@ -110,7 +110,7 @@ export function BlueprintDependencyArrows({
     : pathKind
   const defaultArrowColor = pathName
     ? getPathArrowColor({ kind: pathKind, name: pathName })
-    : getPathTypeArrowColor(pathKind)
+    : getPathKindArrowColor(pathKind)
 
   const updateArrows = useCallback(() => {
     const content = contentRef.current
@@ -134,13 +134,13 @@ export function BlueprintDependencyArrows({
     // Confluence + fan-out: ≥2 same-side arrivals (or departures) merge into
     // one trunk with a single head — the generic mechanism that replaced the
     // overhead-rail bus. The trunk rides the z-0 forward layer, so it is drawn
-    // only in the forward lane; the wrap lane drops the consumed forward deps
+    // only in the forward layer; the wrap layer drops the consumed forward deps
     // through its own filter. `disabled` is the per-scenario off-switch.
     const merge = planArrowConfluences(content, unpaired, {
       disabled: !mergeConfluences,
     })
 
-    // Co-traveller offsets over the runs this lane actually routes (the merged
+    // Co-traveller offsets over the runs this layer actually routes (the merged
     // trunk is not a corridor run): two arrows sharing one detour corridor fan
     // onto adjacent lanes instead of overdrawing one line.
     planArrowCorridors(
@@ -154,7 +154,7 @@ export function BlueprintDependencyArrows({
         : 1
     }
 
-    if (lane === 'forward') {
+    if (layer === 'forward') {
       for (const segment of merge.segments) {
         const opacity = segment.memberDependencyIds.length
           ? Math.max(...segment.memberDependencyIds.map(dependencyOpacity))
@@ -180,8 +180,8 @@ export function BlueprintDependencyArrows({
       if (!cellAEl || !cellBEl) continue
 
       const wrap = isWrapDependency(cellAEl, cellBEl)
-      if (lane === 'forward' && wrap) continue
-      if (lane === 'wrap' && !wrap) continue
+      if (layer === 'forward' && wrap) continue
+      if (layer === 'wrap' && !wrap) continue
 
       const d = buildBidirectionalArrowPath(cellAEl, cellBEl, content)
       if (!d) continue
@@ -211,8 +211,8 @@ export function BlueprintDependencyArrows({
       if (!sourceEl || !targetEl) continue
 
       const wrap = isWrapDependency(sourceEl, targetEl)
-      if (lane === 'forward' && wrap) continue
-      if (lane === 'wrap' && !wrap) continue
+      if (layer === 'forward' && wrap) continue
+      if (layer === 'wrap' && !wrap) continue
 
       const d = buildArrowPath(
         sourceEl,
@@ -255,7 +255,7 @@ export function BlueprintDependencyArrows({
     contentRef,
     defaultArrowColor,
     defaultColorKey,
-    lane,
+    layer,
     mergeConfluences,
     dependencies,
   ])
@@ -337,7 +337,7 @@ export function BlueprintDependencyArrows({
         // Keep the connector hierarchy identical to IntegratedDependencyArrows:
         // ordinary runs tuck below the z-1 cells, while wrap runs stay
         // elevated because they travel through the empty outer corridors.
-        lane === 'forward' ? 'z-0' : 'z-30',
+        layer === 'forward' ? 'z-0' : 'z-30',
       )}
       style={svgStyle}
       overflow="visible"
