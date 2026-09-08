@@ -70,8 +70,6 @@ describe('brand fill', () => {
   // root under a theme, which is a different question from what one file says.
   const HUE = dial('--hue', 'light')
   const SURFACE = dial('--surface', 'light')
-  const FOREGROUND_LIGHTNESS = dial('--foreground-lightness', 'light')
-  const CHROMA = dial('--chroma', 'light')
 
   // `--primary: oklch(var(--primary-lightness) var(--primary-chroma)
   // var(--primary-hue))`. These were literals inside that expression until
@@ -180,10 +178,14 @@ describe('brand fill', () => {
   })
 
   it('carries its dark ink at AAA', () => {
-    // --primary-foreground: oklch(min(surface, fg-lightness) chroma*0.45 hue)
+    // --primary-foreground: oklch(from var(--primary)
+    //   clamp(0.205, calc((0.62 - l) * 100), 0.985) calc(c * 0.08) h)
+    // Derived from the fill, so it is one ink in both modes — and so it stays
+    // correct for an accent darker than this one, where a fixed dark ink
+    // measures 1.11:1 at L 0.15. 11.19:1 here.
     const ink = oklch(
-      Math.min(SURFACE, FOREGROUND_LIGHTNESS),
-      CHROMA * 0.45,
+      Math.min(0.985, Math.max(0.205, (0.62 - L) * 100)),
+      C * 0.08,
       HUE,
     )
     expect(contrast(oklch(L, C, HUE), ink)).toBeGreaterThanOrEqual(7)

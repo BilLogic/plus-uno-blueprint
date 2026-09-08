@@ -7,7 +7,7 @@
  * THE INVARIANT, STATED PRECISELY. "A name is never declared in both" was the
  * short form, and it was already false when it was written — `--surface-hue`,
  * `--primary-hue` and `--radius` all sat here as well. The rule that is
- * actually true, and that `themeDials.test.ts` holds:
+ * actually true, and that the theme-dial assertions hold:
  *
  *   - a derivation is declared HERE and nowhere else (`--primary-hue`, which
  *     is `var(--hue)` rather than a number);
@@ -20,29 +20,34 @@
  *
  * `--radius`, `--primary-lightness`, `--primary-chroma` and `--ring-lightness`
  * were the standing exception to the second rule, on a fourth bullet reading
- * "a dial neither theme turns is not a dial, and lives HERE". #459 retired it:
- * the axis that decides the home is authored versus derived, not mode-varying
- * versus mode-invariant. All four are literals a deployment picks, this file
- * is the layer that derives, and leaving them here is what stopped it from
- * being reconcilable with the template's copy. They are now declared in both
+ * "a dial neither theme turns is not a dial, and lives HERE". The decision to
+ * move the authored knobs out of the derivation layer retired it: the axis
+ * that decides the home is authored versus derived, not mode-varying versus
+ * mode-invariant. All four are literals a deployment picks, this file is the
+ * layer that derives, and leaving them here is what stopped it from being
+ * reconcilable with the copy it is shared with. They are now declared in both
  * theme files, at one value.
  *
  * What is forbidden is the remaining combination: a value declared here AND in
  * every theme file. Light's block matches bare `:root` and imports after this
  * file, so such a declaration can never win under either theme — it is a
  * default that reads like a fallback and is not one. `--surface-hue` was
- * exactly that, and a comment asserting the same untrue fallback in
- * `themes/dark.css` is what hid the defect for months.
+ * exactly that, and a comment in `themes/dark.css` asserting the same untrue
+ * fallback is what hid the defect for months.
  *
- * The stepped numeric scales the brand, warning and destructive roles used to
- * carry are gone: a family of steps is a PRIMITIVE, named for its hue, and
- * those three were named for roles and written as per-theme HSL literals in
- * the theme files. Each role names its jobs here now, derived from its own
- * fill — see § The seven jobs. The hue families in colors.css are untouched;
- * they carry categorical colour, which means nothing and correctly reaches the
- * primitive layer.
+ * The stepped numeric scales that used to stand outside this file are gone.
+ * `warning`, `destructive` and `brand` each carried a five-step ramp of raw
+ * per-theme HSL triples, registered into Tailwind's colour namespace so that
+ * `bg-warning-200` was a legal class, and every component that reached for a
+ * step asks for a job now. Upstream keeps its equivalents, and keeps them
+ * literal, because a build step writes them; ours had nothing behind them but
+ * the shape of a file we do not generate. That is the decision that a
+ * primitive is named for its hue and a semantic token for its job, with the
+ * value between them derived from dials — where every place this vocabulary
+ * knowingly parts from upstream is recorded together.
  *
- * SELECTOR LIST — the one place we diverge from Supabase, deliberately.
+ * SELECTOR LIST — a deliberate divergence, and the structural one: it changes
+ * where a declaration has to live rather than what it resolves to.
  *
  * Supabase declares this block once at `:root`, because their `[data-theme]`
  * always sits on the root element. Ours does not: the presentation stage puts
@@ -67,10 +72,10 @@
    * Only `--primary-hue` is declared here, and it belongs here because it is
    * a derivation and not a number: `var(--hue)`, so both modes run the brand
    * at whatever the themes set, and the split exists so that one of them could
-   * stop. `--surface-hue` is the opposite case — both themes turn it (34 in
-   * light, back onto `--hue` in dark), so a third declaration on this block is
-   * unreachable under both, and it sat here unreachable until 2026-08-26. See
-   * the invariant at the top of this file.
+   * stop. `--surface-hue` is the opposite case — both theme files declare it,
+   * each at its own value, so a third declaration on this block is unreachable
+   * under either theme, and it sat here unreachable for months. See the
+   * invariant at the top of this file.
    */
   --primary-hue: var(--hue);
 
@@ -191,95 +196,73 @@
 
   /* --- Brand / primary -------------------------------------------------- */
   /*
-   * Mode-invariant and decoupled from `--chroma`, so the brand holds its
-   * identity even as neutrals desaturate.
+   * The filled control, driven by the dials in themes/ rather than a literal
+   * (BRAND SEAM). Raise the chroma dial and the whole family — border,
+   * on-colour, ring, sidebar selection — follows without another edit.
    *
-   * Hue 177.6 is the blue-green this product is specified around — it is the
-   * OKLCH hue of #85ECD5. The reference colour is a tint: at its L 0.874 a
-   * filled button is too pale to read as a control against a near-white
-   * canvas. The tint itself still exists in the ramp as `--brand-400`.
-   * `--primary-foreground` is dark ink, not white — white on this fill
-   * measures ~1.4:1, dark ink 12.90.
-   */
-  /* Retune history, compressed — each pass and the one fact it established:
-   *   2026-08-05  L 0.874 (= --brand-400). Read as a pastel badge, not a
-   *               control, against the near-white canvas. Established that
-   *               the ramp's own 400 step is too pale to be the fill.
-   *   2026-08-06  "matcha ceramic": L 0.78 / C 0.09, and the hue dial pushed
-   *               to 183. Established that LIGHTNESS was what made the
-   *               pre-matcha pass too heavy — but it dropped chroma at the
-   *               same time, which was collateral, and it moved the hue off
-   *               the brand ramp, which was a mistake (see below).
-   *   2026-08-07a C 0.09 → 0.12 at the same L. Established the chroma target:
-   *               match Supabase's utilisation of the sRGB ceiling at its own
-   *               L/H (#3ECF8E is oklch(0.762 0.154 159.4), 88.6% of its
-   *               ceiling) rather than any absolute chroma number.
+   * A neutral primary HAS to invert with the theme. At `--primary-chroma: 0`
+   * nothing but lightness separates the fill from the canvas, so `--primary`
+   * is near-black ink in light and near-white in dark, and it is
+   * `--primary-lightness` flipping per theme that makes that work. A
+   * mode-invariant fill only becomes possible once the fill carries chroma.
+   * Keep that in mind when rebranding — a light brand fill wants the
+   * light-theme lightness in BOTH theme files, and the `--primary-foreground`
+   * flip below will follow it.
    *
-   * Brand-alignment + brightening pass (2026-08-07b). Two things were still
-   * wrong, and they had the same root:
+   * `--primary` stays a computed triple rather than aliasing a `--brand-*`
+   * step: the ramp inverts between themes while the on-colour must stay
+   * legible against whatever the fill resolves to, and the flip below is what
+   * buys that. `--hue` is pinned to the ramp's own hue in themes/light.css, so
+   * the fill can never drift off the brand the rest of the app wears.
    *
-   * 1. HUE. The 2026-08-06 pivot to 183 left `--primary` 5.4° off the
-   *    `--brand-*` ramp, which sits at OKLCH hue 177.6 at every step. That
-   *    gap is small in the abstract and load-bearing in practice, because
-   *    `--primary` is the only brand surface derived from the hue dial:
-   *    every other brand usage in the app reads a ramp step, so the filled
-   *    button was the one element wearing a cyaner green than the brand it
-   *    belongs to. The dial is now 177.6 (themes/light.css, themes/dark.css)
-   *    and `--primary` is on the ramp's hue by construction.
+   * Derived tokens, both measured after CSS Color 4 gamut mapping:
+   *   --primary-border  a flat one-shade-darker hairline. The edge is carried
+   *     entirely by the −0.12 lightness step: the ×1.25 chroma bump lands on
+   *     the sRGB ceiling for a vivid brand and buys nothing at all at chroma 0,
+   *     so it is never what makes the hairline visible.
+   *   --ring  reads `--ring-lightness` so the focus affordance clears SC
+   *     1.4.11's 3:1 in both themes instead of inheriting a fill lightness
+   *     that only works in one.
+   * The multipliers stay ratios rather than literals: a hardcoded ceiling
+   * would be wrong the moment `--hue` or `--primary-chroma` moves, and the
+   * browser's own chroma reduction is already the behaviour we want.
    *
-   * 2. LIGHTNESS. L 0.78 was chosen as a correction to 0.874 and overshot.
-   *    Now L 0.83 — brighter, but still 0.044 below the brand-400 step that
-   *    read as a badge, and the 1px `--primary-border` edge that did not exist
-   *    in the 0.874 pass is what lets the fill be lighter without going soft.
-   *
-   * Chroma follows the established target: at L 0.83 / H 177.6 the sRGB
-   * ceiling is C 0.1532, and 0.135 is 88.1% of it — Supabase's utilisation,
-   * with headroom so the fill itself is never gamut-mapped. Rendered:
-   * #48E4C7 (was #46D0BF). Dark ink on it measures 12.90:1 in light theme,
-   * 11.56:1 against dark-theme ink — both well past AAA's 7:1.
-   *
-   * `--primary` stayed a computed triple rather than becoming `var(--brand-400)`
-   * the way Supabase's primary variant is `bg-brand-400 dark:bg-brand-500`,
-   * and that decision outlived the ramp it was about. Two reasons, both
-   * structural: the ramp INVERTED between themes (light 400 was L 0.874, dark
-   * 400 L 0.306), while `--primary` is mode-invariant and feeds a single
-   * `--primary-foreground` resolving to dark ink in both — dark ink on the
-   * dark theme's 400 would have been ~1.5:1. And light 400 sat at only 63% of
-   * its chroma ceiling, which is the dullness this pass exists to fix. The
-   * drift an alias would have prevented is prevented instead by pinning the
-   * hue dial, which is what `--primary-hue: var(--hue)` above is for — and it
-   * is why the ramp could be deleted without this fill moving.
-   *
-   * Derived tokens, all measured after CSS Color 4 gamut mapping:
-   *   --primary-border  wants C 0.1688 at L 0.71, ceiling 0.1311 → maps to
-   *     the ceiling, as it did before. The ×1.25 buys no chroma; the edge is
-   *     carried entirely by the −0.12 lightness step, 1.52:1 against the fill.
-   *   --ring  still ceiling-bound (wants 0.1755 at L 0.58, ceiling 0.1071),
-   *     so the chroma bump does not reach it — but the hue move does, so it
-   *     and its dependants (--sidebar-selected, --sidebar-selected-rail,
-   *     --sidebar-ancestor) shift 5.4° with the brand rather than staying
-   *     put. #008F7A, 4.00:1 on the light canvas and 4.55:1 on the dark one,
-   *     clearing SC 1.4.11's 3:1 in both.
-   * The multipliers are left as ratios rather than clamped to a literal:
-   * a hardcoded ceiling would be wrong the moment `--hue` moves, and the
-   * browser's chroma reduction is already the behaviour we want.
-   *
-   * The L and the C this whole history argues about are the
-   * `--primary-lightness` and `--primary-chroma` dials, and `--ring`'s is
-   * `--ring-lightness`. All three were spelled out here as literals until
-   * #412 named them, and were declared on this block until #459 moved them
-   * into both theme files where the other authored dials live. The numbers
-   * have not moved through either change; this comment is still where a
-   * retune has to be argued, and both theme files are where it lands. */
+   * The L, the C and the H this fill is made of are the `--primary-lightness`,
+   * `--primary-chroma` and `--hue` dials, and `--ring`'s is `--ring-lightness`.
+   * All four were spelled out here as literals until they were named, and were
+   * declared on this block until the authored knobs moved into both theme
+   * files. A retune argues about those numbers, so it is argued where they are
+   * declared: this file says only what derives from them, and says it for
+   * every deployment at once. */
   --primary: oklch(
     var(--primary-lightness) var(--primary-chroma) var(--primary-hue)
   );
   /* The Supabase button treatment: flat fill, one shade-darker hairline.
    * Derived, so it tracks any future retune of --primary. */
   --primary-border: oklch(from var(--primary) calc(l - 0.12) calc(c * 1.25) h);
+  /*
+   * Ink on the fill, via the same hard flip the status on-colours use:
+   * (0.62 − l) is hugely positive for a dark fill (→ clamps to the 0.985
+   * ceiling, near-white) and hugely negative for a light one (→ the 0.205
+   * floor, dark ink). A trace of the fill's chroma keeps a branded fill's
+   * ink off flat grey; at chroma 0 it is exact grey.
+   *
+   * The flip is the mechanism rather than a fixed dark ink, and that is a
+   * decision rather than an accident of how this got written. A fixed ink is
+   * only ever right for the accents that happen to be light: measured across
+   * the accent range it falls to 3.19:1 at L 0.45 and 1.11:1 at L 0.15 —
+   * black text on a black button — and it fails silently, the same shape as
+   * the warm-grey surface defect. Since a deployment authors its own accent,
+   * that is not hypothetical; it is what the first dark brand would hit.
+   * The flip holds above 3.43:1 across the whole range.
+   *
+   * Its own weak point, accepted: that 3.43:1 sits at L 0.60, just under the
+   * threshold — clear of the 3:1 floor for UI and large text, short of 4.5:1
+   * for body. If it bites, move the threshold; do not reinstate a fixed ink.
+   */
   --primary-foreground: oklch(
-    min(var(--surface), var(--foreground-lightness))
-      calc(var(--chroma) * 0.45) var(--primary-hue)
+    from var(--primary) clamp(0.205, calc((0.62 - l) * 100), 0.985)
+      calc(c * 0.08) h
   );
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
@@ -287,34 +270,34 @@
   /*
    * The identity fill, beside the action fill and not the same colour.
    *
-   * `--brand` and `--primary` are both this product's teal; what separates
-   * them is a pair of dials each. Primary is the accent tuned until a filled
-   * button reads as a control against the canvas — the whole retune history
-   * above is that tuning — and brand is the accent at the vividness the
-   * identity was authored at, which no contrast floor gets a vote on.
+   * `--brand` and `--primary` are both the accent hue; what separates them is
+   * a pair of dials each. Primary is the accent tuned until the filled control
+   * clears its contrast floor — which is why a neutral one has to invert
+   * between modes — and brand is the accent at the vividness the identity was
+   * authored at, which does not have to move when the lights go out.
    *
-   * Derived rather than aliased, and that is what let the ramp go. The step
-   * this replaces was a per-theme HSL literal, `--brand-default`, sitting at
-   * the bottom of a five-step ladder each theme wrote out by hand; the two
-   * dials in `themes/` are the whole edit now. Nothing renders differently
-   * for it: the dials ARE that step, read in OKLCH and rounded — L 0.7600 to
-   * 0.76 and C 0.1299 to 0.13, on a hue the ramp already shared with `--hue`.
-   *
-   * A hue dial of its own would be the wrong seam. `--primary-hue` is
-   * `var(--hue)` so that the filled control can never drift off the brand;
-   * giving brand a second hue would be inventing the drift the pin exists to
-   * prevent.
+   * Derived, and deliberately not an alias of a ramp step. The step it
+   * replaces was a per-theme HSL literal, so a rebrand meant re-typing a
+   * lightness curve; two dials is the whole edit now. It is also what lets the
+   * ink below flip: an alias inherits a colour with no lightness the ink can
+   * read, which is the same defect a fixed on-colour has.
    */
   --brand: oklch(var(--brand-lightness) var(--brand-chroma) var(--primary-hue));
   /*
    * Ink on the identity fill, by the same flip every other role's on-colour
-   * uses in this file. Interchangeability is the point of the vocabulary: a
-   * component written against one role re-points at another by changing one
-   * word, and it cannot if one role derives its ink differently from the rest.
-   * At L 0.76 the clamp lands on dark ink, 10.00:1 on the fill.
+   * uses. Interchangeability is the point of the vocabulary: a component
+   * written against one role re-points at another by changing one word, and it
+   * cannot if one role derives its ink differently from the rest.
+   *
+   * The flip's documented weak point is the accepted cost of that. A fill near
+   * L 0.6 is the worst ground either polarity of ink has, and a neutral brand
+   * sits there: no ink of any lightness clears 4.5:1 on a mid grey, so the
+   * floor a role fill can hold is the 3:1 for large text and UI. A deployment
+   * that authors a real accent moves off the trough by moving the dials.
    */
   --brand-foreground: oklch(
-    from var(--brand) clamp(0.12, calc((0.62 - l) * 100), 0.99) calc(c * 0.08) h
+    from var(--brand) clamp(0.205, calc((0.62 - l) * 100), 0.985) calc(c * 0.08)
+      h
   );
 
   /* --- Interaction states ----------------------------------------------
@@ -328,15 +311,9 @@
    *   1. alpha on the resting token   `hover:bg-primary/90`
    *   2. a step of a numeric scale    `bg-brand-400 hover:border-brand-600`
    *
-   * We follow the first. The second needed a scale, and the role scales are
-   * gone — `--wash-{role}` in § The seven jobs is the shape that replaced it,
-   * a translucent overlay painted over a surface that already exists rather
-   * than a second surface to swap in. The hue families in colors.css still
-   * offer steps, for categorical colour that has no state.
-   *
-   * The one place a state token is unavoidable is the blueprint canvas, where
-   * the resting colour comes from data and so cannot be a static utility
-   * class — see blueprint.css.
+   * We follow that. The one place a state token is unavoidable is the
+   * blueprint canvas, where the resting colour comes from data and so cannot
+   * be a static utility class — see blueprint.css.
    */
 
   /* --- Borders & controls ---------------------------------------------- */
@@ -356,14 +333,16 @@
    * — the line that *carries* the focus affordance — and as `focus-visible:ring-3
    * ring-ring/50`, a decorative glow. Inheriting `--primary`'s L 0.874 at 55%
    * would put the affordance around 1.2:1 on the light canvas, failing WCAG 2.2
-   * SC 1.4.11 (non-text contrast, 3:1). Dropping to L 0.58 clears it while
-   * staying unmistakably the brand hue; the `/50` at the utility site still
-   * produces the softer glow, so one token serves both.
+   * SC 1.4.11 (non-text contrast, 3:1). Dropping to the per-theme
+   * `--ring-lightness` clears it while staying unmistakably the brand hue; the
+   * `/50` at the utility site still produces the softer glow, so one token
+   * serves both.
    *
-   * This never renders over a blueprint cell: those resolve
-   * `--ring-blueprint-cell`, which the `[data-blueprint-lane]` rules in
-   * blueprint.css always set, so the fallback in
-   * `var(--ring-blueprint-cell, var(--ring))` is unreachable. `--ring` only ever sits on app chrome.
+   * This never renders over a blueprint cell: those resolve a
+   * `--ring-blueprint-cell*` token of the board's own, which the
+   * `[data-blueprint-lane]` rules in blueprint.css always set, so the
+   * `var(--ring)` written beside it as a fallback is unreachable. `--ring`
+   * only ever sits on app chrome.
    */
   /*
    * The soft rung, below `--border`.
@@ -557,21 +536,20 @@
    *
    * Two of them are inks because they are two problems. Ink on a badge sits on
    * a wash of its own colour; ink in a sentence sits on the page. The gap is
-   * measurable — the amber a status badge wrote on a ten-percent wash of
-   * itself read 2.77:1 here — and the neutral-ground one is the name that has
-   * never existed, which is why `text-destructive` resolves today to a fill
-   * that was tuned for ink to sit ON it rather than to BE it.
+   * measurable — a status word on a ten-percent wash of itself reads about
+   * 2.3:1, where a value tuned for that ground reads about 3.4 — and the
+   * neutral-ground one is the name that has never existed, which is why
+   * `text-destructive` resolves today to a fill that was tuned for ink to sit
+   * ON it rather than to BE it.
    *
-   * Every one is derived from the role's own fill, and none aliases a ramp
-   * step. That is load-bearing rather than tidy: the status hues above are
-   * pulled a fraction toward the brand and then clamped to their category, so
-   * a re-branded deployment's warning still reads as a warning. A fixed ramp
-   * cannot follow an accent, so aliasing one would delete that mechanism —
-   * which is exactly what the `--warning-N` and `--destructive-N` literals in
-   * `themes/` did, sitting on Supabase's amber and red while this deployment's
-   * teal moved the derived roles around them. The ramps in `colors.css` stay
-   * for CATEGORICAL colour — lane identity, path variants, annotation swatches
-   * — which carries no meaning and correctly reaches the primitive layer.
+   * Every one is derived from the role's own fill, and none aliases a hue
+   * primitive. That is load-bearing rather than tidy: the status hues above
+   * are pulled a fraction toward the brand and then clamped to their category,
+   * so a re-branded deployment's warning still reads as a warning. A fixed
+   * ramp cannot follow an accent, so aliasing one would delete that mechanism.
+   * The ramps in colors.css stay for CATEGORICAL colour — lane identity, path
+   * variants, annotation swatches — which carries no meaning and correctly
+   * reaches the primitive layer.
    *
    * The lightnesses are mixes along the same signed surface → foreground span
    * every neutral in this file runs on, so each job lands the same distance
@@ -582,9 +560,8 @@
      happens to be behind it, and then the ink measurement has no ground. */
   --role-tint-mix: 0.06;
   /* Role ink on the page. Far enough along the span to clear AA on the canvas
-     in both modes — 12.90:1 for warning in light, 8.70:1 in dark — and short
-     of the fill's own lightness, which is what makes it ink rather than a
-     smaller fill. */
+     in both modes, and short of the fill's own lightness — which is what makes
+     it ink rather than a smaller fill. */
   --role-ink-mix: 0.76;
   /* Role ink on the role's tint. Further along than the ink above, because the
      tint is already a step off the canvas and eats the difference. */
@@ -597,7 +574,7 @@
      wash.
 
      Derived from the role's INK rather than its fill, which is the move the
-     neutral state surfaces above already make: `--muted` is translucent
+     neutral state surfaces already make: `--muted` is translucent
      `--foreground`, not a lightened surface, because an overlay composites
      against whatever is beneath it and therefore darkens in light and lightens
      in dark. A wash of the FILL cannot do that for a role whose fill is
@@ -739,7 +716,7 @@
    * percent alpha — and an alpha composites against whatever happens to be
    * behind it, so the token had no value until it was painted and the same
    * declaration drew a different colour on every ground it crossed. That is
-   * why `alert.tsx` reached past it for a ramp step. Solid is the fix, and the
+   * why components reached past it for a ramp step. Solid is the fix, and the
    * step below is what makes the colour a decision rather than an accident.
    *
    * Quiet on purpose, and not to a non-text floor. SC 1.4.11 asks 3:1 of a
@@ -750,21 +727,22 @@
    * several times louder than the neutral hairline the same page draws beside
    * it at about 1.2:1.
    *
-   * The interval is measured off what this file replaces. `alert.tsx` bordered
-   * its two ramped variants with a `-400` weight on a `-200` surface, and
-   * those four pairs measured 1.21, 1.29, 1.30 and 1.34 to one across the two
-   * themes. That is the band copied here: the role's own tint, stepped toward
-   * the ink, carrying a little more of the role's colour. The interval and not
-   * the literals, because a fixed ramp cannot follow an accent — which is the
-   * whole reason these are named jobs rather than numbered steps.
+   * The recipe this file follows puts a role border ONE STEP off the surface
+   * it edges — a 400 weight on a 200 surface — and measured off that theme's
+   * own files its four alert variants land at 1.21, 1.29, 1.30 and 1.34 to
+   * one. That is the interval copied here: the role's own tint, stepped
+   * toward the ink, carrying a little more of the role's colour.
    *
-   * And the step rides `--contrast-border` on the way, which the ramp had no
-   * equivalent of: a reader who has turned the contrast preference up gets a
-   * firmer edge here for the same reason every neutral border above gets one.
+   * The interval and not the literals, because a fixed ramp cannot follow an
+   * accent — which is the whole reason these are named jobs rather than
+   * numbered steps. And the step rides `--contrast-border` on the way, which
+   * that recipe has no equivalent of: a reader who has turned the contrast
+   * preference up gets a firmer edge here for the same reason every neutral
+   * border above gets one.
    *
-   * `--border-brand` was derived from `--primary` while brand had no fill of
-   * its own. It reads `--brand` now — through its tint, like the rest — which
-   * is the colour its name always claimed.
+   * `--border-brand` derived from `--primary` while brand had no fill of its
+   * own. It reads `--brand` now — through its tint, like the rest — which is
+   * the colour its name always claimed.
    *
    * Two border jobs survive on purpose and neither is this one.
    * `--primary-border` is the hairline that edges the filled control, measured
@@ -785,18 +763,24 @@
   --role-edge-travel: calc(
     var(--tone-span) * var(--role-edge-step) * var(--role-edge-contrast)
   );
-  /* `--role-edge-step` — how far off its own tint the edge sits, as a fraction
-     of the span — is a dial, and lives in both theme files with the sweep
-     written beside it. Swept rather than picked: at 0.08 light and 0.092 dark
-     every one of the seven roles lands between 1.22:1 and 1.28:1 against its
-     own tint, inside the band above with room on both sides in light and about
-     a hundredth of headroom under the floor in dark.
+  /* How far off its own tint the edge sits, as a fraction of the same signed
+     surface → foreground span the rest of the vocabulary runs on. Per theme,
+     because the span it is a fraction of is per theme — 0.895 from canvas to
+     ink in light, 0.76 in dark — and because the two modes start from
+     different `--contrast`, so the fraction that produces one interval is not
+     one number.
 
-     Chroma is three times the tint's, which on an expressive role is +0.039
-     over the tint — inside the +0.023 to +0.079 the four ramp pairs it
-     replaces spanned, and short of the ceiling the dark amber edge would hit,
-     past which the number in the file and the colour on the screen part
-     company. */
+     Swept rather than picked. At the pair the theme files carry, every role
+     in both modes lands between 1.22:1 and 1.28:1 against its own tint, with
+     room on both sides of the band; light 0.10 leaves it at the top
+     (destructive 1.37) and dark 0.07 at the bottom (destructive 1.15). One
+     shared fraction is not impossible — 0.092 holds both modes inside — but
+     it puts light against the ceiling at 1.34 and buys nothing.
+
+     Chroma is three times the tint's, +0.039 on an expressive role, which
+     sits inside the +0.023 to +0.079 the recipe's own four pairs span and
+     stops short of the ceiling the dark amber edge hits at +0.045 — past
+     which the number in the file and the colour on the screen part company. */
   --border-primary: oklch(
     from var(--surface-primary) calc(l + var(--role-edge-travel))
       calc(c * 3) h
@@ -860,17 +844,20 @@
   /*
    * The ink ladder for that bar, mode-invariant like the bar itself.
    *
-   * The surface had a name and its foreground did not, so one component spelled
-   * absolute white forty-four times, in eleven spellings at nine alphas, none of
-   * which said what job it was doing. That is the defect the neutral-edge rung rule already
-   * names one plane along ("a strength with no name and no way to reuse it",
-   * `tokenDiscipline.test.ts`) — and it is why the file had to be exempted from
-   * the absolute-colour rule until this ladder existed.
+   * The surface had a name and its foreground did not, so one component spells
+   * absolute white dozens of times, at nine different alphas, none of which
+   * says what job it is doing. That is the defect the neutral-edge rung rule
+   * already names one plane along ("a strength with no name and no way to
+   * reuse it", `tokenDiscipline.test.ts`): a strength with no name cannot be
+   * reused and cannot be ruled on, so a guard against absolute colour has
+   * nothing to offer an author but an exemption until a ladder like this one
+   * exists.
    *
-   * Every rung is that same white at the alpha the call site already carried,
-   * so this is a rename and not a retune. `--colors-white` is global.css's
-   * fixed primitive — the one `CanvasPenCursor` already takes for the same
-   * reason — so no rung can flip when the presentation stage goes `.dark`.
+   * Every rung is that same white at an alpha the call sites already carry, so
+   * moving onto one is a rename and not a retune. `--colors-white` is
+   * global.css's fixed primitive — the one `CanvasPenCursor` already takes for
+   * the same reason — so no rung can flip when the presentation stage goes
+   * `.dark`.
    *
    * Ink first, then edges weakest to strongest, then the two washes and the
    * focus ring. `-secondary` is the resting ink of an icon-only control, which

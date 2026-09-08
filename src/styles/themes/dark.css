@@ -35,7 +35,8 @@
      list rather than through anything this file says, which is the shape the
      `--surface-hue` defect above had. `themeDials.test.ts` fails if the two
      files ever disagree. The reasoning is written out beside the same six in
-     `themes/light.css`. #459. */
+     `themes/light.css`, and the retune that argues for the control's three is
+     `docs/guidelines/foundations/color.md` § The `--primary` retune. #459. */
   --radius: 0.625rem;
   --primary-lightness: 0.83;
   --primary-chroma: 0.135;

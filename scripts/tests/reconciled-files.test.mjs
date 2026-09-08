@@ -440,6 +440,8 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/editor/AnnotationCaptureMenu.tsx',
     'src/components/mobile/MobileNavSheet.tsx',
     'src/lib/findingFingerprint.ts',
+
+    'src/styles/colors.css',
   ])
 })
 

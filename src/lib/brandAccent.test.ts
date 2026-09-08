@@ -63,10 +63,15 @@ function rendered(hue: number, theme: Theme) {
 
   return {
     fill: oklch(fillL, fillC, hue),
-    // --primary-foreground: oklch(min(surface, fg-lightness) chroma*0.45 hue)
+    // --primary-foreground: oklch(from var(--primary)
+    //   clamp(0.205, calc((0.62 - l) * 100), 0.985) calc(c * 0.08) h)
+    // The ×100 makes the clamp a step function: a fill under L 0.62 takes the
+    // near-white ceiling, anything above takes the dark floor. Derived from
+    // the FILL rather than from the theme's own lightnesses, which is what
+    // makes it right for an accent this deployment has not authored yet.
     ink: oklch(
-      Math.min(surface, dial('--foreground-lightness', theme)),
-      chroma * 0.45,
+      Math.min(0.985, Math.max(0.205, (0.62 - fillL) * 100)),
+      fillC * 0.08,
       hue,
     ),
     // --ring: oklch(from --primary <ring-lightness> calc(c * 1.3) h)
@@ -172,18 +177,22 @@ describe('a deployment that sets one', () => {
     }
   })
 
-  it('leaves the ink alone in light and tints it in dark, because chroma says so', () => {
-    // Not a caveat — the honest reach of the seam, measured. The filled
-    // control's ink is `calc(var(--chroma) * 0.45)` saturated, and light runs
-    // `--chroma: 0`, so light's ink is a neutral near-black at every accent.
-    // Dark runs 0.005 and its ink carries the hue, faintly. A reader that
-    // claimed to move everything would be wrong here first.
+  it('moves the ink too, in both modes, and to the same ink in each', () => {
+    // The ink used to be `calc(var(--chroma) * 0.45)` saturated at a lightness
+    // read off the theme's own surface and foreground, so light — which runs
+    // `--chroma: 0` — printed the same neutral near-black at every accent, and
+    // the two modes printed different inks. Deriving it from the fill fixes
+    // both: the trace of chroma now comes from the fill's own, so it follows
+    // the accent in either mode, and because `--primary` is mode-invariant the
+    // ink is one colour rather than two.
     const violet = brandAccentHue('#7C3AED')
+    for (const theme of ['light', 'dark'] as const) {
+      expect(rendered(violet, theme).ink, `ink in ${theme}`).not.toEqual(
+        rendered(dial('--hue', theme), theme).ink as Rgb,
+      )
+    }
     expect(rendered(violet, 'light').ink).toEqual(
-      rendered(dial('--hue', 'light'), 'light').ink as Rgb,
-    )
-    expect(rendered(violet, 'dark').ink).not.toEqual(
-      rendered(dial('--hue', 'dark'), 'dark').ink as Rgb,
+      rendered(violet, 'dark').ink as Rgb,
     )
   })
 

@@ -81,6 +81,44 @@ export type Consumer = {
   file: string
   line: number
   kind: 'stylesheet' | 'source'
+  /**
+   * How the name was reached. `var` is the ordinary function; anything else is
+   * Tailwind v4's bare-value shorthand, where the utility itself stands in for
+   * it — `duration-(--motion-micro)`, `text-(--foreground-annotation-chrome)`.
+   * The shorthand resolves the property exactly as `var()` does, so a rule
+   * that only knew about `var(` would let a whole class of reference dangle.
+   */
+  via: string
+  /**
+   * Was a fallback supplied — `var(--x, 12px)`? A name read WITH one still
+   * renders when nothing declares it, so a rule about dangling references has
+   * to be able to tell the two apart. The blueprint cell tokens depend on
+   * this: every consumer reads them as `var(--…-blueprint-cell, <default>)`
+   * and the fallback arm IS the resting state, so those names are undeclared
+   * at the root on purpose.
+   */
+  hasFallback: boolean
+}
+
+/**
+ * A custom property declared from TypeScript rather than from a stylesheet.
+ *
+ * Four shapes, and all four are this app declaring a token: an inline style
+ * key (`{ '--x': value }`), Tailwind's arbitrary-property syntax inside a
+ * class string (square brackets around a `--x:value` pair — not written out
+ * here, because Tailwind's content scan reads its own syntax out of a comment
+ * and emits the utility), an imperative `setProperty('--x', …)`, and the
+ * named constant such a call goes through (`const FOO_VAR = '--x'`). The last
+ * one matters more than it looks: most of this codebase's imperative writes go
+ * through a named constant, and a reader that only saw literal `setProperty`
+ * calls would miss every one of them.
+ */
+export type SourceDeclaration = {
+  name: string
+  /** Path relative to `src`. */
+  file: string
+  line: number
+  via: 'style-key' | 'arbitrary-property' | 'set-property' | 'named-constant'
 }
 
 export type SourceFile = {
@@ -487,16 +525,57 @@ export function stripComments(source: string): string {
   return blankComments(source).replace(/(^|[^:])\/\/.*$/gm, '$1')
 }
 
+let cachedSourceDeclarations: SourceDeclaration[] | null = null
+
+/** Every custom property this app declares from TypeScript. */
+export function sourceDeclarations(): SourceDeclaration[] {
+  const cached = cachedSourceDeclarations
+  if (cached) return cached
+  const patterns: ReadonlyArray<readonly [SourceDeclaration['via'], RegExp]> = [
+    ['style-key', /['"`](--[\w-]+)['"`]\s*:/g],
+    ['arbitrary-property', /\[(--[\w-]+):/g],
+    ['set-property', /setProperty\(\s*['"`](--[\w-]+)['"`]/g],
+    ['named-constant', /=\s*['"`](--[\w-]+)['"`]/g],
+  ]
+  const out: SourceDeclaration[] = []
+  for (const source of sourceFiles()) {
+    source.code.split('\n').forEach((text, index) => {
+      for (const [via, pattern] of patterns) {
+        for (const match of text.matchAll(pattern)) {
+          out.push({ name: match[1], file: source.file, line: index + 1, via })
+        }
+      }
+    })
+  }
+  cachedSourceDeclarations = out
+  return out
+}
+
 let cachedConsumers: Consumer[] | null = null
 
 /**
- * Everywhere a custom property is read: `var(--x)` in a stylesheet, `var(--x)`
- * in a class string or template literal, and `'--x': value` as an inline style
- * key. The last of those is why a stylesheet-only scan cannot answer liveness.
+ * Everywhere a custom property is READ.
+ *
+ * Three shapes, and the model needs all three. `var(--x)` in a stylesheet is
+ * the obvious one. `var(--x)` inside a class string or template literal in
+ * source is the second. The third is Tailwind v4's bare-value shorthand —
+ * `duration-(--motion-micro)`, `text-(--foreground-annotation-chrome)` — where
+ * the utility name stands in for `var`, and which a `var(`-only scan reads
+ * straight past. This repository consumes the whole annotation-chrome ink
+ * ladder that way, because those rungs have no `@theme` entry.
+ *
+ * The inline style KEY (`{ '--x': value }`) is a declaration, not a read, and
+ * lives in `sourceDeclarations` instead.
  */
 export function consumers(): Consumer[] {
   if (cachedConsumers) return cachedConsumers
   const out: Consumer[] = []
+  // The function name is captured so a failure can say how the name was
+  // reached, and the comma so a rule can tell `var(--x)` from `var(--x, 1px)`.
+  const VAR_ONLY = /(var)\(\s*(--[a-zA-Z0-9-]+)\s*(,?)/g
+  // `[\w-]` carries the trailing hyphen, so `w-`, `max-h-` and `duration-`
+  // are each read as the "function" standing in for `var`.
+  const VAR_OR_UTILITY = /([a-zA-Z][\w-]*)\(\s*(--[a-zA-Z0-9-]+)\s*(,?)/g
   const push = (
     text: string,
     file: string,
@@ -505,16 +584,31 @@ export function consumers(): Consumer[] {
   ) => {
     text.split('\n').forEach((line, index) => {
       for (const match of line.matchAll(pattern)) {
-        out.push({ name: match[1], file, line: index + 1, kind })
+        out.push({
+          name: match[2],
+          file,
+          line: index + 1,
+          kind,
+          via: match[1],
+          hasFallback: match[3] === ',',
+        })
       }
     })
   }
   for (const sheet of stylesheets()) {
-    push(sheet.text, sheet.file, 'stylesheet', /var\(\s*(--[a-zA-Z0-9-]+)/g)
+    // Comments blanked: `var(--brand-N)` written in a header paragraph to
+    // explain a naming convention is prose, not a read, and several
+    // stylesheets carry exactly that. Blanking rather than deleting keeps the
+    // line numbers a failure reports.
+    //
+    // `var(` only on this side, because the bare-value shorthand widened for
+    // below is a UTILITY-CLASS idiom that cannot appear in a stylesheet. Left
+    // broad, it reads Tailwind v4's own `--value(--color-*)` inside an
+    // `@utility` body as a dangling reference, which it is not.
+    push(blankComments(sheet.text), sheet.file, 'stylesheet', VAR_ONLY)
   }
   for (const source of sourceFiles()) {
-    push(source.code, source.file, 'source', /var\(\s*(--[a-zA-Z0-9-]+)/g)
-    push(source.code, source.file, 'source', /['"`](--[a-zA-Z0-9-]+)['"`]\s*:/g)
+    push(source.code, source.file, 'source', VAR_OR_UTILITY)
   }
   cachedConsumers = out
   return cachedConsumers
