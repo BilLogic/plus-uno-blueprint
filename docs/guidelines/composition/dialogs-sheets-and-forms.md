@@ -1,7 +1,7 @@
 ---
 audience: designers, developers
-summary: The drawer/sheet posture contract (single owner), the create and delete dialogs, the slice sheet, the session-changes sheet, and the field primitives that keep a vocabulary from becoming free text.
-sources: src/components/blueprint/panelShell.tsx, src/components/editor/DeleteStructureDialog.tsx, src/components/editor/SessionChangesSheet.tsx, src/lib/deletionSafety.ts, src/lib/writeFailures.ts, src/lib/entityStatus.ts, src/lib/touchpointRole.ts
+summary: The drawer/sheet posture contract (single owner), the create and delete dialogs, the slice sheet, the session-changes sheet, the shared image viewer, and the field primitives that keep a vocabulary from becoming free text.
+sources: src/components/blueprint/panelShell.tsx, src/components/blueprint/ZoomableImage.tsx, src/components/editor/DeleteStructureDialog.tsx, src/components/editor/SessionChangesSheet.tsx, src/hooks/useImageZoom.ts, src/lib/imageZoomReducer.ts, src/lib/deletionSafety.ts, src/lib/writeFailures.ts, src/lib/entityStatus.ts, src/lib/touchpointRole.ts
 claims:
   - src/components/blueprint/OptionSelect.tsx
   - src/components/blueprint/OwnerTagSelect.tsx
@@ -12,6 +12,7 @@ claims:
   - src/components/blueprint/StatusBadge.tsx
   - src/components/blueprint/StatusSelect.tsx
   - src/components/blueprint/WalkthroughPathSelect.tsx
+  - src/components/blueprint/ZoomableImage.tsx
   - src/components/editor/CreateBlueprintDialog.tsx
   - src/components/editor/CreatePhaseDialog.tsx
   - src/components/editor/CreateSliceSheet.tsx
@@ -230,6 +231,58 @@ selection, and grouping is a drag.
 A live selection change **merges** into the composed screens rather than
 reseeding them. Reseeding on any change used to throw away minutes of
 drag-composed grouping for one stray pick.
+
+## `ZoomableImage` — the image viewer, owned here
+
+One component for every image in the app worth looking at closely. An adopter
+renders it in place of a bare image and gets the trigger, the popup and the
+whole gesture set; the cover figure is its first adopter, and the panels follow.
+
+**Once open, the image is operated rather than dismissed.** The wheel and a
+trackpad pinch zoom toward the pointer, a click zooms a step in at the point
+clicked, a double-click toggles fit and natural size, and a drag pans once past
+fit. At the ceiling — three times natural size — one more click returns to fit,
+so no gesture is a dead end. The cursor is the viewer's running explanation of
+which of those is next: zoom-in at fit, grab and grabbing while panning,
+zoom-out at the top.
+
+**Three exits, and the image is not one of them.** A click on the surrounding
+margin closes, Escape closes, and a corner button closes; the button sits
+outside the box that clips the image, so it is reachable at every scale, which
+is exactly when a reader is most likely to want it. A click on the image zooms,
+because the image is the subject now. This reverses the cover figure's earlier
+contract, where the opened figure was inert and every click closed the popup —
+see `cover-page.md` for why that stopped being right.
+
+**The wheel is bound to the popup, not the image**, so a pointer that has
+drifted into the empty margin still zooms; a gesture that dies over part of the
+surface reads as broken. The popup is `modal`, which both inerts and
+scroll-locks the page behind it for as long as the viewer is open.
+
+**Motion splits by input class.** Discrete steps — click-zoom, double-click, the
+snap back to fit — tween over `--motion-micro`. Continuous gestures do not,
+because a tween on a gesture the hand is still making reads as lag. Reduced
+motion drops the tween in both cases. No duration was minted for any of this.
+
+**Click versus drag is a distance, not a timer**: a press that stayed within
+four pixels of where it went down is a click, so a shaky press still zooms. A
+timer punishes a slow deliberate click and forces a fake clock into every test.
+
+Every decision about scale and offset is arithmetic in `src/lib/imageZoomReducer.ts`
+and is tested without a DOM; `useImageZoom` measures two boxes, turns events
+into anchors, and writes the answer onto the element. The board's own camera is
+deliberately not reused — it is wired to artboards, focus cells, an annotation
+layer and a semantic-zoom threshold, none of which an image has — but the two
+hard cross-platform parts underneath it are, so the surfaces cannot disagree
+about what a wheel notch is worth.
+
+One implementation note that will look like a mistake and is not: the opened
+image is sized by an **inline pixel width and height** read from `naturalWidth`,
+not by a utility class. Cover SVGs are authored with a `viewBox` and no root
+`width`/`height`, so intrinsic-size detection reports the UA default inside the
+popup and CSS `auto` follows *that*, not the HTML attributes. Stating the
+authored size is the one deterministic route, and it is also what the transform
+scales against.
 
 ## Field primitives
 
