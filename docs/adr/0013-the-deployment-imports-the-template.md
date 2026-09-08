@@ -94,6 +94,43 @@ legible line in the system, not the most magic.
   engine. A richer theme can arrive later behind the same `DeploymentConfig` seam
   without changing this decision.
 
+## What the reconciled set covers on the way there
+
+The import is the last step, and until it lands the drift gate
+(`scripts/reconciled-files.mjs`) is what holds the two copies together. Which
+files belong on it is not a separate decision — it is the split above, applied
+early: **application code is asb's, so it enrols; data, environment and
+branding are the deployment's, so they do not.**
+
+Three cases were argued and are recorded because the answer is not obvious from
+the file alone:
+
+- **Build and tooling config enrols.** `eslint.config.js`, `tsconfig.node.json`
+  and `vite.config.ts` are code, not environment. Environment is the VALUES a
+  build reads — the secrets and URLs the split above puts in env — not the
+  build that reads them. `vite.config.ts` is the one that reads as a deployment
+  file and is not: if this deployment ever needs a build difference, this ADR
+  already says it may not edit the template's code, so the difference has to
+  arrive as a seam the template offers. Enrolling the file is what forces that
+  conversation instead of letting a quiet local edit stand in for it.
+
+- **Branding does not enrol, even when it is identical.** `public/favicon.svg`
+  matches the template's byte for byte today, and that is because this
+  deployment has not branded itself yet rather than because the icon is shared.
+  Enrolling it would mean the deployment could not choose its own icon without
+  changing the template's — which is the same mistake as taking the template's
+  `index.html` title or its Supabase project id.
+
+- **A migration never enrols, however identical.** The two repositories do not
+  share a migration series — that is why a migration filename is a forbidden
+  citation in a shared file. One file matching on both sides is a coincidence,
+  and enrolling it would assert a shared series that does not exist.
+
+The rule this leaves is short enough to apply without re-reading the argument:
+**if a difference would be a difference in the template's behaviour, the file
+enrols; if it would be a difference in this deployment's identity, values or
+content, it does not.**
+
 ## Still open
 
 Nothing that blocks #304. The brand block's exact fields and a richer theme are

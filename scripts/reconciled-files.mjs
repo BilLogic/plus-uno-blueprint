@@ -50,6 +50,36 @@
  * wording the same comment, the template's sentence is the tie-break; a
  * deployment sentence that is materially better goes upstream as its own
  * change first, never sideways.
+ *
+ * ── THE TIE-BREAK IS FOR PROSE, AND ONLY FOR PROSE ────────────────────────
+ *
+ * Comments, doc text, fixture strings. NOT identifiers: not a type name, an
+ * exported symbol, an argument name or a filename.
+ *
+ * The tie-break exists because two people writing the same comment produce no
+ * fact to appeal to, so the argument has to be settled by a rule rather than
+ * by being right. An identifier has an external referent — a column, a table,
+ * an entity — so there IS a fact, and a rule that ignores it can be wrong.
+ *
+ * It nearly was. Five identifiers were spelled one way here and the other way
+ * upstream, and reaching for the tie-break would have taken the template's
+ * spelling for all five. Four of them were not a difference of opinion at all:
+ * the migration that folded the schema's classifiers onto `kind` renamed the
+ * columns, and each repository followed it in some places and not others. The
+ * tie-break would have imported a spelling the schema had retired.
+ *
+ * So an identifier is settled by what it names. Where the two disagree, one
+ * side is behind on a rename, and the fix is to finish it.
+ *
+ * ── WHAT BELONGS ON THIS LIST ─────────────────────────────────────────────
+ *
+ * Application code. NOT the deployment's data, environment or branding — that
+ * split is the one ADR 0013 fixes for the end state, applied early, and it is
+ * recorded there under "What the reconciled set covers on the way there",
+ * along with the three cases whose answer the file alone does not give:
+ * build config enrols, branding does not even when it is identical, and a
+ * migration never does however identical, because the two repositories share
+ * no migration series.
  */
 export const RECONCILED_FILES = [
   // The arrow-routing engine (#351): the same data-driven geometry in both
@@ -1118,4 +1148,20 @@ export const RECONCILED_FILES = [
   'src/components/editor/CreatePhaseDialog.tsx',
   'src/components/editor/DeleteStructureDialog.tsx',
   'src/components/editor/SliceSlideComposer.tsx',
+
+  // ── The build's own configuration ──
+  //
+  // Not a convergence: these three have been byte-identical the whole time and
+  // simply sat outside the gate. They are code rather than environment —
+  // environment is the VALUES a build reads, which live in env, not the build
+  // that reads them — so the split ADR 0013 fixes puts them here.
+  //
+  // `vite.config.ts` is the one that reads as a deployment file and is not.
+  // Enrolling it is the point: this deployment may not edit the template's
+  // code, so a build difference has to arrive as a seam the template offers,
+  // and the gate is what forces that conversation instead of letting a quiet
+  // local edit stand in for it.
+  'eslint.config.js',
+  'tsconfig.node.json',
+  'vite.config.ts',
 ]
