@@ -28,6 +28,25 @@ const CURSOR_CLASS: Record<ImageZoomCursor, string> = {
 }
 
 /**
+ * The frame's shape — on the picture AND on the box that clips it.
+ *
+ * At or below fit the picture is smaller than the box, so the corners the
+ * reader sees are the picture's own. Past fit the picture overflows and what
+ * the reader sees is the CUT, which takes the shape of whatever does the
+ * cutting — so a radius on the picture alone is a radius that disappears the
+ * moment the reader zooms in, which is the one moment the viewer exists for.
+ * Stated once and spent twice: the window reads the same at every scale, and
+ * a retune moves both halves together.
+ *
+ * The shadow does NOT follow it. A shadow is drawn outside the box it belongs
+ * to, so on the clipping box it would fall in the margin — a dark rectangle
+ * ringing the letterbox, at every scale, around nothing the reader can see.
+ * It stays on the picture, where it frames the picture at fit and is clipped
+ * away past fit along with everything else outside the window.
+ */
+const FRAME_SHAPE_CLASS = 'rounded-xl'
+
+/**
  * The chrome the viewer draws over the picture — the close button, the two
  * step buttons, the counter. One spelling, so they read as one set.
  *
@@ -206,7 +225,21 @@ export function ZoomableImage({
         {children}
       </DialogPrimitive.Trigger>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/70 transition-opacity duration-(--motion-fade) data-ending-style:opacity-0 data-starting-style:opacity-0" />
+        {/*
+          `forceRender` because Base UI suppresses a NESTED dialog's backdrop,
+          and whether this viewer is nested is decided by whatever opened it:
+          from the cover page it is the only dialog on the stack, from a cell
+          detail panel it is the second, and the component cannot see the
+          difference. Suppression is the right default for a stack of dialogs
+          that each darken the last — this is not that. The scrim is what says
+          the picture is now the thing being operated, so it is wanted most in
+          the nested case, over a panel that would otherwise stay fully lit.
+        */}
+        <DialogPrimitive.Backdrop
+          forceRender
+          data-image-zoom-scrim
+          className="fixed inset-0 z-50 bg-black/70 transition-opacity duration-(--motion-fade) data-ending-style:opacity-0 data-starting-style:opacity-0"
+        />
         {/*
           Full-bleed rather than inset, so the wheel reaches every pixel a
           reader might have their pointer over. The visual margin is the
@@ -239,7 +272,10 @@ export function ZoomableImage({
           <div
             ref={viewportRef}
             data-image-zoom-viewport
-            className="pointer-events-none absolute inset-4 overflow-hidden sm:inset-10"
+            className={cn(
+              'pointer-events-none absolute inset-4 overflow-hidden sm:inset-10',
+              FRAME_SHAPE_CLASS,
+            )}
           >
             <img
               ref={imageRef}
@@ -250,7 +286,8 @@ export function ZoomableImage({
               style={imageStyle}
               {...imageHandlers}
               className={cn(
-                'pointer-events-auto absolute top-1/2 left-1/2 max-w-none rounded-xl shadow-2xl select-none',
+                'pointer-events-auto absolute top-1/2 left-1/2 max-w-none shadow-2xl select-none',
+                FRAME_SHAPE_CLASS,
                 // `origin-top-left` is load-bearing, not styling. The
                 // transform in `imageStyle` does its own centring, and the
                 // default `50% 50%` origin would centre it a second time —

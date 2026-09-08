@@ -1,5 +1,14 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { useState, type ReactNode } from 'react'
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
+import { Drawer as DrawerPrimitive } from '@base-ui/react/drawer'
 import { afterEach, describe, expect, it } from 'vitest'
 import { ZoomableImage } from '@/components/blueprint/ZoomableImage'
 
@@ -289,5 +298,133 @@ describe('ZoomableImage, on touch', () => {
     fireEvent.pointerUp(image, { ...touch, button: 0, pointerId: 1, clientX: 300, clientY: 400 })
     // A pinch is not a swipe, however far the fingers travelled sideways.
     expect(mounted().image.getAttribute('src')).toBe('/frames/student.png')
+  })
+})
+
+describe('ZoomableImage, the frame', () => {
+  it('clips to the shape the picture is cut to, so the corners survive a zoom', () => {
+    const { box, image } = open()
+    const shape = /(?:^|\s)(rounded-\S+)/.exec(image.className)?.[1]
+    expect(shape).toBeTruthy()
+
+    const carried = box.className.split(/\s+/)
+    // The box is the thing that does the cutting …
+    expect(carried).toContain('overflow-hidden')
+    // … so the box is the thing that has to carry the shape, whatever rung of
+    // the radius scale that shape is later retuned to.
+    expect(carried).toContain(shape)
+  })
+})
+
+/*
+  Opened from inside a panel.
+
+  Everything above opens the viewer at the top of the stack, which is the case
+  that never broke. A cell detail panel is itself a drawer, and a drawer and a
+  dialog share one root context — so a viewer opened from inside one is a
+  NESTED dialog, and Base UI suppresses a nested dialog's backdrop unless it
+  is told not to. The panel below is the smallest thing that reproduces that:
+  the same primitive `panelShell` uses, opened, non-modal, with the viewer
+  rendered inside it.
+*/
+
+/**
+ * A real click arrives at a focused button. jsdom's does not, and focus
+ * RETURN has nowhere to return to unless the trigger held focus on the way
+ * in — so the press is spelled out rather than left to `fireEvent.click`.
+ */
+function press(label: string, name: string) {
+  const trigger = screen.getByRole('button', { name: label })
+  act(() => trigger.focus())
+  fireEvent.click(trigger)
+  return { trigger, viewer: screen.getByRole('dialog', { name }) }
+}
+
+function Panel({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState(true)
+  return (
+    <DrawerPrimitive.Root
+      open={open}
+      onOpenChange={setOpen}
+      modal={false}
+      disablePointerDismissal
+    >
+      <DrawerPrimitive.Portal>
+        <DrawerPrimitive.Viewport>
+          <DrawerPrimitive.Popup data-panel>
+            <DrawerPrimitive.Title>Cell detail</DrawerPrimitive.Title>
+            {children}
+          </DrawerPrimitive.Popup>
+        </DrawerPrimitive.Viewport>
+      </DrawerPrimitive.Portal>
+    </DrawerPrimitive.Root>
+  )
+}
+
+function openInPanel() {
+  const self = GROUP[0]!
+  render(
+    <Panel>
+      <ZoomableImage
+        src={self.src}
+        alt={self.alt}
+        naturalWidth={NATURAL.width}
+        naturalHeight={NATURAL.height}
+        triggerLabel={`Expand: ${self.alt}`}
+      >
+        <img src={self.src} alt="" />
+      </ZoomableImage>
+    </Panel>,
+  )
+  return press(`Expand: ${self.alt}`, self.alt)
+}
+
+/** The same image with no panel around it: one dialog on the stack. */
+function openAlone() {
+  const self = GROUP[0]!
+  render(
+    <ZoomableImage
+      src={self.src}
+      alt={self.alt}
+      naturalWidth={NATURAL.width}
+      naturalHeight={NATURAL.height}
+      triggerLabel={`Expand: ${self.alt}`}
+    >
+      <img src={self.src} alt="" />
+    </ZoomableImage>,
+  )
+  return press(`Expand: ${self.alt}`, self.alt)
+}
+
+const scrim = () => document.querySelector('[data-image-zoom-scrim]')
+const panel = () => document.querySelector('[data-panel]')
+
+describe('ZoomableImage, opened from inside a panel', () => {
+  it('draws its scrim at the top of the stack', () => {
+    openAlone()
+    expect(scrim()).not.toBeNull()
+  })
+
+  it('draws its scrim from inside a panel too, where the stack is two deep', () => {
+    openInPanel()
+    expect(scrim()).not.toBeNull()
+  })
+
+  it('closes on Escape and leaves the panel beneath it open', () => {
+    const { viewer } = openInPanel()
+    fireEvent.keyDown(viewer, { key: 'Escape' })
+    expect(screen.queryByRole('dialog', { name: 'Student' })).toBeNull()
+    expect(panel()).not.toBeNull()
+  })
+
+  it('hands focus back to the trigger it was opened from, at either depth', async () => {
+    const alone = openAlone()
+    fireEvent.keyDown(alone.viewer, { key: 'Escape' })
+    await waitFor(() => expect(document.activeElement).toBe(alone.trigger))
+    cleanup()
+
+    const nested = openInPanel()
+    fireEvent.keyDown(nested.viewer, { key: 'Escape' })
+    await waitFor(() => expect(document.activeElement).toBe(nested.trigger))
   })
 })
