@@ -396,6 +396,20 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/openCellStore.ts',
     'src/lib/serviceRoute.ts',
     'src/lib/touchpointRole.ts',
+    'scripts/always-loaded.mjs',
+    'src/components/blueprint/ServicePanel.test.tsx',
+    'src/components/editor/SliceView.tsx',
+    'src/components/mobile/MobileTopBar.tsx',
+    'src/contexts/activeServiceStore.ts',
+    'src/hooks/useRegistryTouchpoints.ts',
+    'src/lib/agent/tools/serviceScope.test.ts',
+    'src/lib/agent/tools/serviceScope.ts',
+    'src/lib/attachmentUpload.ts',
+    'src/lib/canvasHeaderStyle.ts',
+    'src/lib/placementLinkMutations.ts',
+    'src/lib/placementResourceMutations.ts',
+    'src/lib/resourcePresentation.ts',
+    'src/lib/serviceSlug.ts',
   ])
 })
 

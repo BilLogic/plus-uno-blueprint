@@ -42,6 +42,17 @@ const BINARY = /\.(png|jpe?g|gif|webp|avif|woff2?|ttf|otf|ico|pdf)$/i
 const COLOUR_HOSTS = /\.(css|svg)$/i
 const HEX_COLOUR = /#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b/g
 
+/**
+ * A cross-repository reference, which is not repo-local at all.
+ *
+ * `BilLogic/agentic-service-blueprinting#139` names one issue from either
+ * side — the owner and repository are written down, so the address does not
+ * change with the reader. Only the bare `#139` is ambiguous. The qualified
+ * form is masked before the scan, so a shared file may cite the other
+ * repository's ticket as long as it says which repository it means.
+ */
+const QUALIFIED_REFERENCE = /\b[\w.-]+\/[\w.-]+#\d+/g
+
 const PATTERNS = [
   // An issue or pull-request number. Three or four digits: both repositories
   // are well past #99 and nowhere near #10000.
@@ -100,7 +111,8 @@ export function repoLocalCitations(path, text) {
   const findings = []
 
   text.split('\n').forEach((raw, index) => {
-    const line = masksColours ? raw.replace(HEX_COLOUR, '') : raw
+    let line = raw.replace(QUALIFIED_REFERENCE, '')
+    if (masksColours) line = line.replace(HEX_COLOUR, '')
     for (const [kind, pattern] of PATTERNS) {
       pattern.lastIndex = 0
       const match = pattern.exec(line)

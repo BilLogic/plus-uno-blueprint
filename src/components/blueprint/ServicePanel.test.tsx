@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * The Service panel is the one home the six examples are authored in (#302).
+ * The Service panel is the one home the six examples are authored in.
  *
  * Path has no detail panel of its own, so all six live here — one labelled
  * input per kind under an "Examples" section. What is asserted is what an
@@ -19,10 +19,8 @@ const SERVICE = {
   id: 'svc-1',
   name: 'Home Retrofit',
   summary: 'We insulate homes.',
-  // An author's view: this reader is signed in, so the business model came
-  // back with the service. A signed-out reader gets `businessModelVisible:
-  // false` and no commercial section at all — the claim
-  // `serviceSpecReaderTier.test.tsx` pins (#442).
+  // A signed-in reader: `business_models` is readable and the five fields
+  // render. A signed-out one gets false and the section is left out entirely.
   businessModelVisible: true,
   funding: '',
   pricing: '',

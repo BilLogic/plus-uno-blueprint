@@ -6,7 +6,7 @@ import type { Database, Json } from '@/types/database'
 type Client = SupabaseClient<Database>
 
 /**
- * A placement's identity, and its removal (#277).
+ * A placement's identity, and its removal.
  *
  * A placement names its touchpoint one of two ways: a registry id, or a
  * name the registry lacks. "Link to registry" is the first replacing the
@@ -16,9 +16,9 @@ type Client = SupabaseClient<Database>
  * row and its resources, and `restore_placement` puts both back under the
  * same id.
  *
- * Nothing here matches a name to the registry entry it resembles. That was
- * what made 57 details unreachable; the choice is the author's, made in the
- * panel, and this module only records it.
+ * Nothing here matches a name to the registry entry it resembles; the
+ * choice is the author's, made in the panel, and this module only records
+ * it.
  */
 
 export type PlacementIdentity =

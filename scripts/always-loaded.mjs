@@ -9,29 +9,45 @@
  * holds the swept set once.
  *
  * WHAT COUNTS AS ALWAYS-LOADED. A file is in this tier when the harness hands
- * it to the session without the session choosing — for an IDE agent here, that
- * is `AGENTS.md` and nothing else. There is no `CLAUDE.md`, no `.claude/`
- * bundle and no prompt assembler in this repository; the router itself is the
- * whole of the guaranteed context, which is why it says so in its first
- * sentence.
+ * it to the session without the session choosing — here that is `AGENTS.md`
+ * and nothing else. There is no `CLAUDE.md` and no `.claude/` bundle in this
+ * repository, and no prompt assembler builds one.
  *
- * WHAT IS DELIBERATELY OUT, and why each is a Tier-2 read rather than an
+ * `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` are the
+ * near miss, and they are OUT on purpose. They are read by the plugin HOST at
+ * install time, to learn the plugin's name, version and where its skills live;
+ * nothing puts their bytes in front of a session. What the host does hand a
+ * session from them is skill FRONTMATTER, and a skill's frontmatter is loaded
+ * because the session invoked that skill — a branch, not a boot. So the
+ * manifests are a fact about installation, and the tier is a fact about
+ * context.
+ *
+ * WHAT ELSE IS DELIBERATELY OUT, and why each is a Tier-2 read rather than an
  * omission:
  *
- *   - `CONTEXT.md` and `INDEX.md` are named by the boot protocol, which makes
- *     them the first two pointers to fire, not part of the tier. A session that
- *     touches no vocabulary and knows where it is going pays for neither. They
- *     are also large (43k and 21k chars today), so counting them would make a
- *     budget on the router meaningless — the number it is supposed to protect
- *     would be four percent of the total.
- *   - `README.md` and `SETUP.md` address a human arriving at the repository.
- *   - `compound-engineering.local.md` is read by the compound-engineering
- *     plugin's own skills when one of them runs, which is a branch, not a boot.
+ *   - `CONTEXT.md`, `INDEX.md` and `SETUP.md` are named by § Before the task,
+ *     which makes them the first three pointers to fire, not part of the tier.
+ *     A session that touches no vocabulary and knows where it is going pays
+ *     for none of them. They are also large — `CONTEXT.md` alone is roughly
+ *     three times the router, and was eight times it before the two reference
+ *     maps were cut out of it — so counting them would make a budget on the
+ *     router meaningless.
+ *   - `README.md`, `CONTRIBUTING.md` and `SECURITY.md` address a human
+ *     arriving at the repository.
+ *   - a skill's own `SKILL.md`, and everything under `references/`, loads when
+ *     that skill is invoked, which is the whole point of the routing table.
+ *   - `hooks/secret_guard.py` runs as a hook. It is executed, never read into
+ *     context.
  *
  * The tier is a list rather than a walk because membership is a fact about the
  * harness — which file the tool loads unbidden — and no directory encodes it.
  * Adding a file here is a deliberate act that moves three checks at once, which
  * is the intended cost of growing a tier that every session pays for.
+ *
+ * Shared shape with the deployment this kit was generalised from
+ * (BilLogic/agentic-service-blueprinting#139): same module, same two exports,
+ * same reasoning. Only the census of near misses differs, because only this
+ * repository ships a plugin manifest.
  */
 
 /** Repo-relative paths, in load order. */

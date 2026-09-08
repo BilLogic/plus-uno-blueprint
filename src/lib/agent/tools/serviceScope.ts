@@ -85,8 +85,8 @@ export async function resolveServiceScope(
 /**
  * A throwing active-service id for the WRITE path — a phase, slice, finding or
  * piece of evidence the agent creates belongs to the service on screen, not a
- * cached "first" one. Reuses `findActiveServiceId` (the merged #335 state) and
- * falls back to the first service when no slug resolves.
+ * cached "first" one. Reuses `findActiveServiceId` and falls back to the first
+ * service when no slug resolves.
  */
 export async function resolveActiveServiceId(client: Client): Promise<string> {
   return (await findActiveServiceId(client)) ?? (await resolveFirstServiceId(client))
@@ -95,13 +95,12 @@ export async function resolveActiveServiceId(client: Client): Promise<string> {
 /**
  * The (lowercased) phase names in a service's journey.
  *
- * The blueprint search runs through `public.search_blueprint`, which has no
- * service filter (and adding one is a migration this ticket does not take). The
+ * A blueprint-wide search returns rows with no service column of their own. The
  * journey is a HARD per-service boundary, so a service's rows are exactly those
- * under its phases; the RPC returns each row's phase name as its breadcrumb, so
- * this set post-filters a scoped search. Name, not id, is the only per-service
- * key the RPC surfaces — a limitation that only bites the (unusual) case of two
- * services sharing a phase name.
+ * under its phases, and a search that reports each row's phase name as its
+ * breadcrumb can be post-filtered by this set. Name, not id, is the only
+ * per-service key such a breadcrumb surfaces — a limitation that only bites the
+ * (unusual) case of two services sharing a phase name.
  */
 export async function servicePhaseNames(
   client: Client,
@@ -125,11 +124,12 @@ async function selectIds(
 
 /**
  * The stakeholder ids a service's journey references — the catalog's IMPLICIT
- * membership (ADR 0014), derived by JOIN because the shared catalog dropped its
- * `service_id`. A stakeholder belongs to a service exactly when one of that
- * service's lanes picks it, so this walks the journey the hard boundary defines:
- * phases → scenarios → paths → `lanes.stakeholder_id`. There is deliberately no
- * `stakeholders.service_id` to filter on — that column is gone.
+ * membership under the decision that a service owns its journey and shares the
+ * catalog, derived by JOIN because the shared catalog carries no `service_id`.
+ * A stakeholder belongs to a service exactly when one of that service's lanes
+ * picks it, so this walks the journey the hard boundary defines: phases →
+ * scenarios → paths → `lanes.stakeholder_id`. There is deliberately no
+ * `stakeholders.service_id` to filter on — the catalog is the deployment's.
  */
 export async function serviceStakeholderIds(
   client: Client,

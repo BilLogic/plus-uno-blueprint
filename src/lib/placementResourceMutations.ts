@@ -12,7 +12,7 @@ type Client = SupabaseClient<Database>
  * A row of a placement's list as the editor holds it.
  *
  * `id` is the row it came from, absent on a row pasted since the last save.
- * `kind` rides along because an attachment (#274) and a link sit in the same
+ * `kind` rides along because an attachment and a link sit in the same
  * list and the sync must not turn one into the other — it never writes kind
  * on a kept row, and reads it only for a new one.
  */
@@ -32,7 +32,7 @@ export type PlacementResourceRowInput = {
 }
 
 /**
- * Replace a placement's resources (#273).
+ * Replace a placement's resources.
  *
  * One RPC, one transaction: the position rule is deferrable, so a reorder
  * lands as one statement, and reordering changes no `featured` value — the
@@ -102,7 +102,7 @@ export async function writePlacementResources(
 export type FeaturedBefore = { id: string; featured: boolean }
 
 /**
- * Feature or unfeature one resource (#273).
+ * Feature or unfeature one resource.
  *
  * "Set as preview" on an attachment, "Set as button" on a link, "Unset" on
  * either. The function clears the owner's previous preview in the same

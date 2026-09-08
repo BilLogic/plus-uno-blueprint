@@ -1016,4 +1016,42 @@ export const RECONCILED_FILES = [
   'src/lib/openCellStore.ts',
   'src/lib/serviceRoute.ts',
   'src/lib/touchpointRole.ts',
+
+  // ── asb 1.12.7: fourteen files the citation sweep unblocked ──
+  //
+  // These were code-identical with the template all along and blocked on
+  // prose alone — every one of them carried an issue number, an ADR number, a
+  // migration filename or a plan slug on one side or the other, so enrolling
+  // them would have enrolled a citation the check forbids. The sweep that
+  // cleared the template's copies is what unblocked them; the deployment's
+  // copies take the template's wording under the same tie-break as the batch
+  // above.
+  //
+  // `canvasHeaderStyle.ts` is the one worth reading. Its comment told the ⓘ
+  // mark's history as a sequence of three ticket numbers, which named nothing
+  // to a reader in the other repository; it now tells the same three steps by
+  // what each one did — always-on, then removed as clutter, then returned for
+  // the reader who cannot hover. The history survived the citations.
+  //
+  // `blueprintStoryboardPlaceholder.ts` was a candidate and is again NOT
+  // taken, for the reason the batch above gives: this repo's copy carries the
+  // warning that the asset filename is a VALUE in applied migrations, and the
+  // template's one-liner does not. That sentence goes up before the file comes
+  // down. `stakeholderMutations.ts` and `touchpointMutations.ts` are blocked
+  // the other way — the template's own copies still cite an ADR number and two
+  // migration filenames, so there is nothing clean to converge on yet.
+  'scripts/always-loaded.mjs',
+  'src/components/blueprint/ServicePanel.test.tsx',
+  'src/components/editor/SliceView.tsx',
+  'src/components/mobile/MobileTopBar.tsx',
+  'src/contexts/activeServiceStore.ts',
+  'src/hooks/useRegistryTouchpoints.ts',
+  'src/lib/agent/tools/serviceScope.test.ts',
+  'src/lib/agent/tools/serviceScope.ts',
+  'src/lib/attachmentUpload.ts',
+  'src/lib/canvasHeaderStyle.ts',
+  'src/lib/placementLinkMutations.ts',
+  'src/lib/placementResourceMutations.ts',
+  'src/lib/resourcePresentation.ts',
+  'src/lib/serviceSlug.ts',
 ]

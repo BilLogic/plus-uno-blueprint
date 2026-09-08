@@ -3,7 +3,9 @@ import type { Database } from '@/types/database'
 
 type Client = SupabaseClient<Database>
 
-/** The bucket 20260902150000 made: public-read, service-account write. */
+/**
+ * The bucket the storage migration made: public-read, service-account write.
+ */
 export const ATTACHMENTS_BUCKET = 'cell-attachments'
 
 /**
@@ -12,7 +14,7 @@ export const ATTACHMENTS_BUCKET = 'cell-attachments'
  * `cells/<cell id>/<object id>.<ext>` — the cell's id so the bucket can be
  * read by cell, a minted id so two uploads never collide, and no name from
  * anywhere. Renaming the placement, the touchpoint or the cell changes
- * nothing here, which is what makes the URL in the row stable (#274).
+ * nothing here, which is what makes the URL in the row stable.
  *
  * The extension is the file's own, lowercased and narrowed to what the
  * write policy's pattern admits; a file with none, or one made of
@@ -43,7 +45,7 @@ export type UploadedAttachment = {
  * Put a file in the bucket and describe the attachment row it becomes.
  *
  * Only the upload happens here. The row is written by whichever list the
- * file was dropped into — the placement's (#273) or the cell's — so that a
+ * file was dropped into — the placement's or the cell's — so that a
  * drop and a save are the same two steps they are for a pasted link, and
  * an upload that lands but is never saved leaves an object, not a row.
  *

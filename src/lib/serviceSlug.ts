@@ -1,13 +1,10 @@
 /**
  * A service's route slug — its own `slug` column, with a name-derived fallback.
  *
- * A deployment routes by service slug (#303/#335): `/<slug>` opens that
- * service. #335 shipped this by DERIVING the slug from the name, because
- * production had dropped the `slug` column (the initial schema had it; it was
- * dropped out of band). #341 re-added the column
- * (`20260902230000_a_service_slug_is_a_column_again`), so the slug is now the
- * service's OWN identity: stable across renames, unique by constraint. This
- * module reads that column.
+ * A deployment routes by service slug: `/<slug>` opens that service, and a
+ * scoped agent read names it. The slug lives in a column of its own, so it is
+ * the service's OWN identity: stable across renames, unique by constraint.
+ * This module reads that column.
  *
  * The name-derivation stays as a DEFENSIVE fallback, for a row whose slug is
  * somehow null — the column is nullable, so a deployer who clears the slug gets
@@ -48,7 +45,7 @@ export function serviceSlug(service: ServiceIdentity): string {
 
 /**
  * The service a route slug names, or `null` when none matches. Comparison is
- * case-insensitive so a hand-typed `/Plus-Tutoring` still resolves.
+ * case-insensitive so a hand-typed `/Support-Desk` still resolves.
  */
 export function resolveServiceBySlug<T extends ServiceIdentity>(
   services: readonly T[],

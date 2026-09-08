@@ -73,6 +73,15 @@ describe('what the rule leaves alone', () => {
     expect(repoLocalCitations('src/a.css', '  --ring: #8900ff;')).toEqual([])
   })
 
+  it('leaves a fully-qualified cross-repository reference alone', () => {
+    // The owner and repository are written down, so the address does not
+    // change with the reader — it is the bare form that means two things.
+    expect(
+      repoLocalCitations('src/a.ts', '// BilLogic/agentic-service-blueprinting#139 settled it'),
+    ).toEqual([])
+    expect(texts('src/a.ts', '// qualified owner/repo#139, then bare #243')).toEqual(['#243'])
+  })
+
   it('still catches an ADR in a stylesheet — only the colour form is masked', () => {
     expect(texts('src/a.css', '/* into the build (ADR 0001) */')).toEqual(['ADR 0001'])
   })
