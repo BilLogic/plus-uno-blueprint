@@ -6,12 +6,14 @@ import { ScenarioPathSelectionReset } from '@/components/editor/ScenarioPathSele
 import { WriteFailureNotices } from '@/components/editor/WriteFailureNotices'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ActiveServiceProvider } from '@/contexts/ActiveServiceContext'
+import { DeploymentConfigProvider } from '@/contexts/DeploymentConfigContext'
 import { EditorProvider } from '@/contexts/EditorContext'
 import { EntityExamplesProvider } from '@/contexts/EntityExamplesContext'
 import { PathSelectionProvider } from '@/contexts/PathSelectionContext'
 import { SupabaseProvider } from '@/contexts/SupabaseProvider'
 import { TouchpointRegistryProvider } from '@/contexts/TouchpointRegistryProvider'
 import { ViewStateProvider } from '@/contexts/ViewStateContext'
+import type { DeploymentConfig } from '@/deploymentConfig'
 import { queryClient } from '@/lib/queryClient'
 
 /**
@@ -34,73 +36,78 @@ import { queryClient } from '@/lib/queryClient'
  * shared reads, interaction state, presentation — under one rule: a band may
  * read the bands outside it and never the ones inside.
  *
- * One band is missing here and present there: the deployment seam. Upstream
- * wraps all of this in a `DeploymentConfigProvider` fed by a `DeploymentConfig`
- * prop, which is how a host skins the tree it mounts. This app is still the
- * tree rather than a host of it, so it has no config to provide and no
- * provider to wrap — the difference the convergence work closes.
+ * The band that used to be missing here is the outermost one: the deployment
+ * seam. It goes outermost because every band below it may be skinned by the
+ * config and none of it may be skinned half way down. The `config` prop is how
+ * a HOST skins a tree it mounts, which is where ADR 0013 ends up; this app is
+ * still the tree rather than a host of it, so nothing passes one, and the
+ * values the provider resolves are the ones `deploymentConfig.ts` declares as
+ * this deployment's own. The prop is here anyway, because it is the signature
+ * the flip needs and an absent one is a second difference to close later.
  */
-function App() {
+function App({ config }: { config?: DeploymentConfig | null }) {
   return (
-    <QueryClientProvider client={queryClient}>
-      {/*
-       * `attribute="class"` matches the token setup: themes/light.css targets
-       * `:root, .light`, themes/dark.css targets `.dark`, and the `dark:`
-       * variant is `&:where(.dark, .dark *)`. `enableColorScheme` (on by
-       * default) also sets `color-scheme` on the root, which is what makes
-       * scrollbars and native form controls follow the theme.
-       */}
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-        <SupabaseProvider>
-          {/*
-           * Resolves the URL slug to the active service and canonicalises
-           * the slug into the address bar. Above everything that reads a
-           * service, so no reader below it can see a stale one.
-           */}
-          <ActiveServiceProvider>
+    <DeploymentConfigProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        {/*
+         * `attribute="class"` matches the token setup: themes/light.css targets
+         * `:root, .light`, themes/dark.css targets `.dark`, and the `dark:`
+         * variant is `&:where(.dark, .dark *)`. `enableColorScheme` (on by
+         * default) also sets `color-scheme` on the root, which is what makes
+         * scrollbars and native form controls follow the theme.
+         */}
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <SupabaseProvider>
             {/*
-             * Above the editor so both the menubar identity headers and the
-             * canvas read one cached service query; the definition popovers
-             * on the board pick their per-kind example out of it by kind.
+             * Resolves the URL slug to the active service and canonicalises
+             * the slug into the address bar. Above everything that reads a
+             * service, so no reader below it can see a stale one.
              */}
-            <EntityExamplesProvider>
+            <ActiveServiceProvider>
               {/*
-               * One unscoped read of `touchpoints.tone` and `.aliases` for
-               * the whole session, published to the module store every
-               * touchpoint face resolves its colour through (#326 S6).
+               * Above the editor so both the menubar identity headers and the
+               * canvas read one cached service query; the definition popovers
+               * on the board pick their per-kind example out of it by kind.
                */}
-              <TouchpointRegistryProvider>
-                <EditorProvider>
-                  <ViewStateProvider>
-                    <PathSelectionProvider>
-                      {/*
-                       * A comparison is a statement about the scenario it
-                       * was built in, so moving to another one collapses it.
-                       * Inside the provider it drives, under the editor
-                       * whose navigation it watches.
-                       */}
-                      <ScenarioPathSelectionReset />
-                      <TooltipProvider delay={200}>
-                        <EditorErrorBoundary>
-                          <EditorShell />
-                        </EditorErrorBoundary>
+              <EntityExamplesProvider>
+                {/*
+                 * One unscoped read of `touchpoints.tone` and `.aliases` for
+                 * the whole session, published to the module store every
+                 * touchpoint face resolves its colour through (#326 S6).
+                 */}
+                <TouchpointRegistryProvider>
+                  <EditorProvider>
+                    <ViewStateProvider>
+                      <PathSelectionProvider>
                         {/*
-                         * Outside the boundary, on purpose: a write can fail
-                         * as the shell falls over, and the notice is what
-                         * says so. Inside it, the one message explaining the
-                         * blank screen would be caught by the blank screen.
+                         * A comparison is a statement about the scenario it
+                         * was built in, so moving to another one collapses it.
+                         * Inside the provider it drives, under the editor
+                         * whose navigation it watches.
                          */}
-                        <WriteFailureNotices />
-                      </TooltipProvider>
-                    </PathSelectionProvider>
-                  </ViewStateProvider>
-                </EditorProvider>
-              </TouchpointRegistryProvider>
-            </EntityExamplesProvider>
-          </ActiveServiceProvider>
-        </SupabaseProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+                        <ScenarioPathSelectionReset />
+                        <TooltipProvider delay={200}>
+                          <EditorErrorBoundary>
+                            <EditorShell />
+                          </EditorErrorBoundary>
+                          {/*
+                           * Outside the boundary, on purpose: a write can fail
+                           * as the shell falls over, and the notice is what
+                           * says so. Inside it, the one message explaining the
+                           * blank screen would be caught by the blank screen.
+                           */}
+                          <WriteFailureNotices />
+                        </TooltipProvider>
+                      </PathSelectionProvider>
+                    </ViewStateProvider>
+                  </EditorProvider>
+                </TouchpointRegistryProvider>
+              </EntityExamplesProvider>
+            </ActiveServiceProvider>
+          </SupabaseProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </DeploymentConfigProvider>
   )
 }
 

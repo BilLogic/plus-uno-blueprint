@@ -3,15 +3,10 @@ import { IconTooltip } from '@/components/editor/IconTooltip'
 import { PathSelectorMenu } from '@/components/editor/PathSelectorMenu'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { coverContent } from '@/content/coverContent'
+import { useWorkspaceTitle } from '@/contexts/DeploymentConfigContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useSidebarCollapsedState } from '@/contexts/sidebarCollapsedContext'
 import { cn } from '@/lib/utils'
-
-// The workspace's name comes from the cover content — the one module a
-// deployment defines itself in (#305). A hardcoded 'Uno Blueprint' here made
-// the floating navbar name PLUS's workspace on every other service's board.
-const EDITOR_TITLE = coverContent.title
 
 type SidebarCollapseButtonProps = {
   collapsed: boolean
@@ -133,6 +128,11 @@ export function WorkspaceBadges() {
  */
 export function FloatingSidebarNavbar({ onExpand }: { onExpand: () => void }) {
   const { summary } = useSidebarCollapsedState()
+  // The workspace's name comes from the deployment config, which resolves it
+  // from the cover content — the one module a deployment defines itself in
+  // (#305, #396 Q43). A hardcoded 'Uno Blueprint' here made the floating
+  // navbar name PLUS's workspace on every other service's board.
+  const editorTitle = useWorkspaceTitle()
   // On a scenario the collapsed bar carries the path selector as a trailing
   // control (#305), so paths can be switched without expanding the sidebar. A
   // phase hands over an empty list and this stays hidden — the same control,
@@ -150,7 +150,7 @@ export function FloatingSidebarNavbar({ onExpand }: { onExpand: () => void }) {
           right sat as far from the thing it summons as this strip allows. */}
       <SidebarCollapseButton collapsed onToggle={onExpand} size="icon-sm" />
       <p className="shrink-0 truncate text-xs font-medium text-foreground">
-        {EDITOR_TITLE}
+        {editorTitle}
       </p>
       {summary ? (
         <>
