@@ -354,8 +354,15 @@ applied migration, applied with
 row inside the same transaction. Neither `supabase db reset` nor `db push`
 works here — see
 [ADR 0009](../adr/0009-the-migration-series-is-a-narrative.md). After any
-schema change edit `src/types/database.ts` to match and refresh
-`supabase/schema.reference.sql` if the DDL shape moved. New RPCs must follow the house pattern: SECURITY DEFINER,
+schema change REGENERATE `src/types/database.ts` rather than editing it — its
+header names the generator that works here and the three hand-applied layers to
+put back — and check the result with
+`SUPABASE_DB_URL=… npm run check:database-types:live`, which compares the file
+to `information_schema` and `pg_catalog` column by column and argument by
+argument. Editing it to match is what this document used to say, and a year of
+careful hand edits still left eight columns missing and two foreign-key names
+spelling a relation that had been renamed. Refresh
+`supabase/schema.reference.sql` too if the DDL shape moved. New RPCs must follow the house pattern: SECURITY DEFINER,
 pinned `search_path`, `EXECUTE` revoked from `public`/`anon`, and the
 `is_service_account()` guard first in the body.
 

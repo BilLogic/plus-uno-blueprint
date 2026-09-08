@@ -5,69 +5,54 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * @see supabase/DATABASE.md — full schema, RLS, and connection docs
  * @see docs/erd.mmd — entity relationship diagram
  *
+ * GENERATED, 2026-09-08, from the production project through the Supabase
+ * connector. Every hand-edited block this file carried is gone: the two
+ * placement RPCs, the two rename RPCs, `touchpoints`, `cell_touchpoints`,
+ * `resources`, `services.entity_examples` and the rest now read the way the
+ * generator emits them, and the whole `Functions` map — fifty-one entries
+ * where the hand-maintained file had thirteen — arrived at once.
+ *
+ * The hand edits were not wrong. `cells_layer_id_fkey` and `layers_path_id_fkey`
+ * were, and they had survived a migration that renamed both constraints,
+ * because nothing regenerates a file that is written by hand.
+ *
+ * HOW IT WAS GENERATED, since neither documented path works here. `npm run
+ * supabase:types` needs `--linked`, and the CLI account on this machine has no
+ * access to the project; `npm run supabase:types:local` and the `--db-url`
+ * form both need Docker, which is not installed. The connector has the
+ * privilege the CLI lacks and needs neither, so it is the path that works
+ * today — and the one to use again.
+ *
+ * TWO LAYERS ARE RE-APPLIED BY HAND, deliberately, and they are the whole of
+ * what is not the generator's:
+ *
+ *  1. `cells.status` and `paths.status` are typed `EntityStatus`, and
+ *     `PathKind` is declared, rather than the generator's `string`. All three
+ *     are text columns with check constraints, and a constraint is the one
+ *     thing the generator cannot see; narrowing here is what makes an invalid
+ *     value a type error at the call site instead of a Postgres error at
+ *     runtime.
+ *  2. The row aliases at the foot of the file — `Cell`, `Lane`, `Path` and the
+ *     rest — are this app's vocabulary over the generated shapes and have no
+ *     generated equivalent.
+ *  3. An argument whose SQL default is NULL is typed `?: T | null`, not the
+ *     generator's `?: T`. Postgres accepts NULL for those and call sites pass
+ *     it — `record_authoring_change(agent_session_id)` and
+ *     `set_placement_touchpoint(p_touchpoint_id, p_name)` are the ones that
+ *     bite immediately. The rule is mechanical: read the defaults out of
+ *     `pg_get_function_arguments` and widen the ones that say `DEFAULT NULL`.
+ *
+ * Re-apply all three after any regeneration, or the app silently loses a check
+ * it had — or stops compiling. Nothing else in this file is hand-written; if a
+ * fourth layer appears, it belongs in this list or it does not belong at all.
+ *
  * Regenerate after schema changes:
- *   npm run supabase:types
- *   npm run supabase:types:local
- *
- * HAND-EDITED, 2026-08-30 (#178, then #187). `touchpoints`,
- * `cell_touchpoints`, the two placement RPCs and the two rename RPCs were
- * written by hand because neither generator runs on
- * the machine this landed from: `--linked` reports the project is not linked,
- * and the `--db-url` form needs Docker, which is not installed. The blocks
- * match the live schema exactly and are in the order the generator emits, so
- * the next successful run should be a no-op — if it is not, the generator is
- * right and these are wrong.
- *
- * HAND-EDITED, 2026-09-02 (#311). `services.entity_examples` (jsonb not null
- * default `{}`) was added by hand under the same rules: `supabase gen types
- * --db-url` still needs Docker, which is not installed, so the generator could
- * not run. The `Json` type and the Row/Insert/Update placement mirror every
- * other jsonb-not-null-default column the generator emits (`kpis`, `tools`,
- * `value_props`), verified by replaying `20260902210000` into an empty
- * Postgres 17 and reading `services` back from the catalogue.
- *
- * HAND-EDITED, 2026-08-31 (#181). `resources` and `sync_cell_resources` were
- * added and `cells.links` removed, under the same rules — `20260830280000`
- * drops the column. `search_blueprint` KEEPS its `links` output column: the
- * RPC now builds that jsonb from `resources`, and the name on the wire is
- * uno-bot's to change rather than a schema rename's to make.
- *
- * HAND-EDITED, 2026-08-31 (#180) and 2026-09-02 (#277): the queue table and
- * its three RPCs came and went by hand under the same rules; `cell_touchpoints.name`,
- * `set_placement_touchpoint`, `remove_placement` and `restore_placement` too.
- * HAND-EDITED, 2026-08-30 (#179). `cells.picture` became `cells.frame`, and
- * the slide table took its own name, with `caption` → `title` and `illustration`
- * dropped. Renamed IN PLACE rather than resorted, which is this file's
- * standing convention for a rename — the generator's own ordering is not
- * alphabetical anyway, and moving a block makes a rename read as a deletion
- * and an addition in review.
- *
- * HAND-EDITED, 2026-08-30 (#176). `authoring_changes`, the `trash` view and
- * `record_authoring_change` were added by hand for the same reason and under
- * the same rules. `deleted_structure` needed no removal here: it was never in
- * this file, which is part of why nothing in the app could see that half the
- * record was durable and half was not.
- * HAND-EDITED, 2026-08-30 (#177). Neither generator runs on the machine this
- * landed from: `--linked` reports the project is not linked, and the
- * `--db-url` form needs Docker, which is not installed. So `20260830190000`'s
- * renames were applied here by hand — `findings` → `audit_findings`,
- * `business_model` → `business_models`, and the columns under them — against
- * the schema that migration produces, verified by replaying it into an empty
- * Postgres and reading the catalogue back. The next successful generator run
- * should be a no-op; if it is not, the generator is right and these are wrong.
- *
- * The two renamed tables were moved to their alphabetical positions, which is
- * where the generator emits them. The file is NOT alphabetical throughout, and
- * that is inherited rather than introduced: `services` and `scenarios` still
- * sit where `service_lifecycles` and `service_scenarios` sorted, because the
- * hand edits that renamed them did not re-sort. Sorting only what this change
- * touches keeps the diff readable; the rest goes right on the next real
- * generation.
+ *   npm run supabase:types           (needs a linked project)
+ *   npm run supabase:types:local     (needs Docker)
+ *   or the Supabase connector's type generator, as above
  *
  * `scripts/check-database-names.mjs` rests its argument on this file arriving
- * by machine, so a hand edit weakens that premise until a real regeneration
- * confirms it. It is the reason the edit is recorded here rather than left to
- * be discovered.
+ * by machine. As of this change it does again.
  */
 
 export type Json =
@@ -78,9 +63,18 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+/**
+ * The path kinds this app draws. Hand-written: `paths.kind` is a text column
+ * with a check constraint, and the generator cannot see a constraint.
+ */
 export type PathKind = 'happy' | 'variant' | 'exception'
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
       agent_messages: {
@@ -110,11 +104,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'agent_messages_session_id_fkey'
-            columns: ['session_id']
+            foreignKeyName: "agent_messages_session_id_fkey"
+            columns: ["session_id"]
             isOneToOne: false
-            referencedRelation: 'agent_sessions'
-            referencedColumns: ['id']
+            referencedRelation: "agent_sessions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -141,6 +135,62 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      audit_findings: {
+        Row: {
+          cell_ids: string[]
+          cell_keys: string[]
+          check_key: string
+          created_at: string
+          fingerprint: string
+          id: string
+          run_id: string
+          service_id: string
+          severity: string
+          source: string
+          status: string
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          cell_ids?: string[]
+          cell_keys?: string[]
+          check_key: string
+          created_at?: string
+          fingerprint: string
+          id?: string
+          run_id: string
+          service_id: string
+          severity: string
+          source: string
+          status?: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cell_ids?: string[]
+          cell_keys?: string[]
+          check_key?: string
+          created_at?: string
+          fingerprint?: string
+          id?: string
+          run_id?: string
+          service_id?: string
+          severity?: string
+          source?: string
+          status?: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_findings_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       authoring_changes: {
         Row: {
@@ -187,62 +237,6 @@ export type Database = {
         }
         Relationships: []
       }
-      audit_findings: {
-        Row: {
-          cell_ids: string[]
-          cell_keys: string[]
-          check_key: string
-          created_at: string
-          fingerprint: string
-          id: string
-          summary: string | null
-          run_id: string
-          service_id: string
-          severity: string
-          source: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          cell_ids?: string[]
-          cell_keys?: string[]
-          check_key: string
-          created_at?: string
-          fingerprint: string
-          id?: string
-          summary?: string | null
-          run_id: string
-          service_id: string
-          severity: string
-          source: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          cell_ids?: string[]
-          cell_keys?: string[]
-          check_key?: string
-          created_at?: string
-          fingerprint?: string
-          id?: string
-          summary?: string | null
-          run_id?: string
-          service_id?: string
-          severity?: string
-          source?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'audit_findings_service_id_fkey'
-            columns: ['service_id']
-            isOneToOne: false
-            referencedRelation: 'services'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       business_models: {
         Row: {
           created_at: string
@@ -279,11 +273,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'business_models_service_id_fkey'
-            columns: ['service_id']
+            foreignKeyName: "business_models_service_id_fkey"
+            columns: ["service_id"]
             isOneToOne: true
-            referencedRelation: 'services'
-            referencedColumns: ['id']
+            referencedRelation: "services"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -317,18 +311,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'cell_dependencies_source_cell_id_fkey'
-            columns: ['source_cell_id']
+            foreignKeyName: "cell_dependencies_source_cell_id_fkey"
+            columns: ["source_cell_id"]
             isOneToOne: false
-            referencedRelation: 'cells'
-            referencedColumns: ['id']
+            referencedRelation: "cells"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'cell_dependencies_target_cell_id_fkey'
-            columns: ['target_cell_id']
+            foreignKeyName: "cell_dependencies_target_cell_id_fkey"
+            columns: ["target_cell_id"]
             isOneToOne: false
-            referencedRelation: 'cells'
-            referencedColumns: ['id']
+            referencedRelation: "cells"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -371,100 +365,113 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'cell_touchpoints_cell_id_fkey'
-            columns: ['cell_id']
+            foreignKeyName: "cell_touchpoints_cell_id_fkey"
+            columns: ["cell_id"]
             isOneToOne: false
-            referencedRelation: 'cells'
-            referencedColumns: ['id']
+            referencedRelation: "cells"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'cell_touchpoints_touchpoint_id_fkey'
-            columns: ['touchpoint_id']
+            foreignKeyName: "cell_touchpoints_touchpoint_id_fkey"
+            columns: ["touchpoint_id"]
             isOneToOne: false
-            referencedRelation: 'touchpoints'
-            referencedColumns: ['id']
+            referencedRelation: "touchpoints"
+            referencedColumns: ["id"]
           },
         ]
       }
       cells: {
         Row: {
+          cell_key: string | null
           content: string
           created_at: string
-          summary: string | null
           form: string | null
+          frame: string | null
           function: string | null
           id: string
           lane_id: string
-          status: EntityStatus
+          origin: string
           owner: string | null
           path_id: string
           perceived_owner: string | null
-          frame: string | null
-          search_tsv: unknown
           position: number
+          search_tsv: unknown
+          status: EntityStatus
           step_id: string
+          summary: string | null
           updated_at: string
           value_props: Json
         }
         Insert: {
+          cell_key?: string | null
           content?: string
           created_at?: string
-          summary?: string | null
           form?: string | null
+          frame?: string | null
           function?: string | null
           id?: string
           lane_id: string
-          status?: EntityStatus
+          origin?: string
           owner?: string | null
           path_id: string
           perceived_owner?: string | null
-          frame?: string | null
-          search_tsv?: unknown
           position?: number
+          search_tsv?: unknown
+          status?: EntityStatus
           step_id: string
+          summary?: string | null
           updated_at?: string
           value_props?: Json
         }
         Update: {
+          cell_key?: string | null
           content?: string
           created_at?: string
-          summary?: string | null
           form?: string | null
+          frame?: string | null
           function?: string | null
           id?: string
           lane_id?: string
-          status?: EntityStatus
+          origin?: string
           owner?: string | null
           path_id?: string
           perceived_owner?: string | null
-          frame?: string | null
-          search_tsv?: unknown
           position?: number
+          search_tsv?: unknown
+          status?: EntityStatus
           step_id?: string
+          summary?: string | null
           updated_at?: string
           value_props?: Json
         }
         Relationships: [
           {
-            foreignKeyName: 'cells_layer_id_fkey'
-            columns: ['lane_id']
+            foreignKeyName: "cells_lane_id_fkey"
+            columns: ["lane_id"]
             isOneToOne: false
-            referencedRelation: 'lanes'
-            referencedColumns: ['id']
+            referencedRelation: "lanes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'cells_path_id_fkey'
-            columns: ['path_id']
+            foreignKeyName: "cells_path_id_fkey"
+            columns: ["path_id"]
             isOneToOne: false
-            referencedRelation: 'paths'
-            referencedColumns: ['id']
+            referencedRelation: "paths"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'cells_step_id_fkey'
-            columns: ['step_id']
+            foreignKeyName: "cells_path_matches_lane_fkey"
+            columns: ["lane_id", "path_id"]
             isOneToOne: false
-            referencedRelation: 'steps'
-            referencedColumns: ['id']
+            referencedRelation: "lanes"
+            referencedColumns: ["id", "path_id"]
+          },
+          {
+            foreignKeyName: "cells_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "steps"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -519,11 +526,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'evidence_service_id_fkey'
-            columns: ['service_id']
+            foreignKeyName: "evidence_service_id_fkey"
+            columns: ["service_id"]
             isOneToOne: false
-            referencedRelation: 'services'
-            referencedColumns: ['id']
+            referencedRelation: "services"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -534,11 +541,12 @@ export type Database = {
           kpis: Json
           lane_role: string | null
           name: string
+          origin: string
           owner_team: string | null
           path_id: string
           position: number
-          tools: Json
           stakeholder_id: string | null
+          tools: Json
           updated_at: string
         }
         Insert: {
@@ -547,11 +555,12 @@ export type Database = {
           kpis?: Json
           lane_role?: string | null
           name: string
+          origin?: string
           owner_team?: string | null
           path_id: string
           position?: number
-          tools?: Json
           stakeholder_id?: string | null
+          tools?: Json
           updated_at?: string
         }
         Update: {
@@ -560,103 +569,114 @@ export type Database = {
           kpis?: Json
           lane_role?: string | null
           name?: string
+          origin?: string
           owner_team?: string | null
           path_id?: string
           position?: number
-          tools?: Json
           stakeholder_id?: string | null
+          tools?: Json
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'layers_path_id_fkey'
-            columns: ['path_id']
+            foreignKeyName: "lanes_path_id_fkey"
+            columns: ["path_id"]
             isOneToOne: false
-            referencedRelation: 'paths'
-            referencedColumns: ['id']
+            referencedRelation: "paths"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lanes_stakeholder_id_fkey"
+            columns: ["stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "stakeholders"
+            referencedColumns: ["id"]
           },
         ]
       }
       path_steps: {
         Row: {
-          position: number
           created_at: string
           path_id: string
+          position: number
           step_id: string
           updated_at: string
         }
         Insert: {
-          position?: number
           created_at?: string
           path_id: string
+          position?: number
           step_id: string
           updated_at?: string
         }
         Update: {
-          position?: number
           created_at?: string
           path_id?: string
+          position?: number
           step_id?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'path_steps_path_id_fkey'
-            columns: ['path_id']
+            foreignKeyName: "path_steps_path_id_fkey"
+            columns: ["path_id"]
             isOneToOne: false
-            referencedRelation: 'paths'
-            referencedColumns: ['id']
+            referencedRelation: "paths"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'path_steps_step_id_fkey'
-            columns: ['step_id']
+            foreignKeyName: "path_steps_step_id_fkey"
+            columns: ["step_id"]
             isOneToOne: false
-            referencedRelation: 'steps'
-            referencedColumns: ['id']
+            referencedRelation: "steps"
+            referencedColumns: ["id"]
           },
         ]
       }
       paths: {
         Row: {
           created_at: string
-          summary: string | null
           id: string
+          kind: string
           name: string
           note: string | null
-          kind: PathKind
-          status: EntityStatus
+          origin: string
           scenario_id: string
+          status: EntityStatus
+          summary: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
-          summary?: string | null
           id?: string
+          kind: string
           name: string
           note?: string | null
-          kind: PathKind
-          status?: EntityStatus
+          origin?: string
           scenario_id: string
+          status?: EntityStatus
+          summary?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
-          summary?: string | null
           id?: string
+          kind?: string
           name?: string
           note?: string | null
-          kind?: PathKind
-          status?: EntityStatus
+          origin?: string
           scenario_id?: string
+          status?: EntityStatus
+          summary?: string | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'paths_service_scenario_id_fkey'
-            columns: ['scenario_id']
+            foreignKeyName: "paths_scenario_id_fkey"
+            columns: ["scenario_id"]
             isOneToOne: false
-            referencedRelation: 'scenarios'
-            referencedColumns: ['id']
+            referencedRelation: "scenarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -668,6 +688,7 @@ export type Database = {
           loops_to_phase_id: string | null
           name: string
           operational_requirements: string | null
+          origin: string
           position: number
           service_id: string
           summary: string | null
@@ -680,6 +701,7 @@ export type Database = {
           loops_to_phase_id?: string | null
           name: string
           operational_requirements?: string | null
+          origin?: string
           position?: number
           service_id: string
           summary?: string | null
@@ -692,6 +714,7 @@ export type Database = {
           loops_to_phase_id?: string | null
           name?: string
           operational_requirements?: string | null
+          origin?: string
           position?: number
           service_id?: string
           summary?: string | null
@@ -699,18 +722,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'phases_loops_to_phase_id_fkey'
-            columns: ['loops_to_phase_id']
+            foreignKeyName: "phases_loops_to_phase_id_fkey"
+            columns: ["loops_to_phase_id"]
             isOneToOne: false
-            referencedRelation: 'phases'
-            referencedColumns: ['id']
+            referencedRelation: "phases"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'phases_service_id_fkey'
-            columns: ['service_id']
+            foreignKeyName: "phases_service_id_fkey"
+            columns: ["service_id"]
             isOneToOne: false
-            referencedRelation: 'services'
-            referencedColumns: ['id']
+            referencedRelation: "services"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -756,101 +779,166 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'resources_cell_id_fkey'
-            columns: ['cell_id']
+            foreignKeyName: "resources_cell_id_fkey"
+            columns: ["cell_id"]
             isOneToOne: false
-            referencedRelation: 'cells'
-            referencedColumns: ['id']
+            referencedRelation: "cells"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'resources_placement_in_cell_fkey'
-            columns: ['cell_touchpoint_id', 'cell_id']
+            foreignKeyName: "resources_placement_in_cell_fkey"
+            columns: ["cell_touchpoint_id", "cell_id"]
             isOneToOne: false
-            referencedRelation: 'cell_touchpoints'
-            referencedColumns: ['id', 'cell_id']
+            referencedRelation: "cell_touchpoints"
+            referencedColumns: ["id", "cell_id"]
+          },
+        ]
+      }
+      scenarios: {
+        Row: {
+          created_at: string
+          id: string
+          layout: string
+          name: string
+          note: string | null
+          origin: string
+          phase_id: string
+          position: number
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          layout?: string
+          name: string
+          note?: string | null
+          origin?: string
+          phase_id: string
+          position?: number
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          layout?: string
+          name?: string
+          note?: string | null
+          origin?: string
+          phase_id?: string
+          position?: number
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scenarios_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "phases"
+            referencedColumns: ["id"]
           },
         ]
       }
       services: {
         Row: {
           created_at: string
-          summary: string | null
+          entity_examples: Json
           id: string
           name: string
-          slug: string | null
           origin: string
-          entity_examples: Json
+          slug: string | null
+          summary: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
-          summary?: string | null
+          entity_examples?: Json
           id?: string
           name: string
-          slug?: string | null
           origin?: string
-          entity_examples?: Json
+          slug?: string | null
+          summary?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
-          summary?: string | null
+          entity_examples?: Json
           id?: string
           name?: string
-          slug?: string | null
           origin?: string
-          entity_examples?: Json
+          slug?: string | null
+          summary?: string | null
           updated_at?: string
         }
         Relationships: []
       }
-      scenarios: {
+      slices: {
         Row: {
+          actor: string | null
+          authorship: string
           created_at: string
+          created_by: string | null
           id: string
-          name: string
-          note: string | null
+          kind: string
+          locale: string
           position: number
-          phase_id: string
+          service_id: string
+          stakeholder_id: string | null
           summary: string | null
+          title: string
           updated_at: string
-          layout: string
         }
         Insert: {
+          actor?: string | null
+          authorship?: string
           created_at?: string
+          created_by?: string | null
           id?: string
-          name: string
-          note?: string | null
+          kind: string
+          locale?: string
           position?: number
-          phase_id: string
+          service_id: string
+          stakeholder_id?: string | null
           summary?: string | null
+          title: string
           updated_at?: string
-          layout?: string
         }
         Update: {
+          actor?: string | null
+          authorship?: string
           created_at?: string
+          created_by?: string | null
           id?: string
-          name?: string
-          note?: string | null
+          kind?: string
+          locale?: string
           position?: number
-          phase_id?: string
+          service_id?: string
+          stakeholder_id?: string | null
           summary?: string | null
+          title?: string
           updated_at?: string
-          layout?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'service_scenarios_phase_id_fkey'
-            columns: ['phase_id']
+            foreignKeyName: "slices_service_id_fkey"
+            columns: ["service_id"]
             isOneToOne: false
-            referencedRelation: 'phases'
-            referencedColumns: ['id']
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "slices_stakeholder_id_fkey"
+            columns: ["stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "stakeholders"
+            referencedColumns: ["id"]
           },
         ]
       }
       slides: {
         Row: {
-          title: string | null
           cell_ids: string[]
           cell_keys: string[]
           created_at: string
@@ -859,10 +947,10 @@ export type Database = {
           narrative: string | null
           position: number
           slice_id: string
+          title: string | null
           updated_at: string
         }
         Insert: {
-          title?: string | null
           cell_ids?: string[]
           cell_keys?: string[]
           created_at?: string
@@ -871,10 +959,10 @@ export type Database = {
           narrative?: string | null
           position: number
           slice_id: string
+          title?: string | null
           updated_at?: string
         }
         Update: {
-          title?: string | null
           cell_ids?: string[]
           cell_keys?: string[]
           created_at?: string
@@ -883,71 +971,16 @@ export type Database = {
           narrative?: string | null
           position?: number
           slice_id?: string
+          title?: string | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'slides_slice_id_fkey'
-            columns: ['slice_id']
+            foreignKeyName: "slides_slice_id_fkey"
+            columns: ["slice_id"]
             isOneToOne: false
-            referencedRelation: 'slices'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      slices: {
-        Row: {
-          actor: string | null
-          created_at: string
-          created_by: string | null
-          summary: string | null
-          id: string
-          locale: string
-          authorship: string
-          position: number
-          service_id: string
-          kind: string
-          title: string
-          stakeholder_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          actor?: string | null
-          created_at?: string
-          created_by?: string | null
-          summary?: string | null
-          id?: string
-          locale?: string
-          authorship?: string
-          position?: number
-          service_id: string
-          kind: string
-          title: string
-          stakeholder_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          actor?: string | null
-          created_at?: string
-          created_by?: string | null
-          summary?: string | null
-          id?: string
-          locale?: string
-          authorship?: string
-          position?: number
-          service_id?: string
-          kind?: string
-          title?: string
-          stakeholder_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'slices_service_id_fkey'
-            columns: ['service_id']
-            isOneToOne: false
-            referencedRelation: 'services'
-            referencedColumns: ['id']
+            referencedRelation: "slices"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -958,6 +991,7 @@ export type Database = {
           id: string
           kind: string
           name: string
+          parent_id: string | null
           summary: string | null
           updated_at: string
         }
@@ -967,6 +1001,7 @@ export type Database = {
           id?: string
           kind: string
           name: string
+          parent_id?: string | null
           summary?: string | null
           updated_at?: string
         }
@@ -976,10 +1011,57 @@ export type Database = {
           id?: string
           kind?: string
           name?: string
+          parent_id?: string | null
           summary?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "stakeholders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "stakeholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      steps: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          origin: string
+          scenario_id: string
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          origin?: string
+          scenario_id: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          origin?: string
+          scenario_id?: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "steps_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       touchpoints: {
         Row: {
@@ -1026,46 +1108,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'touchpoints_stakeholder_id_fkey'
-            columns: ['stakeholder_id']
+            foreignKeyName: "touchpoints_stakeholder_id_fkey"
+            columns: ["stakeholder_id"]
             isOneToOne: false
-            referencedRelation: 'stakeholders'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      steps: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          scenario_id: string
-          summary: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          scenario_id: string
-          summary?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          scenario_id?: string
-          summary?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'steps_service_scenario_id_fkey'
-            columns: ['scenario_id']
-            isOneToOne: false
-            referencedRelation: 'scenarios'
-            referencedColumns: ['id']
+            referencedRelation: "stakeholders"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1088,10 +1135,99 @@ export type Database = {
           label: string | null
           payload: Json | null
         }
+        Insert: {
+          affected_slices?: Json | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string | null
+          kind?: string | null
+          label?: string | null
+          payload?: Json | null
+        }
+        Update: {
+          affected_slices?: Json | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string | null
+          kind?: string | null
+          label?: string | null
+          payload?: Json | null
+        }
         Relationships: []
       }
     }
     Functions: {
+      add_lane: {
+        Args: {
+          at_position?: number | null
+          lane_role?: string | null
+          name: string
+          scenario_id: string
+        }
+        Returns: string[]
+      }
+      add_step: {
+        Args: { at_position?: number | null; name: string; path_id: string }
+        Returns: string
+      }
+      cell_natural_key: { Args: { cell_id: string }; Returns: string }
+      clear_cell_dependency: {
+        Args: { dependency_id: string }
+        Returns: undefined
+      }
+      create_path: {
+        Args: {
+          kind?: string
+          lane_source_path_id?: string | null
+          name: string
+          scenario_id: string
+        }
+        Returns: string
+      }
+      create_phase: {
+        Args: { name: string; service_id: string; summary?: string | null }
+        Returns: string
+      }
+      create_scenario: {
+        Args: {
+          lane_set?: Json
+          lane_source_path_id?: string | null
+          layout?: string
+          name: string
+          path_name?: string
+          phase_id: string
+          step_count?: number
+        }
+        Returns: Json
+      }
+      delete_cell: { Args: { cell_id: string }; Returns: string }
+      delete_path: { Args: { path_id: string }; Returns: string }
+      delete_scenario: { Args: { scenario_id: string }; Returns: string }
+      deletion_impact: {
+        Args: { kind: string; scope_id?: string | null; target_id: string }
+        Returns: Json
+      }
+      duplicate_path: {
+        Args: {
+          copy_cells?: boolean
+          copy_dependencies?: boolean
+          kind?: string
+          name: string
+          source_path_id: string
+        }
+        Returns: string
+      }
+      duplicate_scenario: {
+        Args: { name: string; source_scenario_id: string }
+        Returns: string
+      }
+      is_service_account: { Args: never; Returns: boolean }
+      key_slug: { Args: { value: string }; Returns: string }
+      mint_cell_key: {
+        Args: { lane_id: string; path_id: string; step_id: string }
+        Returns: string
+      }
+      owns_agent_session: { Args: { session_owner: string }; Returns: boolean }
       record_authoring_change: {
         Args: {
           agent_session_id?: string | null
@@ -1102,42 +1238,77 @@ export type Database = {
         }
         Returns: string
       }
-      remove_placement: {
-        Args: { p_placement_id: string }
-        Returns: Json
+      remove_lane: {
+        Args: { lane_name: string; scenario_id: string }
+        Returns: string
+      }
+      remove_lanes: { Args: { lane_ids: string[] }; Returns: string }
+      remove_placement: { Args: { p_placement_id: string }; Returns: Json }
+      remove_step: {
+        Args: { path_id: string; step_id: string }
+        Returns: string
       }
       rename_content_item: {
         Args: { p_content: string; p_from: string; p_to: string }
         Returns: string
       }
+      rename_owner_tag: {
+        Args: { from_name: string; to_name: string }
+        Returns: string[]
+      }
+      rename_path: {
+        Args: { new_name: string; path_id: string }
+        Returns: undefined
+      }
+      rename_phase: {
+        Args: { new_name: string; phase_id: string }
+        Returns: undefined
+      }
+      rename_scenario: {
+        Args: { new_name: string; scenario_id: string }
+        Returns: undefined
+      }
       rename_touchpoint: {
-        Args: { p_touchpoint_id: string; p_name: string }
+        Args: { p_name: string; p_touchpoint_id: string }
         Returns: Json
+      }
+      reorder_lanes: {
+        Args: { lane_names: string[]; scenario_id: string }
+        Returns: undefined
+      }
+      reorder_steps: {
+        Args: { path_id: string; step_ids: string[] }
+        Returns: undefined
       }
       restore_cell_touchpoints: {
         Args: { p_cell_id: string; p_rows: Json }
         Returns: undefined
       }
-      restore_featured_resources: {
-        Args: { p_rows: Json }
-        Returns: undefined
-      }
+      restore_featured_resources: { Args: { p_rows: Json }; Returns: undefined }
       restore_placement: {
-        Args: { p_row: Json; p_resources?: Json }
+        Args: { p_resources?: Json; p_row: Json }
         Returns: Json
+      }
+      schema_comments: {
+        Args: never
+        Returns: {
+          column_name: string
+          comment: string
+          relation: string
+        }[]
       }
       search_blueprint: {
         Args: {
-          embed_model?: string
-          filter_lane_role?: string
-          filter_path_kind?: string
-          filter_phase?: string
-          filter_scenario?: string
+          embed_model?: string | null
+          filter_lane_role?: string | null
+          filter_path_kind?: string | null
+          filter_phase?: string | null
+          filter_scenario?: string | null
           granularity?: string[]
           include?: string[]
           match_count?: number
-          q?: string
-          query_embedding?: string
+          q?: string | null
+          query_embedding?: string | null
           rrf_k?: number
         }
         Returns: {
@@ -1159,14 +1330,32 @@ export type Database = {
           updated_at: string
         }[]
       }
-      set_placement_touchpoint: {
-        Args: { p_placement_id: string; p_touchpoint_id?: string | null; p_name?: string | null }
-        Returns: Json
+      set_cell_dependency: {
+        Args: {
+          kind?: string
+          name?: string | null
+          source_cell_id: string
+          target_cell_id: string
+        }
+        Returns: string
       }
       set_featured_resource: {
-        Args: { p_resource_id: string; p_featured: boolean }
+        Args: { p_featured: boolean; p_resource_id: string }
         Returns: Json
       }
+      set_path_steps: {
+        Args: { path_id: string; step_ids: string[] }
+        Returns: undefined
+      }
+      set_placement_touchpoint: {
+        Args: {
+          p_name?: string | null
+          p_placement_id: string
+          p_touchpoint_id?: string | null
+        }
+        Returns: Json
+      }
+      slices_referencing: { Args: { cell_ids: string[] }; Returns: Json }
       sync_cell_resources: {
         Args: { p_cell_id: string; p_rows: Json }
         Returns: undefined
@@ -1179,9 +1368,36 @@ export type Database = {
         Args: { p_placement_id: string; p_rows: Json }
         Returns: undefined
       }
+      update_scenario_layout: {
+        Args: { layout: string; scenario_id: string }
+        Returns: undefined
+      }
+      upsert_cell: {
+        Args: {
+          content: string
+          lane_id: string
+          path_id: string
+          step_id: string
+        }
+        Returns: string
+      }
+      value_sets: {
+        Args: never
+        Returns: {
+          column_name: string
+          definition: string
+          name: string
+          relation: string
+          source: string
+        }[]
+      }
     }
-    Enums: Record<string, never>
-    CompositeTypes: Record<string, never>
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
 

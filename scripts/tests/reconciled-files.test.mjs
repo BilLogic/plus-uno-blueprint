@@ -202,7 +202,6 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/blueprint/NotionPropertyRow.tsx',
     'src/components/blueprint/PhasePanel.tsx',
     'src/components/blueprint/ScenarioSlideFilters.tsx',
-    'src/components/blueprint/StakeholderSelect.test.tsx',
     'src/components/blueprint/StoryboardWalkthroughShell.tsx',
     'src/contexts/StoryboardWalkthroughContext.tsx',
     'src/contexts/ViewStateContext.tsx',
