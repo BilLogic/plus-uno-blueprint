@@ -28,17 +28,19 @@
      declares; `themeDials.test.ts` now holds that for every dial. */
   --surface-hue: var(--hue);
   --chroma: 0.005;
-  /* The four authored knobs, at the same values `themes/light.css` declares —
+  /* The six authored knobs, at the same values `themes/light.css` declares —
      one brand fill and one corner in both modes. Same value, declared twice, on
      purpose: a mode-invariant dial written only into the light file reaches
      this theme through the bare `:root` at the head of that file's selector
      list rather than through anything this file says, which is the shape the
      `--surface-hue` defect above had. `themeDials.test.ts` fails if the two
-     files ever disagree. The reasoning is written out beside the same four in
+     files ever disagree. The reasoning is written out beside the same six in
      `themes/light.css`. #459. */
   --radius: 0.625rem;
   --primary-lightness: 0.83;
   --primary-chroma: 0.135;
+  --brand-lightness: 0.76;
+  --brand-chroma: 0.13;
   --ring-lightness: 0.58;
   --surface: 0.19;
   --elevation-step: 0.025;
@@ -75,4 +77,16 @@
   --destructive-400: 6.7deg 60% 20.6%;
   --destructive-300: 7.5deg 51.3% 15.3%;
   --destructive-200: 10.9deg 23.4% 9.2%;
+
+  /* The same job as light's 0.08, at a larger fraction of a shorter span: this
+     mode runs 0.76 from canvas to ink where light runs 0.895, and it starts
+     from `--contrast: 0.5` rather than 0.53, which leaves the edge step
+     unscaled here and scaled up by a twentieth there.
+
+     Swept the same way. The window that lands every role inside 1.21–1.34:1
+     against its own tint is 0.089 to 0.11 in this mode, and 0.092 puts the
+     seven between 1.22 and 1.27 — the interval light's 0.08 draws, which is
+     what makes the edge read the same in both themes rather than the fraction
+     matching. */
+  --role-edge-step: 0.092;
 }

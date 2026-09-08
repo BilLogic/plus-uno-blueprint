@@ -65,8 +65,25 @@ const AUTHORED_IN_BOTH = [
   '--radius',
   '--primary-lightness',
   '--primary-chroma',
+  // The identity fill's own pair, beside the control's. One value in both
+  // modes here because this deployment's brand does not invert — a neutral
+  // control has to, which is why `--primary-lightness` could have been the
+  // per-theme one and is not.
+  '--brand-lightness',
+  '--brand-chroma',
   '--ring-lightness',
 ]
+
+/**
+ * Dials that are per-theme on purpose, and therefore NOT on the list above.
+ *
+ * `--role-edge-step` is the live case: the two modes carry different fractions
+ * of different spans, for the reasons written beside each. Listed rather than
+ * merely omitted, so that a dial dropped from `AUTHORED_IN_BOTH` by accident
+ * does not look the same as one kept out of it on purpose — and so the print
+ * override, which has to take a per-theme dial back, has a roster to check.
+ */
+const AUTHORED_PER_THEME = ['--role-edge-step']
 
 /** What one theme file declares a name as, or `ABSENT`. */
 const valueIn = (file: string, name: string) =>
@@ -143,6 +160,17 @@ describe('theme dials', () => {
         (name) => `${name}: ${valueIn(LIGHT, name)} / ${valueIn(LIGHT, name)}`,
       ),
     )
+  })
+
+  it('holds each per-theme dial to actually differing between the two', () => {
+    // The mirror of the exemption check above. A dial listed here that both
+    // themes answer identically belongs on `AUTHORED_IN_BOTH` instead, and
+    // `print.css` would then be restating a value it has no reason to.
+    for (const name of AUTHORED_PER_THEME) {
+      expect(valueIn(LIGHT, name)).not.toBe('ABSENT')
+      expect(valueIn(DARK, name)).not.toBe('ABSENT')
+      expect(resolveValue(name, 'light')).not.toBe(resolveValue(name, 'dark'))
+    }
   })
 
   it('declares the authored knobs nowhere else', () => {

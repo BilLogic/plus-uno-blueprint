@@ -60,6 +60,18 @@
     --destructive-400: 7.1deg 91.3% 91%;
     --destructive-300: 7.1deg 100% 96.7%;
     --destructive-200: 0deg 100% 99.4%;
+
+    /*
+     * The role edge's step too, and for the ramps' own reason.
+     *
+     * Not derived from the dials above: the two themes carry different
+     * fractions of different spans, so a dial this block skips keeps dark's
+     * value on white paper. That is the same fault omitting the ramps had —
+     * a dark-mode page printed its status badge as a black block with black
+     * text — and `themeDials.test.ts` asserts the property rather than the
+     * list, so the next per-theme dial fails here on its own.
+     */
+    --role-edge-step: 0.08;
   }
 
   /* Preserve lane fills, badges, and divider colors in the PDF. */

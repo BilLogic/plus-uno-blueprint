@@ -28,11 +28,12 @@
      `--chroma` is 0, but it is what a tinted light theme would turn. */
   --surface-hue: 34;
   --chroma: 0;
-  /* The four knobs this deployment authors rather than derives: the corner
-     radius, the filled control's lightness and chroma, and the focus ring's
-     lightness. `themes/dark.css` declares all four at these same values, and
-     `themeDials.test.ts` holds the two files to it — this deployment runs one
-     brand fill and one corner in both modes.
+  /* The six knobs this deployment authors rather than derives: the corner
+     radius, the filled control's lightness and chroma, the identity fill's
+     lightness and chroma, and the focus ring's lightness. `themes/dark.css`
+     declares all six at these same values, and `themeDials.test.ts` holds the
+     two files to it — this deployment runs one brand fill and one corner in
+     both modes.
 
      Writing an identical value twice is the point, not an oversight. `--hue`
      above is the standing example: a mode-invariant value declared here alone
@@ -43,16 +44,31 @@
      months, silently, under a comment in `themes/dark.css` claiming the
      opposite. Declared in both files, the leak has nothing left to carry.
 
-     All four lived in `semantic.css` until #459, on the argument that a dial
-     neither theme turns is not a dial a theme owns. That argument reads the
-     wrong axis: what decides the home is authored versus derived, and these
-     are literals a deployment picks. `theme.css` derives every `--radius-*`
-     rung from `--radius`; `--primary` and `--ring` in `semantic.css` read the
-     other three, and the retune history that argues for their values is the
-     long comment beside `--primary` there. */
+     Four of them lived in `semantic.css` until #459, on the argument that a
+     dial neither theme turns is not a dial a theme owns. That argument reads
+     the wrong axis: what decides the home is authored versus derived, and
+     these are literals a deployment picks. `theme.css` derives every
+     `--radius-*` rung from `--radius`; `--primary` and `--ring` in
+     `semantic.css` read the control's three, and the retune history that
+     argues for their values is the long comment beside `--primary` there. */
   --radius: 0.625rem;
   --primary-lightness: 0.83;
   --primary-chroma: 0.135;
+  /* The identity fill, at the vividness the brand was authored at.
+     Its own pair rather than a reuse of the control's: `--primary` is the
+     accent tuned until a filled button reads as a control against this
+     canvas, and `--brand` is the accent as the identity wears it. Share one
+     pair and the two roles resolve to one colour and the distinction becomes
+     decoration.
+
+     These two are not a new colour. They are the ramp's `--brand-default`
+     step read in OKLCH — L 0.7600, C 0.1299, H 177.66 — rounded to the two
+     figures a dial is written in, so `bg-brand` renders what it always did
+     while the ramp behind it goes. The hue needs no dial of its own: it is
+     already `--hue`, to within a twentieth of a degree, which is what the
+     ramp was built to be. */
+  --brand-lightness: 0.76;
+  --brand-chroma: 0.13;
   --ring-lightness: 0.58;
   /*
    * Near-white canvas. Raised surfaces round up against L=1, so in light mode
@@ -106,4 +122,21 @@
   --destructive-400: 7.1deg 91.3% 91%;
   --destructive-300: 7.1deg 100% 96.7%;
   --destructive-200: 0deg 100% 99.4%;
+
+  /*
+   * How far a role's edge sits off that role's own tint, as a fraction of the
+   * signed canvas → ink span. Deliberately small: the edge is not what
+   * identifies an alert, so it stays a short step toward the role's ink rather
+   * than reading as a rule around the box. `semantic.css` carries the
+   * reasoning and the band; this is the number, and it is per theme because
+   * the span it is a fraction of is per theme — 0.895 here, 0.76 in dark.
+   *
+   * Swept against this deployment's own teal rather than copied. Every role
+   * lands inside 1.21–1.34:1 against its own tint for any fraction from 0.07
+   * to 0.095; 0.08 sits in the middle of that window and puts the seven roles
+   * between 1.24 and 1.28 to one — the same interval the `-400`-on-`-200` ramp
+   * steps this replaces drew, which measured 1.21 for warning and 1.29 for
+   * destructive.
+   */
+  --role-edge-step: 0.08;
 }
