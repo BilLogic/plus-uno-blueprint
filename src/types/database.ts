@@ -293,6 +293,7 @@ export type Database = {
           id: string
           kind: string
           name: string | null
+          note: string | null
           source_cell_id: string
           target_cell_id: string
           updated_at: string
@@ -302,6 +303,7 @@ export type Database = {
           id?: string
           kind?: string
           name?: string | null
+          note?: string | null
           source_cell_id: string
           target_cell_id: string
           updated_at?: string
@@ -311,6 +313,7 @@ export type Database = {
           id?: string
           kind?: string
           name?: string | null
+          note?: string | null
           source_cell_id?: string
           target_cell_id?: string
           updated_at?: string
