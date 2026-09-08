@@ -35,6 +35,7 @@ import { readFileSync, existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { RECONCILED_FILES } from './reconciled-files.mjs'
+import { repoLocalCitations, describeCitation } from './repo-local-citations.mjs'
 
 const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url))
 const PACKAGE = 'node_modules/agentic-service-blueprinting'
@@ -50,8 +51,22 @@ const byteReader = (root) => (path) => {
 }
 
 /**
- * The problems with the reconciled set: one string per enrolled path that is
- * not byte-identical to asb's copy. An empty array means the gate passes.
+ * The problems with the reconciled set. Two kinds, both fatal:
+ *
+ * 1. an enrolled path that is not byte-identical to asb's copy;
+ * 2. an enrolled file that cites a repo-local identity — an issue number, an
+ *    ADR number, a migration filename, a `docs/` path, a plan or todo number.
+ *
+ * The second is here rather than in a check of its own because the enrolled
+ * set is exactly the set the rule applies to, and this is the script that
+ * already reads it. A file is shared or it is not; the citation rule follows
+ * from that one fact and needs no second list to fall out of step with.
+ *
+ * Byte-identity is checked first and short-circuits: a drifted file already
+ * needs a decision, and listing its citations underneath would bury the
+ * drift. A file that fails only the citation rule is byte-identical, which
+ * means the same citations are wrong upstream too — so the fix goes there
+ * first and arrives here on the next pin bump.
  *
  * @param {object} io
  * @param {string[]} io.files                  enrolled repo-relative paths
@@ -80,6 +95,10 @@ export function auditReconciled({ files, readInstance, readAsb }) {
           'so the two must be byte-identical: reconcile them, or drop the entry ' +
           'from scripts/reconciled-files.mjs',
       )
+      continue
+    }
+    for (const finding of repoLocalCitations(path, ours.toString('utf8'))) {
+      problems.push(describeCitation(path, finding))
     }
   }
   return problems
@@ -118,9 +137,10 @@ function main() {
 
   for (const problem of problems) console.error(problem)
   console.error(
-    `\n${problems.length} reconciled file(s) have drifted from the template. A file ` +
-      'on scripts/reconciled-files.mjs is a promise that it stays byte-identical to ' +
-      "asb's copy; make it so, or drop the entry.",
+    `\n${problems.length} problem(s) in the reconciled set. A file on ` +
+      'scripts/reconciled-files.mjs is a promise of two things: that it stays ' +
+      "byte-identical to asb's copy, and that it cites no identity that means " +
+      'something different on the other side. Make both true, or drop the entry.',
   )
   process.exit(1)
 }

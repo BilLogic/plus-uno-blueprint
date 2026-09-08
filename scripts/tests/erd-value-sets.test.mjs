@@ -52,7 +52,10 @@ test('a claim is held to the set by equality, and a column nobody constrains is 
 })
 
 test('the committed ERD parses to the sets it states', () => {
-  const claims = erdValueSets(readFileSync(new URL('../../docs/reference/erd.mmd', import.meta.url), 'utf8'))
+  const claims = erdValueSets(
+    readFileSync(new URL('../../docs/reference/erd.mmd', import.meta.url), 'utf8'),
+    'docs/reference/erd.mmd',
+  )
   assert.ok(claims.some((c) => c.column === 'paths.kind'), 'the enum block is read')
   // Once in the enum block, once on the entity's attribute line.
   assert.equal(claims.filter((c) => c.column === 'scenarios.layout').length, 2, 'attribute lines are read')
