@@ -120,11 +120,9 @@ import { fileURLToPath } from 'node:url'
 
 import { RECONCILED_FILES } from './reconciled-files.mjs'
 import { sweptDocs } from './swept-docs.mjs'
+import { PACKAGE, refuseOnStaleInstall } from './template-pin.mjs'
 
 const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url))
-
-/** Where `npm ci` puts the pinned template. The same copy check:reconciled reads. */
-export const PACKAGE = 'node_modules/agentic-service-blueprinting'
 
 /** Shortest normalised block that counts as copied rather than coincident. */
 export const PROSE_FLOOR = 80
@@ -264,6 +262,13 @@ function main() {
     )
     process.exit(1)
   }
+
+  // An installed template behind the pin is the same failure with a subtler
+  // face (#510): the sweep would compare this deployment's prose against the
+  // PREVIOUS version's, so a block the template has since rewritten reads as
+  // duplicated and a block it has since adopted reads as ours alone. Both
+  // verdicts are about a document nobody is holding.
+  refuseOnStaleInstall(REPO_ROOT)
 
   const { documents, failures, compared } = sweep(REPO_ROOT, packageRoot)
 

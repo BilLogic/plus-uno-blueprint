@@ -113,6 +113,14 @@ const ADAPTER_OVERRIDE = 'src/lib/agent/canvas-adapter.md'
 // same files the app pulls in with `?raw`, read here with readFileSync.
 // Shared core lives at references/; each skill's own materials under
 // skills/<name>/references/, so the lookup is by name across both.
+//
+// This SERVES the installed package rather than measuring anything against
+// it, which is why it asks nothing of `scripts/template-pin.mjs` while the
+// four checks that do measure all refuse on an install behind the pin (#510).
+// The harness is a stand-in for the app, and the app is built against
+// whatever npm installed; a harness that demanded a fresher tree than the
+// dev server runs on would be answering a question about npm rather than
+// about the agent.
 const PACKAGE = dirname(
   fileURLToPath(import.meta.resolve('agentic-service-blueprinting/package.json')),
 )
