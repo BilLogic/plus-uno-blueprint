@@ -21,6 +21,7 @@ import {
   resolvePaletteToken,
   resolveValue,
   stylesheet,
+  type Theme,
 } from '@/lib/tokenModel'
 
 /**
@@ -58,12 +59,12 @@ describe('palette', () => {
 })
 
 describe('brand fill', () => {
-  // `--primary` and everything derived from it are authored in OKLCH against
-  // the theme's `--hue` dial. Nothing here can be read off the HSL ramps, so
-  // this block resolves the declarations on disk and measures them directly —
-  // the fill is the most-tuned colour in the system and has been retuned three
-  // times, twice into a state someone had to walk back.
-  const light = stylesheet('themes/light.css').text
+  // `--primary`, `--brand` and everything derived from them are authored in
+  // OKLCH against the theme's `--hue` dial. Nothing here can be read off the
+  // HSL ramps in `colors.css`, so this block resolves the dials through the
+  // cascade and measures the colours they produce — the control fill is the
+  // most-tuned colour in the system and has been retuned three times, twice
+  // into a state someone had to walk back.
 
   // Through the cascade, not off the page: a dial's value is what wins at the
   // root under a theme, which is a different question from what one file says.
@@ -81,6 +82,15 @@ describe('brand fill', () => {
   const C = dial('--primary-chroma', 'light')
 
   const canvas = oklch(SURFACE, 0, dial('--surface-hue', 'light'))
+
+  /* `--brand: oklch(var(--brand-lightness) var(--brand-chroma)
+     var(--primary-hue))`, resolved through the cascade for one theme. */
+  const brandFill = (theme: 'light' | 'dark') =>
+    oklch(
+      dial('--brand-lightness', theme),
+      dial('--brand-chroma', theme),
+      dial('--hue', theme),
+    )
 
   it('states its own lightness and chroma, so a retune has to come here', () => {
     // A drive-by edit that moves either number lands on this assertion first
@@ -101,17 +111,43 @@ describe('brand fill', () => {
     expect(resolveValue('--ring', 'light')).toBe(resolveValue('--ring', 'dark'))
   })
 
-  it('sits on the brand ramp rather than beside it', () => {
+  it('wears the same hue as the identity fill beside it', () => {
     // The 2026-08-06 pass left the hue dial 5.4° off the `--brand-*` ramp,
     // which put the filled button on a cyaner green than every other brand
-    // surface in the app. The ramp is authored as HSL literals whose OKLCH
-    // hue is 177.6 at every step — so this compares the dial against the
-    // ramp as CONVERTED, not against the HSL numbers on the page, which read
-    // 163–171 and are not a hue reference.
-    const brandHues = [...light.matchAll(/--brand-(\d00):\s*([\d.]+)deg\s+([\d.]+)%\s+([\d.]+)%/g)]
-      .map(([, , h, s, l]) => oklchHue(hslToRgb(Number(h), Number(s), Number(l))))
-    expect(brandHues.length).toBeGreaterThanOrEqual(5)
-    for (const hue of brandHues) expect(Math.abs(hue - HUE)).toBeLessThan(0.2)
+    // surface in the app. The ramp is gone — a stepped family is named for a
+    // hue and never for a role — and what it guarded is now structural: both
+    // fills read `--primary-hue`, which is `var(--hue)`, so the control and
+    // the identity cannot come apart the way they did.
+    expect(resolveValue('--primary-hue', 'light')).toBe(String(HUE))
+    expect(oklchHue(brandFill('light'))).toBeCloseTo(HUE, 1)
+  })
+
+  it('keeps the identity fill on the colour the retired ramp anchor carried', () => {
+    // `bg-brand` resolved `hsl(var(--brand-default))` — the one step of that
+    // ramp anything outside `colors.css` consumed — until the two dials
+    // replaced it. They are that step, read in OKLCH and rounded to the two
+    // figures a dial is written in: L 0.7600 to 0.76, C 0.1299 to 0.13, on a
+    // hue (177.66) the ramp already shared with `--hue`.
+    //
+    // Held as a number rather than as a claim, because "renders unchanged" is
+    // the whole argument for deleting the ramp under it. The rounding costs
+    // one 8-bit step of blue and nothing else, which is why the tolerance is
+    // one channel unit and not a ratio.
+    const retired = hslToRgb(169.5, 61.3, 49.5)
+    for (const theme of ['light', 'dark'] as const) {
+      const brand = brandFill(theme)
+      expect(contrast(retired, brand)).toBe(1)
+      for (const [index, channel] of brand.entries()) {
+        expect(Math.abs(channel - retired[index]) * 255).toBeLessThanOrEqual(1)
+      }
+    }
+  })
+
+  it('runs one identity fill in both modes, like the control beside it', () => {
+    // Two dials, declared in both theme files at one value — the shape
+    // `themeDials.test.ts` holds. A deployment whose identity wants a
+    // different lightness per mode turns them apart there, not here.
+    expect(resolveValue('--brand', 'light')).toBe(resolveValue('--brand', 'dark'))
   })
 
   it('leaves the fill itself un-gamut-mapped', () => {
@@ -174,6 +210,149 @@ describe('brand fill', () => {
       HUE,
     )
     expect(contrast(border, oklch(L, C, HUE))).toBeGreaterThan(1.4)
+  })
+})
+
+/**
+ * The seven jobs a role offers, measured where each one is painted.
+ *
+ * The vocabulary's whole claim is that an author picks a name by answering
+ * what the colour sits on, so every assertion here pairs a job with its
+ * ground: the edge against its own tint, the two inks against the two grounds
+ * they are named for. Nothing is measured against nothing, which is the defect
+ * the alpha edge this replaced had — a token whose value depended on whatever
+ * was behind it, and therefore had no value until it was painted.
+ *
+ * The arithmetic mirrors `semantic.css`, dial for dial and through the
+ * cascade, so a theme that turns one of them is measured at its new value
+ * rather than at the number this file was written against.
+ */
+describe('the role vocabulary', () => {
+  const THEME_LIST = ['light', 'dark'] as const
+  type Lch = { l: number; c: number; h: number }
+
+  const span = (theme: Theme) =>
+    dial('--foreground-lightness', theme) - dial('--surface', theme)
+
+  /** `--{status}-hue`: the anchor, pulled 15% toward the brand, then clamped. */
+  const statusHue = (anchor: number, lo: number, hi: number, theme: Theme) =>
+    Math.min(hi, Math.max(lo, anchor + (dial('--hue', theme) - 159) * 0.15))
+
+  /** The solid fill each role's seven names are derived from. */
+  const fills = (theme: Theme): Record<string, Lch> => ({
+    primary: {
+      l: dial('--primary-lightness', theme),
+      c: dial('--primary-chroma', theme),
+      h: dial('--hue', theme),
+    },
+    brand: {
+      l: dial('--brand-lightness', theme),
+      c: dial('--brand-chroma', theme),
+      h: dial('--hue', theme),
+    },
+    warning: {
+      l: dial('--warning-lightness', theme),
+      c: dial('--expressive-chroma', theme),
+      h: statusHue(75, 65, 95, theme),
+    },
+    destructive: {
+      l: dial('--destructive-lightness', theme),
+      c: dial('--expressive-chroma', theme),
+      h: statusHue(25, 12, 42, theme),
+    },
+    info: {
+      l: dial('--info-lightness', theme),
+      c: dial('--expressive-chroma', theme),
+      h: statusHue(288, 272, 302, theme),
+    },
+    success: { l: dial('--success-lightness', theme), c: dial('--expressive-chroma', theme), h: 152 },
+    // `--secondary` is the third elevation step of `--background`, so its
+    // lightness can round past 1 in light mode. Only its chroma and hue reach
+    // the vocabulary — every job below replaces the lightness outright.
+    secondary: {
+      l: dial('--surface', theme) + dial('--elevation-step', theme) * 2,
+      c: dial('--chroma', theme) * 0.5,
+      h: dial('--surface-hue', theme),
+    },
+  })
+
+  const mix = (f: Lch, theme: Theme, fraction: number, chroma: number): Lch => ({
+    l: dial('--surface', theme) + span(theme) * fraction,
+    c: f.c * chroma,
+    h: f.h,
+  })
+  const tintOf = (f: Lch, theme: Theme) => mix(f, theme, 0.06, 0.14)
+  const inkOnTint = (f: Lch, theme: Theme) => mix(f, theme, 0.82, 0.9)
+  const inkOnPage = (f: Lch, theme: Theme) => mix(f, theme, 0.76, 0.9)
+
+  /** `--role-edge-contrast`, normalised at the `--contrast: 0.5` baseline. */
+  const edgeContrast = (theme: Theme) => {
+    const floor = 0.05
+    const linear = floor + (1 - floor) * dial('--contrast', theme)
+    return linear / (floor + (1 - floor) * 0.5)
+  }
+  const edgeOf = (f: Lch, theme: Theme): Lch => {
+    const tint = tintOf(f, theme)
+    return {
+      l:
+        tint.l +
+        span(theme) * dial('--role-edge-step', theme) * edgeContrast(theme),
+      c: tint.c * 3,
+      h: tint.h,
+    }
+  }
+  const paint = ({ l, c, h }: Lch) => oklch(l, c, h)
+  const canvasOf = (theme: Theme) =>
+    oklch(dial('--surface', theme), dial('--chroma', theme) * 0.5, dial('--surface-hue', theme))
+
+  it.each(THEME_LIST)('keeps every %s role edge quiet against its own tint', (theme) => {
+    // The band is not a guess and not the 3:1 non-text floor. It is what the
+    // ramp steps this replaced measured: `alert.tsx` bordered its two ramped
+    // variants with a -400 weight on a -200 surface, and those four pairs read
+    // 1.21, 1.29, 1.30 and 1.34 across the two themes. Aim higher and the
+    // hairline becomes a rule around the box; aim lower and there is no edge.
+    //
+    // Stated over all seven roles rather than the two that had a ramp: the
+    // point of the vocabulary is that success and info now draw the same edge
+    // by the same mechanism, where they used to composite an alpha against
+    // whatever was behind them.
+    for (const [role, f] of Object.entries(fills(theme))) {
+      const ratio = contrast(paint(edgeOf(f, theme)), paint(tintOf(f, theme)))
+      // Named in the assertion rather than beside it, so a failure says which
+      // of the seven left the band and at what.
+      expect({ role, quiet: ratio >= 1.21 && ratio <= 1.34, ratio }).toEqual({
+        role,
+        quiet: true,
+        ratio,
+      })
+    }
+  })
+
+  it.each(THEME_LIST)('clears AA for both %s role inks, each on its own ground', (theme) => {
+    // Two inks because there are two problems, and the split is the whole
+    // reason `--text-{role}` had to be minted: the fill it used to resolve to
+    // was tuned for ink to sit ON it, not to BE it. The badge's amber word
+    // read 2.77:1 in light against the wash it sat on before this.
+    for (const [role, f] of Object.entries(fills(theme))) {
+      expect({
+        role,
+        onTint: contrast(paint(inkOnTint(f, theme)), paint(tintOf(f, theme))) >= 4.5,
+        onPage: contrast(paint(inkOnPage(f, theme)), canvasOf(theme)) >= 4.5,
+      }).toEqual({ role, onTint: true, onPage: true })
+    }
+  })
+
+  it.each(THEME_LIST)('leaves ordinary copy legible on every %s tint', (theme) => {
+    // The alert keeps its body at `--foreground`, so the tint has to stay a
+    // tint. A role whose resting surface pulled the page's own ink under AA
+    // would be a fill wearing a surface's name.
+    const ink = oklch(dial('--foreground-lightness', theme), 0, dial('--surface-hue', theme))
+    for (const [role, f] of Object.entries(fills(theme))) {
+      expect({ role, legible: contrast(ink, paint(tintOf(f, theme))) >= 4.5 }).toEqual({
+        role,
+        legible: true,
+      })
+    }
   })
 })
 
