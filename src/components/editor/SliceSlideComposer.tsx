@@ -117,19 +117,19 @@ export function SliceSlideComposer({
 
     const updateSlot = (x: number, y: number) => {
       const next = slotAt(x, y)
-      // Written straight to the ref as well: a pointerup in the same slide
+      // Written straight to the ref as well: a pointerup in the same frame
       // as the last move must not read a slot from one render ago.
       slotRef.current = next
       setSlot((current) => (sameSlot(current, next) ? current : next))
     }
 
     /*
-      Edge scrolling runs on its own animation-frame loop, not on pointermove. Coupled
+      Edge scrolling runs on its own frame loop, not on pointermove. Coupled
       to move events, a pointer held *still* in the edge band scrolled
       nothing — the user waits at the edge like at a bus stop with no bus —
       and when it did scroll, the slot under the pointer changed without the
       pointer moving, so the drawn line and the actual drop target drifted
-      apart. The loop scrolls and re-derives the slot every animation frame.
+      apart. The loop scrolls and re-derives the slot every frame.
     */
     const tick = () => {
       // The composer no longer scrolls; the sheet's scroll surface does.

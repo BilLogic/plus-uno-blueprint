@@ -1102,4 +1102,20 @@ export const RECONCILED_FILES = [
   'src/lib/stakeholderMutations.ts',
   'src/lib/touchpointMutations.ts',
   'src/lib/cssCascadeLayerContract.test.ts',
+
+  // ── asb 1.12.9: what the errorMessage sweep left byte-identical ──
+  //
+  // The template's copies of seventeen files stopped inlining
+  // `x instanceof Error ? x.message : String(x)` and started calling the
+  // `errorMessage` helper both repositories already export. One of them —
+  // `DeleteStructureDialog.tsx` — had no other difference and is byte-identical
+  // now. The other two took the template's wording under the tie-break, and
+  // both times the template was simply right: `CreatePhaseDialog.tsx` said
+  // "description" for a field that writes `phases.summary`, and
+  // `SliceSlideComposer.tsx` said "in the same slide" where the sentence is
+  // about an animation frame — a rename that ran through prose it did not
+  // belong in.
+  'src/components/editor/CreatePhaseDialog.tsx',
+  'src/components/editor/DeleteStructureDialog.tsx',
+  'src/components/editor/SliceSlideComposer.tsx',
 ]
