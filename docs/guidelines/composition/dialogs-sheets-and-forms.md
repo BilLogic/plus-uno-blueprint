@@ -236,7 +236,54 @@ drag-composed grouping for one stray pick.
 
 One component for every image in the app worth looking at closely. An adopter
 renders it in place of a bare image and gets the trigger, the popup and the
-whole gesture set; the cover figure is its first adopter, and the panels follow.
+whole gesture set. The adopters are the cover figure, the cover section's
+`framed` illustration, the featured attachment preview, a cell's frame
+screenshots, and the storyboard detail stack in the side panel.
+
+**Some pictures deliberately do not open, and each has a reason.** Touchpoint
+logos are iconography rather than content: there is nothing inside a brand mark
+to read closer, and opening one fullscreen teaches the reader that the
+affordance is decorative. A cover section's `badge` logomark is the same
+argument on the same grounds. Storyboard frames drawn inside a canvas cell keep
+selecting that cell, because the board already binds click, drag, marquee, pan
+and context menu to that surface. And any frame drawn inside a **deck** is left
+alone — the slice presentation's stage media, and the storyboard detail stack in
+its `horizontal` orientation, which is only ever rendered inside
+`StoryboardWalkthroughModal`. A deck binds the arrow keys and Escape on the
+window, and a viewer inside it would want all three for itself, so one press
+would drive both. Every excluded picture is reachable in adopted form
+somewhere else, so nothing becomes unviewable.
+
+**Siblings are passed in, never discovered.** An adopter renders one
+`ZoomableImage` per member of the group and hands each of them the same ordered
+array plus its own index. A DOM scan of the container was rejected: the order
+carries meaning — a step panel's frames are ordered by lane, so stepping is "the
+same moment, the next actor" — and a scan would preserve that only until a
+wrapper element or a CSS reorder quietly broke it. Past two members the viewer
+draws a counter and two step buttons; the arrow keys and a horizontal swipe step
+as well. **Stepping returns to fit**, so every sibling opens the same way and
+nobody is handed the next picture already scrolled into a corner of the last
+one; it takes the hook's `reset` rather than its `measure`, because two frames
+of one step are usually the same size and a measurement-driven refit would do
+nothing exactly when it is needed. Stepping **wraps** at both ends, the same
+rule the zoom follows at its ceiling: no control in this viewer is a dead end.
+
+**The swipe is gated on `canPanImage`, and that is the scale test, not an
+approximation of one.** Pan limits are zero on both axes precisely when the
+image overflows neither, which is true at or below fit and false above it — so
+"there is no pan to steal here" and "this is fit" are one sentence. Above fit
+the same sideways press is the pan.
+
+**On touch the gesture set is pinch, drag and swipe — and not tap.** Every
+fullscreen image on a phone has taught the reader that a tap dismisses, and a
+viewer that zoomed instead would spend that habit on the one gesture it cannot
+afford to surprise anyone with; the tap is left meaning nothing rather than made
+to mean two things. The input class is read off `pointerType` at the press, not
+off a media query, so a tablet with a mouse keeps click-to-zoom. Adding the
+two-finger pinch is also what finally made Safari's `gesture*` events need
+`shouldApplyGestureZoom`: on iOS one pinch is both mechanisms at once, and
+applying both would square every step. That is the same gate, and the same
+reason, the canvas found.
 
 **Once open, the image is operated rather than dismissed.** The wheel and a
 trackpad pinch zoom toward the pointer, a click zooms a step in at the point
@@ -249,6 +296,13 @@ natural size — one more click returns to fit,
 so no gesture is a dead end. The cursor is the viewer's running explanation of
 which of those is next: zoom-in at fit, grab and grabbing while panning,
 zoom-out at the top.
+
+**Names come from the site that renders the picture.** A lane name, a resource
+name, an illustration's own alt text — every adopter had one to hand except a
+cell's frame screenshots, which take **the cell's own content sentence**. That
+is what the frame depicts, and it is already in scope where they render. A
+caption field on the record was considered and rejected: a schema change in
+service of a label.
 
 **Three exits, and the image is not one of them.** A click on the surrounding
 margin closes, Escape closes, and a corner button closes; the button sits

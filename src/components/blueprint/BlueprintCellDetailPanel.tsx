@@ -31,6 +31,7 @@ import {
 import { CellResourcesTab } from '@/components/blueprint/CellResourcesTab'
 import { IconTooltip } from '@/components/editor/IconTooltip'
 import { StoryboardStepDetailStack } from '@/components/blueprint/StoryboardStepDetailStack'
+import { ZoomableImage } from '@/components/blueprint/ZoomableImage'
 
 import {
   SegmentedControl,
@@ -1174,9 +1175,20 @@ function BlueprintCellDetailPanelBody() {
           src.includes('/logo/')
         const logos = images.filter(isTechLogo)
         const screenshots = images.filter((src) => !isTechLogo(src))
+        const screenshotSiblings = screenshots.map((src) => ({
+          src,
+          alt: cellTitleText,
+        }))
 
         return (
           <>
+            {/*
+              Logos stay inert, at every size. They are iconography, not
+              content: there is nothing inside a brand mark to read closer,
+              and making one open a fullscreen viewer teaches the reader that
+              the openable affordance is decorative — which spends the signal
+              the screenshots below it depend on.
+            */}
             {logos.length > 0 ? (
               <div className="flex w-full flex-wrap items-center justify-center gap-3">
                 {logos.map((src) => (
@@ -1199,14 +1211,35 @@ function BlueprintCellDetailPanelBody() {
                 mediaClassName={CELL_DETAIL_PICTURE_CLASS}
               />
             ) : (
-              // The cell's frame, for a placement with no featured attachment.
-              screenshots.map((src) => (
+              /*
+                The cell's frame, for a placement with no featured
+                attachment — and there can be several of them, which is why
+                they are handed to the viewer as a GROUP. The array is the
+                one `screenshots` already holds, in the order the placement's
+                attachments arrived in, and each trigger says which index it
+                is; the viewer never goes looking for its own siblings.
+
+                The name is the cell's own content sentence. A frame has no
+                caption anywhere in the schema and is not getting one for the
+                sake of a label — what the picture shows is the moment the
+                cell describes, and that sentence is already right here.
+              */
+              screenshots.map((src, index) => (
                 <div key={src} className={CELL_DETAIL_PICTURE_FRAME_CLASS}>
-                  <img
+                  <ZoomableImage
                     src={src}
-                    alt=""
-                    className={CELL_DETAIL_PICTURE_CLASS}
-                  />
+                    alt={cellTitleText}
+                    triggerLabel={`Expand: ${cellTitleText}`}
+                    siblings={screenshotSiblings}
+                    siblingIndex={index}
+                    triggerClassName="absolute inset-0 block cursor-pointer"
+                  >
+                    <img
+                      src={src}
+                      alt=""
+                      className={CELL_DETAIL_PICTURE_CLASS}
+                    />
+                  </ZoomableImage>
                 </div>
               ))
             )}

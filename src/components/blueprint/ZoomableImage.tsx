@@ -1,6 +1,13 @@
-import type { ReactNode } from 'react'
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
+} from 'react'
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
-import { X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useImageZoom } from '@/hooks/useImageZoom'
 import type { ImageZoomCursor } from '@/lib/imageZoomReducer'
 import { cn } from '@/lib/utils'
@@ -18,6 +25,35 @@ const CURSOR_CLASS: Record<ImageZoomCursor, string> = {
   'zoom-out': 'cursor-zoom-out',
   grab: 'cursor-grab',
   grabbing: 'cursor-grabbing',
+}
+
+/**
+ * The chrome the viewer draws over the picture — the close button, the two
+ * step buttons, the counter. One spelling, so they read as one set.
+ *
+ * `bg-foreground/70 text-background` rather than a literal: the ground under
+ * this chrome is whatever the reader opened, so it needs ink that inverts
+ * with the theme the way the page's own does.
+ */
+const VIEWER_CHROME_CLASS =
+  'z-10 rounded-full bg-foreground/70 text-background backdrop-blur-sm'
+const STEP_BUTTON_CLASS =
+  'absolute top-1/2 flex size-9 -translate-y-1/2 cursor-pointer items-center justify-center transition-colors duration-(--motion-micro) hover:bg-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
+
+/**
+ * One member of a sibling group: an image the viewer can step to.
+ *
+ * Passed IN by the site that renders the row, never discovered by scanning a
+ * container. The order carries meaning — a step panel's frames are ordered
+ * by lane, so stepping is "the same moment, the next actor" — and a DOM
+ * scan would preserve that only by accident, until the day a wrapper element
+ * or a CSS reorder quietly broke it.
+ */
+export type ZoomableImageSibling = {
+  src: string
+  alt: string
+  naturalWidth?: number
+  naturalHeight?: number
 }
 
 /**
@@ -39,9 +75,17 @@ const CURSOR_CLASS: Record<ImageZoomCursor, string> = {
  * reachable, which is why it sits outside the clipping box and above the
  * image rather than inside the frame with it.
  *
- * No sibling stepping. The first adopter is a cover figure, which has none;
- * arrow keys, on-screen prev/next and the counter arrive with the adopters
- * that come in rows.
+ * Siblings, where the adopter has them. A row of lane frames is one moment
+ * seen by three actors and exists to be compared, so the viewer steps
+ * between them — arrow keys, the two on-screen buttons, a horizontal swipe —
+ * with a counter saying which of how many. Each step returns to fit, so
+ * every sibling opens the same way and the reader is never handed the next
+ * picture already scrolled to a corner of the last one.
+ *
+ * Stepping WRAPS at both ends. That is the same rule the zoom follows at its
+ * ceiling: no gesture in this viewer is a dead end, and a next button that
+ * greys out on the last frame is a control that stops answering. A row of
+ * three actors is something a reader cycles rather than traverses.
  */
 export function ZoomableImage({
   src,
@@ -50,6 +94,8 @@ export function ZoomableImage({
   naturalHeight,
   triggerLabel,
   triggerClassName,
+  siblings,
+  siblingIndex = 0,
   children,
 }: {
   src: string
@@ -65,22 +111,93 @@ export function ZoomableImage({
   /** The trigger is a button and therefore needs a name of its own. */
   triggerLabel: string
   triggerClassName?: string
+  /**
+   * The whole ordered group this image belongs to, and below it the position
+   * this trigger occupies in it. An adopter renders one `ZoomableImage` per
+   * member and hands each the same array — so which one was clicked is the
+   * index, and the row's order is the array's.
+   *
+   * A group of one is no group: the chrome only appears past two, because a
+   * counter reading "1 of 1" states nothing and two dead buttons are worse
+   * than none.
+   */
+  siblings?: readonly ZoomableImageSibling[]
+  siblingIndex?: number
   /** The closed-state rendering — the thumbnail and any hint over it. */
   children: ReactNode
 }) {
+  const group = siblings && siblings.length > 1 ? siblings : null
+  const [open, setOpen] = useState(false)
+  const [current, setCurrent] = useState(siblingIndex)
+  const shown = group?.[current] ?? { src, alt, naturalWidth, naturalHeight }
+
+  const step = useCallback(
+    (delta: 1 | -1) => {
+      if (!group) return
+      setCurrent((index) => (index + delta + group.length) % group.length)
+    },
+    [group],
+  )
+
   const {
     popupRef,
     viewportRef,
     imageRef,
     measure,
+    reset,
     cursor,
     animated,
     imageStyle,
     imageHandlers,
-  } = useImageZoom({ naturalWidth, naturalHeight })
+  } = useImageZoom({
+    naturalWidth: shown.naturalWidth,
+    naturalHeight: shown.naturalHeight,
+    onSwipeStep: group ? step : undefined,
+  })
+
+  /**
+   * Back to fit on a step, and only on a step.
+   *
+   * Guarded by the index it last ran for rather than left to the dependency
+   * array: `reset` changes identity whenever a node attaches or the authored
+   * size changes, and a bare effect would then throw away a reader's zoom at
+   * moments that have nothing to do with stepping.
+   */
+  const shownIndexRef = useRef(current)
+  useLayoutEffect(() => {
+    if (shownIndexRef.current === current) return
+    shownIndexRef.current = current
+    reset()
+  }, [current, reset])
+
+  /**
+   * Arrow keys step; Escape is left alone, because the dialog already closes
+   * on it and the reader means the same thing by it here as everywhere else.
+   */
+  const onKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
+    if (!group) return
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault()
+      step(-1)
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault()
+      step(1)
+    }
+  }
 
   return (
-    <DialogPrimitive.Root>
+    <DialogPrimitive.Root
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next)
+        if (next) {
+          // Every opening starts at the image that was clicked, not at
+          // wherever the last visit through this trigger wandered to.
+          setCurrent(siblingIndex)
+          shownIndexRef.current = siblingIndex
+        }
+      }}
+    >
       <DialogPrimitive.Trigger
         type="button"
         aria-label={triggerLabel}
@@ -97,7 +214,8 @@ export function ZoomableImage({
         */}
         <DialogPrimitive.Popup
           ref={popupRef}
-          aria-label={alt}
+          aria-label={shown.alt}
+          onKeyDown={onKeyDown}
           className="fixed inset-0 z-50 outline-none transition-opacity duration-(--motion-fade) data-ending-style:opacity-0 data-starting-style:opacity-0"
         >
           {/*
@@ -125,8 +243,8 @@ export function ZoomableImage({
           >
             <img
               ref={imageRef}
-              src={src}
-              alt={alt}
+              src={shown.src}
+              alt={shown.alt}
               onLoad={measure}
               draggable={false}
               style={imageStyle}
@@ -148,9 +266,58 @@ export function ZoomableImage({
               )}
             />
           </div>
+          {/*
+            The stepping chrome, outside the clipping box for the same reason
+            the close button is: it is wanted most when the reader is deep in
+            one sibling, which is exactly when a box that clips would have
+            taken it away.
+          */}
+          {group ? (
+            <>
+              <button
+                type="button"
+                aria-label="Previous image"
+                onClick={() => step(-1)}
+                className={cn(VIEWER_CHROME_CLASS, STEP_BUTTON_CLASS, 'left-4')}
+              >
+                <ChevronLeft className="size-5" aria-hidden />
+              </button>
+              <button
+                type="button"
+                aria-label="Next image"
+                onClick={() => step(1)}
+                className={cn(
+                  VIEWER_CHROME_CLASS,
+                  STEP_BUTTON_CLASS,
+                  'right-4',
+                )}
+              >
+                <ChevronRight className="size-5" aria-hidden />
+              </button>
+              {/*
+                Live, because on a step the picture changes and nothing else
+                a screen reader is looking at does — the popup's own label
+                follows the image, but a label is announced on open, not on
+                every change to it.
+              */}
+              <p
+                aria-live="polite"
+                data-image-zoom-counter
+                className={cn(
+                  VIEWER_CHROME_CLASS,
+                  'absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 text-sm font-medium tabular-nums',
+                )}
+              >
+                {current + 1} of {group.length}
+              </p>
+            </>
+          ) : null}
           <DialogPrimitive.Close
             aria-label="Close"
-            className="absolute top-4 right-4 z-10 flex size-9 cursor-pointer items-center justify-center rounded-full bg-foreground/70 text-background backdrop-blur-sm transition-colors duration-(--motion-micro) hover:bg-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className={cn(
+              VIEWER_CHROME_CLASS,
+              'absolute top-4 right-4 flex size-9 cursor-pointer items-center justify-center transition-colors duration-(--motion-micro) hover:bg-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+            )}
             render={<button type="button" />}
           >
             <X className="size-5" aria-hidden />
