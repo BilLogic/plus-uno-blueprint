@@ -29,6 +29,13 @@ describe('session canvas view state', () => {
 
     deleteCanvasViewStatesForTab('slice:closed')
 
+    // React unmount cleanup runs after the close dispatch. That late write
+    // must not resurrect the discarded workspace camera.
+    writeCanvasViewState('desktop:slice:closed', {
+      pan: { x: 500, y: 500 },
+      zoom: 2,
+    })
+
     expect(readCanvasViewState('desktop:slice:closed')).toBeUndefined()
     expect(readCanvasViewState('mobile:slice:closed')).toBeUndefined()
   })
