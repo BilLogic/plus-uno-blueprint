@@ -922,8 +922,16 @@ export const RECONCILED_FILES = [
   // anywhere, reachable only by a revert. Byte identity cost three bare issue
   // numbers leaving our doc comments.
   'src/components/blueprint/RoleSelect.tsx',
-  'src/components/blueprint/PlacementResourcesList.tsx',
   'src/lib/utils.ts',
+  // NOT enrolled any more: `PlacementResourcesList.tsx`. It came off when the
+  // cell's Resources tab was given the same list the placement's group has —
+  // the list moved into `ResourcesList.tsx`, which both owners now hand rows
+  // and a pair of writes, and the placement's file is the eleven-line wrapper
+  // that is left. What it says is now specific to this deployment twice over:
+  // it names the two owners' writes, and its comment cites the tickets the
+  // move happened under. The template still carries the whole list inline, so
+  // the two are not one edit apart — what would put this back is porting the
+  // shared list upstream and re-enrolling BOTH files, not a comment fix.
 
   // asb 1.12.0 adopt. The deployment seam, and four files the pin bump made
   // free (BilLogic/agentic-service-blueprinting#214).

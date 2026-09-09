@@ -105,8 +105,8 @@ test('a resources save sends the whole list, for this cell, in one call', async 
     'cell-1',
     [{ kind: 'link', name: 'Old', url: 'https://old.example.com/' }],
     [
-      { label: 'Spec', url: 'https://spec.example.com' },
-      { label: 'Figma', url: 'https://figma.com/file/abc' },
+      { name: 'Spec', url: 'https://spec.example.com' },
+      { name: 'Figma', url: 'https://figma.com/file/abc' },
     ],
   )
 
@@ -139,8 +139,8 @@ test('a saved row names itself by id, and a new row has none yet', async () => {
     'cell-1',
     [{ id: 'r-1', kind: 'link', name: 'Spec', url: 'https://spec.example.com/' }],
     [
-      { id: 'r-1', label: 'Spec', url: 'https://spec.example.com' },
-      { label: 'Figma', url: 'https://figma.com/file/abc' },
+      { id: 'r-1', name: 'Spec', url: 'https://spec.example.com' },
+      { name: 'Figma', url: 'https://figma.com/file/abc' },
     ],
   )
 
@@ -150,10 +150,10 @@ test('a saved row names itself by id, and a new row has none yet', async () => {
   )
 })
 
-test('a resource with no label falls back to its host', async () => {
+test('a resource with no name falls back to its host', async () => {
   const client = fakeClient()
   await updateCellResources(client, 'cell-1', [], [
-    { label: '  ', url: 'https://www.notion.so/page' },
+    { name: '  ', url: 'https://www.notion.so/page' },
   ])
   assert.equal(client.captured.rpc.args.p_rows[0].name, 'notion.so')
 })
@@ -163,8 +163,8 @@ test('one bad URL aborts the whole write', async () => {
   await assert.rejects(
     () =>
       updateCellResources(client, 'cell-1', [], [
-        { label: 'Good', url: 'https://ok.example.com' },
-        { label: 'Bad', url: 'http://insecure.example.com' },
+        { name: 'Good', url: 'https://ok.example.com' },
+        { name: 'Bad', url: 'http://insecure.example.com' },
       ]),
     /not secure/,
   )

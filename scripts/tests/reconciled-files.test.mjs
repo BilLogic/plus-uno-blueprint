@@ -67,6 +67,16 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
   // left of the two copies differed only in the fallback merge model and in
   // one key name.
   //
+  // The first REMOVAL is `PlacementResourcesList.tsx`, and it is here for the
+  // same reason every addition is: so that leaving the set is as deliberate as
+  // joining it. Giving the cell's Resources tab the list the placement's group
+  // already had moved that list into `ResourcesList.tsx` — one component, two
+  // owners, each handing it rows and a pair of writes — and left the
+  // placement's file as the wrapper naming this deployment's writes. The
+  // template still carries the whole list inline, so the two are not one
+  // comment apart; the reason and what would put it back are recorded beside
+  // the entry it replaced in `scripts/reconciled-files.mjs`.
+  //
   // #407 asked whether a whole-array `deepEqual` is still the right ratchet
   // now that the list is 211 long and every reconciliation ticket touches it,
   // or whether set-equality plus a separate ordering rule would hold the same
@@ -355,7 +365,6 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/blueprint/BlueprintPathBand.tsx',
     'src/components/blueprint/MergedCompareGrid.tsx',
     'src/components/blueprint/RoleSelect.tsx',
-    'src/components/blueprint/PlacementResourcesList.tsx',
     'src/lib/utils.ts',
     'src/contexts/DeploymentConfigContext.tsx',
     'src/lib/agent/tools/referenceRegistry.ts',

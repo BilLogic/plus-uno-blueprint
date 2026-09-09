@@ -184,7 +184,7 @@ export async function restoreCellTouchpoints(
 export type ResourceDraft = {
   id?: string | null
   kind?: 'link' | 'attachment'
-  label: string
+  name: string
   url: string
 }
 
@@ -229,7 +229,7 @@ export async function updateCellResources(
     rows.push({
       id: draft.id ?? null,
       kind: draft.kind ?? 'link',
-      name: draft.label.trim() || hostOf(checked.url),
+      name: draft.name.trim() || hostOf(checked.url),
       url: checked.url,
     })
   }

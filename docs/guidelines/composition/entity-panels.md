@@ -24,6 +24,7 @@ claims:
   - src/components/blueprint/PlacementResourcesList.tsx
   - src/components/blueprint/PanelTextareaField.tsx
   - src/components/blueprint/PhasePanel.tsx
+  - src/components/blueprint/ResourcesList.tsx
   - src/components/blueprint/ScenarioPanel.tsx
   - src/components/blueprint/ServicePanel.tsx
   - src/components/blueprint/StepHeaderAffordance.tsx
@@ -193,18 +194,28 @@ this cell". Both write at once with an inverse in the ledger, and neither is a
 field of the placement, so neither waits for Save. Nothing here matches the
 name to the entry it resembles: the choice is the author's.
 
-**The placement's resources are the one list with its own Save** (#273).
-`PlacementResourcesList` sits inside the placement's group: the preview and
-the buttons it leads with on top, each with an unset control; every resource
-under them in order, with a row menu that sets a preview (an attachment), a
-button (a link) or unsets one; a paste field that adds a link named by its
-host, nobody typing a name; and an upload control that puts a file in the
-`cell-attachments` bucket first and then adds it as an attachment row carrying
-the object's public URL — "Replace…" on the preview uploads the same way and
-swaps that row's file (#274). The URL names the cell's id and a minted one, so
-renaming the placement or the cell moves nothing; the Resources tab takes a
-file the same way for a resource with no placement. The list saves on its own
-button because a reorder
+**The resource list is one component with two owners** (#273, #549).
+`ResourcesList` is the list itself; `PlacementResourcesList` and the Resources
+tab's editor are the two owners that hand it rows and a pair of writes, and
+nothing else about them differs. It draws the preview and the buttons its owner
+leads with on top, each with an unset control — and no drag handle, because
+there is at most one preview and the buttons follow the main list's order, so
+that block has no order of its own. Under it sits every resource in order, each
+row carrying a drag handle (`Reorder` from `framer-motion`, with the arrow keys
+on that same handle because the drag is pointer-only) and a row menu that sets
+a preview (an attachment), a button (a link) or unsets one, renames the row in
+place, or drops it. A paste field adds a link named by its host and an upload
+puts a file in the `cell-attachments` bucket before it becomes an attachment row
+carrying the object's public URL — "Replace…" on the preview uploads the same
+way and swaps that row's file (#274). **Nobody is ever required to type a
+name**: a link arrives as its host and a file as its own filename, and the
+rename is a second, optional act. The upload is on screen the whole way — the
+row present and dimmed while the bucket is written, and a `Retry` in its place
+if the write is refused. The URL names the cell's id and a minted one, so
+renaming the placement or the cell moves nothing; a cell owns a preview and
+buttons the way a placement does, because the partial unique index already
+indexes a cell-owned preview and `set_featured_resource` scopes its clear to
+the placement-less owner. The list saves on its own button because a reorder
 is a whole-list fact written in one transaction, and featuring is one row's
 flag the database settles at once — clearing the previous preview in the same
 transaction — so folding either into the four-field Save would make that
