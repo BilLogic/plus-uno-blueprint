@@ -731,11 +731,11 @@ export async function dispatchTool(
       }
       case 'create_finding': {
         const source = args.source === 'whatif' ? 'whatif' : 'audit'
-        const checkKey = need(args, 'check_name')
+        const checkKey = need(args, 'check_key')
         const severityArg = s(args, 'severity')
         if (severityArg !== 'info' && severityArg !== 'warn' && severityArg !== 'critical')
           throw new Error('severity must be info, warn, or critical.')
-        const summary = need(args, 'note')
+        const summary = need(args, 'summary')
         const cellIds = Array.isArray(args.cell_ids)
           ? args.cell_ids.filter(
               (value): value is string => typeof value === 'string',
