@@ -28,7 +28,7 @@ type SlideHeaderContentProps = {
   paths: PathOption[]
   selectedPathIds: string[]
   /** When true, title and summary share one row inside a menubar. */
-  inlineDescription?: boolean
+  inlineSummary?: boolean
 }
 
 function resolveScenarioSummary(
@@ -47,9 +47,9 @@ function SlideHeaderContent({
   slides,
   paths,
   selectedPathIds,
-  inlineDescription = false,
+  inlineSummary = false,
 }: SlideHeaderContentProps) {
-  if (inlineDescription) {
+  if (inlineSummary) {
     return (
       <PhaseMenubarHeader
         slide={slide}
