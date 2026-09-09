@@ -63,8 +63,14 @@ export const PATH_COLUMN_BY_KIND: Record<PathKind, AssignedPathColumn> = {
   exception: 'secondary',
 }
 
+/**
+ * The picker shows a path's name as authored. It used to strip a scenario-name
+ * prefix so "<Scenario> Alternate Path" read as "Alternate Path" — a rule that
+ * only held for one organisation's naming habit and silently truncated any
+ * path legitimately starting with those words.
+ */
 export function formatPathPickerLabel(name: string): string {
-  return name.replace(/^Warm-Up\s+/i, '')
+  return name
 }
 
 function chunkPaths<T>(items: T[], size: number): T[][] {
