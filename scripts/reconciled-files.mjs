@@ -46,7 +46,16 @@
  * `check:reconciled` enforces this over everything on this list, whatever the
  * extension. `measure-template-divergence.mjs --enrollable` reports the other
  * side of it: shared files that differ by prose alone and are one agreed
- * comment away from belonging here. Where the only difference is two people
+ * comment away from belonging here.
+ *
+ * Two sets, and they are not the same one. The ADOPTION SURFACE is every file
+ * the template ships that this repository also has and has NOT enrolled —
+ * everything that could one day belong here. `--enrollable` is the narrow band
+ * inside it that is one comment from belonging today. A sweep for citations
+ * runs over the adoption surface, because the point is to catch an address
+ * BEFORE a file reaches this list; a sweep for enrolments runs over the
+ * enrollable band. Measured on the adoption surface at the 1.13.2 pin: 199
+ * files, 244 addresses, of which exactly one was a defect. Where the only difference is two people
  * wording the same comment, the template's sentence is the tie-break; a
  * deployment sentence that is materially better goes upstream as its own
  * change first, never sideways.

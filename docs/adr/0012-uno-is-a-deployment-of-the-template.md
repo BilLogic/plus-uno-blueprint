@@ -86,6 +86,13 @@ PLUS's blueprint without a PLUS line in the schema.
 
 ## Still open — the sync mechanism is a separate decision
 
+> **Resolved by [ADR 0013](0013-the-deployment-imports-the-template.md).** The
+> section below records what this decision deliberately left open, and is kept
+> as written. The answer is: a git dependency pinned by release tag, mounted
+> through a typed `DeploymentConfig` prop — the "shared package" lean below,
+> taken without publishing to a registry.
+
+
 This ADR records *that* uno consumes the canonical code as an overlay. It does **not**
 decide *how* the deployment consumes it — git subtree, git submodule, or a shared
 published package — which is a genuine trade-off deserving its own ADR before the
