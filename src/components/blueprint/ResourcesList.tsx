@@ -163,8 +163,21 @@ function ResourceListRow({
         <Link2 className="size-3 shrink-0 text-muted-foreground" aria-hidden />
       )}
       {renaming === null ? (
+        // The name is text, not a second door into the rename. The menu item
+        // is the only way in, on purpose: the row is already a drag target,
+        // so a click on the name would be a second meaning for one gesture,
+        // and it is the door that would have to change the moment an "open"
+        // affordance lands on this row.
+        //
+        // The URL rides along twice, because `title` alone reaches only a
+        // pointer: it is a hover tooltip for a mouse and a visually hidden
+        // suffix for a screen reader, which reads "name, then where it goes".
+        // When the name WAS a button the URL sat on something focusable; text
+        // is the right element here, so the second copy is what keeps it from
+        // becoming mouse-only.
         <span className="min-w-0 flex-1 truncate" title={row.url}>
           {row.name}
+          <span className="sr-only">{`, ${row.url}`}</span>
         </span>
       ) : (
         <Input
@@ -173,9 +186,11 @@ function ResourceListRow({
           aria-label={`Rename ${row.name}`}
           className="h-6 min-w-0 flex-1 text-xs"
           onChange={(event) => setRenaming(event.target.value)}
-          // Two exits, and blur is not one of them: the menu that opened this
-          // hands focus back to its own trigger as it closes, so a blur here
-          // is the menu leaving, not the reader finishing.
+          // Two exits, and blur is not one of them. The menu that opened this
+          // is the only way in, and it hands focus back to its own trigger as
+          // it closes — so the blur that arrives first is the menu leaving and
+          // not the reader finishing, and a rename that settled itself on
+          // whatever took focus next would commit on the way in.
           onKeyDown={(event) => {
             if (event.key === 'Enter') {
               event.preventDefault()
@@ -240,6 +255,11 @@ function ResourceListRow({
  * or unsets one, renames the row, or drops it. Pasting a URL adds a link named
  * by its host and a file arrives under its own name; naming is a second,
  * optional act, which is why it is a rename and not a field on the way in.
+ * The rename has one door, the menu item — which is also how a reader FINDS
+ * that a row can be renamed at all. The name beside it stays text: the row is
+ * already a drag target and carries its URL in a title, so a click there would
+ * be a third meaning for one gesture. Enter commits; Escape leaves the name
+ * that was standing.
  *
  * Reorder is a drag on the handle at the start of the row — `Reorder` from
  * `framer-motion`, which the app already depends on — with the arrow keys on

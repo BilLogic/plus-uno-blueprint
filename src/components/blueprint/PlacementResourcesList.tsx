@@ -14,11 +14,11 @@ import type { CellResource } from '@/types/blueprint'
  * The placement's own list, and the two writes that make it the placement's.
  *
  * The list itself is `ResourcesList` — the same one the cell's Resources tab
- * edits (#549). What is a placement's here and nowhere else is exactly three
- * things: the rows it is handed, the pair of writes, and the sentence under
- * the heading. Everything the reader touches — the rows, the featured block,
- * the row menu, the drag handle, the paste field, the upload — is the shared
- * list, because two copies of it is the defect #549 exists to remove.
+ * edits. What is a placement's here and nowhere else is exactly three things:
+ * the rows it is handed, the pair of writes, and the sentence under the
+ * heading. Everything the reader touches — the rows, the featured block, the
+ * row menu, the drag handle, the paste field, the upload — is the shared
+ * list, because a second copy of it is the defect this shape removes.
  */
 export function PlacementResourcesList({
   placement,

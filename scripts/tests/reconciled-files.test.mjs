@@ -67,15 +67,17 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
   // left of the two copies differed only in the fallback merge model and in
   // one key name.
   //
-  // The first REMOVAL is `PlacementResourcesList.tsx`, and it is here for the
-  // same reason every addition is: so that leaving the set is as deliberate as
-  // joining it. Giving the cell's Resources tab the list the placement's group
-  // already had moved that list into `ResourcesList.tsx` — one component, two
+  // The 1.15.0 bump is the newest entry, and it is the first where a file was
+  // taken OFF this list and put back before either state reached `main`. The
+  // cell's Resources tab was given the list the placement's group already had,
+  // which moved that list into `ResourcesList.tsx` — one component, two
   // owners, each handing it rows and a pair of writes — and left the
-  // placement's file as the wrapper naming this deployment's writes. The
-  // template still carries the whole list inline, so the two are not one
-  // comment apart; the reason and what would put it back are recorded beside
-  // the entry it replaced in `scripts/reconciled-files.mjs`.
+  // placement's file as the wrapper naming its owner's writes. Written before
+  // 1.15.0 shipped, that read as un-enrolling `PlacementResourcesList.tsx`,
+  // because the template still carried the whole list inline and the two were
+  // no longer one comment apart. 1.15.0 makes the same move upstream, so they
+  // are one comment apart again, and the gate stays whole: the wrapper is
+  // held, and the shared list and the row-reveal rule join it.
   //
   // #407 asked whether a whole-array `deepEqual` is still the right ratchet
   // now that the list is 211 long and every reconciliation ticket touches it,
@@ -365,6 +367,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/blueprint/BlueprintPathBand.tsx',
     'src/components/blueprint/MergedCompareGrid.tsx',
     'src/components/blueprint/RoleSelect.tsx',
+    'src/components/blueprint/PlacementResourcesList.tsx',
     'src/lib/utils.ts',
     'src/contexts/DeploymentConfigContext.tsx',
     'src/lib/agent/tools/referenceRegistry.ts',
@@ -473,6 +476,8 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/ui/badge.tsx',
     'src/components/ui/skeleton.tsx',
     'src/contexts/canvasModeContext.ts',
+    'src/components/blueprint/ResourcesList.tsx',
+    'src/lib/rowReveal.ts',
   ])
 })
 
