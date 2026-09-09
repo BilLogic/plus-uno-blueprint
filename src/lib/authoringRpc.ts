@@ -87,6 +87,40 @@ export type CellDependencyBefore = {
   note: string | null
 }
 
+/**
+ * The same row plus the one column `update_cell_dependency` has no business
+ * with — what `set_cell_dependency` hands back when its upsert UPDATED.
+ *
+ * `name` travels here and not there because the two functions can change
+ * different things. The panel's edit cannot touch `name`; the upsert still
+ * declares the argument, and the map skill calls these RPCs with the service
+ * key rather than through this module, so an inverse for the upsert that
+ * dropped `name` would be an inverse with a hole in it.
+ */
+export type CellDependencyRow = CellDependencyBefore & { name: string | null }
+
+/**
+ * What `set_cell_dependency` hands back — an upsert saying which half it took.
+ *
+ * `id` is the row it wrote, either half. `inserted` is the write's own account
+ * of whether that row is new, read from its `xmax` inside the same statement;
+ * nothing outside the function can establish it after the fact, which is the
+ * whole reason it travels. `previous` is the row AS IT STOOD, captured before
+ * the write and keyed on its own id, so the undo restores THIS row rather than
+ * whatever joins the same two cells by the time it runs.
+ *
+ * `previous` is null on an insert, and it can be null on an update too — a
+ * concurrent insert between the capture and the upsert leaves the call
+ * updating a row it never saw. `deriveRevert` treats that as "no inverse",
+ * which is the honest answer and the one the ledger already gives for a
+ * delete.
+ */
+export type CellDependencyWrite = {
+  id: string
+  inserted: boolean
+  previous: CellDependencyRow | null
+}
+
 export type LaneSetEntry = {
   name: string
   lane_role: string | null
@@ -237,10 +271,36 @@ function deriveRevert(
       return typeof data === 'string'
         ? { fn: 'delete_path', args: { path_id: data } }
         : undefined
-    case 'set_cell_dependency':
-      return typeof data === 'string'
-        ? { fn: 'clear_cell_dependency', args: { dependency_id: data } }
-        : undefined
+    case 'set_cell_dependency': {
+      // The one case here that reads the write's REPORT rather than its name.
+      // `set_cell_dependency` upserts, and the two halves have opposite
+      // inverses: an insert is undone by deleting the row, an update by
+      // putting the row's words back. Deriving a delete from the name got the
+      // update half exactly backwards — the edge existed before the write, and
+      // the undo destroyed it. Reachable only from the agent tool, which is
+      // the caller that upserts onto edges a person has already read.
+      const outcome = data as CellDependencyWrite | null
+      if (!outcome?.id) return undefined
+      if (outcome.inserted)
+        return { fn: 'clear_cell_dependency', args: { dependency_id: outcome.id } }
+      // An update whose before-state did not come back cannot be restored, and
+      // a row with no `revert` is how the ledger says so — the same silence it
+      // shows on a delete, rather than an approximation that reads like an
+      // undo and is not one.
+      const previous = outcome.previous
+      if (!previous) return undefined
+      // Not `update_cell_dependency`: that one is the panel's edit, and it
+      // revalidates a pair this undo is not moving. `restore_cell_dependency`
+      // puts two prose columns back on a row that is already where it was.
+      return {
+        fn: 'restore_cell_dependency',
+        args: {
+          dependency_id: previous.id,
+          name: previous.name,
+          note: previous.note,
+        },
+      }
+    }
     case 'update_cell_dependency': {
       // Self-inverse: the function that changed the row is the function that
       // changes it back, pointed at the values it returned. That is only sound
@@ -565,6 +625,11 @@ export function reorderLanes(
  * was only ever used as a note, by all eight rows that had one — and the
  * function still declares it with a default, so a caller that has nothing to
  * say about it can say nothing.
+ *
+ * Returns what the write DID, not just where it landed: which half of the
+ * upsert it took and the row as it stood. That is what lets the ledger record
+ * an inverse this operation's name cannot supply — see `CellDependencyWrite`
+ * and the `set_cell_dependency` case in `deriveRevert`.
  */
 export function setCellDependency(
   client: Client,
@@ -575,8 +640,8 @@ export function setCellDependency(
     /** Anything worth knowing about this dependency. */
     note?: string | null
   },
-): Promise<string> {
-  return call<string>(client, 'set_cell_dependency', {
+): Promise<CellDependencyWrite> {
+  return call<CellDependencyWrite>(client, 'set_cell_dependency', {
     source_cell_id: input.sourceCellId,
     target_cell_id: input.targetCellId,
     kind: input.kind ?? 'leads_to',

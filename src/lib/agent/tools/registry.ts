@@ -517,13 +517,19 @@ export async function dispatchTool(
         // the eight rows that ever carried one carried a sentence, which is
         // what `note` is for. The alternative was to keep writing a column
         // nothing reads, which is the same as dropping the words on the floor.
-        const id = await setCellDependency(client, {
+        const written = await setCellDependency(client, {
           sourceCellId: need(args, 'source_cell_id'),
           targetCellId: need(args, 'target_cell_id'),
           kind,
           note: s(args, 'label') ?? null,
         })
-        return `Dependency set (${id}).`
+        // Which half the upsert took is said out loud. The tool is named for
+        // creating, and a model told "set" after landing on an edge that
+        // already existed goes on believing it made one — which is how the
+        // same pair gets connected again on the next pass.
+        return written.inserted
+          ? `Dependency created (${written.id}).`
+          : `That pair was already connected; the existing dependency (${written.id}) was updated in place.`
       }
       case 'update_path': {
         await renamePath(client, {
