@@ -3,9 +3,9 @@ import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CoverCommandCopy } from '@/components/cover/CoverCommandCopy'
 
-// Pins the click-to-copy command: the command lands on the clipboard and the
+// Pins the click-to-copy control: the command lands on the clipboard and the
 // "Copied" affordance shows, while a missing or denied clipboard API leaves
-// the command inert rather than throwing (jsdom itself has no clipboard).
+// the control inert rather than throwing (jsdom itself has no clipboard).
 
 afterEach(() => {
   cleanup()
@@ -25,7 +25,7 @@ describe('CoverCommandCopy', () => {
     expect(screen.getByText('Copied')).toBeDefined()
   })
 
-  it('a denied clipboard leaves the command inert — no crash, no false Copied', async () => {
+  it('a denied clipboard leaves the control inert — no crash, no false Copied', async () => {
     const writeText = vi.fn().mockRejectedValue(new Error('denied'))
     vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } })
 

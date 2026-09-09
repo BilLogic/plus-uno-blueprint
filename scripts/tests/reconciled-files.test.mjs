@@ -449,6 +449,11 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
 
     'src/styles/colors.css',
     'src/styles/semantic.css',
+    'src/components/blueprint/StoryboardStepDetailStack.tsx',
+    'src/components/cover/CoverSections.tsx',
+    'src/components/editor/CanvasEmptyState.tsx',
+    'src/components/cover/coverCommandCopy.test.tsx',
+    'src/lib/serviceSlug.test.ts',
   ])
 })
 

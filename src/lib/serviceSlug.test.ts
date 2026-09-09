@@ -6,16 +6,17 @@ import {
 } from '@/lib/serviceSlug'
 
 /*
- * The route slug is a service's own `slug` column (#341), with a name-derived
+ * The route slug is a service's own `slug` column, with a name-derived
  * fallback (mirroring the database's `key_slug`) for a row whose column is
  * null. These pin that the column wins over the name — so a rename does not
- * move the URL — that the fallback still derives when the column is absent, and
- * the slug -> service resolution the router turns a `/<slug>` deep link into.
+ * move the URL — that the fallback still derives when the column is absent,
+ * and the slug -> service resolution the router turns a `/<slug>` deep link
+ * into.
  */
 
 describe('slugifyServiceName', () => {
   it('lowercases and hyphenates like key_slug', () => {
-    expect(slugifyServiceName('PLUS Tutoring')).toBe('plus-tutoring')
+    expect(slugifyServiceName('Support Desk')).toBe('support-desk')
   })
 
   it('collapses runs of non-alphanumerics into one hyphen', () => {
@@ -33,25 +34,25 @@ describe('slugifyServiceName', () => {
 
 describe('serviceSlug', () => {
   it('is the stored slug column when set', () => {
-    expect(serviceSlug({ id: 'svc-1', name: 'PLUS Tutoring', slug: 'plus-tutoring' })).toBe(
-      'plus-tutoring',
+    expect(serviceSlug({ id: 'svc-1', name: 'Support Desk', slug: 'support-desk' })).toBe(
+      'support-desk',
     )
   })
 
   it('is the stored slug, not a derivation of a renamed name', () => {
-    // The whole point of the column (#341): the URL is the slug's own identity,
-    // so renaming the service does NOT move its route.
-    expect(serviceSlug({ id: 'svc-1', name: 'Renamed Service', slug: 'plus-tutoring' })).toBe(
-      'plus-tutoring',
+    // The whole point of the column: the URL is the slug's own identity, so
+    // renaming the service does NOT move its route.
+    expect(serviceSlug({ id: 'svc-1', name: 'Renamed Service', slug: 'support-desk' })).toBe(
+      'support-desk',
     )
   })
 
   it('falls back to the slugified name when the column is null', () => {
-    expect(serviceSlug({ id: 'svc-1', name: 'PLUS Tutoring', slug: null })).toBe('plus-tutoring')
+    expect(serviceSlug({ id: 'svc-1', name: 'Support Desk', slug: null })).toBe('support-desk')
   })
 
   it('falls back to the slugified name when the column is absent', () => {
-    expect(serviceSlug({ id: 'svc-1', name: 'PLUS Tutoring' })).toBe('plus-tutoring')
+    expect(serviceSlug({ id: 'svc-1', name: 'Support Desk' })).toBe('support-desk')
   })
 
   it('falls back to the id when the name slugifies to nothing and no column', () => {

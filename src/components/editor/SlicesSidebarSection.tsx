@@ -38,9 +38,9 @@ import { errorMessage } from '@/lib/utils'
 /** Sidebar group order — unknown types fall into CUSTOM. */
 const SLICE_TYPE_GROUPS = ['journey', 'step', 'lane', 'cell', 'custom'] as const
 
-type SliceKindGroup = (typeof SLICE_TYPE_GROUPS)[number]
+type SliceTypeGroup = (typeof SLICE_TYPE_GROUPS)[number]
 
-function sliceKindGroup(sliceKind: string): SliceKindGroup {
+function sliceKindGroup(sliceKind: string): SliceTypeGroup {
   const type = sliceKind.toLowerCase()
   return SLICE_TYPE_GROUPS.find((group) => group === type) ?? 'custom'
 }
@@ -275,7 +275,7 @@ export function RenameSliceDialog({
 }) {
   const { client } = useSupabase()
   const [title, setTitle] = useState('')
-  const [summary, setDescription] = useState('')
+  const [summary, setSummary] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -287,7 +287,7 @@ export function RenameSliceDialog({
   if (open && slice && !seed) {
     setSeed(slice)
     setTitle(slice.title)
-    setDescription(slice.summary ?? '')
+    setSummary(slice.summary ?? '')
     setError(null)
   }
   if (!open && seed) setSeed(null)
@@ -349,7 +349,7 @@ export function RenameSliceDialog({
             <Input
               value={summary}
               placeholder="What this slice shows, and who it is for"
-              onChange={(event) => setDescription(event.target.value)}
+              onChange={(event) => setSummary(event.target.value)}
             />
           </label>
           {error ? (
