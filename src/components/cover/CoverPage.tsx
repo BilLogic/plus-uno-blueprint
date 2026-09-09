@@ -67,10 +67,10 @@ function pickServicePage(
 /**
  * The provider-free surface — tests hand it a plain callback.
  *
- * `services` is the deployment's roster (#336). With more than one, the tab
- * whose body is the services index heads its panel with the service selector,
- * its strip label reads the plural, and the ACTIVE service's own page renders
- * (#338). With one or none, the props default to the single-service shape and
+ * `services` is the deployment's roster. With more than one, the tab whose
+ * body is the services index heads its panel with the service selector, its
+ * strip label reads the plural, and the ACTIVE service's own page renders.
+ * With one or none, the props default to the single-service shape and
  * the page is byte-for-byte what it was before the switcher — no selector,
  * singular label, the sole page below.
  */

@@ -5,16 +5,15 @@ type CoverServicesSelectorProps = {
   services: ActiveService[]
   /** The active service's slug — the tab shown selected. */
   activeSlug: string | null
-  /** Make a service active. Sets the URL slug and re-scopes the board (#336). */
+  /** Make a service active. Sets the URL slug and re-scopes the board. */
   onSelect: (slug: string) => void
 }
 
 /**
- * The cover's Services selector (#336, #303) — the front door to a
- * multi-service deployment. It reuses the Skills tab's segmented-control
- * pattern: a tab per service on a recessed track, the active one lifted onto
- * the background. Picking one makes it active, which drives the URL and the
- * board.
+ * The cover's Services selector — the front door to a multi-service
+ * deployment. It reuses the Skills tab's segmented-control pattern: a tab per
+ * service on a recessed track, the active one lifted onto the background.
+ * Picking one makes it active, which drives the URL and the board.
  *
  * Rendered only when a second service exists; the single-service tab shows no
  * selector row at all, so this component never mounts there.
