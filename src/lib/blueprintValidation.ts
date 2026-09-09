@@ -46,8 +46,12 @@ export const LAYOUT_HINTS: Record<Layout, string> = {
  *   `customer_actions` and (since the divider migration) `support_actions`,
  *   so a scenario created from this template started life with two lanes
  *   whose dividers were drawn by name lookup rather than by role. Actor lanes
- *   BEYOND the spine — Teacher, Lead Tutor, Student, Supervisor — genuinely
- *   carry no role and are not in this set.
+ *   BEYOND the spine — Teacher, Lead Tutor, Student, Supervisor — are not in
+ *   this set, because they are particular to the boards that have them. They
+ *   do carry a role: they were unclassified for as long as naming a lane
+ *   after a person made the role look optional, and a role-less lane is a
+ *   lane the dividers cannot place. The column stays nullable — a lane
+ *   inserted from the canvas sends no role, and picks one later.
  * - **Touchpoints sit above actions**, which reverses the usual textbook order. That
  *   was a deliberate change — see the `stage_tech_before_actions_layer_order`
  *   migration — and a new blueprint that ordered them the other way would not

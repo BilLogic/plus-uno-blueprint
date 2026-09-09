@@ -15,11 +15,15 @@
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import {
+  countBlueprintDividerRows,
+  countBlueprintWrapCorridorMargins,
   laneHasInLaneLoopCorridor,
   laneHasOverheadArrowCorridor,
   laneHasWrapCorridorBelow,
+  lanePrecedesBlueprintDivider,
   shouldShowInteractionLineAfter,
   shouldShowInternalInteractionLineAfter,
+  shouldShowLaneDividerAfter,
   shouldShowVisibilityLineAfter,
 } from '@/lib/blueprintLayout'
 import {
@@ -28,6 +32,8 @@ import {
   CUSTOMER_ACTIONS_ROLE,
   FRONTSTAGE_ACTIONS_ROLE,
   FRONTSTAGE_TOUCHPOINTS_ROLE,
+  PARTNER_ACTIONS_ROLE,
+  STORYBOARD_ROLE,
   SUPPORT_ACTIONS_ROLE,
 } from '@/lib/laneRoles'
 import type { BlueprintData, BlueprintLane } from '@/types/blueprint'
@@ -56,6 +62,190 @@ test('the interaction line follows the spine actor', () => {
   assert.equal(shouldShowInteractionLineAfter(lane(CUSTOMER_ACTIONS_ROLE)), true)
   assert.equal(shouldShowInteractionLineAfter(lane(BACKSTAGE_ACTIONS_ROLE)), false)
   assert.equal(shouldShowInteractionLineAfter(lane(null)), false)
+})
+
+/**
+ * The customer side is a band, and a band has ONE floor.
+ *
+ * The assertion below is the invariant — the line of interaction follows the
+ * LAST customer-side lane — and never a census of the boards that exist. A
+ * count of today's two-customer-lane boards would pass on the day it was
+ * written and say nothing about the rule; these say what a reader sees.
+ */
+function customerBand(...roles: (string | null)[]): BlueprintLane[] {
+  return roles.map((role, index) => lane(role, `lane ${index}`, index))
+}
+
+/** Which lanes the interaction line draws after, by index. */
+function interactionLinesAfter(lanes: BlueprintLane[]): number[] {
+  return lanes
+    .map((entry, index) =>
+      shouldShowInteractionLineAfter(entry, lanes) ? index : -1,
+    )
+    .filter((index) => index >= 0)
+}
+
+test('two customer-side lanes draw one line, after the second', () => {
+  const lanes = customerBand(
+    STORYBOARD_ROLE,
+    CUSTOMER_ACTIONS_ROLE,
+    CUSTOMER_ACTIONS_ROLE,
+    FRONTSTAGE_TOUCHPOINTS_ROLE,
+    FRONTSTAGE_ACTIONS_ROLE,
+  )
+  assert.deepEqual(interactionLinesAfter(lanes), [2])
+})
+
+test('one customer-side lane draws the line where it always did', () => {
+  const lanes = customerBand(
+    STORYBOARD_ROLE,
+    CUSTOMER_ACTIONS_ROLE,
+    FRONTSTAGE_TOUCHPOINTS_ROLE,
+    FRONTSTAGE_ACTIONS_ROLE,
+  )
+  assert.deepEqual(interactionLinesAfter(lanes), [1])
+})
+
+test('a board with no customer-side lane draws no line of interaction', () => {
+  const lanes = customerBand(
+    STORYBOARD_ROLE,
+    BACKSTAGE_ACTIONS_ROLE,
+    BACKSTAGE_TOUCHPOINTS_ROLE,
+    SUPPORT_ACTIONS_ROLE,
+  )
+  assert.deepEqual(interactionLinesAfter(lanes), [])
+})
+
+test('classifying the lane under the spine moves the line down to it', () => {
+  // An actor lane can sit above the spine or below it, and both orders are
+  // authored. Giving the one BELOW a customer-side role extends the band
+  // downwards, so the line follows it — the row does not move, the floor of
+  // the band does.
+  const before = customerBand(
+    STORYBOARD_ROLE,
+    CUSTOMER_ACTIONS_ROLE,
+    null,
+    FRONTSTAGE_ACTIONS_ROLE,
+  )
+  const after = customerBand(
+    STORYBOARD_ROLE,
+    CUSTOMER_ACTIONS_ROLE,
+    CUSTOMER_ACTIONS_ROLE,
+    FRONTSTAGE_ACTIONS_ROLE,
+  )
+  assert.deepEqual(interactionLinesAfter(before), [1])
+  assert.deepEqual(interactionLinesAfter(after), [2])
+})
+
+test('three customer-side lanes still draw one line', () => {
+  const lanes = customerBand(
+    CUSTOMER_ACTIONS_ROLE,
+    CUSTOMER_ACTIONS_ROLE,
+    CUSTOMER_ACTIONS_ROLE,
+    FRONTSTAGE_ACTIONS_ROLE,
+  )
+  assert.deepEqual(interactionLinesAfter(lanes), [2])
+})
+
+test('a lane between two customer-side lanes does not split the band in two', () => {
+  // Nothing in production interleaves them, and the rule is still "the last
+  // one", not "the one whose neighbour differs" — which would draw twice.
+  const lanes = customerBand(
+    CUSTOMER_ACTIONS_ROLE,
+    PARTNER_ACTIONS_ROLE,
+    CUSTOMER_ACTIONS_ROLE,
+    FRONTSTAGE_ACTIONS_ROLE,
+  )
+  assert.deepEqual(interactionLinesAfter(lanes), [2])
+})
+
+test('the band is read from the role, never from the lane name', () => {
+  // The same reason every other divider case here is stated twice. A second
+  // customer-side lane is whatever the board calls its actors.
+  const lanes = [
+    lane(CUSTOMER_ACTIONS_ROLE, 'Regular Tutor', 0),
+    lane(CUSTOMER_ACTIONS_ROLE, 'Lead Tutor', 1),
+    lane(FRONTSTAGE_ACTIONS_ROLE, 'Front Stage Actions', 2),
+  ]
+  assert.deepEqual(interactionLinesAfter(lanes), [1])
+})
+
+test('a lane row is flush only against the divider that actually draws', () => {
+  // The band rule has to reach the row shell too: the lane above the line is
+  // the one that loses its bottom rule, and before this it was every
+  // customer-side lane.
+  const lanes = customerBand(
+    CUSTOMER_ACTIONS_ROLE,
+    CUSTOMER_ACTIONS_ROLE,
+    FRONTSTAGE_ACTIONS_ROLE,
+  )
+  assert.equal(lanePrecedesBlueprintDivider(lanes[0]!, lanes), false)
+  assert.equal(lanePrecedesBlueprintDivider(lanes[1]!, lanes), true)
+  assert.equal(shouldShowLaneDividerAfter(lanes[0]!, 0, lanes), true)
+  assert.equal(shouldShowLaneDividerAfter(lanes[1]!, 1, lanes), false)
+})
+
+test('the corridor below belongs to the floor of the band, not to the band', () => {
+  // The corridor exists because the standard blueprint already leaves a band
+  // between the row and the line of interaction. A lane inside the customer
+  // band has no line beneath it, so it has no such gap to route through —
+  // reserving one opens space under a row nothing is drawn under.
+  const lanes = customerBand(
+    CUSTOMER_ACTIONS_ROLE,
+    CUSTOMER_ACTIONS_ROLE,
+    FRONTSTAGE_ACTIONS_ROLE,
+  )
+  assert.equal(laneHasWrapCorridorBelow(lanes[0]!, lanes), false)
+  assert.equal(laneHasWrapCorridorBelow(lanes[1]!, lanes), true)
+  assert.equal(countBlueprintWrapCorridorMargins(lanes), 1)
+})
+
+test('a second customer-side lane adds a row, not a divider row', () => {
+  // Both counts are read as HEIGHT: each is multiplied by a row constant and
+  // added to the grid. A count that disagrees with what the renderer draws is
+  // therefore a grid taller than its own contents, by exactly the rows it
+  // over-counted, on every board whose customer side is more than one row
+  // deep.
+  const one = customerBand(
+    CUSTOMER_ACTIONS_ROLE,
+    FRONTSTAGE_ACTIONS_ROLE,
+    BACKSTAGE_ACTIONS_ROLE,
+    SUPPORT_ACTIONS_ROLE,
+  )
+  const two = customerBand(
+    CUSTOMER_ACTIONS_ROLE,
+    CUSTOMER_ACTIONS_ROLE,
+    FRONTSTAGE_ACTIONS_ROLE,
+    BACKSTAGE_ACTIONS_ROLE,
+    SUPPORT_ACTIONS_ROLE,
+  )
+  assert.equal(countBlueprintDividerRows(one), 3)
+  assert.equal(countBlueprintDividerRows(two), countBlueprintDividerRows(one))
+  assert.equal(countBlueprintWrapCorridorMargins(one), 1)
+  assert.equal(
+    countBlueprintWrapCorridorMargins(two),
+    countBlueprintWrapCorridorMargins(one),
+  )
+})
+
+test('what is counted is what is drawn, lane for lane', () => {
+  // The two answers were able to disagree because only one of them was given
+  // the board to answer about. Stated as an equality rather than as a number,
+  // because the number is a property of this fixture and the equality is a
+  // property of the grid.
+  const lanes = customerBand(
+    STORYBOARD_ROLE,
+    CUSTOMER_ACTIONS_ROLE,
+    CUSTOMER_ACTIONS_ROLE,
+    FRONTSTAGE_TOUCHPOINTS_ROLE,
+    FRONTSTAGE_ACTIONS_ROLE,
+    BACKSTAGE_ACTIONS_ROLE,
+    SUPPORT_ACTIONS_ROLE,
+  )
+  assert.equal(
+    countBlueprintDividerRows(lanes),
+    lanes.filter((entry) => lanePrecedesBlueprintDivider(entry, lanes)).length,
+  )
 })
 
 test('the visibility line follows the frontstage actions lane', () => {
