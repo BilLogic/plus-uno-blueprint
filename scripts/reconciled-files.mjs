@@ -232,6 +232,12 @@ export const RECONCILED_FILES = [
   'src/lib/agent/providers/models.ts',
   'src/lib/agent/providers/provider.ts',
 
+  // The ground a surface paints, and the tint that measures from it. Every
+  // component below that paints its own surface spreads `ground(...)`, so the
+  // helper and its callers have to say the same thing on both sides or a role
+  // tint measures from a surface that is not underneath it.
+  'src/lib/ground.ts',
+
   // shadcn ui primitives: unmodified library components neither repo has
   // customised — the fork point is further up, in the blueprint-specific
   // components that compose these.

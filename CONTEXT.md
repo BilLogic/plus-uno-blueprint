@@ -70,13 +70,22 @@ Table `lanes`: `path_id`, `name` (free-form, any language), `lane_role` (the
 semantic key, deliberately separate from the display name — inferring one from
 the other broke every non-English blueprint), `stakeholder_id`, `owner_team`,
 `kpis`, `tools`, `position`.
+A lane's **name says who, or it says what**. The customer side and the partners
+are named after the actor — *Regular Tutor*, *Lead Tutor*, *Teacher*, *CPO* —
+because on those rows the reader is asking whose moment this is. The machinery
+is named after the job — *Front Stage Actions*, *Back Stage Touchpoints*,
+*Support Actions* — because there the reader is asking what kind of work it is,
+and the actor varies by step. Both conventions appear on every board and that is
+correct; a lane named for a person still carries the `lane_role` that places it.
 
 **line of visibility** — the horizontal rule separating what the customer
 experiences from the machinery that makes it possible. Above it: what the
 customer sees. Below it: everything that has to happen for the moment above to
 feel effortless.
 **Not a column.** It is derived at render time from `lane_role`. Its sibling,
-the **line of interaction**, is drawn after the customer-actions lane.
+the **line of interaction**, is drawn after the **last** customer-actions lane:
+the customer side is a band and can be several rows deep, and a boundary drawn
+once per row would not be a boundary.
 
 **cell** — one box on the board: one moment, in one lane, at one step. The atom
 of the whole system — slices cite cells, findings point at cells, share links
