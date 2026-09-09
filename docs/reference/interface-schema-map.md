@@ -43,6 +43,9 @@ column a reason.
 | **Touchpoint** | `touchpoints` | — |
 | **Role** | `cell_touchpoints.role` | — |
 | **Registry** | `cell_touchpoints.touchpoint_id` | The column is a foreign key into `touchpoints`, and the field is where a name-only placement is linked to the registry entry it was about (#277). A reader is choosing from the registry; the panel says so rather than naming the key. |
+| **Kind** | `evidence.kind` | — |
+| **Title** | `evidence.title` | — |
+| **Note** | `evidence.note` | — |
 | **Stakeholder** | `lanes.stakeholder_id` | — |
 | **Owner team** | `lanes.owner_team` | — |
 | **KPIs** | `lanes.kpis` | — |
@@ -100,7 +103,7 @@ and the sentence behind it are read from one place and cannot drift into two.
 
 <!-- generated:catalog — npm run interface-map -->
 
-24 of 34 names carry a comment in the catalog.
+25 of 37 names carry a comment in the catalog.
 
 | The schema says | What the catalog says |
 |---|---|
@@ -122,6 +125,9 @@ and the sentence behind it are read from one place and cannot drift into two.
 | `touchpoints` | Deployment-level catalog of the tools, documents, channels and artifacts the |
 | `cell_touchpoints.role` | What this touchpoint is to this moment: core (the step happens through |
 | `cell_touchpoints.touchpoint_id` | — |
+| `evidence.kind` | — |
+| `evidence.title` | — |
+| `evidence.note` | The one thing worth keeping about this source, in the author's own words: |
 | `lanes.stakeholder_id` | — |
 | `lanes.owner_team` | Team that staffs/owns this lane (feeds KPI-alignment audit). |
 | `lanes.kpis` | String array: metrics this lane's team is measured on. |

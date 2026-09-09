@@ -79,6 +79,29 @@
  * different question from every other `origin` (`import`, `app`) — that word is
  * now free for `services`, which gained it in the same migration.
  *
+ * **`20260909060000` is the one place a `note` stopped being an aside and kept
+ * the word anyway**, and it is worth saying so here rather than leaving the
+ * next reader to notice. `20260830190000` dropped `evidence.note` as unused,
+ * having asserted first that it held nothing on every row; that was right on
+ * the morning it ran. Measured three months later, the field beside it —
+ * `evidence.excerpt`, "the quoted passage" — held two values in 66 rows and one
+ * of those was a note about a meeting. The aside was doing the work and the
+ * field that claimed to carry the source's own content was not. So `excerpt` is
+ * renamed into `note`, `evidence.ref` is dropped beside it, and the doctrine
+ * survives with one honest exception: on `evidence` the note IS the prose,
+ * because the column that claimed to be turned out never to be. That is a fold,
+ * not a licence — `audit_findings.summary` is still a summary, and the next
+ * column whose job is a thing's own sentence still gets that word.
+ *
+ * That row enforces nothing either, for the usual reason: `excerpt` is live
+ * English across this tree — the standing "no verbatim excerpts" privacy rule,
+ * and `cell-resources.test.mjs`'s fixture of the world before `20260830280000`
+ * — so a bare fragment would flag prose that is right. It is asserted
+ * table-qualified by `one-spelling-each.test.mjs` beside the four above.
+ * `evidence.ref` is not in the row at all, because it was dropped rather than
+ * renamed and this map is renames: `20260909060000` refuses to run if a row
+ * still carries one rather than inventing a sentence around a locator.
+ *
  * **Four of these renames are not in the enforced map's word lists**, and the
  * reason is structural. `audit_findings` contains `findings` and
  * `business_models` contains `business_model`, so no substring distinguishes the
@@ -495,6 +518,16 @@ export const RENAME_MAP = Object.freeze(
       was: ['cells.links'],
       is: ['resources', 'evidence'],
       migrations: ['20260830280000'],
+      retired: [],
+      copy: [],
+    },
+    // A source carries one note. See the header for why the one column
+    // `20260830190000` dropped is the one that came back, why `retired` and
+    // `copy` are empty, and why `evidence.ref` is absent from the row.
+    {
+      was: ['evidence.excerpt'],
+      is: ['evidence.note'],
+      migrations: ['20260909060000'],
       retired: [],
       copy: [],
     },

@@ -44,7 +44,7 @@ test('the vocabulary is one line per kind, definition verbatim', () => {
 
 const columns = new Map([
   ['paths', ['id', 'kind', 'status']],
-  ['evidence', ['id', 'excerpt']],
+  ['evidence', ['id', 'note']],
 ])
 const comments = [
   { relation: 'paths', column_name: null, comment: 'One route through a scenario.' },

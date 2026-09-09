@@ -208,8 +208,9 @@ create table public.evidence (
   proposition_question_key text check (proposition_question_key in ('understand','value','usability')),
   kind text not null,
   title text not null,
-  ref text,
-  excerpt text,
+  -- The one prose column. `ref` was dropped and `excerpt` renamed to this by
+  -- 20260909060000, which is why the word is back after 20260830190000 took it.
+  note text,
   observed_at date,
   added_by text,   -- agent name or participant code. Never the interviewee.
   created_by uuid,

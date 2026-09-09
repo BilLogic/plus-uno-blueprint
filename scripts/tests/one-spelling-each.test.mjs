@@ -111,17 +111,39 @@ export const ONE_SPELLING = Object.freeze([
     current: 'resources.kind',
     why: 'a placement\'s screenshot is a featured attachment — a resource whose kind says so — since 20260902130000; the column went with #276. `screenshot` stays on the unplaced queue until #277',
   },
+  {
+    retired: 'evidence.excerpt',
+    current: 'evidence.note',
+    why: '`excerpt` is live English everywhere else — the standing "no verbatim excerpts" privacy rule, and `cell-resources.test.mjs`\'s fixture of the world before 20260830280000 — so a bare fragment would flag prose that is right. This is the one rename that puts a word BACK: see DROPPED below',
+  },
 ])
 
 /**
- * The column this ticket drops outright, with nothing taking its place.
+ * The column dropped outright, with nothing taking its place.
  *
- * `cell_dependencies.note` was dropped here too, and came back: an edge can now
- * say why it exists, and `20260908200000` adds the column for it. The word is
- * not retired — `paths.note`, `scenarios.note` and this one are all asides, in
- * the sense `scripts/retired-vocabulary.mjs` reserves the word for.
+ * `evidence.ref` is a locator and not prose, so nothing folds it anywhere:
+ * `20260909060000` refuses to run at all if a row still carries one, and the
+ * job it was doing — reaching a source that lives on the web — is done by a
+ * URL written inside the note, which renders as a link. Of 66 rows it was
+ * filled zero times, and zero means unused rather than unreachable: the
+ * agent's `create_evidence` could write it the whole time.
+ *
+ * ── TWO COLUMNS THAT LEFT THIS LIST, AND WHY ──────────────────────────────
+ *
+ * `cell_dependencies.note` was dropped by #177 and came back: an edge can now
+ * say why it exists, and `20260908200000` adds the column for it.
+ *
+ * `evidence.note` was dropped by #177 too — it held nothing on every row, and
+ * the assertion that said so is still in `20260830190000`. It comes back by a
+ * different route: `20260909060000` RENAMES `evidence.excerpt` into it, having
+ * measured that the field beside it, the one that claimed to carry the
+ * source's own content, held two values in 66 rows and one of those was a
+ * summary. The aside was doing the work, so the word goes to the field that
+ * turned out to hold that content. That is a fold, not a licence — the
+ * doctrine `scripts/retired-vocabulary.mjs` states is unchanged, and
+ * `audit_findings.summary` is still a summary.
  */
-export const DROPPED = Object.freeze(['evidence.note'])
+export const DROPPED = Object.freeze(['evidence.ref'])
 
 /** The column that keeps a word of its own, and the reason it is allowed to. */
 export const DOCUMENTED_EXCEPTION = 'cells.content'
@@ -177,7 +199,7 @@ test('the check goes red on a schema that never did the rename', () => {
       ['cell_dependencies', { name: 'cell_dependencies', columns: new Map([['label', {}]]) }],
       ['paths', { name: 'paths', columns: new Map([['path_type', {}]]) }],
       ['scenarios', { name: 'scenarios', columns: new Map([['view_type', {}]]) }],
-      ['evidence', { name: 'evidence', columns: new Map([['note', {}]]) }],
+      ['evidence', { name: 'evidence', columns: new Map([['excerpt', {}], ['ref', {}]]) }],
       ['cell_touchpoints', { name: 'cell_touchpoints', columns: new Map([['screenshot', {}], ['url', {}]]) }],
     ]),
   }
@@ -186,7 +208,9 @@ test('the check goes red on a schema that never did the rename', () => {
   assert.equal(found.length, ONE_SPELLING.length * 2 + DROPPED.length)
   assert.ok(found.some((one) => /^findings still exists/.test(one)))
   assert.ok(found.some((one) => /^audit_findings does not exist/.test(one)))
-  assert.ok(found.some((one) => /^evidence\.note still exists/.test(one)))
+  assert.ok(found.some((one) => /^evidence\.excerpt still exists/.test(one)))
+  assert.ok(found.some((one) => /^evidence\.note does not exist/.test(one)))
+  assert.ok(found.some((one) => /^evidence\.ref still exists/.test(one)))
 
   // And red the other way: the rename read as a drop, with nothing arriving.
   const dropped = { tables: new Map() }

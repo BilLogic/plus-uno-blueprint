@@ -311,13 +311,14 @@ type CellDependencySectionsProps = {
  * same in both modes, because they are the same list.
  *
  * READ MODE MOVED TOO, and it moved from outside this repository. The
- * why-line reads from a tooltip and the `linkName` badge is no longer drawn;
- * both were asked for by #550 and both are asserted by
- * `cellDependencyWhyLine.test.tsx`, which is enrolled in the reconciled set as
- * byte-identical to the template's copy. So the changes went upstream first
- * and arrived here with the pin at asb 1.16.0 — the test was adopted whole,
- * and this component, which has drifted about a hundred lines from the
- * template's, matches its behaviour rather than its bytes.
+ * why-line reads from a tooltip and the edge's `name` no longer reaches a row
+ * at all: the read that turns a dependency into a connection dropped it at asb
+ * 1.17.0, so there is no `linkName` to draw. Both halves were asked for by
+ * #550 and both are asserted by `cellDependencyWhyLine.test.tsx`, which is
+ * enrolled in the reconciled set as byte-identical to the template's copy. So
+ * the changes went upstream first and arrived here with the pin — the test was
+ * adopted whole, and this component, which has drifted about a hundred lines
+ * from the template's, matches its behaviour rather than its bytes.
  */
 export function CellDependencySections({
   connections,

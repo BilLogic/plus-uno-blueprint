@@ -84,6 +84,22 @@ export const LABEL_COLUMNS = Object.freeze(
       because:
         'The column is a foreign key into `touchpoints`, and the field is where a name-only placement is linked to the registry entry it was about (#277). A reader is choosing from the registry; the panel says so rather than naming the key.',
     },
+    {
+      label: 'Kind',
+      names: ['evidence.kind'],
+      because: '',
+    },
+    {
+      label: 'Title',
+      names: ['evidence.title'],
+      because: '',
+    },
+    // The plain word, and no reason beside it: the label and the column agree.
+    // The other `note` on this map is a path's, and it is Author note only
+    // because it sits under a Summary that is the path's own sentence. A
+    // source has no such sibling — `evidence.note` is the only prose an
+    // evidence row carries — so there is nothing here to explain away.
+    { label: 'Note', names: ['evidence.note'], because: '' },
     { label: 'Stakeholder', names: ['lanes.stakeholder_id'], because: '' },
     { label: 'Owner team', names: ['lanes.owner_team'], because: '' },
     { label: 'KPIs', names: ['lanes.kpis'], because: '' },

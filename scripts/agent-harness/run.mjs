@@ -477,18 +477,18 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       }
       case 'list_evidence': {
         const scope = args.cell_id ? `&cell_id=eq.${encodeURIComponent(String(args.cell_id))}` : ''
-        const rows = await rest(`evidence?select=id,cell_id,kind,title,ref,excerpt,note,observed_at&order=created_at.desc&limit=100${scope}`)
+        const rows = await rest(`evidence?select=id,cell_id,kind,title,note,observed_at&order=created_at.desc&limit=100${scope}`)
         record.result = rows?.length
-          ? [`${rows.length} evidence row(s):`, ...rows.map((r) => `[${r.kind}] "${r.title}"${r.ref ? ` ref=${r.ref}` : ''}${r.cell_id ? ` cell=${r.cell_id}` : ''} (${r.id})`)].join('\n')
+          ? [`${rows.length} evidence row(s):`, ...rows.map((r) => `[${r.kind}] "${r.title}"${r.cell_id ? ` cell=${r.cell_id}` : ''} (${r.id})`)].join('\n')
           : args.cell_id ? `No evidence attached to cell ${args.cell_id}.` : 'No evidence recorded yet.'
         return record.result
       }
       case 'get_evidence': {
         const ids = Array.isArray(args.evidence_ids) ? args.evidence_ids : []
         if (!ids.length) { record.result = 'Pass at least one evidence id.'; return record.result }
-        const rows = await rest(`evidence?select=id,cell_id,kind,title,ref,excerpt,note,observed_at&id=in.(${ids.map(encodeURIComponent).join(',')})`)
+        const rows = await rest(`evidence?select=id,cell_id,kind,title,note,observed_at&id=in.(${ids.map(encodeURIComponent).join(',')})`)
         record.result = rows?.length
-          ? rows.map((r) => [`[${r.kind}] "${r.title}" (${r.id})`, r.excerpt ? `  excerpt: ${r.excerpt}` : '', r.note ? `  note: ${r.note}` : ''].filter(Boolean).join('\n')).join('\n')
+          ? rows.map((r) => [`[${r.kind}] "${r.title}" (${r.id})`, r.note ? `  note: ${r.note}` : ''].filter(Boolean).join('\n')).join('\n')
           : 'No evidence with those ids.'
         return record.result
       }
