@@ -1343,6 +1343,7 @@ export type Database = {
         Args: {
           kind?: string
           name?: string | null
+          note?: string | null
           source_cell_id: string
           target_cell_id: string
         }

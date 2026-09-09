@@ -515,8 +515,9 @@ export function setCellDependency(
     sourceCellId: string
     targetCellId: string
     kind?: DependencyKind
-    /** The word on the arrow. `cell_dependencies.name` since 20260830190000. */
+    /** The word on the arrow, held in `cell_dependencies.name`. */
     name?: string | null
+    note?: string | null
   },
 ): Promise<string> {
   return call<string>(client, 'set_cell_dependency', {
@@ -524,6 +525,7 @@ export function setCellDependency(
     target_cell_id: input.targetCellId,
     kind: input.kind ?? 'leads_to',
     name: input.name ?? null,
+    note: input.note ?? null,
   })
 }
 
