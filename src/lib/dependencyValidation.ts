@@ -64,12 +64,44 @@ export const DEPENDENCY_DIRECTION_LABELS = {
   outgoing: 'Leads to',
 } as const
 
+/**
+ * The words the dependency editor is made of, held beside the vocabulary they
+ * describe rather than inside the component that renders them.
+ *
+ * ONE PROSE FIELD, AND IT IS `note` (#550). The editor used to offer `Name
+ * (optional)` over `cell_dependencies.name`, documented as the word drawn on
+ * the arrow. Measured in production on 2026-09-09: 434 rows, 8 with a name, 0
+ * with a note — and not one of the 8 is a word on an arrow. Every one is a
+ * sentence about the edge ("All lessons complete → badge claimable"). Authors
+ * wrote notes into the name field because it was the only prose field there
+ * was, so `name` is retired and `note` is the field it was being used as.
+ *
+ * The label is `Note` and the copy is deliberately WIDE. "Why this edge exists"
+ * was the first draft and it is too narrow — it tells an author their sentence
+ * is unwelcome unless it is a justification. A note on a dependency is the same
+ * kind of thing as a note on a piece of evidence: whatever is worth recording.
+ */
+export const DEPENDENCY_EDIT_TEXT = {
+  /** The field's name. The word "optional" is rendered beside it, not in it. */
+  noteLabel: 'Note',
+  noteOptional: true,
+  notePlaceholder: 'Anything worth knowing about this dependency',
+  /** Verb first: names the action, not the widget. */
+  connectTo: 'Connect to…',
+  add: 'Add a dependency',
+  /** Edit mode with nothing yet to edit. */
+  empty: 'Nothing depends on this cell yet.',
+} as const
+
+/** The draft row's id — not a dependency id, and never sent anywhere. */
+export const DEPENDENCY_DRAFT_ROW = 'draft'
+
 export type DraftDependency = {
   sourceCellId: string
   targetCellId: string | null
   kind: DependencyKind
-  /** The word on the arrow — `cell_dependencies.name`. */
-  name: string
+  /** Anything worth knowing about it — `cell_dependencies.note`. */
+  note: string
 }
 
 /** Enough about the other end to check a draft without another read. */

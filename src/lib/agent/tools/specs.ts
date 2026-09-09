@@ -16,8 +16,10 @@ export { REFERENCE_NAMES }
 /**
  * ARGUMENT NAMES ARE NOT COLUMN NAMES, and one of them visibly is not.
  *
- * `create_cell_dependency(label)` writes `cell_dependencies.name`. The mapping
- * happens in `registry.ts`.
+ * `create_cell_dependency(label)` writes `cell_dependencies.note`. The mapping
+ * happens in `registry.ts`. It wrote `name` until #550, which retired that
+ * column on the evidence that all eight rows carrying one carried a sentence
+ * and not a badge; the ARGUMENT did not move with it, for the reason below.
  *
  * It stays because this surface is a PINNED CROSS-REPO CONTRACT, not app
  * internals. `agentic-service-blueprinting` is a git-URL dependency fixed to a
@@ -857,7 +859,9 @@ export const TOOL_SPECS: ToolSpec[] = [
         source_cell_id: str('Source cell id'),
         target_cell_id: str('Target cell id'),
         kind: { type: 'string', enum: ['leads_to', 'enables'], description: 'Default leads_to' },
-        label: str('Short arrow label; omit for none'),
+        label: str(
+          'A note about this dependency — anything worth knowing about it; omit for none. Not a word drawn on the arrow: nothing renders it as one.',
+        ),
       },
       required: ['source_cell_id', 'target_cell_id'],
     },

@@ -100,6 +100,7 @@ export type WriteFn =
   | 'update_evidence'
   | 'delete_evidence'
   | 'set_cell_dependency'
+  | 'update_cell_dependency'
   | 'clear_cell_dependency'
   | 'reorder_steps'
   | 'set_path_steps'
@@ -398,6 +399,10 @@ const DESCRIBERS: Record<WriteFn, (entry: ChangeEntry) => string> = {
       ? `Removed evidence “${titled(entry)}”`
       : 'Removed an evidence source',
   set_cell_dependency: () => 'Connected two cells',
+  // Not "connected", because nothing new points anywhere: this row already
+  // existed and now says something else. The ledger's job is to tell the two
+  // apart, since only one of them can be taken back by deleting a row.
+  update_cell_dependency: () => 'Edited a connection',
   clear_cell_dependency: () => 'Removed a connection',
   reorder_steps: () => 'Reordered the steps',
   set_path_steps: () => 'Reordered the steps',

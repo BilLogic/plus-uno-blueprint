@@ -1378,6 +1378,15 @@ export type Database = {
         Args: { p_placement_id: string; p_rows: Json }
         Returns: undefined
       }
+      update_cell_dependency: {
+        Args: {
+          dependency_id: string
+          kind: string
+          note: string
+          target_cell_id: string
+        }
+        Returns: Json
+      }
       update_scenario_layout: {
         Args: { layout: string; scenario_id: string }
         Returns: undefined

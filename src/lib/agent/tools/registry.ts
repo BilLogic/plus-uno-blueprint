@@ -511,11 +511,17 @@ export async function dispatchTool(
       }
       case 'create_cell_dependency': {
         const kind = args.kind === 'enables' ? 'enables' : 'leads_to'
+        // `label` lands in `note`, not in `name`. The argument keeps its name
+        // because this surface is a pinned cross-repo contract; the column it
+        // maps to is app internals, and `name` is retired (#550) — every one of
+        // the eight rows that ever carried one carried a sentence, which is
+        // what `note` is for. The alternative was to keep writing a column
+        // nothing reads, which is the same as dropping the words on the floor.
         const id = await setCellDependency(client, {
           sourceCellId: need(args, 'source_cell_id'),
           targetCellId: need(args, 'target_cell_id'),
           kind,
-          name: s(args, 'label') ?? null,
+          note: s(args, 'label') ?? null,
         })
         return `Dependency set (${id}).`
       }

@@ -64,6 +64,29 @@ export type DeletionImpact = {
   affected_slices: AffectedSlice[]
 }
 
+/**
+ * One dependency row as it stood BEFORE an edit — what
+ * `update_cell_dependency` hands back.
+ *
+ * Its whole purpose is the inverse. Keyed on `id`, so undoing an edit restores
+ * the row that was edited; a would-be inverse keyed on
+ * (source, target, kind) restores *a* row joining those two cells, which after
+ * a second edit is not the same thing.
+ *
+ * `note` is here and `name` is not, and the omission is load-bearing on both
+ * counts. The note travels because an undo that put the kind and the target
+ * back and left the author's sentence overwritten would be an undo of most of
+ * the edit. `name` is retired (#550) — nothing writes it any more — so there is
+ * nothing about it to restore.
+ */
+export type CellDependencyBefore = {
+  id: string
+  source_cell_id: string
+  target_cell_id: string
+  kind: DependencyKind
+  note: string | null
+}
+
 export type LaneSetEntry = {
   name: string
   lane_role: string | null
@@ -218,6 +241,29 @@ function deriveRevert(
       return typeof data === 'string'
         ? { fn: 'clear_cell_dependency', args: { dependency_id: data } }
         : undefined
+    case 'update_cell_dependency': {
+      // Self-inverse: the function that changed the row is the function that
+      // changes it back, pointed at the values it returned. That is only sound
+      // because it returns the row AS IT STOOD and keys on the row's own id —
+      // an edit that moved the target would otherwise be undone by writing to
+      // whatever now joins the new pair.
+      //
+      // Every argument the function takes is in the returned row, which is
+      // what makes the inverse total: there is no field the edit could have
+      // changed that the undo does not put back.
+      const before = data as CellDependencyBefore | null
+      return before?.id
+        ? {
+            fn: 'update_cell_dependency',
+            args: {
+              dependency_id: before.id,
+              kind: before.kind,
+              target_cell_id: before.target_cell_id,
+              note: before.note,
+            },
+          }
+        : undefined
+    }
     default:
       return undefined
   }
@@ -503,11 +549,22 @@ export function reorderLanes(
 // ---------------------------------------------------------------------------
 
 /**
- * Add or update one dependency between two cells in the same version.
+ * Add one dependency between two cells in the same version.
  *
  * `leads_to` draws an arrow; `enables` records a dependency that deliberately
  * does not — a blueprint where every relationship is an arrow is unreadable,
  * and most "this depends on that" facts are not handoffs.
+ *
+ * ADD, and no longer "or update", which is the distinction #550 turns on. It
+ * upserts on (source, target, kind), so it can only ever change the note of an
+ * edge that already joins that exact pair in that exact kind; asked for a new
+ * kind or a new target it writes a SECOND row. `updateCellDependency` is the
+ * one that edits.
+ *
+ * `name` is not an argument here any more. The column is retired (#550) — it
+ * was only ever used as a note, by all eight rows that had one — and the
+ * function still declares it with a default, which is what lets this stop
+ * sending it rather than having to send a null that would erase one.
  */
 export function setCellDependency(
   client: Client,
@@ -515,8 +572,7 @@ export function setCellDependency(
     sourceCellId: string
     targetCellId: string
     kind?: DependencyKind
-    /** The word on the arrow, held in `cell_dependencies.name`. */
-    name?: string | null
+    /** Anything worth knowing about this dependency. */
     note?: string | null
   },
 ): Promise<string> {
@@ -524,8 +580,56 @@ export function setCellDependency(
     source_cell_id: input.sourceCellId,
     target_cell_id: input.targetCellId,
     kind: input.kind ?? 'leads_to',
-    name: input.name ?? null,
+    // `name` is omitted rather than sent as null, and the difference is not
+    // cosmetic: this function upserts `do update set name = excluded.name`, so
+    // a null would ERASE the sentence on any edge an author happens to edit —
+    // while the row still renders it as a badge, because the change to stop
+    // rendering it is upstream's and has not arrived. Omitting leaves the
+    // column alone, which is what "retired" means until stage 2 drops it.
+    // PostgREST resolves by the argument names it is given and the generated
+    // type marks this one optional; no gate here can exercise that, so watch
+    // the first add on a deployed build.
     note: input.note ?? null,
+  })
+}
+
+/**
+ * Change one dependency row where it sits — its kind, where it points, and its
+ * note — in one transaction.
+ *
+ * `setCellDependency` cannot do this and it is not a near miss. It upserts on
+ * (source, target, kind), so a new kind or a new target is a new conflict key:
+ * the edit INSERTS a second row and leaves the first behind, drawn. Only the
+ * note edits in place through it. Measured on 2026-09-09 against a from-scratch
+ * replay — one edge, then 1, 2 and 3 rows — and the migration's header carries
+ * the numbers.
+ *
+ * A client-side clear-then-set is not the answer either — two transactions, so
+ * a failure between them destroys the edge, and two ledger rows whose undo only
+ * half works.
+ *
+ * Returns the row as it stood, which is what `deriveRevert` above turns into an
+ * inverse keyed on the row's own id.
+ */
+export function updateCellDependency(
+  client: Client,
+  input: {
+    dependencyId: string
+    kind: DependencyKind
+    targetCellId: string
+    /**
+     * Anything worth knowing about this dependency. Empty clears it; the
+     * function trims. Required rather than optional, because an omitted note
+     * on an `update` would be an erase nobody asked for.
+     */
+    note: string | null
+  },
+): Promise<CellDependencyBefore> {
+  return call<CellDependencyBefore>(client, 'update_cell_dependency', {
+    dependency_id: input.dependencyId,
+    kind: input.kind,
+    target_cell_id: input.targetCellId,
+    note: input.note,
   })
 }
 
