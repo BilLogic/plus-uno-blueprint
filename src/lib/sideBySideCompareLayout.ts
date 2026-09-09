@@ -296,7 +296,7 @@ export function buildSideBySideLabelRowSpecs(
         : getSharedLaneRowHeight(lane, blueprints, compact),
       wrapCorridorAbove:
         !collapsed && laneHasOverheadRailCorridorAbove(lane, blueprints),
-      wrapCorridorBelow: !collapsed && laneHasWrapCorridorBelow(lane),
+      wrapCorridorBelow: !collapsed && laneHasWrapCorridorBelow(lane, lanes),
       inLaneLoopCorridorAbove:
         !collapsed && laneHasInLaneLoopCorridor(lane, blueprints),
       showDividerBelow: shouldShowLaneDividerAfter(lane, laneIndex, lanes),

@@ -321,28 +321,47 @@ export function countOverheadRailCorridorMargins(
 }
 
 /**
- * Does a corridor open UNDER this lane row? Only the spine actor's row has
- * one: the standard blueprint already leaves a band between it and the line of
- * interaction, and backward loops on that row are routed through it rather
- * than over the cells.
+ * Does a corridor open UNDER this lane row? Only the row the line of
+ * interaction is drawn after has one: the standard blueprint already leaves a
+ * band between that row and the line, and backward loops on it are routed
+ * through the band rather than over the cells.
+ *
+ * That is why `lanes` matters here rather than being a convenience. The
+ * corridor's reason for existing is the gap under the line, so it belongs to
+ * the lane the line follows — the LAST customer-side lane — and not to every
+ * lane on the customer side. Ask without the board and a customer-side lane
+ * in the middle of the band is told it has a corridor under it, which opens
+ * BLUEPRINT_WRAP_CORRIDOR_MARGIN of space beneath a row that has no line
+ * beneath it.
  */
-export function laneHasWrapCorridorBelow(lane: BlueprintLane): boolean {
-  return shouldShowInteractionLineAfter(lane)
+export function laneHasWrapCorridorBelow(
+  lane: BlueprintLane,
+  lanes?: BlueprintLane[],
+): boolean {
+  return shouldShowInteractionLineAfter(lane, lanes)
 }
 
 export function countBlueprintDividerRows(lanes: BlueprintLane[]): number {
   return lanes.filter(
     (lane) =>
-      shouldShowInteractionLineAfter(lane) ||
+      shouldShowInteractionLineAfter(lane, lanes) ||
       shouldShowVisibilityLineAfter(lane, lanes) ||
       shouldShowInternalInteractionLineAfter(lane, lanes),
   ).length
 }
 
+/**
+ * Both counts above are read as HEIGHT — one is multiplied by
+ * BLUEPRINT_DIVIDER_ROW_HEIGHT and the other by
+ * BLUEPRINT_WRAP_CORRIDOR_MARGIN — so a count that disagrees with what the
+ * renderer draws is a grid taller than its own contents by exactly the rows
+ * it over-counted. Each therefore has to ask the question the renderer asks,
+ * board and all.
+ */
 export function countBlueprintWrapCorridorMargins(
   lanes: BlueprintLane[],
 ): number {
-  return lanes.filter(laneHasWrapCorridorBelow).length
+  return lanes.filter((lane) => laneHasWrapCorridorBelow(lane, lanes)).length
 }
 
 export const LANE_COLUMN_WIDTH = 220
