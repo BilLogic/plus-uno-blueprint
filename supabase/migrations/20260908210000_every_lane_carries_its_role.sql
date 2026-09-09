@@ -59,12 +59,60 @@
 -- Front Stage Actions lane, which is what every other board does with a
 -- visible act. No lane is created for it.
 --
--- Its `Front Stage Touchpoints` lane becomes `backstage_touchpoints`: it holds
--- Tutors admin page, Sessions admin and Students admin page, which no customer
--- ever sees. It stays a separate lane from that board's Back Stage
--- Touchpoints, because a supervisor's own tools and the platform's plumbing
--- are not the same thing. Its NAME is left alone deliberately — renaming a
--- lane is a decision about what a reader is shown, and it was not taken here.
+-- Its `Front Stage Touchpoints` lane holds Tutors admin page, Sessions admin
+-- and Students admin page — tools no customer ever sees, under a name that
+-- says the opposite. This file first gave that lane `backstage_touchpoints`
+-- and left the name alone, because renaming a lane is a decision about what a
+-- reader is shown and it was not this file's to take. It has been taken, and
+-- the answer is FOLD AND DELETE: the three cells move into the board's
+-- existing Back Stage Touchpoints lane and the lane itself goes. That removes
+-- the badly-named lane rather than renaming it, and removes the board's
+-- duplicate `backstage_touchpoints` row along with it.
+--
+-- The cost is accepted knowingly. A supervisor's admin screens end up on the
+-- same row as the platform's plumbing — the Slack bridge, the reconfirmation
+-- fan-out, the group foreign key — and those are not the same kind of thing.
+-- They are the same ROLE: the tools and artifacts staff use out of sight. One
+-- honest row reads better than two rows where one is misnamed.
+--
+-- This is not the rename that was withdrawn. That withdrawal protects lanes
+-- named after a person — Regular Tutor, Lead Tutor, Teacher — from being
+-- renamed into job names, because this deployment names lanes both ways on
+-- purpose and the glossary now says so. `Front Stage Touchpoints` is already a
+-- job name. It names the wrong job.
+--
+-- ── AND THAT BOARD IS RESTACKED ─────────────────────────────────────────
+--
+-- Folding alone would leave the picture wrong. `Supervisor` is
+-- `backstage_actions` by the roster above and sits at position 1, above the
+-- board's only `frontstage_actions` lane — so with the roles assigned and the
+-- fold done, two backstage rows stand above the line of visibility, which is
+-- the one thing that line exists to prevent. It is the only board in the
+-- deployment that would; the other thirty-nine draw no backstage row above
+-- their line, before this file or after it. The order the roles ask for:
+--
+--     Storyboard
+--     Front Stage Actions          the two visible halves
+--     ──── line of visibility ────
+--     Back Stage Touchpoints       the three admin screens and the plumbing
+--     Supervisor                   backstage actions
+--     Back Stage Actions
+--     Support Actions
+--
+-- `Back Stage Actions` stays, and stays empty. Empty lanes are normal here —
+-- a third of this deployment's lanes hold no cell, and this file adds five
+-- more — and it is a standard lane rather than a duplicate actor, so the rule
+-- that deletes the empty Student lane above does not reach it.
+--
+-- Two `backstage_actions` rows is the accepted outcome: `Supervisor` carrying
+-- the cells, `Back Stage Actions` empty beneath it. An actor lane carrying a
+-- machinery role is exactly what the glossary rule describes.
+--
+-- The restack is written against the six lane ids of that one named path
+-- rather than against the roles, for the reason section 4 gives about its own
+-- reorder: the board ends with two `backstage_actions` lanes, so a rule
+-- phrased over roles alone has two rows to place and no way to tell them
+-- apart.
 --
 -- ── FIVE LANES THAT WERE NEVER ADDED, AND FOUR STACKS BUILT UPSIDE DOWN ──
 --
@@ -78,11 +126,11 @@
 -- here — a third of the lanes in this deployment hold no cell.
 --
 -- The reorder is written against four NAMED paths rather than against the
--- roles alone, and that is load-bearing. After this file the Supervisor board
--- holds two `backstage_touchpoints` lanes and two `backstage_actions` lanes,
--- so a swap phrased as "wherever backstage actions sits above backstage
--- touchpoints" would match that board twice and reorder a stack that is
--- correct.
+-- roles alone, and that is load-bearing. Section 2 leaves the Supervisor board
+-- with two `backstage_actions` lanes, so a swap phrased as "wherever backstage
+-- actions sits above backstage touchpoints" reads that board through two
+-- pairings and would act on whichever one happened to match — inside a stack
+-- section 2 has just placed by hand.
 --
 -- ── REPLAYING AGAINST AN EMPTY DATABASE ─────────────────────────────────
 --
@@ -128,12 +176,57 @@ delete from public.lanes
       where c.lane_id = 'c1000000-0000-4000-8000-000000000012'
    );
 
--- ── 2. The supervisor's tools are back-stage tools ──────────────────────
+-- ── 2. The supervisor's tools fold into the back stage ──────────────────
+--
+-- The cells move FIRST. `cells.lane_id` cascades on delete, so a lane dropped
+-- while it still holds rows takes them with it silently, along with the three
+-- touchpoint placements and four resources that hang off these three cells by
+-- id. Moving rather than re-creating is what keeps those attached; the delete
+-- is then guarded on the lane holding nothing, exactly as the Student delete
+-- above is.
+--
+-- `cells_lane_step_slot_unique` is (lane_id, step_id, position), and two of
+-- the three destinations are already taken at position 0 — Manage sessions and
+-- Manage students each hold a plumbing cell there. So each moved cell takes
+-- the next free slot in its own step. A step holding two cells is ordinary in
+-- this deployment; the destination lane already does it on other boards.
 
-update public.lanes
-   set lane_role = 'backstage_touchpoints'
+update public.cells as c
+   set lane_id = 'f1000000-0000-4000-8000-000000000008',
+       position = coalesce(
+         (select max(d.position) + 1
+            from public.cells d
+           where d.lane_id = 'f1000000-0000-4000-8000-000000000008'
+             and d.step_id = c.step_id),
+         0
+       )
+ where c.lane_id = 'f1000000-0000-4000-8000-000000000006';
+
+delete from public.lanes
  where id = 'f1000000-0000-4000-8000-000000000006'
-   and lane_role = 'frontstage_touchpoints';
+   and not exists (
+     select 1
+       from public.cells c
+      where c.lane_id = 'f1000000-0000-4000-8000-000000000006'
+   );
+
+-- The restack. `lanes_path_position_unique` is deferrable and initially
+-- deferred, so the six rows may hold one another's positions for the length of
+-- the statement. If the delete above did not fire, the vacated position is
+-- still occupied and this fails at commit rather than quietly leaving the
+-- board half-restacked.
+update public.lanes as l
+   set position = restack.position
+  from (values
+    ('f1000000-0000-4000-8000-000000000004'::uuid, 0),  -- Storyboard
+    ('f1000000-0000-4000-8000-000000000007'::uuid, 1),  -- Front Stage Actions
+    ('f1000000-0000-4000-8000-000000000008'::uuid, 2),  -- Back Stage Touchpoints
+    ('f1000000-0000-4000-8000-000000000005'::uuid, 3),  -- Supervisor
+    ('f1000000-0000-4000-8000-000000000009'::uuid, 4),  -- Back Stage Actions
+    ('f1000000-0000-4000-8000-00000000000a'::uuid, 5)   -- Support Actions
+  ) as restack(id, position)
+ where l.id = restack.id
+   and l.position is distinct from restack.position;
 
 -- ── 3. The two double-act cells are split by act ────────────────────────
 --
@@ -273,6 +366,8 @@ declare
   v_inverted text;
   v_unsupported text;
   v_undivided text;
+  v_dropped text;
+  v_exposed text;
 begin
   -- A lane named after a person still carries the role that places it. This
   -- is the rule the forty broke; if one of them was missed, it is named here.
@@ -289,9 +384,11 @@ begin
   end if;
 
   -- The four repaired paths now stack the way the other thirty-five do.
-  -- Scoped to those four on purpose: the supervisor board legitimately holds
-  -- two lanes of each backstage role, and a rule phrased over the whole table
-  -- would call that board broken.
+  -- Scoped to those four on purpose: they are the paths this file reorders,
+  -- and that order is this deployment's convention rather than a law of the
+  -- table — a board that ran its backstage stack the other way deliberately
+  -- would not be broken. Asserted over every path it would be claiming
+  -- something this file did not do.
   select string_agg(distinct actions.path_id::text, ', ')
     into v_inverted
     from public.lanes as actions
@@ -349,6 +446,69 @@ begin
     raise exception
       'proof: cell(s) % still name a front-stage act and a back-stage one together',
       v_undivided;
+  end if;
+
+  -- The fold moved the supervisor's three admin screens; it did not delete
+  -- them with their lane. `cells.lane_id` cascades, so a delete that ran
+  -- before the move would have taken all three and said nothing. Named by
+  -- what they say, because that is what would be missing.
+  select string_agg(gone.content, ', ' order by gone.content)
+    into v_dropped
+    from (values
+      ('Tutors admin page'), ('Sessions admin'), ('Students admin page')
+    ) as gone(content)
+   where exists (
+           select 1 from public.paths p
+            where p.id = 'f1000000-0000-4000-8000-000000000003'
+         )
+     and not exists (
+           select 1
+             from public.cells c
+            where c.lane_id = 'f1000000-0000-4000-8000-000000000008'
+              and c.content = gone.content
+         );
+
+  if v_dropped is not null then
+    raise exception
+      'proof: the fold lost %, which its lane held before the delete',
+      v_dropped;
+  end if;
+
+  -- No board draws a back-stage row above its line of visibility. The line
+  -- follows a frontstage-actions lane, or a frontstage-touchpoints lane with
+  -- no actions lane under it, which is `shouldShowVisibilityLineAfter` read in
+  -- SQL. A backstage row above it is a row the board tells the reader the
+  -- customer can see. This is what the restack in section 2 is for, and it is
+  -- phrased over the whole table because it is true of every board.
+  select string_agg(distinct exposed.path_id::text, ', ')
+    into v_exposed
+    from public.lanes as exposed
+    join (
+      select ordered.path_id, min(ordered.position) as line_position
+        from (
+          select l.path_id,
+                 l.position,
+                 l.lane_role,
+                 lead(l.lane_role) over (
+                   partition by l.path_id order by l.position
+                 ) as next_role
+            from public.lanes l
+        ) as ordered
+       where ordered.lane_role = 'frontstage_actions'
+          or (ordered.lane_role = 'frontstage_touchpoints'
+              and ordered.next_role is distinct from 'frontstage_actions')
+       group by ordered.path_id
+    ) as visibility
+      on visibility.path_id = exposed.path_id
+   where exposed.lane_role in (
+           'backstage_touchpoints', 'backstage_actions', 'support_actions'
+         )
+     and exposed.position < visibility.line_position;
+
+  if v_exposed is not null then
+    raise exception
+      'proof: path(s) % draw a back-stage lane above the line of visibility',
+      v_exposed;
   end if;
 end;
 $proof$;
