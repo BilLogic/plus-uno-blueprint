@@ -1396,4 +1396,12 @@ export const RECONCILED_FILES = [
   'src/components/blueprint/StoryboardStepDetailStack.tsx',
   'src/components/cover/CoverSections.tsx',
   'src/components/editor/CanvasEmptyState.tsx',
+
+  // Two test files that differed by nothing the code under test can see: a
+  // deployment's service name standing in for a neutral one in the slug
+  // fixtures, this repository's issue numbers in their headers, and one pair
+  // of copies that named the same thing "command" and "control". The
+  // template's wording is the tie-break for prose, so both take it whole.
+  'src/components/cover/coverCommandCopy.test.tsx',
+  'src/lib/serviceSlug.test.ts',
 ]

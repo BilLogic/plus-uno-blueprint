@@ -81,7 +81,7 @@ export function CreateSliceSheet({
   const { openTab } = useViewState()
   const [step, setStep] = useState<'slides' | 'name'>('slides')
   const [title, setTitle] = useState('')
-  const [summary, setDescription] = useState('')
+  const [summary, setSummary] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -105,13 +105,13 @@ export function CreateSliceSheet({
   const reset = () => {
     setStep('slides')
     setTitle('')
-    setDescription('')
+    setSummary('')
     setError(null)
   }
 
   const problems = validateDraftSlice({
     title,
-    summary: summary,
+    summary,
     sliceKind,
     // Always blank: the field is gone, and the column stays nullable
     // until a migration drops it.
@@ -131,7 +131,7 @@ export function CreateSliceSheet({
       const slice = await createSlice(client, {
         serviceId,
         title,
-        summary: summary,
+        summary,
         sliceKind,
         actor: '',
         cellIds,
@@ -144,7 +144,8 @@ export function CreateSliceSheet({
       // at it, and the tab is also where it gets edited.
       openTab({ kind: 'slice', sliceId: slice.id })
     } catch (createError) {
-      const message = errorMessage(createError)
+      const message =
+        errorMessage(createError)
       // In the preview state every write comes back "permission denied", and
       // raw PostgREST text reads like a bug when it is actually the answer.
       setError(
@@ -237,7 +238,7 @@ export function CreateSliceSheet({
                 <Input
                   value={title}
                   autoFocus
-                  placeholder="Tutor warm-up journey"
+                  placeholder="First-time customer journey"
                   onChange={(event) => setTitle(event.target.value)}
                 />
               </label>
@@ -256,7 +257,7 @@ export function CreateSliceSheet({
                 <Input
                   value={summary}
                   placeholder="What this slice shows, and who it is for"
-                  onChange={(event) => setDescription(event.target.value)}
+                  onChange={(event) => setSummary(event.target.value)}
                 />
               </label>
 
