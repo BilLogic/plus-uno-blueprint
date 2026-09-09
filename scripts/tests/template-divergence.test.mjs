@@ -16,7 +16,9 @@ import assert from 'node:assert/strict'
 import {
   bucketOf,
   enrollableCandidates,
+  formatEnrollableReport,
   inScope,
+  splitOnCitations,
   stripProse,
   tally,
 } from '../measure-template-divergence.mjs'
@@ -68,13 +70,14 @@ test('out-of-scope paths are dropped rather than bucketed somewhere', () => {
 
 /*
   `--enrollable`: shared files that differ from the pinned template by prose
-  alone, and so are one agreed comment away from the drift gate.
+  alone — the code identical, the comments not. What follows that measurement
+  is a separate question, and the second block below is where it is asked.
 
-  The report is only useful if it is honest in both directions — a file that
+  The list is only useful if it is honest in both directions — a file that
   differs in code must never appear, or someone enrols it and reddens the
-  gate; a file that differs only in a comment must appear, or the cheapest
-  enrolments stay invisible. Both, plus the crudeness the stripper is allowed,
-  are pinned here.
+  gate; a file that differs only in a comment must appear, or the candidates
+  stay invisible. Both, plus the crudeness the stripper is allowed, are
+  pinned here.
 */
 test('prose comes out and code stays in', () => {
   assert.equal(stripProse('const a = 1 // why\n\n/* block */\nconst b = 2\n'), 'const a = 1\nconst b = 2')
@@ -126,4 +129,78 @@ test('a `//` inside a string is treated as a comment, and that is the safe way t
   // `check:reconciled` is what actually refuses, so a false candidate costs a
   // second look and a false negative costs an enrolment nobody notices.
   assert.equal(stripProse("const u = 'https://example.test'"), "const u = 'https:")
+})
+
+/*
+  What the report is allowed to CLAIM about a candidate, which is a separate
+  thing from which files it lists.
+
+  It used to say each candidate was "one agreed comment away from being
+  enrollable". That was an inference on top of the measurement, and it was
+  wrong about all three files it was printed over: one comment carried a
+  schema fact, one carried a history that landed differently in the two
+  repositories, and one cited a migration that `check:reconciled` refuses at
+  any wording. The half of the claim that CAN be measured is pinned here, and
+  so is the wording, because a report nobody asserts on can say anything.
+*/
+test('a candidate citing a repo-local identity is separated from the rest', () => {
+  const { blocked, proseOnly } = splitOnCitations({
+    candidates: ['src/lib/cites.ts', 'src/lib/clean.ts'],
+    readInstance: (path) =>
+      path === 'src/lib/cites.ts' ? '// see 20260909060000\nx()\n' : '// our words\nx()\n',
+    readAsb: (path) =>
+      path === 'src/lib/cites.ts' ? '// see 21000208000000\nx()\n' : '// their words\nx()\n',
+  })
+  assert.deepEqual(proseOnly, ['src/lib/clean.ts'])
+  assert.deepEqual(
+    blocked.map(({ path, findings }) => [path, findings.map((f) => [f.side, f.kind, f.text])]),
+    [
+      [
+        'src/lib/cites.ts',
+        [
+          ['this repo', 'migration', '20260909060000'],
+          ['template', 'migration', '21000208000000'],
+        ],
+      ],
+    ],
+  )
+})
+
+test('a citation on only one side still blocks the candidate', () => {
+  // Agreement is not available in this direction either: taking the
+  // template's wording would drop a fact this deployment's comment carries,
+  // and keeping ours enrols a citation the gate refuses.
+  const { blocked, proseOnly } = splitOnCitations({
+    candidates: ['src/lib/a.ts'],
+    readInstance: () => '// applied in 20260820030000\n// the change log (#176)\nx()\n',
+    readAsb: () => '// applied already\nx()\n',
+  })
+  assert.deepEqual(proseOnly, [])
+  assert.deepEqual(
+    blocked[0].findings.map((f) => f.text),
+    ['20260820030000', '#176'],
+  )
+})
+
+test('the report says a cited candidate needs the citation out of both copies', () => {
+  const report = formatEnrollableReport({
+    blocked: [
+      {
+        path: 'src/lib/cites.ts',
+        findings: [{ line: 52, kind: 'migration', text: '20260909060000', side: 'this repo' }],
+      },
+    ],
+    proseOnly: [],
+  })
+  assert.match(report, /BOTH copies/)
+  assert.match(report, /src\/lib\/cites\.ts:52 cites `20260909060000`/)
+  assert.doesNotMatch(report, /one agreed comment/)
+})
+
+test('the report still names a comment-only candidate, and stops at what it measured', () => {
+  const report = formatEnrollableReport({ blocked: [], proseOnly: ['src/lib/clean.ts'] })
+  assert.match(report, /^1 shared file\(s\) differ/)
+  assert.match(report, /src\/lib\/clean\.ts/)
+  assert.match(report, /Read them before assuming they agree/)
+  assert.doesNotMatch(report, /one agreed comment/)
 })
