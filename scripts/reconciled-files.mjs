@@ -1445,4 +1445,21 @@ export const RECONCILED_FILES = [
   'src/components/ui/badge.tsx',
   'src/components/ui/skeleton.tsx',
   'src/contexts/canvasModeContext.ts',
+
+  // The 1.15.0 bump. One list, two owners, in both repositories.
+  //
+  // The cell's Resources tab used to carry a second and poorer list of its
+  // own — a label field and a URL field per row, no featured block, no row
+  // menu, no order. Giving it the list the placement's group already had moved
+  // that list out of `PlacementResourcesList` and into `ResourcesList`, which
+  // both owners hand rows and a pair of writes. 1.15.0 makes the same move
+  // upstream, so the shared file is one file in two repositories and is held
+  // here from the day it lands rather than after the drift is noticed.
+  //
+  // `rowReveal.ts` comes with it and is the smaller half of the same idea: the
+  // rule that a row's secondary control waits for a reader is stated once and
+  // imported by both the resource list and the dependency why-line, instead of
+  // a class list copied into two folders. It arrived byte-identical.
+  'src/components/blueprint/ResourcesList.tsx',
+  'src/lib/rowReveal.ts',
 ]

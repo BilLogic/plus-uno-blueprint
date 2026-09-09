@@ -97,7 +97,9 @@ describe('one list for what a placement points at', () => {
 
   it('reordering sends the new order and no featured value at all', async () => {
     const { getByLabelText, getByText } = mount()
-    fireEvent.click(getByLabelText('Move Spec up'))
+    // The drag is pointer-only, so the keyboard half of the handle is the
+    // reachable path — and the one a test can drive.
+    fireEvent.keyDown(getByLabelText('Reorder Spec'), { key: 'ArrowUp' })
     rpc.mockResolvedValueOnce({ data: null, error: null })
     fireEvent.click(getByText('Save resources'))
     await waitFor(() => expect(rpc).toHaveBeenCalledTimes(1))
