@@ -64,6 +64,25 @@ alter default privileges in schema public
 alter default privileges in schema public
   grant all on sequences to anon, authenticated, service_role;
 
+-- FUNCTIONS TOO, and the omission was #572. The line above was written for
+-- relations because relations were what the grant audits of 2026-08-30 were
+-- about, and the schema's `f` entry was left off — so a function created here
+-- arrived with stock Postgres's EXECUTE TO PUBLIC and nothing else, while the
+-- same function in production arrived granted to `anon` as well. That is not a
+-- small difference: it makes `revoke all on function … from public` look like
+-- a complete revoke on a replay and leave the anonymous grant standing in
+-- production, which is what it did on four SECURITY DEFINER functions.
+--
+-- Read from production's `pg_default_acl` on 2026-09-09 rather than assumed:
+--
+--   postgres | public | f | {postgres=X/postgres, anon=X/postgres,
+--                            authenticated=X/postgres, service_role=X/postgres}
+--
+-- `PLATFORM_FUNCTION_DEFAULT` in `scripts/migration-replay.mjs` states the same
+-- fact to the static model, and the two must agree.
+alter default privileges in schema public
+  grant execute on functions to anon, authenticated, service_role;
+
 create extension if not exists pgcrypto with schema extensions;
 create extension if not exists "uuid-ossp" with schema extensions;
 create extension if not exists vector with schema extensions;
