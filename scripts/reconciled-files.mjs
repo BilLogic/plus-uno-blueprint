@@ -1380,4 +1380,20 @@ export const RECONCILED_FILES = [
   // 204 in both files, which is what the template's copy already said.
   'src/styles/colors.css',
   'src/styles/semantic.css',
+
+  // Three files the template ships that this copy already matched byte for
+  // byte, found by re-scanning the whole adoption surface rather than the
+  // narrow prose-only band. Nothing converged them on purpose — the noun
+  // sweep and the cover work moved the last differing lines out from under
+  // them — so they are bookkeeping, not code, and they are held here now so
+  // the next edit to either copy has to answer for the drift.
+  //
+  // A fourth, `src/components/cover/coverPage.test.tsx`, is identical too and
+  // is NOT here: it cites `plan 2026-08-18-001`, an address in this
+  // repository's docs tree, and that sentence has to change in both copies
+  // before either can promise it. It enrols with the upstream pass that
+  // rewrites it.
+  'src/components/blueprint/StoryboardStepDetailStack.tsx',
+  'src/components/cover/CoverSections.tsx',
+  'src/components/editor/CanvasEmptyState.tsx',
 ]
