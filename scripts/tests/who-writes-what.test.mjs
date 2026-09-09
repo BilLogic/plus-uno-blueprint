@@ -16,7 +16,7 @@
  *      deleted tool fails here rather than leaving CONTEXT.md quietly wrong
  *   2. every write tool that NAMES one of these records is assigned an owner —
  *      a `delete_slice` nobody added to the table fails here
- *   3. CONTEXT.md's own table PARSES to the rows below — not "the file
+ *   3. the TEMPLATE's ownership table PARSES to the rows below — not "the file
  *      mentions these words somewhere", which `slices` and `evidence` would
  *      satisfy from a dozen other paragraphs, but the three rows themselves
  *
@@ -26,11 +26,19 @@
  * `check:write-surface`'s subject, and reimplementing that scan here would be
  * a second reader to drift from the first.
  *
- * `evidence` sits in the table with the owner **nobody**. That is not an
- * unclaimed row: it is research provenance, written at import, cited by a
- * slice, weighed by an audit, read by a what-if. An owner column that could
- * not say "nobody" would have forced it onto whichever reader was loudest —
- * which is how *derived layer* and *analysis tier* both went wrong.
+ * THE TABLE IS NOT THIS REPOSITORY'S TO STATE (#566). It is the shared model,
+ * defined once in the template's `CONTEXT.md`; this deployment's own glossary
+ * points at it rather than keeping a second copy, so rule 3 reads the pinned
+ * template's copy and this test holds OUR write roster against THEIR
+ * definition. A pin bump that changes the table fails here, which is the same
+ * failure this rule always had and now catches it at its source.
+ *
+ * `evidence` belongs to **the cell**. It read "nobody" for as long as the panel
+ * was its only writer, and that was a fact about the roster rather than a
+ * position: the moment `create_evidence` and `update_evidence` landed, rule 2
+ * demanded a real owner, and the cell is the claim the source grounds. "Nobody"
+ * is still a sayable owner — what-if writes no record of its own — it is simply
+ * not evidence's answer any more.
  *
  * Run: npm test
  */
@@ -39,6 +47,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { declaredTools } from '../check-write-surface.mjs'
+import { PACKAGE } from '../template-pin.mjs'
 
 // The runner copies test files into a temp dir, so paths resolve from the
 // working directory (npm test runs at the repo root), not from import.meta.
@@ -62,10 +71,12 @@ export const RECORD_OWNERS = [
     tools: ['create_finding', 'update_finding'],
     owner: 'the audit',
   },
+  // The cell is the claim the source grounds — see the template's CONTEXT.md,
+  // where this row read "nobody" while the panel was evidence's only writer.
   {
     records: ['evidence'],
     tools: ['create_evidence', 'update_evidence'],
-    owner: 'nobody',
+    owner: 'the cell',
   },
 ]
 
@@ -88,7 +99,7 @@ export function writesWithNoOwner(rows, roster) {
 }
 
 /**
- * The ownership table as CONTEXT.md draws it, parsed back into rows.
+ * The ownership table as the glossary draws it, parsed back into rows.
  *
  * Parsed rather than searched for. `slices`, `evidence` and the tool names
  * appear in many other paragraphs of that file, so "the document mentions the
@@ -98,7 +109,7 @@ export function writesWithNoOwner(rows, roster) {
 export function ownershipTable(markdown) {
   const lines = markdown.split('\n')
   const head = lines.findIndex((line) => line.startsWith('| record | written by | belongs to |'))
-  if (head < 0) throw new Error('no ownership table found in CONTEXT.md')
+  if (head < 0) throw new Error('no ownership table found in the glossary')
 
   const rows = []
   for (const line of lines.slice(head + 2)) {
@@ -187,6 +198,9 @@ test('every write tool that names one of these records has an owner', () => {
   )
 })
 
-test('CONTEXT.md’s table parses to exactly the rows this file enforces', () => {
-  assert.deepEqual(ownershipTable(read('CONTEXT.md')), RECORD_OWNERS)
+test('the template’s table parses to exactly the rows this file enforces', () => {
+  // The definition lives upstream (#566), so this reads the pinned template's
+  // copy. A pin bump that moves the table fails here rather than leaving this
+  // deployment's roster held against a table nobody is looking at.
+  assert.deepEqual(ownershipTable(read(`${PACKAGE}/CONTEXT.md`)), RECORD_OWNERS)
 })

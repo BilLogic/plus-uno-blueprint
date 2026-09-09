@@ -115,7 +115,7 @@
  * sitting beside `customer_actions` and `support_actions`; `picture` said the
  * same thing one level down, about a column. So the lane is a **storyboard**, one
  * image on one cell is a **frame**, and a step's frames read across the lanes are
- * a **strip** — see `CONTEXT.md`, which is where the vocabulary lives.
+ * a **strip** — see `CONTEXT.md`, which routes to where the vocabulary lives.
  * `slice_items` named a slide by its relationship to its parent, the shape
  * `layers` had before it was `lanes`, and a slide's `caption` becomes a `title`
  * under the rule the paragraph above settles.

@@ -102,8 +102,10 @@
  *
  * **"Derived layer" was renamed, not exempted.** A rename removes the collision
  * where an exemption only records it. The replacement was then dropped as well,
- * for a reason worth keeping: no one word was true of all four tables. See
- * `CONTEXT.md` § The three records, and the one that is nobody’s.
+ * for a reason worth keeping: no one word was true of all four tables. That
+ * reasoning is the shared model and lives upstream (#566): see
+ * `node_modules/agentic-service-blueprinting/CONTEXT.md` § What the skills
+ * produce, and `scripts/retired-vocabulary.mjs` for the two names themselves.
  *
  * **The breadcrumb label `'Layer: '` was sequenced, and then the sequence ran.**
  * It was a real ordering constraint: the label sits inside every *stored* chunk

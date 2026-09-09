@@ -117,7 +117,7 @@ test('a section that defines no term fails, and the failure names the heading', 
 
 test('a bold sentence is not a term row — the em dash is what makes one', () => {
   assert.equal(TERM_ROW.test('**cell** — one square of the board.'), true)
-  assert.equal(TERM_ROW.test('**Evidence is the one with no owner**, and that is a property.'), false)
+  assert.equal(TERM_ROW.test('**A view, not a copy**, and that is a property.'), false)
   assert.equal(TERM_ROW.test('**The subject is panel labels.** Narrower on purpose.'), false)
 })
 
@@ -134,7 +134,12 @@ test('sections are found by heading depth, and the title is not one', () => {
 test('the committed glossary passes, and the report says what it counted', () => {
   const { failures, terms } = sweep()
   assert.deepEqual(failures, [])
-  assert.ok(terms > 20, `only ${terms} term rows in ${SUBJECT} — is it still a glossary?`)
+  // A floor against vacuity, not a census. It was 20 while this file defined
+  // the shared model as well as its own words; #566 moved the shared model
+  // upstream and left the deltas, so the honest floor is lower. What it still
+  // catches is the failure it was written for: a `sweep` that finds nothing
+  // reports no findings, and a glossary with no term rows is not a glossary.
+  assert.ok(terms > 10, `only ${terms} term rows in ${SUBJECT} — is it still a glossary?`)
 })
 
 test('the script exits 0 and names its subject', () => {
