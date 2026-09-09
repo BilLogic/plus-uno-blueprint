@@ -1016,7 +1016,7 @@ function BlueprintCellDetailPanelBody() {
   const hasRealPlacement = Boolean(selectedPlacement?.id)
   const techDetailLabel =
     isTechLane || hasRealPlacement ? (touchpointDetail?.name ?? null) : null
-  const detailDescriptionText =
+  const detailSummaryText =
     techDetailLabel && detailBodyText.trim() === techDetailLabel
       ? ''
       : detailBodyText
@@ -1258,8 +1258,8 @@ function BlueprintCellDetailPanelBody() {
   const titleRepeatsTouchpoint =
     showTouchpoint && techDetailLabel?.trim() === cellTitleText.trim()
   const descriptionRepeatsTitle =
-    detailDescriptionText.trim() === cellTitleText.trim() ||
-    detailDescriptionText.trim() === cellContent.trim()
+    detailSummaryText.trim() === cellTitleText.trim() ||
+    detailSummaryText.trim() === cellContent.trim()
   const editingCell = canEdit && resolvedCellId !== null
 
   /*
@@ -1363,11 +1363,11 @@ function BlueprintCellDetailPanelBody() {
             some things and not others. The editor shows the same text inside
             its own Summary field. */}
         {!editingCell &&
-        detailDescriptionText.trim() &&
+        detailSummaryText.trim() &&
         !descriptionRepeatsTitle ? (
           <Field label="Summary" hint="What the detail fields add up to.">
             <p className={cn('whitespace-pre-wrap', PANEL_TEXT.value)}>
-              {detailDescriptionText.trim()}
+              {detailSummaryText.trim()}
             </p>
           </Field>
         ) : null}
@@ -1385,7 +1385,7 @@ function BlueprintCellDetailPanelBody() {
           // Never seed the field with the title wearing a description's
           // clothes — only prose that actually says more than the cell text.
           fallbackDescription={
-            descriptionRepeatsTitle ? '' : detailDescriptionText.trim()
+            descriptionRepeatsTitle ? '' : detailSummaryText.trim()
           }
           onDone={clearSelection}
         />

@@ -41,7 +41,7 @@ function WalkthroughStepSlide({
     laneName: entry.laneName,
     label: STORYBOARD_LANE_SHORT_LABELS[entry.laneName] ?? entry.laneName,
     frame: entry.frame,
-    description: entry.content,
+    summary: entry.content,
   }))
 
   if (entries.length === 0) {

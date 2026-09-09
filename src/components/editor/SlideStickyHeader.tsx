@@ -31,7 +31,7 @@ type SlideHeaderContentProps = {
   inlineDescription?: boolean
 }
 
-function resolveScenarioDescription(
+function resolveScenarioSummary(
   slide: NavItem,
   paths: PathOption[],
   selectedPathIds: string[],
@@ -64,7 +64,7 @@ function SlideHeaderContent({
   const isScenario = isSubslide(slide)
 
   const description = isScenario
-    ? resolveScenarioDescription(slide, paths, selectedPathIds)
+    ? resolveScenarioSummary(slide, paths, selectedPathIds)
     : slide.summary ??
       paths[0]?.summary ??
       'Scenarios in this phase and how they connect.'

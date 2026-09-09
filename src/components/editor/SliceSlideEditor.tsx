@@ -95,7 +95,7 @@ export function SliceSlideEditor({
     update(next.filter((slide) => slide.cells.length > 0))
   }
 
-  const moveFrame = (from: number, to: number) => {
+  const moveSlide = (from: number, to: number) => {
     if (from === to) return
     const next = [...slides]
     const [moved] = next.splice(from, 1)
@@ -103,10 +103,10 @@ export function SliceSlideEditor({
     update(next)
   }
 
-  const removeCell = (frameIndex: number, cell: string) => {
+  const removeCell = (slideIndex: number, cell: string) => {
     const next = slides
       .map((slide, index) =>
-        index === frameIndex
+        index === slideIndex
           ? { ...slide, cells: slide.cells.filter((id) => id !== cell) }
           : slide,
       )
@@ -118,9 +118,9 @@ export function SliceSlideEditor({
   // shows on the canvas, so the editor and the artboard agree. Derived from
   // the slides above it rather than a running counter, which keeps it a pure
   // function of the render's input.
-  const sequenceByFrame = slides.map((slide, frameIndex) => {
+  const sequenceBySlide = slides.map((slide, slideIndex) => {
     const before = slides
-      .slice(0, frameIndex)
+      .slice(0, slideIndex)
       .reduce((total, earlier) => total + earlier.cells.length, 0)
     return slide.cells.map((_, cellIndex) => before + cellIndex + 1)
   })
@@ -145,7 +145,7 @@ export function SliceSlideEditor({
       {collapsed ? null : (
     <div className="flex max-h-56 shrink-0 gap-2 overflow-x-auto overflow-y-hidden px-2 pb-2">
       {slides.map((slide, index) => {
-        const frameProblems = problems.filter(
+        const slideProblems = problems.filter(
           (problem) => problem.slide === index,
         )
         const isActive = index === activeSlide
@@ -177,7 +177,7 @@ export function SliceSlideEditor({
                   cellDrop?.slide === index ? cellDrop.index : undefined,
                 )
               } else {
-                moveFrame(dragging.slide, index)
+                moveSlide(dragging.slide, index)
               }
             }}
           >
@@ -252,7 +252,7 @@ export function SliceSlideEditor({
                     aria-hidden
                   />
                   <span className="shrink-0 text-muted-foreground">
-                    {sequenceByFrame[index][cellIndex]}
+                    {sequenceBySlide[index][cellIndex]}
                   </span>
                   {/* The cell's words, not the tail of its key. `070110` is
                       an address; nobody recognises their content by address. */}
@@ -300,9 +300,9 @@ export function SliceSlideEditor({
             />
 
 
-            {frameProblems.length > 0 ? (
+            {slideProblems.length > 0 ? (
               <p className="text-3xs text-destructive">
-                {frameProblems[0].message}
+                {slideProblems[0].message}
               </p>
             ) : null}
 
