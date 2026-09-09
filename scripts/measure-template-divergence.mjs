@@ -23,8 +23,12 @@
  *
  * `--enrollable` answers a different question and reads a different source, so
  * it is worth saying why. It lists files that are NOT byte-identical but would
- * be if prose were the only difference — the cheapest enrolments available,
- * and the ones the citation sweep keeps producing. Enrolment is measured
+ * be if prose were the only difference — the ones the citation sweep keeps
+ * producing. It used to call every one of them one agreed comment away from
+ * enrolment, which was an inference rather than the measurement, and was
+ * wrong about all three of its candidates (#579). It now measures the half of
+ * that claim it can — a file citing a repo-local identity is not enrollable at
+ * any wording — and reports the rest as what was seen. Enrolment is measured
  * against the PINNED package, not the sibling checkout, because that is what
  * `check:reconciled` compares against; a candidate measured against anything
  * else is a candidate that reddens the gate on arrival. It reports and fails
@@ -43,6 +47,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { RECONCILED_FILES } from './reconciled-files.mjs'
+import { describeCitation, repoLocalCitations } from './repo-local-citations.mjs'
 import { PACKAGE, refuseOnStaleInstall } from './template-pin.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '')
@@ -145,6 +150,49 @@ export function enrollableCandidates({ paths, readInstance, readAsb }) {
   return candidates
 }
 
+/**
+ * The candidates a citation already rules out, apart from the rest.
+ *
+ * A prose-only difference reads like the cheapest thing there is to settle:
+ * two people wrote the same comment differently, take one of them. That step
+ * — from "the code is identical" to "one agreed comment from enrollable" — is
+ * an inference, and this splits off the part of it that can be measured.
+ * `check:reconciled` refuses an enrolled file that cites a repo-local
+ * identity, so a candidate carrying one on EITHER side is not one agreement
+ * away from anything: the citation has to come out of both copies before
+ * enrolment is available at all. `linkedText.ts` is the shape of it, citing a
+ * different migration in each repository, where agreeing on either number
+ * leaves the file exactly as unenrollable as it was.
+ *
+ * The scan is `repoLocalCitations`, the same one the gate refuses on. A
+ * second matcher of the same subject would drift from it, and this report
+ * would start promising enrolments the gate then rejects — the failure both
+ * rules exist to catch.
+ *
+ * What is left over is reported as measured and no further. Whether two
+ * differing comments state the same fact is not a thing a scan can answer.
+ *
+ * @param {object} io
+ * @param {string[]} io.candidates                    prose-only candidate paths
+ * @param {(p: string) => string|null} io.readInstance this repo's text
+ * @param {(p: string) => string|null} io.readAsb      the template's text
+ */
+export function splitOnCitations({ candidates, readInstance, readAsb }) {
+  const blocked = []
+  const proseOnly = []
+  for (const path of candidates) {
+    const findings = [
+      ['this repo', readInstance(path)],
+      ['template', readAsb(path)],
+    ].flatMap(([side, text]) =>
+      repoLocalCitations(path, text ?? '').map((finding) => ({ ...finding, side })),
+    )
+    if (findings.length) blocked.push({ path, findings })
+    else proseOnly.push(path)
+  }
+  return { blocked, proseOnly }
+}
+
 /** Text at a path under `root`, or null when it is absent or not text. */
 const textReader = (root) => (path) => {
   const full = join(root, path)
@@ -154,6 +202,61 @@ const textReader = (root) => (path) => {
   } catch {
     return null
   }
+}
+
+/**
+ * The `--enrollable` report, as text.
+ *
+ * Separated from the run so the wording can be pinned by a test. The sentence
+ * this replaced — "each is one agreed comment away from being enrollable" —
+ * was true of none of the three files it was printed over, and nothing was in
+ * a position to notice, because the only thing under test was which files the
+ * list contained.
+ *
+ * @param {object} report
+ * @param {{path: string, findings: object[]}[]} report.blocked  candidates a citation rules out
+ * @param {string[]} report.proseOnly                            the rest
+ */
+export function formatEnrollableReport({ blocked, proseOnly }) {
+  const sections = [
+    `${blocked.length + proseOnly.length} shared file(s) differ from the pinned ` +
+      'template by prose alone:\nthe code is identical and the comments are not.',
+  ]
+
+  if (blocked.length) {
+    sections.push(
+      `${blocked.length} candidate(s) cite a repo-local identity, which no agreement ` +
+        'on the wording\nreaches: `check:reconciled` refuses an enrolled file that cites ' +
+        'one, so the\ncitation has to come out of BOTH copies before enrolment is ' +
+        'available.',
+      blocked
+        .flatMap(({ path, findings }) =>
+          findings.map(
+            (finding) => `  ${finding.side.padEnd(9)}  ${describeCitation(path, finding)}`,
+          ),
+        )
+        .join('\n'),
+    )
+  }
+
+  if (proseOnly.length) {
+    sections.push(
+      `${proseOnly.length} file(s) differ by comment only. That is the measurement, not ` +
+        'a verdict on\nhow cheap they are: comments carry facts, and two sentences that ' +
+        'differ can\neach be true of their own repository. Read them before assuming ' +
+        'they agree.',
+      proseOnly.map((path) => `  ${path}`).join('\n'),
+    )
+  }
+
+  sections.push(
+    "The template's wording is the tie-break where the two really are just two\n" +
+      'people writing the same comment. A deployment sentence that is materially\n' +
+      'better goes upstream as its own change first, never sideways; one that\n' +
+      'states a different fact does not converge at all.',
+  )
+
+  return sections.join('\n\n')
 }
 
 function reportEnrollable() {
@@ -172,29 +275,18 @@ function reportEnrollable() {
   // enrolled — the opposite of what this list is for (#510).
   refuseOnStaleInstall(ROOT)
 
+  const readInstance = textReader(ROOT)
+  const readAsb = textReader(packageRoot)
   const paths = [...tree('HEAD').keys()].filter(inScope)
-  const candidates = enrollableCandidates({
-    paths,
-    readInstance: textReader(ROOT),
-    readAsb: textReader(packageRoot),
-  })
+  const candidates = enrollableCandidates({ paths, readInstance, readAsb })
 
   if (candidates.length === 0) {
     console.log('No shared file differs from the pinned template by prose alone.')
     return
   }
 
-  console.log(
-    `${candidates.length} shared file(s) differ from the pinned template by prose ` +
-      'alone. Each is one agreed comment away from being enrollable:\n',
-  )
-  for (const path of candidates) console.log(path)
-  console.log(
-    '\nThe template\'s wording is the tie-break, so a difference that is only two ' +
-      '\npeople writing the same comment resolves by taking the template\'s. A ' +
-      '\ndeployment sentence that is materially better goes upstream as its own ' +
-      '\nchange first, never sideways.',
-  )
+  const { blocked, proseOnly } = splitOnCitations({ candidates, readInstance, readAsb })
+  console.log(formatEnrollableReport({ blocked, proseOnly }))
 }
 
 function tree(ref) {
