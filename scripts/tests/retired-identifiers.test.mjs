@@ -7,8 +7,9 @@
  * everything would look identical to a schema that is broken. What is asserted
  * here is the machinery: that a rename leaves the index name behind, that a
  * word-boundary sweep cannot see a word buried in an identifier, that a
- * dropped function comes back open, and that an embed hint three literals into
- * a concatenation is still found.
+ * dropped function comes back open, that `revoke … from public` leaves the
+ * platform's grant to `anon` standing beside it, and that an embed hint three
+ * literals into a concatenation is still found.
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
@@ -16,7 +17,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import {
-  definerFunctionsReachableByAnon,
+  authoringSurfaceReachableByAnon,
   postgresRegex,
   replayMigrations,
   retiredIdentifiers,
@@ -117,7 +118,7 @@ test('a dropped function comes back executable by PUBLIC', () => {
       'create or replace function public.write_it() returns void security definer language sql as $fn$ select 2 $fn$;',
   })
   // `create or replace` preserves privileges, so nothing is open yet.
-  assert.deepEqual(definerFunctionsReachableByAnon(schema), [])
+  assert.deepEqual(authoringSurfaceReachableByAnon(schema), [])
 
   const reopened = replay({
     '001_fn.sql': `
@@ -133,9 +134,104 @@ test('a dropped function comes back executable by PUBLIC', () => {
   })
   // The drop took the revoke with it and the grant restored only half. #147.
   assert.deepEqual(
-    definerFunctionsReachableByAnon(reopened).map((one) => one.name),
+    authoringSurfaceReachableByAnon(reopened).map((one) => one.name),
     ['public.write_it'],
   )
+})
+
+test('revoking PUBLIC leaves the platform grant to anon standing', () => {
+  // #572, and the reason the check above passed for three weeks while four
+  // functions in production carried `anon`. The revoke is the one every one of
+  // those migrations wrote, and it is not the revoke it looks like: on this
+  // platform a function created in `public` arrives granted to `anon` too, and
+  // `from public` does not reach that.
+  const schema = replay({
+    '001_fn.sql': `
+      create function public.write_it() returns void security definer language sql as $fn$ select 1 $fn$;
+      revoke all on function public.write_it() from public;
+      grant execute on function public.write_it() to authenticated, service_role;
+    `,
+  })
+  assert.deepEqual(
+    authoringSurfaceReachableByAnon(schema).map((one) => [one.name, one.open]),
+    [['public.write_it', ['anon']]],
+    'PUBLIC is gone and anon is not, which is the whole defect',
+  )
+
+  const paired = replay({
+    '001_fn.sql': `
+      create function public.write_it() returns void security definer language sql as $fn$ select 1 $fn$;
+      revoke all on function public.write_it() from public;
+      revoke execute on function public.write_it() from anon;
+      grant execute on function public.write_it() to authenticated, service_role;
+    `,
+  })
+  assert.deepEqual(authoringSurfaceReachableByAnon(paired), [], 'the paired revoke closes it')
+})
+
+test('the platform grant is a fact about `public` and not about every schema', () => {
+  // `semantic_search` carries no `pg_default_acl` entry, so a function created
+  // there arrives with stock Postgres's EXECUTE TO PUBLIC and nothing else. A
+  // model that handed every schema the API roles would invent findings there.
+  const schema = replay({
+    '001_fn.sql': `
+      create schema semantic_search;
+      create function semantic_search.chunk() returns void security definer language sql as $fn$ select 1 $fn$;
+      revoke all on function semantic_search.chunk() from public;
+      grant execute on function semantic_search.chunk() to authenticated;
+    `,
+  })
+  const fn = schema.functions.get('semantic_search.chunk')
+  assert.deepEqual([...fn.acl].sort(), ['authenticated'])
+})
+
+test('a SECURITY INVOKER function that writes rows is on the surface too', () => {
+  // The clause `rename_touchpoint` needed. It escalates nothing — it runs as
+  // its caller — but it is an authoring RPC that changes rows, and under a
+  // definer-only reading it was not a finding while it held PUBLIC and anon.
+  const schema = replay({
+    '001_fn.sql': `
+      create function public.rename_it(p_id uuid, p_name text) returns void
+        security invoker language plpgsql as $fn$
+        begin
+          update public.touchpoints set name = p_name where id = p_id;
+        end
+        $fn$;
+      create function public.describe_it(p_name text) returns text
+        security invoker language sql as $fn$ select upper(p_name) $fn$;
+      create function public.stamp_it() returns trigger
+        security invoker language plpgsql as $fn$
+        begin
+          new.updated_at = now();
+          return new;
+        end
+        $fn$;
+    `,
+  })
+  assert.deepEqual(
+    authoringSurfaceReachableByAnon(schema).map((one) => [one.name, one.why]),
+    [['public.rename_it', 'writes rows as its caller']],
+    'the pure function and the trigger stamp write nothing and are not findings',
+  )
+})
+
+test('a locked row is not a write', () => {
+  // `for update` appears in nearly every one of these bodies, on the row the
+  // function is about to read. A predicate that took it for a write would call
+  // the whole read surface an authoring surface.
+  const schema = replay({
+    '001_fn.sql': `
+      create function public.read_it(p_id uuid) returns text
+        security invoker language plpgsql as $fn$
+        declare v text;
+        begin
+          select name into v from public.touchpoints where id = p_id for update;
+          return v;
+        end
+        $fn$;
+    `,
+  })
+  assert.deepEqual(authoringSurfaceReachableByAnon(schema), [])
 })
 
 test('the graveyard holds names that existed, not words that appear', () => {

@@ -52,33 +52,48 @@ join pg_namespace n on n.oid = rel.relnamespace
 where n.nspname = 'public' and c.contype = 'c'
 order by 1, 2;
 
--- ── 4. The invariant — NOW ASSERTED BY MIGRATION, kept here as a diagnostic ──
--- Zero rows means no SECURITY DEFINER function is reachable by anon or PUBLIC
+-- ── 4. The invariant — ASSERTED BY `check:identifiers`, kept here as a diagnostic ──
+-- Zero rows means no function on the authoring surface is reachable by anon,
 -- except search_blueprint, which is the read RPC uno-bot calls with the anon
--- key. A drop-and-recreate silently restores Postgres's default EXECUTE to
--- PUBLIC, which is exactly how this invariant was broken once already.
+-- key. The surface is two shapes: a SECURITY DEFINER function, which acts with
+-- its owner's rights, and a SECURITY INVOKER function that changes rows, which
+-- escalates nothing but is an authoring RPC all the same.
 --
--- It was broken a SECOND time on 2026-08-21 and nobody saw it until 2026-08-26,
--- because this query was correct and sitting in a file a human was trusted to
--- run. The query was never the gap. Running it was. It now lives in
--- 20260826130000_the_invariant_that_only_ran_by_hand.sql, where every migration
--- application re-asserts it and a violation fails the push.
+-- It was broken on 2026-08-21 and nobody saw it until 2026-08-26, because this
+-- query was correct and sitting in a file a human was trusted to run. The query
+-- was never the gap. Running it was.
+--
+-- THE FIX FOR THAT WAS ITSELF HALF A FIX, and the correction matters more than
+-- the query. This block used to say the invariant now lived in
+-- 20260826130000_the_invariant_that_only_ran_by_hand.sql, "where every
+-- migration application re-asserts it". A `do $assert$` inside a migration runs
+-- ONCE, when that file is applied, and never again. Between then and 2026-09-09
+-- four more functions acquired the grant — create_path, create_scenario,
+-- duplicate_path, update_cell_dependency — and the sentence above is why nobody
+-- looked. The check that actually re-runs is `npm run check:identifiers`, on
+-- every pull request, against the replayed files (#572).
 --
 -- Kept here because a diagnostic you can paste into psql is worth having, and
 -- because this is where someone regenerating the snapshots will look.
 --
+-- Asked with has_function_privilege rather than by reading proacl text: it
+-- follows PUBLIC and role membership, so a grant that reaches anon by any road
+-- answers yes. The ACL is selected alongside so the row says which road.
+--
 -- There is also an anon-reachable witness, useful when you have only the
 -- publishable key: POST to /rest/v1/rpc/<write_fn>. A correctly-revoked
 -- function answers "permission denied for function <name>"; one that kept the
--- PUBLIC grant answers with its own guard's message instead. Both are HTTP 401
+-- grant answers with its own guard's message instead. Both are HTTP 401
 -- and SQLSTATE 42501, so only the sentence tells them apart. Do NOT automate
 -- that probe: when the invariant IS violated the call reaches the function
 -- body, and a future write RPC without an internal guard would execute.
-select p.proname, array_to_string(p.proacl::text[], ' | ') as acl
+select p.proname,
+       case when p.prosecdef then 'SECURITY DEFINER' else 'writes rows as its caller' end as why,
+       coalesce(array_to_string(p.proacl::text[], ' | '), 'DEFAULT (PUBLIC, anon)') as acl
 from pg_proc p
 join pg_namespace n on n.oid = p.pronamespace
-where n.nspname = 'public' and p.prokind = 'f' and p.prosecdef
+where n.nspname = 'public' and p.prokind = 'f'
   and p.proname <> 'search_blueprint'
-  and (p.proacl is null
-       or exists (select 1 from unnest(p.proacl::text[]) a
-                  where a like '=X/%' or a like 'anon=X/%'));
+  and (p.prosecdef
+       or pg_get_functiondef(p.oid) ~* '(insert\s+into|update\s+(only\s+)?[\w."]+\s+set|delete\s+from)')
+  and has_function_privilege('anon', p.oid, 'EXECUTE');

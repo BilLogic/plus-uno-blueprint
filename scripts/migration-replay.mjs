@@ -603,14 +603,14 @@ function applyStatement(schema, statement, source) {
  * `grant`/`revoke … on function …`, as an EXECUTE grantee set per function.
  *
  * `null` means the ACL was never touched, which in Postgres means the default
- * still stands: EXECUTE TO PUBLIC. That is not a missing value to be treated
- * as empty — a null `proacl` and an explicit `=X/owner` entry are the same
- * permission, and #147 is what happens when only the second is looked for.
+ * still stands. That is not a missing value to be treated as empty — a null
+ * `proacl` and an explicit `=X/owner` entry are the same permission, and #147
+ * is what happens when only the second is looked for.
  *
  * The first explicit grant or revoke MATERIALISES the default rather than
  * replacing it, so granting `authenticated` on a freshly created function
- * leaves PUBLIC exactly where the default put it. That is the mechanism, and
- * `materialise()` is the one line that models it.
+ * leaves the rest of the default exactly where it was. That is the mechanism,
+ * and `materialise()` is the one line that models it.
  *
  * Keyed by qualified name, ignoring the argument list. This schema has no
  * overloaded functions; a future one would need the signature here.
@@ -625,7 +625,7 @@ function applyFunctionPrivilege(schema, sql) {
   const name = qualified(target.replace(/\([\s\S]*$/, ''))
   const fn = schema.functions.get(name)
   if (!fn) return true
-  const acl = materialise(fn.acl)
+  const acl = materialise(name, fn.acl)
   for (const raw of splitTopLevel(grantees)) {
     const role = raw.trim().toLowerCase().replace(/^group\s+/, '')
     if (verb.toLowerCase() === 'grant') acl.add(role)
@@ -635,36 +635,112 @@ function applyFunctionPrivilege(schema, sql) {
   return true
 }
 
-/** An untouched ACL, written out. PUBLIC is in it. */
-const materialise = (acl) => new Set(acl ?? ['public'])
+/**
+ * The privileges a newly created function arrives with, by schema.
+ *
+ * NOT just PUBLIC, and reading it as just PUBLIC is what #572 is. Stock
+ * Postgres grants EXECUTE TO PUBLIC on a new function; a Supabase project ALSO
+ * carries `alter default privileges in schema public grant execute on
+ * functions to postgres, anon, authenticated, service_role`, so an object
+ * created in `public` arrives granted to the API roles as well. Read from
+ * production's `pg_default_acl` on 2026-09-09 rather than assumed:
+ *
+ *   postgres | public | f | {postgres=X/postgres, anon=X/postgres,
+ *                            authenticated=X/postgres, service_role=X/postgres}
+ *
+ * That entry is why `revoke all … from public` is not the revoke it looks
+ * like. It takes away PUBLIC's own grant and leaves `anon`'s beside it, so a
+ * function recreated with a `from public` revoke and an `authenticated` grant
+ * comes back reachable by the anonymous key — measured on four SECURITY
+ * DEFINER functions in production, while this model called all four clean.
+ *
+ * Scoped to `public` because that is the only schema in this project with such
+ * an entry: `semantic_search` has none, so a function created there arrives
+ * with the stock default and nothing more.
+ *
+ * `scripts/replay-prelude.sql` states the same fact to a real server, and the
+ * two must agree — a static model and a replay prelude that disagree about the
+ * host produce a green check on either side of a real gap.
+ */
+const PLATFORM_FUNCTION_DEFAULT = Object.freeze({
+  public: ['public', 'postgres', 'anon', 'authenticated', 'service_role'],
+  other: ['public'],
+})
+
+/** An untouched ACL, written out. What is in it depends on the schema. */
+const materialise = (name, acl) =>
+  new Set(
+    acl ??
+      (name.startsWith('public.')
+        ? PLATFORM_FUNCTION_DEFAULT.public
+        : PLATFORM_FUNCTION_DEFAULT.other),
+  )
 
 /**
- * SECURITY DEFINER functions in `public` that PUBLIC or `anon` can execute.
+ * A statement in a function body that changes rows.
  *
- * The invariant, stated once: a SECURITY DEFINER function runs as its owner,
- * so anything that can call it acts with the owner's rights. `search_blueprint`
- * is the single deliberate exception — it is the read RPC uno-bot calls with
- * the publishable anon key.
+ * Deliberately the three DML heads and nothing cleverer. `update` needs its
+ * `set` to tell the statement from `for update`, which every one of these
+ * bodies takes on the row it is about to read. A trigger function assigning
+ * `new.updated_at` writes nothing by this test and should not: the write is
+ * the caller's statement, and the caller is the subject.
+ */
+const WRITES_ROWS = /\b(?:insert\s+into|update\s+(?:only\s+)?[\w."]+\s+set|delete\s+from)\b/i
+
+/**
+ * The authoring surface: a function in `public` that acts with more than its
+ * caller's rights, or that changes rows.
+ *
+ * TWO CLAUSES, BECAUSE THE SURFACE HAS TWO SHAPES and a check that knew only
+ * the first missed one of the five #572 found. A SECURITY DEFINER function
+ * runs as its owner, so anything that can call it acts with the owner's
+ * rights — that is the escalation clause, and it is the older one. A SECURITY
+ * INVOKER function that writes runs as the caller and escalates nothing, but
+ * it is still an authoring RPC, still reachable, and still holds the grant the
+ * revoke on this surface exists to remove: `rename_touchpoint` is exactly
+ * that, and under the definer-only reading it was not a finding.
+ *
+ * `search_blueprint` is the single deliberate exception — it is the read RPC
+ * uno-bot calls with the publishable anon key.
  *
  * The static counterpart of the `do $assert$` block in
  * `20260826130000_the_invariant_that_only_ran_by_hand.sql`, and the two must
  * agree. This one runs with no database, which is the property CI needs; that
  * one runs against the object that actually exists, which is the property a
  * static replay can never have.
+ *
+ * IT WAS VACUOUS FOR THREE WEEKS and passed the whole time, which is the part
+ * worth keeping. The subject was right and the model underneath it was wrong:
+ * `materialise()` called a freshly created function PUBLIC-only, so a
+ * `revoke … from public` cleared the modelled ACL outright while production —
+ * where the platform's default privileges also name `anon` — kept the
+ * anonymous grant beside it. Four SECURITY DEFINER functions carried `anon` in
+ * production and this returned an empty list for every one. A check whose
+ * subject is right and whose model is wrong reads exactly like a check that
+ * passes.
  */
-export function definerFunctionsReachableByAnon(schema, { exception = 'search_blueprint' } = {}) {
+export function authoringSurfaceReachableByAnon(schema, { exception = 'search_blueprint' } = {}) {
   const out = []
   for (const fn of schema.functions.values()) {
     if (!fn.name.startsWith('public.')) continue
-    if (!fn.securityDefiner) continue
+    const definer = Boolean(fn.securityDefiner)
+    const writes = WRITES_ROWS.test(fn.definition ?? '')
+    if (!definer && !writes) continue
     if (fn.name.split('.').pop() === exception) continue
+    const why = definer ? 'SECURITY DEFINER' : 'writes rows as its caller'
     if (fn.acl === null) {
-      out.push({ name: fn.name, acl: 'DEFAULT (PUBLIC)', source: fn.source })
+      out.push({ name: fn.name, acl: 'DEFAULT (PUBLIC, anon)', why, source: fn.source })
       continue
     }
     const open = ['public', 'anon'].filter((role) => fn.acl.has(role))
     if (open.length > 0) {
-      out.push({ name: fn.name, acl: [...fn.acl].sort().join(' | '), open, source: fn.source })
+      out.push({
+        name: fn.name,
+        acl: [...fn.acl].sort().join(' | '),
+        open,
+        why,
+        source: fn.source,
+      })
     }
   }
   return out.sort((a, b) => a.name.localeCompare(b.name))

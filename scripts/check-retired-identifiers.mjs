@@ -28,8 +28,9 @@
  *   - no function BODY names an identifier this series retired — matched
  *     against the graveyard rather than against the words, so a local variable
  *     called `layer_map` is not a finding and `service_scenario_id` is
- *   - no SECURITY DEFINER function in `public` is executable by PUBLIC or anon,
- *     `search_blueprint` excepted
+ *   - no function on the authoring surface — SECURITY DEFINER, or SECURITY
+ *     INVOKER with a row-changing statement in its body — is executable by
+ *     PUBLIC or anon in `public`, `search_blueprint` excepted
  *
  * TWO HALVES, AND THE CI HALF IS THE WEAKER ONE
  *
@@ -131,7 +132,7 @@ import {
   retiredFragmentsIn,
 } from './retired-vocabulary.mjs'
 import {
-  definerFunctionsReachableByAnon,
+  authoringSurfaceReachableByAnon,
   replayMigrations,
   retiredIdentifiers,
 } from './migration-replay.mjs'
@@ -408,7 +409,7 @@ function main() {
 
   const schema = replayMigrations(MIGRATIONS)
   const findings = staticFindings(schema)
-  const open = definerFunctionsReachableByAnon(schema)
+  const open = authoringSurfaceReachableByAnon(schema)
 
   for (const finding of findings) {
     console.error(
@@ -418,9 +419,10 @@ function main() {
   }
   for (const fn of open) {
     console.error(
-      `::error::SECURITY DEFINER function reachable by PUBLIC or anon — ${fn.name} ` +
-        `[${fn.acl}], defined by ${fn.source}. A drop takes the grants with it and the ` +
-        'recreate lands on EXECUTE TO PUBLIC; re-issue the paired revoke.',
+      `::error::authoring-surface function reachable by PUBLIC or anon — ${fn.name} ` +
+        `(${fn.why}) [${fn.acl}], defined by ${fn.source}. On this platform a newly ` +
+        'created function in `public` arrives granted to `anon`, and `revoke … from ' +
+        "public` does not take that away; issue `revoke execute … from anon` beside it.",
     )
   }
 
@@ -461,7 +463,7 @@ function main() {
   if (total > 0) {
     console.error(
       `\n${findings.length} retired identifier(s), ${open.length} over-granted ` +
-        `SECURITY DEFINER function(s)${live ? `, ${live.length} live finding(s)` : ''}.`,
+        `authoring-surface function(s)${live ? `, ${live.length} live finding(s)` : ''}.`,
     )
     process.exit(1)
   }
