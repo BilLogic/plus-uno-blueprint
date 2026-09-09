@@ -1286,6 +1286,10 @@ export type Database = {
         Args: { path_id: string; step_ids: string[] }
         Returns: undefined
       }
+      restore_cell_dependency: {
+        Args: { dependency_id: string; name: string | null; note: string | null }
+        Returns: undefined
+      }
       restore_cell_touchpoints: {
         Args: { p_cell_id: string; p_rows: Json }
         Returns: undefined
@@ -1344,7 +1348,7 @@ export type Database = {
           source_cell_id: string
           target_cell_id: string
         }
-        Returns: string
+        Returns: Json
       }
       set_featured_resource: {
         Args: { p_featured: boolean; p_resource_id: string }
