@@ -14,29 +14,33 @@ export { REFERENCE_NAMES }
  */
 
 /**
- * ARGUMENT NAMES ARE NOT COLUMN NAMES, and after 20260830190000 four of them
- * visibly are not.
+ * ARGUMENT NAMES ARE NOT COLUMN NAMES, and one of them visibly is not.
  *
- * `create_cell_dependency(label)` writes `cell_dependencies.name`;
- * `create_finding(check_name, note)` writes `audit_findings.check_key` and
- * `.summary`; `create_slice(kind, description)` writes `slices.kind` and
- * `.summary`. The mapping happens in `registry.ts`.
+ * `create_cell_dependency(label)` writes `cell_dependencies.name`. The mapping
+ * happens in `registry.ts`.
  *
- * The ones that remain stay because this surface is a PINNED CROSS-REPO
- * CONTRACT, not app internals. `agentic-service-blueprinting` is a git-URL
- * dependency fixed to a tag, and its skills name these arguments in prose the
- * model reads — `agents/auditor.md` still says `check_name`. Renaming here
- * without a matching release upstream means a skill telling the model to send
- * an argument this app rejects, which is a worse failure than a name that
+ * It stays because this surface is a PINNED CROSS-REPO CONTRACT, not app
+ * internals. `agentic-service-blueprinting` is a git-URL dependency fixed to a
+ * tag, and its skills name these arguments in prose the model reads. Renaming
+ * here without a matching release upstream means a skill telling the model to
+ * send an argument this app rejects, which is a worse failure than a name that
  * reads a little behind the schema. AGENTS.md states the direction: a fix goes
  * upstream and arrives here as a version bump.
  *
- * `slice_type` went the other way, and how it went is the pattern. Nothing in
- * the pinned package names it any more — the template's own tool schema says
- * `kind` and no skill mentions the retired word — so the schema here says
- * `kind` too, and `registry.ts` still ACCEPTS `slice_type` from anything that
- * has not caught up. The alias is asserted live in
- * `scripts/tests/toolParity.test.mjs`: it has to keep being read, or it goes.
+ * `create_finding` used to be on that list, and how it came off is the whole
+ * point of the rule. Its arguments were `check_name` and `note` against
+ * `audit_findings.check_key` and `.summary`, and the note here said they had
+ * to stay because the auditor skill still said `check_name`. It does not any
+ * more: the pinned package's `agents/auditor.md`, `audit-playbook.md` and
+ * `data-model.md` all say `check_key`, and its own tool schema says
+ * `check_key` and `summary`. The bump arrived; the argument names follow it.
+ *
+ * `slice_type` went the same way earlier. Nothing in the pinned package names
+ * it any more — the template's own tool schema says `kind` and no skill
+ * mentions the retired word — so the schema here says `kind` too, and
+ * `registry.ts` still ACCEPTS `slice_type` from anything that has not caught
+ * up. The alias is asserted live in `scripts/tests/toolParity.test.mjs`: it
+ * has to keep being read, or it goes.
  */
 
 /**
@@ -920,14 +924,14 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'create_finding',
     description:
-      'Record one sb:audit / sb:whatif finding as a triageable row. Dedupe is built in: an open finding with the same fingerprint (check_name + cited cells) is updated in place, a dismissed one stays dismissed (the call reports it and writes nothing), a resolved one reopens as a new row. Omit run_id on the first finding of a run and reuse the returned run_id for the rest of that run. Cite cells by id; for a zero-cell finding pass scope instead (e.g. "scenario:Warm-Up").',
+      'Record one sb:audit / sb:whatif finding as a triageable row. Dedupe is built in: an open finding with the same fingerprint (check_key + cited cells) is updated in place, a dismissed one stays dismissed (the call reports it and writes nothing), a resolved one reopens as a new row. Omit run_id on the first finding of a run and reuse the returned run_id for the rest of that run. Cite cells by id; for a zero-cell finding pass scope instead (e.g. "scenario:Warm-Up").',
     parameters: {
       type: 'object',
       properties: {
         source: { type: 'string', enum: ['audit', 'whatif'], description: 'Which skill produced it' },
-        check_name: str('Roster check name, e.g. "gap-sweep"'),
+        check_key: str('Roster check key, e.g. "gap-sweep"'),
         severity: { type: 'string', enum: ['info', 'warn', 'critical'], description: 'Per the check doc default unless evidence says otherwise' },
-        note: str('The finding itself — what is wrong, where, and why it matters. No raw ids in this text.'),
+        summary: str('The finding itself — what is wrong, where, and why it matters. No raw ids in this text.'),
         cell_ids: {
           type: 'array',
           description: 'Cells the finding is about; omit only for zero-cell findings',
@@ -936,7 +940,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         scope: str('Zero-cell fingerprint scope, required when cell_ids is empty. Include a short reason slug so two zero-cell findings from one check cannot collide, e.g. "scenario:Warm-Up:orphan-step-cooldown"'),
         run_id: str('The run identity returned by the first create_finding of this run'),
       },
-      required: ['source', 'check_name', 'severity', 'note'],
+      required: ['source', 'check_key', 'severity', 'summary'],
     },
   },
   {
