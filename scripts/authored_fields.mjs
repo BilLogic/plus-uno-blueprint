@@ -11,6 +11,11 @@
  *
  * So: `export` before any destructive database work, `restore` after.
  *
+ * Since #547 the seed says so itself rather than trusting anyone to remember:
+ * `supabase/seed.sql` opens with a guard that counts the rows under its
+ * service holding one of the columns listed below, and refuses to load at all
+ * when the count is not zero — naming this command as what to run first.
+ *
  * Everything is keyed by **natural keys**, never UUIDs — a reset is precisely
  * the thing that changes UUIDs, and names are what carries across it. A row
  * whose names no longer match is reported, not guessed at: a near-miss restore
@@ -57,29 +62,57 @@ const OUTPUT = resolve(REPO_ROOT, 'docs/authored-fields.json')
   COLUMNS, so a resource is now out of its reach entirely — exporting one
   means exporting a table, which is a change this file has not had.
 
+  `maturity` left too, but as a RENAME rather than a removal, and this file
+  did not notice for a fortnight: `20260821240000_status_not_maturity` renamed
+  `cells.maturity` to `cells.status`, and the select below went on naming the
+  old one. PostgREST answers an unknown column with a 400, so
+  `authored_fields.mjs export` — the command the seed's guard now tells you to
+  run before anything destructive — had been failing outright rather than
+  exporting less. Found on 2026-09-09 while wiring that guard, which is the
+  argument for wiring it: the list is now read by something that runs.
+
   The original list covered only the fields typed into the app's authoring UI,
   on the reasoning that everything else came from `seed.sql`. That stopped
   being true: seed.sql carries no cells at all any more (9KB, no INSERT into
   cells, last touched Aug 19), so the blueprint's actual prose lives in the
-  database and nowhere else. These four are that prose.
+  database and nowhere else. These are that prose.
+
+  This list is now load-bearing twice over. `supabase/seed.sql`'s guard reads
+  the SAME columns to decide whether a database holds work the seed would
+  destroy, and `scripts/tests/seed-loads.test.mjs` holds the two lists to each
+  other by set equality — so a column added here without being added there
+  fails `npm test`, rather than quietly leaving the guard blind to it.
 */
-const CELL_FIELDS = [
+export const CELL_FIELDS = [
   'content',
   'summary',
-  'maturity',
+  'status',
   'function',
   'form',
   'value_props',
   'owner',
   'perceived_owner',
 ]
-const LANE_FIELDS = ['owner_team', 'kpis', 'tools']
-const PHASE_FIELDS = ['business_impact', 'operational_requirements']
+export const LANE_FIELDS = ['owner_team', 'kpis', 'tools']
+export const PHASE_FIELDS = ['business_impact', 'operational_requirements']
+
+/**
+ * Values that mean "nobody typed this", beyond null and blank.
+ *
+ * `cells.status` is `not null default 'live'`, so every row in the database
+ * carries one whether or not a person chose it. Read as content it would make
+ * all 933 cells look authored, which is a false positive here (a whole board
+ * exported for nothing) and a permanent refusal in the seed's guard. Only a
+ * status that has MOVED off the default is a decision somebody made.
+ */
+export const COLUMN_DEFAULTS = { status: 'live' }
 
 const url = process.env.SUPABASE_URL?.trim()
 const key = process.env.SUPABASE_SERVICE_KEY?.trim()
 
-if (!url || !key) {
+/** Exits rather than throwing: this is the entry point's check, not a library's. */
+function requireCredentials() {
+  if (url && key) return
   console.error(
     'Missing SUPABASE_URL or SUPABASE_SERVICE_KEY.\n' +
       '  export SUPABASE_URL="https://<project-ref>.supabase.co"\n' +
@@ -107,10 +140,11 @@ async function rest(path, init = {}) {
 }
 
 /** True when every authored field on the row is empty — nothing worth carrying. */
-function isEmpty(row, fields) {
+export function isEmpty(row, fields) {
   return fields.every((field) => {
     const value = row[field]
     if (value === null || value === undefined) return true
+    if (value === COLUMN_DEFAULTS[field]) return true
     if (typeof value === 'string') return value.trim() === ''
     if (Array.isArray(value)) return value.length === 0
     return false
@@ -311,19 +345,31 @@ async function runRestore(dryRun) {
   return missing.length + ambiguous.length > 0 ? 1 : 0
 }
 
-const command = process.argv[2]
-const dryRun = process.argv.includes('--dry-run')
+async function main() {
+  const command = process.argv[2]
+  const dryRun = process.argv.includes('--dry-run')
 
-try {
-  if (command === 'export') {
-    await runExport()
-  } else if (command === 'restore') {
-    process.exitCode = await runRestore(dryRun)
-  } else {
-    console.error('Usage: authored_fields.mjs export | restore [--dry-run]')
+  try {
+    if (command === 'export') {
+      requireCredentials()
+      await runExport()
+    } else if (command === 'restore') {
+      requireCredentials()
+      process.exitCode = await runRestore(dryRun)
+    } else {
+      console.error('Usage: authored_fields.mjs export | restore [--dry-run]')
+      process.exit(1)
+    }
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error))
     process.exit(1)
   }
-} catch (error) {
-  console.error(error instanceof Error ? error.message : String(error))
-  process.exit(1)
+}
+
+// The field lists above are imported by the seed's guard test, so running this
+// module's body on import would exit that test process for want of a service
+// key. Compared against a resolved path rather than a hand-built `file://`
+// URL: the URL form silently no-ops whenever the path needs escaping.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await main()
 }

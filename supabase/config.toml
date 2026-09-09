@@ -64,11 +64,26 @@ enabled = true
 schema_paths = []
 
 [db.seed]
-# If enabled, seeds the database after migrations during a db reset.
-enabled = true
-# Specifies an ordered list of seed files to load during db reset.
-# Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-sql_paths = ["./seed.sql", "./seeds/application_discovery_happy_path.sql", "./seeds/application_discovery_sad_path.sql", "./seeds/application_interview_happy_path.sql", "./seeds/onboarding_tech_setup_happy_path.sql", "./seeds/onboarding_modules_happy_path.sql", "./seeds/lesson_modules_happy_path.sql", "./seeds/onboarding_session_sign_up_happy_path.sql", "./seeds/pre_session_standard_scheduling_happy_path.sql", "./seeds/pre_session_fill_in_request_happy_path.sql", "./seeds/pre_session_call_off_request_happy_path.sql", "./seeds/in_session_before_students_join_happy_path.sql", "./seeds/in_session_students_just_joined_happy_path.sql", "./seeds/in_session_goal_setting_happy_path.sql", "./seeds/in_session_goal_setting_detailed_path.sql", "./seeds/in_session_goal_setting_check_update_paths.sql", "./seeds/in_session_goal_setting_set_goals_edge_case.sql", "./seeds/in_session_goal_setting_updated_goals_edge_case.sql", "./seeds/goal_setting_parallel_session_pictures.sql", "./seeds/in_session_help_request_happy_path.sql", "./seeds/in_session_wrap_up_happy_path.sql", "./seeds/warm_up_happy_path.sql", "./seeds/warm_up_alternate_path.sql"]
+# DELIBERATELY EMPTY, and disabled besides (#547). This table used to name the
+# 23 files that ARE this repository's seed, and naming them here is what made
+# them reachable: four CLI subcommands read it, and only `db reset` has the
+# word "reset" in its name. `db push --include-seed` — whose `--linked` is the
+# default, and which is otherwise the ordinary way to ship migrations — read
+# the same list and would have loaded 92 deletes and 183 `on conflict … do
+# update` upserts into whatever the CLI was pointed at.
+#
+# The list now lives in `scripts/load-seed.mjs`, which loads it in one
+# transaction against a connection string typed on purpose:
+#
+#   SUPABASE_DB_URL=postgresql://… npm run seed:load -- --apply
+#
+# `enabled = false` AND an empty `sql_paths`, on purpose: an empty array is a
+# value the CLI could reasonably read as "unset", and unset means its own
+# default of `./seed.sql`. The boolean is what makes that unreachable either
+# way. `npm run check:seed-load` reads the script's list, not this table, and
+# fails if this table ever names a file again.
+enabled = false
+sql_paths = []
 
 [db.network_restrictions]
 # Enable management of network restrictions.

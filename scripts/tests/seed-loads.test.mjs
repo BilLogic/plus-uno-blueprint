@@ -1,7 +1,14 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
+import {
+  CELL_FIELDS,
+  COLUMN_DEFAULTS,
+  LANE_FIELDS,
+  PHASE_FIELDS,
+  isEmpty,
+} from '../authored_fields.mjs'
 import {
   buildInventorySql,
   evaluate,
@@ -10,17 +17,19 @@ import {
   isDownstream,
   parseCounts,
   parsePsqlErrors,
-  resolveSeedFiles,
+  reachableFromConfig,
   seedSectionFromConfig,
   seededTables,
 } from '../check-seed-loads.mjs'
+import { NOT_LOADED, SEED_FILES, resolveSeedFiles } from '../load-seed.mjs'
 
 const ROOT = resolve(new URL('../..', import.meta.url).pathname)
 
 /**
- * The list `[db.seed].sql_paths` states IS the seed. `supabase/seed.sql` is
- * its first entry and 22 scenario files follow — so a reader that got this
- * wrong would check a fifteenth of the content and report the rest green.
+ * This reader no longer says what the seed IS — `scripts/load-seed.mjs` does,
+ * since #547 — but it still says what `[db.seed]` would load, and empty is the
+ * only passing answer. Every shape below is one this reader has to get right
+ * for that alarm to mean anything.
  */
 describe('reading the seed out of config.toml', () => {
   it('reads the ordered list, and keeps the order', () => {
@@ -83,23 +92,146 @@ describe('expanding a glob the config format allows', () => {
 })
 
 /**
- * The committed config, not a fixture. A path renamed in `config.toml` and
- * not on disk is a file the deployment silently stops loading, and this is
- * the only place that notices.
+ * The committed files, not fixtures. A path renamed in `load-seed.mjs` and
+ * not on disk is a file the seed silently stops loading, and this is the only
+ * place that notices.
  */
 describe('this repository’s own seed', () => {
   const files = resolveSeedFiles()
 
-  it('resolves every entry the config names to a file on disk', () => {
-    const declared = seedSectionFromConfig(
-      readFileSync(resolve(ROOT, 'supabase/config.toml'), 'utf8'),
-    )
-    expect(files).toHaveLength(declared.sqlPaths.length)
+  it('resolves every entry SEED_FILES names to a file on disk', () => {
+    expect(files).toHaveLength(SEED_FILES.length)
   })
 
   it('loads supabase/seed.sql first — the scenarios hang off what it creates', () => {
     expect(files[0].endsWith('/supabase/seed.sql')).toBe(true)
     expect(files.length).toBeGreaterThan(1)
+  })
+
+  /**
+   * The fence (#547). `[db.seed].sql_paths` is what `supabase db push
+   * --include-seed` reads, and that command's `--linked` is the default and
+   * its name says nothing about resetting anything. Emptying the table is the
+   * whole of the reachability half of #547; a later edit that puts one path
+   * back restores the reach, and nothing else in the repository reads that
+   * table any more.
+   */
+  it('leaves [db.seed] naming nothing, so no CLI subcommand can load the seed', () => {
+    expect(reachableFromConfig()).toEqual([])
+  })
+
+  it('disables [db.seed] as well, because an empty array may read as unset', () => {
+    // The Supabase CLI's own default for an unset `sql_paths` is `./seed.sql`.
+    // The boolean is what makes that unreachable rather than merely unlikely.
+    const section = seedSectionFromConfig(
+      readFileSync(resolve(ROOT, 'supabase/config.toml'), 'utf8'),
+    )
+    expect(section.enabled).toBe(false)
+  })
+
+  /**
+   * `supabase/seeds/` held 25 files while `[db.seed].sql_paths` named 22, so
+   * three had never been loaded by anything and nothing said so. This does not
+   * adopt them — it makes the omission a stated one, and fails when a fourth
+   * file appears untethered to either list.
+   */
+  it('accounts for every file in supabase/seeds/, loaded or explicitly not', () => {
+    const onDisk = readdirSync(resolve(ROOT, 'supabase/seeds'))
+      .filter((name) => name.endsWith('.sql'))
+      .map((name) => `seeds/${name}`)
+      .sort()
+    const accounted = [
+      ...SEED_FILES.filter((rel) => rel.startsWith('seeds/')),
+      ...NOT_LOADED.map((entry) => entry.file),
+    ].sort()
+    expect(accounted).toEqual(onDisk)
+  })
+
+  it('gives every unloaded file a reason, so the list cannot become a dumping ground', () => {
+    for (const entry of NOT_LOADED) expect(entry.reason.length).toBeGreaterThan(20)
+  })
+})
+
+/**
+ * The safety (#547). `supabase/seed.sql` opens with a guard that refuses when
+ * any row under its service holds a column `scripts/authored_fields.mjs`
+ * enumerates — the columns a person typed, which the seed overwrites without
+ * error because every insert in it is an upsert keyed by a hand-minted id.
+ *
+ * The guard restates those three lists in PL/pgSQL, because SQL cannot import
+ * a JavaScript constant. A restatement is a second copy and a second copy goes
+ * stale — `authored_fields.mjs` itself spent a fortnight selecting
+ * `cells.maturity`, renamed to `status` in `20260821240000`, which made
+ * `authored_fields.mjs export` fail outright rather than export less. So the
+ * two are held to each other by set equality here, in the suite CI runs, and
+ * `npm run check:seed-load` catches the other axis: a column named in the
+ * guard that the schema does not have fails the load loudly.
+ */
+describe('the guard in supabase/seed.sql', () => {
+  const seed = readFileSync(resolve(ROOT, 'supabase/seed.sql'), 'utf8')
+
+  /** One `<name> constant text[] := array[…]` declaration, as its strings. */
+  const declared = (name) => {
+    const match = new RegExp(`${name}\\s+constant\\s+text\\[\\]\\s*:=\\s*array\\[([^\\]]*)\\]`, 'i')
+      .exec(seed)
+    if (!match) return null
+    return [...match[1].matchAll(/'([^']*)'/g)].map((m) => m[1])
+  }
+
+  it('counts exactly the cell columns authored_fields.mjs enumerates', () => {
+    expect(declared('cell_columns')?.sort()).toEqual([...CELL_FIELDS].sort())
+  })
+
+  it('counts exactly the lane columns authored_fields.mjs enumerates', () => {
+    expect(declared('lane_columns')?.sort()).toEqual([...LANE_FIELDS].sort())
+  })
+
+  it('counts exactly the phase columns authored_fields.mjs enumerates', () => {
+    expect(declared('phase_columns')?.sort()).toEqual([...PHASE_FIELDS].sort())
+  })
+
+  it('names the export command, which is what makes a refusal survivable', () => {
+    expect(seed).toContain('scripts/authored_fields.mjs export')
+  })
+
+  it('scopes itself to the service it rebuilds, not to every row in the database', () => {
+    // Another service's authored work is not this file's business. A guard
+    // that counted it would refuse on a database this seed could not harm.
+    expect(seed).toContain("target constant uuid := 'a0000000-0000-4000-8000-000000000001'")
+    expect(seed).toContain('where ph.service_id = $1')
+    expect(seed).toContain('where t.service_id = $1')
+  })
+
+  it('stands before the first write, or it is not a guard', () => {
+    expect(seed.indexOf('do $guard$')).toBeLessThan(seed.indexOf('insert into public.services'))
+    expect(seed.indexOf('do $guard$')).toBeLessThan(seed.indexOf('delete from'))
+  })
+})
+
+/**
+ * `cells.status` is `not null default 'live'`, so every row in the database
+ * carries one whether or not a person chose it. Counted as content it would
+ * export a whole board for nothing and make the seed's guard refuse on every
+ * database that has any cells at all — including one this seed had just
+ * loaded onto an empty database a minute earlier.
+ */
+describe('a defaulted column is not authored content', () => {
+  it('treats a status still on its default as empty', () => {
+    expect(isEmpty({ status: 'live' }, ['status'])).toBe(true)
+  })
+
+  it('treats a status that moved off the default as authored', () => {
+    expect(isEmpty({ status: 'deprecated' }, ['status'])).toBe(false)
+  })
+
+  it('still treats null, blank and the empty array as empty', () => {
+    expect(isEmpty({ owner: null, form: '  ', kpis: [] }, ['owner', 'form', 'kpis'])).toBe(true)
+  })
+
+  it('and the guard mirrors it — the same columns, the same defaults', () => {
+    const seed = readFileSync(resolve(ROOT, 'supabase/seed.sql'), 'utf8')
+    const literal = /column_defaults\s+constant\s+jsonb\s*:=\s*'([^']*)'/.exec(seed)?.[1]
+    expect(JSON.parse(literal ?? 'null')).toEqual(COLUMN_DEFAULTS)
   })
 })
 

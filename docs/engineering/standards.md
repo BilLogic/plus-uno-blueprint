@@ -113,13 +113,21 @@ of which is in CI for that reason — no workflow stands one up.
 `scripts/replay-prelude.sql` plus the whole migration series and fails when a
 file joins the recorded unable-to-replay set (ADR 0009).
 `npm run check:seed-load` builds the same substrate and then loads the seed
-`supabase/config.toml` `[db.seed]` names — all 23 files, in its order — with
+`scripts/load-seed.mjs` names — all 23 files, in its order — with
 zero failing statements, and reads the result back AS ANON: every table the
 seed writes non-empty, and the four joins the board's own selects compile to
 returning rows. Run it whenever you touch the seed or the schema under it. It
 exists because nothing else asks: a rename that lands in a migration and not
 in the seed passes every static check, which is how the seed once fell a month
-behind the schema it loads onto (#379).
+behind the schema it loads onto (#379). It also fails when
+`supabase/config.toml` `[db.seed].sql_paths` names a seed file again — that
+table is empty and disabled since #547, and nothing else reads it.
+
+**Loading the seed for real** is `SUPABASE_DB_URL=… npm run seed:load --
+--apply`, which sends all 23 files in one transaction to a connection string
+typed on purpose. `supabase/seed.sql` refuses outright on a database that
+already holds authored work; see
+[access-and-security § Migrations workflow](access-and-security.md#migrations-workflow).
 
 ## Tooling traps
 
