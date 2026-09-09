@@ -29,7 +29,7 @@ import { cn } from '@/lib/utils'
 type PhaseMenubarHeaderProps = {
   slide: NavItem
   slides: NavItem[]
-  /** Paths still inform the description fallback; filtering lives in the sidebar. */
+  /** Paths still inform the summary fallback; filtering lives in the sidebar. */
   paths?: PathOption[]
   selectedPathIds?: string[]
   className?: string
@@ -213,7 +213,7 @@ export function PhaseMenubarHeader({
 }: PhaseMenubarHeaderProps) {
   const label = getSlideDisplayLabel(slide, slides)
   const isScenario = isSubslide(slide)
-  const description = resolveHeaderSummary(slide, paths, selectedPathIds)
+  const summary = resolveHeaderSummary(slide, paths, selectedPathIds)
 
   return (
     <Menubar
@@ -236,7 +236,7 @@ export function PhaseMenubarHeader({
         kind={isScenario ? 'scenario' : 'phase'}
         id={slide.id}
         label={label}
-        summary={description}
+        summary={summary}
       />
       {/* Compare controls moved to the navbar's right cluster
           (CompareControlsCluster) — the title keeps the left edge to

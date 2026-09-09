@@ -396,7 +396,7 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
         <CanvasEmptyState
           variant="phase"
           title="No scenarios in this phase yet"
-          description="Add one with the + on this phase's row in the sidebar (Edit mode)."
+          summary="Add one with the + on this phase's row in the sidebar (Edit mode)."
         />
       </div>
     )
@@ -461,7 +461,7 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
         <CanvasEmptyState
           variant="phase"
           title="No selected paths in this phase"
-          description="The selected path only exists in another phase or scenario."
+          summary="The selected path only exists in another phase or scenario."
         />
       </div>
     )

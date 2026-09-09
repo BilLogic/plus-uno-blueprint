@@ -81,7 +81,7 @@ export function CreateSliceSheet({
   const { openTab } = useViewState()
   const [step, setStep] = useState<'slides' | 'name'>('slides')
   const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
+  const [summary, setDescription] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -111,7 +111,7 @@ export function CreateSliceSheet({
 
   const problems = validateDraftSlice({
     title,
-    summary: description,
+    summary: summary,
     sliceKind,
     // Always blank: the field is gone, and the column stays nullable
     // until a migration drops it.
@@ -131,7 +131,7 @@ export function CreateSliceSheet({
       const slice = await createSlice(client, {
         serviceId,
         title,
-        summary: description,
+        summary: summary,
         sliceKind,
         actor: '',
         cellIds,
@@ -254,7 +254,7 @@ export function CreateSliceSheet({
                   </span>
                 </span>
                 <Input
-                  value={description}
+                  value={summary}
                   placeholder="What this slice shows, and who it is for"
                   onChange={(event) => setDescription(event.target.value)}
                 />

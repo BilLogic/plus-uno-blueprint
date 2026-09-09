@@ -277,7 +277,7 @@ export const coverContent: CoverContent = {
           kind: 'skill',
           id: 'skills-map',
           command: '/sb:map',
-          description:
+          summary:
             "Builds a blueprint from what you already have — documents, a working session, or someone else's diagram — and produces a validated blueprint file, signed off scenario by scenario and imported into the workspace.",
           figure: {
             src: '/cover/sb-map.svg',
@@ -290,7 +290,7 @@ export const coverContent: CoverContent = {
           kind: 'skill',
           id: 'skills-audit',
           command: '/sb:audit',
-          description:
+          summary:
             'Runs the check roster to find what is missing, conflicting, or unowned, and produces findings for triage — the audit writes no changes of its own.',
           figure: {
             src: '/cover/sb-audit.svg',
@@ -303,7 +303,7 @@ export const coverContent: CoverContent = {
           kind: 'skill',
           id: 'skills-whatif',
           command: '/sb:whatif',
-          description:
+          summary:
             'Traces a proposed change through the dependency graph before anyone commits, producing the cells it would reach and the assumptions it would break — worked on a copy, never the live blueprint.',
           figure: {
             src: '/cover/sb-whatif.svg',
@@ -316,7 +316,7 @@ export const coverContent: CoverContent = {
           kind: 'skill',
           id: 'skills-slice',
           command: '/sb:slice',
-          description:
+          summary:
             'Cuts the view one stakeholder needs out of the whole, producing one slice per view that still cites the cells it quotes.',
           figure: {
             src: '/cover/sb-slice.svg',

@@ -24,10 +24,10 @@ import { cn } from '@/lib/utils'
 type SlideHeaderContentProps = {
   slide: NavItem
   slides: NavItem[]
-  /** Paths still inform the description fallback; filtering lives in the sidebar. */
+  /** Paths still inform the summary fallback; filtering lives in the sidebar. */
   paths: PathOption[]
   selectedPathIds: string[]
-  /** When true, title and description share one row inside a menubar. */
+  /** When true, title and summary share one row inside a menubar. */
   inlineDescription?: boolean
 }
 
@@ -63,7 +63,7 @@ function SlideHeaderContent({
   const label = getSlideDisplayLabel(slide, slides)
   const isScenario = isSubslide(slide)
 
-  const description = isScenario
+  const summary = isScenario
     ? resolveScenarioSummary(slide, paths, selectedPathIds)
     : slide.summary ??
       paths[0]?.summary ??
@@ -93,9 +93,9 @@ function SlideHeaderContent({
               </h1>
             </ScenarioTitleDefinition>
           </div>
-          {description ? (
+          {summary ? (
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              {description}
+              {summary}
             </p>
           ) : null}
         </div>

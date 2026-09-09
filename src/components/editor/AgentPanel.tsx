@@ -1144,7 +1144,7 @@ function AgentChatView({
                       {command.label}
                     </span>
                     <span className="min-w-0 flex-1 leading-snug text-muted-foreground">
-                      {command.description}
+                      {command.summary}
                     </span>
                   </CommandItem>
                 ))}
@@ -1273,7 +1273,7 @@ function AgentChatView({
               }}
               placeholder={
                 pendingSkill
-                  ? pendingSkill.description
+                  ? pendingSkill.summary
                   : keyed
                     ? 'Message the agent… ("/" for skills)'
                     : 'Add an API key in agent settings first'
