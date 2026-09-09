@@ -1410,4 +1410,39 @@ export const RECONCILED_FILES = [
   // template's wording is the tie-break for prose, so both take it whole.
   'src/components/cover/coverCommandCopy.test.tsx',
   'src/lib/serviceSlug.test.ts',
+
+  // The 1.14.0 bump's harvest, in three groups.
+  //
+  // The cover's services tab went upstream whole, so its four files are held
+  // here rather than forked: the type layer that splits a tab into a content
+  // tab and a services tab, the page that renders it, the selector, and the
+  // test.
+  //
+  // Two more are identical and deliberately NOT here, both held out by the
+  // second promise rather than the first. `coverPage.test.tsx` cites a plan
+  // row in this repository's docs tree, and `coverModel.ts` gives
+  // `docs/guide/01-the-blueprint-model.md` as the example a `docPath` looks
+  // like — a file the template has and this repository does not. Both
+  // sentences are byte-identical in the two copies, so neither can be fixed
+  // on one side alone; they enrol when the shared line changes upstream.
+  //
+  // `AgentDock`, `CanvasModeProvider`, `canvasModeContext`, `badge` and
+  // `skeleton` came back the other way: this copy was already right and the
+  // template adopted it. Three of them were defects there — a second set of
+  // window-global listeners on a hidden dock, a canvas mode the agent tool
+  // could set without write access, and a skeleton running two animations at
+  // once.
+  //
+  // `CreateSliceSheet` was two comments away all along, and both were the
+  // template's: a rename there had turned "on screen" into "on slide" in two
+  // sentences that are not about slides.
+  'src/components/cover/CoverPage.tsx',
+  'src/components/cover/CoverServicesSelector.tsx',
+  'src/components/cover/coverServicesTab.test.tsx',
+  'src/components/editor/AgentDock.tsx',
+  'src/components/editor/CanvasModeProvider.tsx',
+  'src/components/editor/CreateSliceSheet.tsx',
+  'src/components/ui/badge.tsx',
+  'src/components/ui/skeleton.tsx',
+  'src/contexts/canvasModeContext.ts',
 ]
