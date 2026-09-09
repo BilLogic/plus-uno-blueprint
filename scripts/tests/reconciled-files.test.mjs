@@ -455,6 +455,15 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/editor/CanvasEmptyState.tsx',
     'src/components/cover/coverCommandCopy.test.tsx',
     'src/lib/serviceSlug.test.ts',
+    'src/components/cover/CoverPage.tsx',
+    'src/components/cover/CoverServicesSelector.tsx',
+    'src/components/cover/coverServicesTab.test.tsx',
+    'src/components/editor/AgentDock.tsx',
+    'src/components/editor/CanvasModeProvider.tsx',
+    'src/components/editor/CreateSliceSheet.tsx',
+    'src/components/ui/badge.tsx',
+    'src/components/ui/skeleton.tsx',
+    'src/contexts/canvasModeContext.ts',
   ])
 })
 
