@@ -2,9 +2,10 @@
  * Semantic lane roles — the stable contract between blueprint content and
  * rendering. A lane's display name (`lanes.name`) is free-form in any
  * language; its `lane_role` carries the rendering semantics (touchpoint cells,
- * storyboard rows, divider-line anchoring). The vocabulary is extensible:
- * org-defined custom roles render as generic swimlanes, as does a null role
- * (e.g. actor lanes such as Student or Regular Tutor).
+ * storyboard rows, divider-line anchoring). The vocabulary is closed: the
+ * `lanes_lane_role_check` constraint accepts exactly these roles or null, and
+ * a null role (e.g. an actor lane such as Student or Regular Tutor) renders
+ * as a generic swimlane.
  */
 export const CUSTOMER_ACTIONS_ROLE = 'customer_actions'
 export const FRONTSTAGE_ACTIONS_ROLE = 'frontstage_actions'
