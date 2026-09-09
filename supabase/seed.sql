@@ -1,16 +1,63 @@
--- Development seed: service lifecycle with phases and in-session scenarios
+-- Development seed: the service, its phases and their scenarios.
+--
+-- `supabase/config.toml` `[db.seed].sql_paths` names this file first and the
+-- 22 scenario files under `supabase/seeds/` after it. That list IS the seed.
+-- `npm run check:seed-load` loads all 23 onto a fresh replay of the migration
+-- series and is the only thing that proves they still fit the schema.
+--
+-- ── This file rebuilds what it owns, and it does not own the service row ───
+--
+-- Everything below the service is delete-then-insert: this service's phases
+-- are deleted and rewritten, and so are each phase's scenarios. The seed owns
+-- those subtrees outright, and rebuilding them is what a reset means. Their
+-- `on conflict` clauses cannot fire — the rows were deleted a statement ago.
+--
+-- The `services` row is the exception, deliberately. It is the anchor the rest
+-- hangs off, it predates the seed on any database that has one, and this file
+-- could not delete it without taking the whole board down with it. So the
+-- insert makes sure the anchor EXISTS and says nothing further: on a database
+-- that already has the row, `do nothing` leaves the name and the summary to
+-- whoever set them.
+--
+-- That is #313's rule reaching the columns beside the one it was written for.
+-- `entity_examples` is absent from this insert because a seed that says
+-- nothing about a column cannot wrongly clear it. `name` and `summary` were
+-- not absent: they carried `on conflict (id) do update set` from this
+-- repository's first commit, through two mechanical renames, and nobody ever
+-- decided they should. Overwriting is a decision, and this file has no
+-- standing to make it — `20260821360000_the_service_says_what_it_is` renamed
+-- the service and rewrote its summary, and the migration series is the
+-- authority on that row. The values below are that migration's, restated so a
+-- fresh local database is named what the deployed one is; on a replay from
+-- empty the migration matches no row, so this insert is the only thing that
+-- names the service locally, and `services.slug` stays null there, which is
+-- why the local route is the name-derived one (`src/lib/serviceSlug.ts`).
+-- When the series moves the name again, this copy is what goes stale.
+--
+-- ── Nothing structural stops this file reaching a hosted project ───────────
+--
+-- It is a local-reset artifact by convention, not by construction.
+-- `npm run supabase:reset` is `supabase db reset`, whose `--local` is the
+-- default — but the same CLI takes `db reset --linked` (seeding unless
+-- `--no-seed`), `db push --include-seed` (whose `--linked` IS the default),
+-- and `--db-url`, and all three read the `[db.seed].sql_paths` above. Any of
+-- them loads these 23 files into a hosted project, and `db push
+-- --include-seed` does not have the word "reset" in it to warn anybody. The
+-- `do nothing` below is why the service row would survive that; the deletes
+-- further down are why nothing underneath it would. There is no guard here
+-- because a hosted database is not reliably distinguishable from a local one
+-- in SQL, and a guard that is sometimes wrong would read as one that always
+-- works. Point these commands at a deployment only on purpose.
 
 insert into public.services (id, name, summary)
 values (
   'a0000000-0000-4000-8000-000000000001',
-  'PLUS Application',
-  'Application through onboarding and session lifecycle'
+  'PLUS Tutoring',
+  'A hybrid human-AI tutoring service: university students run live, in-class math sessions for middle schoolers, supported by an app that handles their hiring, scheduling, session tooling and reflection.'
 )
-on conflict (id) do update set
-  name = excluded.name,
-  summary = excluded.summary;
+on conflict (id) do nothing;
 
--- Replace any prior demo phases/scenarios for this lifecycle
+-- Replace any prior demo phases/scenarios for this service
 delete from public.phases
 where service_id = 'a0000000-0000-4000-8000-000000000001';
 
