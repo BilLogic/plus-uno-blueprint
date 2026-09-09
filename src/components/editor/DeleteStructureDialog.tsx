@@ -26,9 +26,11 @@ import { errorMessage } from '@/lib/utils'
 
 export type DeletionTarget = {
   /**
-   * `DeletableKind` is narrower than the set `deletion_impact` answers for, on
-   * purpose — `lane` and `step` count something other than what their delete
-   * removes. See `deletionSafety.ts`.
+   * `DeletableKind` used to be narrower than the set `deletion_impact` answers
+   * for, because `lane` and `step` counted something other than what their
+   * delete removed. The SQL was fixed and the type widened; what is narrower
+   * now is `handleDelete`'s switch, which refuses a kind it has no call for
+   * rather than reporting a delete that did not happen.
    */
   kind: DeletableKind
   /** The row to delete. */
@@ -139,6 +141,12 @@ export function DeleteStructureDialog({
           // Frames cascade in the database; there is no archive row to return.
           await deleteSlice(client, target.id, target.label)
           break
+        default:
+          // `DeletableKind` admits `step` and `lane`; no call site builds one
+          // yet, and neither has a delete here. Falling through would close the
+          // dialog and fire `onDeleted` over a row still on the board — the
+          // one failure a confirm dialog must not have.
+          throw new Error(`No delete is wired for a ${target.kind}.`)
       }
       invalidateStructure()
       onOpenChange(false)
