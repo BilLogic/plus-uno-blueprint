@@ -165,6 +165,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/agent/providers/google.ts',
     'src/lib/agent/providers/models.ts',
     'src/lib/agent/providers/provider.ts',
+    'src/lib/ground.ts',
     'src/components/ui/accordion.tsx',
     'src/components/ui/attachment.tsx',
     'src/components/ui/breadcrumb.tsx',
