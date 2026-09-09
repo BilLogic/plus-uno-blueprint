@@ -35,7 +35,7 @@ export type StoryboardFrameEntry = {
   laneName: string
   label: string
   frame: string
-  description: string
+  summary: string
 }
 
 export type StoryboardWalkthroughStep = {
@@ -83,7 +83,7 @@ export function pickWalkthroughBlueprint(
 
 type StoryboardBlueprint = Pick<BlueprintData, 'lanes' | 'cells'>
 
-function resolveCellDescription(cell: BlueprintData['cells'][number] | undefined): string {
+function resolveCellSummary(cell: BlueprintData['cells'][number] | undefined): string {
   return cell?.summary?.trim() || cell?.content.trim() || ''
 }
 
@@ -106,7 +106,7 @@ export function resolveStoryboardStripEntries(
         laneName: name,
         label: STORYBOARD_LANE_SHORT_LABELS[name] ?? name,
         frame,
-        description: resolveCellDescription(cell),
+        summary: resolveCellSummary(cell),
       },
     ]
   })
@@ -150,7 +150,7 @@ export function buildStoryboardWalkthroughSession(
         stepName: step.name,
         laneEntries: frameEntries.map((entry) => ({
           laneName: entry.laneName,
-          content: entry.description,
+          content: entry.summary,
           frame: entry.frame,
         })),
         frames: frameEntries.map((entry) => entry.frame),

@@ -35,7 +35,7 @@ type PhaseMenubarHeaderProps = {
   className?: string
 }
 
-function resolveHeaderDescription(
+function resolveHeaderSummary(
   slide: NavItem,
   paths: PathOption[],
   selectedPathIds: string[],
@@ -213,7 +213,7 @@ export function PhaseMenubarHeader({
 }: PhaseMenubarHeaderProps) {
   const label = getSlideDisplayLabel(slide, slides)
   const isScenario = isSubslide(slide)
-  const description = resolveHeaderDescription(slide, paths, selectedPathIds)
+  const description = resolveHeaderSummary(slide, paths, selectedPathIds)
 
   return (
     <Menubar

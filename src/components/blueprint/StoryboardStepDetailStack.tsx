@@ -90,7 +90,7 @@ export function StoryboardStepDetailStack({
             className="line-clamp-3 self-start overflow-hidden text-sm leading-relaxed whitespace-pre-wrap text-foreground"
             style={{ gridColumn: index + 1, gridRow: 3 }}
           >
-            {entry.description || (
+            {entry.summary || (
               <span className="text-muted-foreground">No description</span>
             )}
           </p>
@@ -143,7 +143,7 @@ export function StoryboardStepDetailStack({
             {entry.label}
           </p>
           <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground">
-            {entry.description || (
+            {entry.summary || (
               <span className="text-muted-foreground">No description</span>
             )}
           </p>

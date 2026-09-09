@@ -64,11 +64,9 @@ export const BLUEPRINT_MENUBAR_FLAT_CLASS =
 export const BLUEPRINT_MENUBAR_TITLE_CLASS =
   'relative z-10 flex min-w-0 max-w-[calc(100%-9rem)] flex-col items-start gap-0.5 px-1'
 
-export const BLUEPRINT_MENUBAR_DESCRIPTION_CLASS =
+export const BLUEPRINT_MENUBAR_SUMMARY_CLASS =
   'min-w-0 max-w-full truncate px-1.5 text-xs text-muted-foreground'
 
-/** asb's spelling of the same class, so the shared header is byte-identical. */
-export const BLUEPRINT_MENUBAR_SUMMARY_CLASS = BLUEPRINT_MENUBAR_DESCRIPTION_CLASS
 
 /**
  * The identity block's pinned height: the title line, then the summary line.
