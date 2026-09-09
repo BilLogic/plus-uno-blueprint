@@ -387,6 +387,20 @@ is invisible to every static check — that is how the seed came to be a month
 behind the schema it loads onto (#379). It needs a local Postgres 17 and is not
 in CI; run it in the same sitting as the migration.
 
+**Loading the seed is a write, and it is fenced and guarded (#547).** The 23
+files are named by `scripts/load-seed.mjs`, not by `supabase/config.toml`
+`[db.seed].sql_paths`, which is empty and disabled — that table is what four
+CLI subcommands read, including `db push --include-seed`, whose `--linked` is
+the default and whose name says nothing about resetting anything.
+`SUPABASE_DB_URL=… npm run seed:load -- --apply` is the one named way in, and
+it loads all 23 in a single transaction. Beyond that fence, `supabase/seed.sql`
+opens with a guard that counts the rows under its service holding a column
+`scripts/authored_fields.mjs` enumerates and refuses the load when the count is
+not zero — the seed's inserts are upserts keyed by hand-minted ids, so a load
+onto a populated database reports no errors at all while rewriting every column
+it carries. Export with `node scripts/authored_fields.mjs export` before any
+destructive database work; the refusal says so too.
+
 ## Environments
 
 Single owner of environment facts — operations links back here.

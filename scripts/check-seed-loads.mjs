@@ -15,8 +15,16 @@
  *
  *   1. a fresh database, `scripts/replay-prelude.sql`, and every file in
  *      `supabase/migrations/` in filename order — the substrate
- *   2. every file `supabase/config.toml` `[db.seed]` names, IN ITS ORDER
+ *   2. every file `scripts/load-seed.mjs` names, IN ITS ORDER
  *   3. the reads a browser makes with the anon key
+ *
+ * Step 2 read `supabase/config.toml` `[db.seed].sql_paths` until #547 moved
+ * the list into `load-seed.mjs` — naming the files in the config is what made
+ * `supabase db push --include-seed` able to load them into a deployment. This
+ * check follows the list to its new home, and gained a job in the process: it
+ * fails if `[db.seed]` ever names a seed file again. A reader of this file
+ * cannot tell "the fence is holding" from "somebody put the list back and
+ * nothing noticed" unless something asks, so this asks.
  *
  * ── Why the substrate is a replay and not a dump ──────────────────────────
  *
@@ -62,10 +70,11 @@
  * both say so.
  */
 import { spawnSync } from 'node:child_process'
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { resolveSeedFiles } from './load-seed.mjs'
 import { classifyFailure, errorMessage, ratchetFailures } from './postgres-replay.mjs'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -137,18 +146,25 @@ export function expandSeedEntries(entries, list) {
 }
 
 /**
- * Every file the seed loads, absolute, in order.
+ * Seed files `[db.seed]` would still load, if any — the fence's own alarm.
  *
- * `[db.seed].sql_paths` IS the seed — `supabase/seed.sql` is only its first
- * entry, and 22 scenario files follow it, each loaded after the file that
- * created the service they hang off. A check that read `seed.sql` alone would
- * pass on a fifteenth of the content.
+ * Empty is the passing answer and the only one. #547 emptied that table and
+ * disabled it because naming the seed there is what let `supabase db push
+ * --include-seed` reach a deployment with it; a later edit that puts a path
+ * back would restore exactly that reach, and nothing else in the repository
+ * reads the table any more, so nothing else would notice. Globs are expanded
+ * first, so `./seeds/*.sql` reports the files it would load rather than one
+ * inscrutable pattern.
+ *
+ * `enabled = false` alone is not a pass. The flag is one edit away from true
+ * and the paths are what say where it would go — a table that names 23 files
+ * behind a false boolean is a fence with the gate closed, not a fence.
  */
-export function resolveSeedFiles(supabaseDir = SUPABASE) {
+export function reachableFromConfig(supabaseDir = SUPABASE) {
   const config = join(supabaseDir, 'config.toml')
   if (!existsSync(config)) return []
   const section = seedSectionFromConfig(readFileSync(config, 'utf8'))
-  if (!section || !section.enabled || section.sqlPaths.length === 0) return []
+  if (!section) return []
   const list = (sub) => {
     try {
       return readdirSync(join(supabaseDir, sub))
@@ -157,8 +173,6 @@ export function resolveSeedFiles(supabaseDir = SUPABASE) {
     }
   }
   return expandSeedEntries(section.sqlPaths, list)
-    .map((rel) => join(supabaseDir, rel))
-    .filter((file) => existsSync(file) && statSync(file).isFile())
 }
 
 // ── Reading what psql said ─────────────────────────────────────────────────
@@ -397,8 +411,22 @@ function main() {
   const files = resolveSeedFiles()
   if (files.length === 0) {
     console.error(
-      '[seed] supabase/config.toml names no seed files under [db.seed].sql_paths. ' +
+      '[seed] scripts/load-seed.mjs names no seed files in SEED_FILES. ' +
         'That list IS the seed; without it there is nothing to check.',
+    )
+    process.exitCode = 1
+    return
+  }
+
+  const reachable = reachableFromConfig()
+  if (reachable.length > 0) {
+    console.error(
+      `[seed] supabase/config.toml [db.seed].sql_paths names ${reachable.length} seed ` +
+        `file(s) again:\n  ${reachable.join('\n  ')}\n` +
+        '[seed] that table is the reach #547 removed. Every path in it is loadable by ' +
+        '`supabase db push --include-seed`, whose --linked is the default and whose name ' +
+        'says nothing about resetting anything. The seed is loaded by ' +
+        '`npm run seed:load -- --apply`; leave sql_paths empty.',
     )
     process.exitCode = 1
     return

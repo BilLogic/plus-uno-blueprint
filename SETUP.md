@@ -28,7 +28,15 @@ Pick one. Local is the default and needs no account.
 ```bash
 npm run supabase:start
 npm run supabase:reset   # applies everything in supabase/migrations/
+SUPABASE_DB_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres \
+  npm run seed:load -- --apply   # the blueprint content
 ```
+
+The reset no longer seeds. `supabase/config.toml` `[db.seed]` names nothing
+and is disabled, because the same list was readable by `supabase db push
+--include-seed` — see the header of `supabase/seed.sql`. `npm run seed:load`
+without `--apply` prints what it would load and sends nothing, and the seed
+refuses outright on a database that already holds authored work.
 
 Copy the `API URL` and `anon key` the CLI prints into `.env`:
 
