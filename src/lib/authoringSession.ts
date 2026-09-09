@@ -417,7 +417,7 @@ const DESCRIBERS: Record<WriteFn, (entry: ChangeEntry) => string> = {
       : 'Duplicated a slice',
   update_slice_meta: (entry) =>
     titled(entry) ? `Edited slice “${titled(entry)}”` : 'Edited a slice',
-  // Named by the count, because "replaced the slides" is the one description
+  // Named by the count, because "replaced the slides" is the one summary
   // here that hides its own size: this write deletes every slide the slice
   // had, and going from twelve to one is the case the row exists to surface.
   replace_slides: (entry) => {

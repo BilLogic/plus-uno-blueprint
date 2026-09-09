@@ -105,7 +105,7 @@ const OVERVIEW_PAN_IGNORE =
   // section/overview wrappers) used to be here too, which made every drag
   // that started inside a path board a dead drag: empty board space must
   // pan like the rest of the canvas.
-  "button, a, input, textarea, select, label, [role='button'], [data-slide-sticky-header], [data-zoom-indicator], [data-annotation-toolbar], [data-canvas-annotation-layer], [data-canvas-phase-interactive], [data-phase-menubar-header], [data-path-description-trigger], [data-cell-detail-panel], [data-blueprint-cell-interactive], [data-slot='menubar'], [data-slot='menubar-trigger'], [data-canvas-nav]"
+  "button, a, input, textarea, select, label, [role='button'], [data-slide-sticky-header], [data-zoom-indicator], [data-annotation-toolbar], [data-canvas-annotation-layer], [data-canvas-phase-interactive], [data-phase-menubar-header], [data-path-summary-trigger], [data-cell-detail-panel], [data-blueprint-cell-interactive], [data-slot='menubar'], [data-slot='menubar-trigger'], [data-canvas-nav]"
 
 function CanvasFocusEscapeHandler() {
   const { view, goHome } = useEditor()
@@ -189,14 +189,14 @@ function ServicePhaseSection({
   onlyScenarioId = null,
 }: ServicePhaseSectionProps) {
   const label = getSlideDisplayLabel(phase, slides)
-  const description =
+  const summary =
     phase.summary ?? 'Scenarios in this phase and how they connect.'
 
   return (
     <CanvasPhaseSection
       title={label}
       ordinal={phase.index}
-      description={description}
+      summary={summary}
       phaseId={phase.id}
       variant="overview"
       showFlowArrow={showFlowArrow}

@@ -1382,7 +1382,7 @@ function BlueprintCellDetailPanelBody() {
           // editor with a second Save button.
           placement={selectedPlacement}
           placementResources={cellResources}
-          // Never seed the field with the title wearing a description's
+          // Never seed the field with the title wearing a summary's
           // clothes — only prose that actually says more than the cell text.
           fallbackDescription={
             descriptionRepeatsTitle ? '' : detailSummaryText.trim()
@@ -1391,7 +1391,7 @@ function BlueprintCellDetailPanelBody() {
         />
       ) : (
         <>
-          {/* Basic info (text, description, owners) first; the function/form/
+          {/* Basic info (text, summary, owners) first; the function/form/
               value spec is a deeper lane of the same cell and reads below it. */}
           <CellContentSection cellId={resolvedCellId} />
           <CellOverviewSpec cellId={resolvedCellId} />

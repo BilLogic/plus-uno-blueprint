@@ -179,7 +179,7 @@ export function CellPanelEditor({
    */
   placementResources?: readonly CellResource[]
   /**
-   * What the panel displays as this cell's description when the column is
+   * What the panel displays as this cell's summary when the column is
    * empty (a touchpoint cell's prose is its placement's summary). Seeded into
    * the field so the editor shows the same text the reader saw — saving moves
    * it into the column, which takes precedence from then on.
@@ -205,7 +205,7 @@ export function CellPanelEditor({
       // The DB truth. The *field* may be seeded with the placement-derived
       // fallback below, but diffs and reverts compare against this — an
       // owner-only edit must not smuggle the fallback prose into the
-      // description column, and undo must restore what the DB actually held.
+      // summary column, and undo must restore what the DB actually held.
       summary: content.summary ?? '',
       owner: content.owner ?? '',
       perceivedOwner: content.perceived_owner ?? '',
@@ -307,7 +307,7 @@ function CellPanelEditorForm({
     summary: seededDescription,
   })
   // Only a deliberate edit persists the seeded fallback prose into the
-  // description column; an untouched field keeps whatever the DB held.
+  // summary column; an untouched field keeps whatever the DB held.
   const [descriptionTouched, setDescriptionTouched] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)

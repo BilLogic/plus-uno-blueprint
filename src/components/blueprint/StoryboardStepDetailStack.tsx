@@ -44,7 +44,7 @@ export function StoryboardStepDetailStack({
       analogy. The vertical stack below carries no deck around it and does
       open; these frames are reachable there, so nothing becomes unviewable.
     */
-    // Shared rows keep image tops, titles, and descriptions aligned across users.
+    // Shared rows keep image tops, titles, and summaries aligned across users.
     const gridStyle = {
       gridTemplateColumns: `repeat(${entries.length}, minmax(0, 1fr))`,
       gridTemplateRows: 'minmax(0, 1fr) auto auto',
@@ -86,12 +86,12 @@ export function StoryboardStepDetailStack({
 
         {entries.map((entry, index) => (
           <p
-            key={`description-${entry.laneName}`}
+            key={`summary-${entry.laneName}`}
             className="line-clamp-3 self-start overflow-hidden text-sm leading-relaxed whitespace-pre-wrap text-foreground"
             style={{ gridColumn: index + 1, gridRow: 3 }}
           >
             {entry.summary || (
-              <span className="text-muted-foreground">No description</span>
+              <span className="text-muted-foreground">No summary</span>
             )}
           </p>
         ))}
@@ -144,7 +144,7 @@ export function StoryboardStepDetailStack({
           </p>
           <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground">
             {entry.summary || (
-              <span className="text-muted-foreground">No description</span>
+              <span className="text-muted-foreground">No summary</span>
             )}
           </p>
         </div>

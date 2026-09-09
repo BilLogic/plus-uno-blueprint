@@ -36,7 +36,7 @@ type CanvasPhaseSectionProps = {
    * the ordinal is information — it prefixes the badge (`01 · Application`)
    * in the same time-marker register the mobile reader uses. */
   ordinal: number
-  description?: string | null
+  summary?: string | null
   phaseId: string
   children: ReactNode
   className?: string
@@ -105,7 +105,7 @@ function isBlueprintPanelTarget(target: EventTarget | null): boolean {
 export function CanvasPhaseSection({
   title,
   ordinal,
-  description,
+  summary,
   phaseId,
   children,
   className,
@@ -210,7 +210,7 @@ export function CanvasPhaseSection({
       />
       <ScenarioTitleBadge
         name={ordinalLabel(ordinal, title)}
-        summary={description}
+        summary={summary}
         tone={interactive ? 'phase' : 'default'}
         // The time-marker register: mono, uppercase, letterspaced — the same
         // idiom the mobile reader's step eyebrows use, so both surfaces name

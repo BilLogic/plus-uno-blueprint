@@ -149,7 +149,7 @@ export function isScenarioSwitch(
 /**
  * Every field of a path, in a stable order.
  *
- * The comparison used to name three of the five fields, so `description` and
+ * The comparison used to name three of the five fields, so `summary` and
  * `note` edits never reached the catalog and the sidebar kept rendering the
  * old text for the life of the session. Deriving the signature from the whole
  * record instead of a hand-written field list means adding a sixth field
