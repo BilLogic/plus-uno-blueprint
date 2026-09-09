@@ -53,8 +53,8 @@
  * same pointer grammar, same filler set, same failure shape — so that one
  * harness review reads both repositories the same way. It differs in two
  * places, both because this router has a different shape: pointers here may
- * name a directory (`docs/plans/`), and triggers are read from every routing
- * item rather than from one named table.
+ * name a directory (`docs/connectors/`), and triggers are read from every
+ * routing item rather than from one named table.
  *
  * Run: node scripts/check-pointers.mjs   (also: npm run check:pointers)
  */

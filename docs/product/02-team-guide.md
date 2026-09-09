@@ -1,7 +1,7 @@
 ---
 audience: everyone
 summary: The zero-background guide — find a scenario, read a journey, use a phone, ask the assistant, share links, and present to stakeholders.
-sources: docs/plans/2026-08-08-001-feat-mobile-responsive-blueprint-plan.md, src/components/editor/SidebarNav.tsx, src/components/editor/SlicePresentation.tsx, src/lib/urlViewState.ts
+sources: src/components/editor/SidebarNav.tsx, src/components/editor/SlicePresentation.tsx, src/lib/urlViewState.ts
 last-reviewed: 2026-08-18
 ---
 

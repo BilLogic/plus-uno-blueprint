@@ -72,12 +72,11 @@ path-level guard would reject wanted structural changes along with the palette.
 
 ## "Template scrub" was never built, and will not be
 
-[`docs/ideation/generalization-audit.md`](../ideation/generalization-audit.md)
-(2026-07-16) closed with a remediation step named **template scrub**: delete
-this repo's PLUS-specific code — the arrow-routing special cases, the display
-flags, `src/data/`, the product screenshots, the hosted-push script, the legacy
-`services` table — and parameterize the rest, producing a generic template out
-of this tree.
+A generalization audit of this repository (2026-07-16) closed with a
+remediation step named **template scrub**: delete this repo's PLUS-specific
+code — the arrow-routing special cases, the display flags, `src/data/`, the
+product screenshots, the hosted-push script, the legacy `services` table — and
+parameterize the rest, producing a generic template out of this tree.
 
 No such script was ever written, and none should be. The plan assumed the
 template would be *extracted from here*. It was not:

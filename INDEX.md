@@ -7,13 +7,13 @@ Five files at the root, each answering one question:
 [CONTEXT](CONTEXT.md) *what do these words mean*, this file *where do I go*,
 and [AGENTS](AGENTS.md) *what must I not do*.
 
-Under `docs/`, three lanes, never mixed: **reference** (below — living,
-always true), **history** (`docs/plans/`, `docs/ideation/`,
-`docs/brainstorms/` — decision-era snapshots, content never edited; check a
-plan's frontmatter `status`/`distilled-into` before treating it as truth),
-and the **queue** ([GitHub Issues](https://github.com/BilLogic/plus-uno-blueprint/issues) —
+Under `docs/`, two lanes, never mixed: **reference** (below — living,
+always true, with `docs/adr/` recording the decisions that are hard to
+reverse) and the **queue**
+([GitHub Issues](https://github.com/BilLogic/plus-uno-blueprint/issues) —
 assignment, closing and cross-repo links are things a folder of markdown
-cannot do).
+cannot do). Everything else that used to be written down — the plans, the
+ideation, the brainstorms — is git history.
 
 ## Route by task
 
@@ -48,7 +48,6 @@ cannot do).
 | Deploy, rollback, environments, monitoring, troubleshooting | docs/engineering/operations.md |
 | Anything crossing a repo boundary — the database, uno-bot, the deploy | docs/connectors/overview.md |
 | Merge from the template, or find out what is still PLUS-specific here | docs/engineering/template-relationship.md |
-| Is this plan file still true? | its frontmatter `status` + `distilled-into` |
 
 ## Reading paths by role
 
@@ -71,7 +70,7 @@ Read in order and stop where it says to; each path is short on purpose.
 ## Every reference doc
 
 Every living doc under `docs/`, with the one-line summary from its own
-frontmatter. History is deliberately absent, and the queue does not live here.
+frontmatter. The queue does not live here.
 
 | Doc | Audience | What it answers |
 |---|---|---|
@@ -134,6 +133,7 @@ frontmatter. History is deliberately absent, and the queue does not live here.
 | docs/adr/0013-the-deployment-imports-the-template.md | developers | The deployment consumes the canonical template by importing it as a pinned-by-release-tag git dependency and mounting its whole app through a typed `DeploymentConfig` prop — never by vendoring or editing the code in place — so that drift is structurally impossible and an upgrade is a reviewable tag bump. |
 | docs/adr/0014-a-service-owns-its-journey-and-shares-the-catalog.md | developers | When a deployment holds more than one service, the journey entities (phase, scenario, path, step, lane, cell, slice) are a hard per-service boundary while the catalog of nouns a journey references — touchpoints and stakeholders both — is one deployment-level pool where the name is the identity and a service's membership is implicit in what its journey references, so a tool or actor is recorded once and reused across services without a palette to author or keep in sync. |
 | docs/adr/0015-the-template-owns-the-agent.md | developers | The template (asb) owns the agent's canonical baseline — its loop, its tools, and a default doctrine — and a deployment tunes it through the typed `DeploymentConfig` the same way it tunes the UI, never by editing template code; uno, being the prototype that defines the product, contributes its agent into the canonical default rather than carrying a per-deployment override, so uno's canvas-adapter override folds into the default and disappears at the flip. |
+| docs/adr/0016-the-history-tier-is-retired.md | developers | The docs tree drops from three lanes to two — reference and the queue — by retiring `docs/plans/`, `docs/ideation/` and `docs/brainstorms/` in full; open work lives in GitHub Issues, durable decisions become ADRs, and everything the 86 retired files held stays readable in git history. `docs/archive/` is deliberately not part of this. |
 | docs/adr/overview.md | developers | What earns an ADR here, the numbering and template, and the current set. |
 | docs/connectors/netlify.md | developers | The host — push to main is production, there is no netlify.toml, and the deploy environment carries only public values. |
 | docs/connectors/overview.md | developers | The three systems this instance is coupled to, and the rule that keeps that coupling out of the open-source package. |

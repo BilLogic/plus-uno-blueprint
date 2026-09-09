@@ -55,8 +55,7 @@
  * those paths the pinned template also carries. Today that is `CONTEXT.md`,
  * `README.md` and `AGENTS.md`; it is a walk rather than a list so that a doc
  * that becomes shared later is swept without anyone remembering to add it.
- * `swept-docs.mjs` already excludes `docs/adr/`, `docs/plans/`,
- * `docs/ideation/` and `docs/brainstorms/`, for the reason its own header
+ * `swept-docs.mjs` already excludes `docs/adr/`, for the reason its own header
  * gives: a decision record states the decision of its day in the words of its
  * day, and rewriting one falsifies it. That exclusion is inherited here rather
  * than restated, which is the whole point of there being one list.

@@ -15,11 +15,11 @@
  *    `src`, comments removed, so a component, a prop, a constant, a variant
  *    string, a data attribute or a file name that reintroduces either word
  *    fails — including one written next week. `src` is the whole subject
- *    because `docs/plans`, `docs/adr`, `docs/brainstorms` and
- *    `supabase/migrations` are DATED RECORDS of what was decided and applied
- *    on a day, and rewriting a record is worse than the word it removes. The
- *    living docs — `docs/guidelines`, `docs/reference` — were swept by hand
- *    with this change and are held by review, not by this file.
+ *    because `docs/adr` and `supabase/migrations` are DATED RECORDS of what
+ *    was decided and applied on a day, and rewriting a record is worse than
+ *    the word it removes. The living docs — `docs/guidelines`,
+ *    `docs/reference` — were swept by hand with this change and are held by
+ *    review, not by this file.
  *
  * 2. **No COMMENT says chip or pill either.** The same walk, read on its other
  *    axis: `commentsOnly()` is the exact complement of `stripComments`, so one

@@ -29,10 +29,9 @@ one guard's scope.
 The compiled artifact is an input to the model, produced by a fixture step that
 excludes `docs/` from Tailwind's content scan. This is load-bearing rather than
 hygiene: Tailwind v4 scans non-gitignored markdown, so a class name written in a
-planning document generates that class in the compiled output. A risk note in
-`docs/plans/2026-08-22-001-refactor-one-visual-vocabulary-plan.md` warning that
-`--field` was live via `bg-field` generated the only occurrence of `bg-field` in the
-repo, and thereby the evidence for its own warning.
+planning document generates that class in the compiled output. A risk note in a
+planning document warning that `--field` was live via `bg-field` generated the only
+occurrence of `bg-field` in the repo, and thereby the evidence for its own warning.
 
 Liveness must also be read from the JavaScript bundle, not the stylesheet alone —
 `--colors-white` has zero occurrences in compiled CSS and one in the bundle, via an

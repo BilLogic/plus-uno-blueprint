@@ -1,5 +1,4 @@
--- Advisor hardening, per the access-model plan
--- (docs/plans/2026-08-06-001-plan-access-model-three-personas.md).
+-- Advisor hardening, per the access-model plan.
 -- Already applied to the hosted project as `advisor_hardening_2026_08_06`
 -- and `revoke_flag_founding_from_public`; committed here so a rebuilt
 -- environment (local stack, branch DB) does not silently regress the

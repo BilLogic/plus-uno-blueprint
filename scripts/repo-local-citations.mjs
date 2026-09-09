@@ -81,8 +81,9 @@ const PATTERNS = [
   ['docs-path', /\bdocs\/[a-z0-9_\-.]+(?:\/[a-z0-9_\-.]+)*/g],
   // A plan or todo by its number, date slug or section letter — `plan 003`,
   // `plan 2026-08-17-001 U1`, `nav plan D8`, `todo 027 §4`, `Plan §3`. These
-  // are addresses in `docs/plans/` even when the path is left off, and that
-  // tree is one repository's.
+  // are addresses even when the path is left off, and the plans and todos
+  // trees they address are retired: what they name now sits in one
+  // repository's git history and nowhere in the other's.
   //
   // A plan named rather than numbered — "the trigger-line plan", "the access
   // model plan" — is NOT caught, and that is the line: a name resolves to

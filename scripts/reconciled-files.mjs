@@ -1258,9 +1258,9 @@ export const RECONCILED_FILES = [
   // The three that took the template's sentence, each one comment apart.
   //
   // `MobileNavSheet.tsx` named the plan and the phase the drawer was decided
-  // in. That is an address in this repository's plans tree and nothing at all
-  // in the template's, and the template's wording already omits it, so there
-  // was no meaning to weigh against the tie-break.
+  // in. That was an address in this repository's plans tree, since retired,
+  // and nothing at all in the template's; the template's wording already
+  // omits it, so there was no meaning to weigh against the tie-break.
   //
   // `findingFingerprint.ts` cited a section number of the audit playbook.
   // The template names the rule instead — the audit playbook's fingerprint
@@ -1371,10 +1371,10 @@ export const RECONCILED_FILES = [
   //
   // `src/styles/semantic.css` is enrolled here rather than declined, which is
   // the append that paragraph promised. The template's copy said "Sidebar
-  // selection language (nav plan D8)" — D8 a row of
-  // `docs/plans/2026-07-30-002-feat-sidebar-navigation-model-plan.md`, an
-  // address in THIS repository's docs tree that travelled upstream with the
-  // port and resolved to nothing there. Byte-identity and this list's second
+  // selection language (nav plan D8)" — D8 a row of this repository's
+  // sidebar-navigation-model plan, an address in a docs tree that travelled
+  // upstream with the port and resolved to nothing there (and that has since
+  // been retired here too). Byte-identity and this list's second
   // promise could not both be kept while the shared text carried it. The
   // sentence now states the decision instead of its plan row, and 1.13.2
   // carries that, so the file that was already identical is finally held.

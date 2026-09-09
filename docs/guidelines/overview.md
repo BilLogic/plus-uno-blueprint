@@ -1,7 +1,7 @@
 ---
 audience: designers
 summary: The design point of view — restraint, one signature per surface, the Supabase benchmark — plus the foundations/components/composition split and how to propose deviations.
-sources: docs/plans/2026-08-04-001-refactor-supabase-design-system-alignment-plan.md, docs/plans/2026-08-08-001-feat-mobile-responsive-blueprint-plan.md, docs/plans/2026-08-08-002-feat-desktop-ui-refinements-plan.md, docs/plans/2026-08-16-002-feat-mobile-shell-implementation-plan.md, src/styles/
+sources: src/styles/
 last-reviewed: 2026-08-25
 ---
 

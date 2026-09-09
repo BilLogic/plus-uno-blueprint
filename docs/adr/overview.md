@@ -45,3 +45,4 @@ deleted ADR is a decision nobody can find the reasoning for.
 | [0013](0013-the-deployment-imports-the-template.md) | The deployment imports the template as a pinned git-dep and mounts it with a config |
 | [0014](0014-a-service-owns-its-journey-and-shares-the-catalog.md) | A service owns its journey and shares the catalog (touchpoints + stakeholders, deployment-level) |
 | [0015](0015-the-template-owns-the-agent.md) | The template owns the agent; a deployment configures it like the UI (uno, the prototype, bakes its agent into the canonical default) |
+| [0016](0016-the-history-tier-is-retired.md) | The history tier is retired; the queue is issues and durable decisions are ADRs |

@@ -9,14 +9,16 @@
  *
  * WHAT IS NOT SWEPT, and why: `docs/adr/` records the decisions of its day
  * in the words of its day, and rewriting a decision record is falsifying it.
- * `docs/plans`, `docs/ideation`, `docs/brainstorms` are pre-ticket thinking
- * on the way to a spec; what they got wrong is why the spec exists.
+ * It is the only such tree left — the plans, ideation and brainstorms that
+ * used to sit beside it were pre-ticket thinking on the way to a spec, and
+ * they now live in the issue they belong to and in git history.
  */
 import { readdirSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
 export const ROOT_DOCS = ['CONTEXT.md', 'README.md', 'AGENTS.md']
-export const HISTORY = ['docs/adr', 'docs/plans', 'docs/ideation', 'docs/brainstorms']
+/** Trees that keep the words of the day they were written, so nothing sweeps them. */
+export const DATED_RECORDS = ['docs/adr']
 
 function markdownUnder(dir) {
   const found = []
@@ -33,6 +35,6 @@ export function sweptDocs(root = process.cwd()) {
   const base = resolve(root)
   const docs = markdownUnder(resolve(base, 'docs'))
     .map((path) => path.slice(base.length + 1))
-    .filter((rel) => !HISTORY.some((dir) => rel.startsWith(`${dir}/`)))
+    .filter((rel) => !DATED_RECORDS.some((dir) => rel.startsWith(`${dir}/`)))
   return [...ROOT_DOCS, ...docs]
 }

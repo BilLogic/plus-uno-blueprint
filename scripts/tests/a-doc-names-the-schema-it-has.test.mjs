@@ -24,10 +24,8 @@
  * pair's `is` list. No file and no line is pardoned by name.
  *
  * WHAT IS NOT SWEPT, and why: `docs/adr/` records the decisions of its day in
- * the words of its day; `supabase/migrations/` is the series itself; and
- * `docs/plans`, `docs/ideation`, `docs/brainstorms` are pre-ticket thinking on
- * their way out of the tree. Those are directory rules, stated here, not a
- * list of files.
+ * the words of its day, and `supabase/migrations/` is the series itself. Those
+ * are directory rules, stated here, not a list of files.
  *
  * Run: npm test
  */
