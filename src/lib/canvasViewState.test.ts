@@ -1,42 +1,41 @@
 import { describe, expect, it } from 'vitest'
 import {
+  beginCanvasViewState,
   deleteCanvasViewStatesForTab,
-  readCanvasViewState,
   writeCanvasViewState,
 } from '@/lib/canvasViewState'
 
-describe('session canvas view state', () => {
-  it('restores isolated transform snapshots for each surface', () => {
-    const transform = { pan: { x: 40, y: -25 }, zoom: 0.8 }
-    writeCanvasViewState('desktop:slice:one', transform)
-    transform.pan.x = 999
+const snapshot = (x: number) => ({
+  transform: { pan: { x, y: -25 }, zoom: 0.8 },
+  destinationKey: 'scenario:one',
+  geometry: { left: 10, top: 20, width: 800, height: 500 },
+})
 
-    expect(readCanvasViewState('desktop:slice:one')).toEqual({
-      pan: { x: 40, y: -25 },
-      zoom: 0.8,
-    })
+describe('session canvas view state', () => {
+  it('restores an isolated snapshot for the same mount generation', () => {
+    const first = beginCanvasViewState('desktop:slice:one')
+    const value = snapshot(40)
+    writeCanvasViewState(first.lease, value)
+    value.transform.pan.x = 999
+
+    expect(beginCanvasViewState('desktop:slice:one').snapshot).toEqual(
+      snapshot(40),
+    )
   })
 
-  it('discards both surface variants when their tab closes', () => {
-    writeCanvasViewState('desktop:slice:closed', {
-      pan: { x: 10, y: 20 },
-      zoom: 1,
-    })
-    writeCanvasViewState('mobile:slice:closed', {
-      pan: { x: -10, y: -20 },
-      zoom: 0.5,
-    })
-
+  it('rejects stale cleanup even when a replacement mount starts first', () => {
+    const oldMount = beginCanvasViewState('desktop:slice:closed')
+    writeCanvasViewState(oldMount.lease, snapshot(10))
     deleteCanvasViewStatesForTab('slice:closed')
 
-    // React unmount cleanup runs after the close dispatch. That late write
-    // must not resurrect the discarded workspace camera.
-    writeCanvasViewState('desktop:slice:closed', {
-      pan: { x: 500, y: 500 },
-      zoom: 2,
-    })
+    const replacement = beginCanvasViewState('desktop:slice:closed')
+    expect(replacement.snapshot).toBeUndefined()
+    writeCanvasViewState(oldMount.lease, snapshot(500))
+    expect(beginCanvasViewState('desktop:slice:closed').snapshot).toBeUndefined()
 
-    expect(readCanvasViewState('desktop:slice:closed')).toBeUndefined()
-    expect(readCanvasViewState('mobile:slice:closed')).toBeUndefined()
+    writeCanvasViewState(replacement.lease, snapshot(30))
+    expect(beginCanvasViewState('desktop:slice:closed').snapshot).toEqual(
+      snapshot(30),
+    )
   })
 })

@@ -1,7 +1,25 @@
 import type { CameraTransform } from '@/lib/cameraTransition'
 
-const views = new Map<string, CameraTransform>()
-const discarded = new Set<string>()
+export type CanvasViewGeometry = {
+  left: number
+  top: number
+  width: number
+  height: number
+}
+
+export type CanvasViewSnapshot = {
+  transform: CameraTransform
+  destinationKey: string
+  geometry: CanvasViewGeometry
+}
+
+export type CanvasViewLease = {
+  key: string
+  generation: number
+}
+
+const views = new Map<string, CanvasViewSnapshot>()
+const generations = new Map<string, number>()
 
 const validTransform = (value: CameraTransform) =>
   Number.isFinite(value.pan.x) &&
@@ -9,25 +27,42 @@ const validTransform = (value: CameraTransform) =>
   Number.isFinite(value.zoom) &&
   value.zoom > 0
 
-export function readCanvasViewState(key: string): CameraTransform | undefined {
-  if (discarded.delete(key)) return undefined
-  const value = views.get(key)
-  if (!value || !validTransform(value)) return undefined
-  return { pan: { ...value.pan }, zoom: value.zoom }
+const cloneSnapshot = (snapshot: CanvasViewSnapshot): CanvasViewSnapshot => ({
+  transform: {
+    pan: { ...snapshot.transform.pan },
+    zoom: snapshot.transform.zoom,
+  },
+  destinationKey: snapshot.destinationKey,
+  geometry: { ...snapshot.geometry },
+})
+
+/** A mount captures a lease so a closed tab's later cleanup cannot write. */
+export function beginCanvasViewState(key: string): {
+  lease: CanvasViewLease
+  snapshot?: CanvasViewSnapshot
+} {
+  const generation = generations.get(key) ?? 0
+  const snapshot = views.get(key)
+  return {
+    lease: { key, generation },
+    ...(snapshot && validTransform(snapshot.transform)
+      ? { snapshot: cloneSnapshot(snapshot) }
+      : {}),
+  }
 }
 
-export function writeCanvasViewState(key: string, value: CameraTransform) {
-  // Closing a mounted tab deletes first and React unmount cleanup writes
-  // afterward. Consume that one stale cleanup instead of resurrecting state
-  // the close explicitly discarded.
-  if (discarded.delete(key)) return
-  if (!validTransform(value)) return
-  views.set(key, { pan: { ...value.pan }, zoom: value.zoom })
+export function writeCanvasViewState(
+  lease: CanvasViewLease,
+  snapshot: CanvasViewSnapshot,
+) {
+  if ((generations.get(lease.key) ?? 0) !== lease.generation) return
+  if (!validTransform(snapshot.transform)) return
+  views.set(lease.key, cloneSnapshot(snapshot))
 }
 
 export function deleteCanvasViewState(key: string) {
   views.delete(key)
-  discarded.add(key)
+  generations.set(key, (generations.get(key) ?? 0) + 1)
 }
 
 export function deleteCanvasViewStatesForTab(tabKey: string) {

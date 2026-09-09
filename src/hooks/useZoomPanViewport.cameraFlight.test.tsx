@@ -3,6 +3,7 @@
 import { act, cleanup, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useZoomPanViewport } from '@/hooks/useZoomPanViewport'
+import type { CameraTransitionResult } from '@/lib/cameraTransition'
 
 type Rect = { left: number; top: number; width: number; height: number }
 
@@ -46,16 +47,18 @@ let cameraState: () => {
   pan: { x: number; y: number }
 }
 let panCamera: (dx: number, dy: number) => void
-let refitCamera: () => boolean
+let refitCamera: () => false | Promise<CameraTransitionResult>
 
 function Harness({
   resetKey,
   target,
   cameraStateKey,
+  cameraDestinationKey,
 }: {
   resetKey: string
   target: Rect
   cameraStateKey?: string
+  cameraDestinationKey?: string
 }) {
   const camera = useZoomPanViewport({
     resetKey,
@@ -66,6 +69,7 @@ function Harness({
     animateFit: true,
     refitOnResize: false,
     cameraStateKey,
+    cameraDestinationKey,
   })
   cameraState = camera.getCameraState
   panCamera = camera.panBy
@@ -86,7 +90,15 @@ function Harness({
           camera.contentRef.current = node
           if (node) {
             stampBox(node, { width: 1200, height: 600 })
-            node.getBoundingClientRect = () => rect({ left: 0, top: 0, width: 1200, height: 600 })
+            node.getBoundingClientRect = () => {
+              const camera = cameraState()
+              return rect({
+                left: camera.pan.x,
+                top: camera.pan.y,
+                width: 1200 * camera.zoom,
+                height: 600 * camera.zoom,
+              })
+            }
           }
         }}
       >
@@ -95,7 +107,15 @@ function Harness({
           ref={(node) => {
             if (!node) return
             stampBox(node, target)
-            node.getBoundingClientRect = () => rect(target)
+            node.getBoundingClientRect = () => {
+              const camera = cameraState()
+              return rect({
+                left: camera.pan.x + target.left * camera.zoom,
+                top: camera.pan.y + target.top * camera.zoom,
+                width: target.width * camera.zoom,
+                height: target.height * camera.zoom,
+              })
+            }
           }}
         />
       </div>
@@ -113,6 +133,7 @@ function FocusHarness({ selected }: { selected: 'a' | 'b' }) {
     animateFit: true,
     refitOnResize: false,
   })
+  cameraState = camera.getCameraState
 
   return (
     <div
@@ -126,8 +147,15 @@ function FocusHarness({ selected }: { selected: 'a' | 'b' }) {
           camera.contentRef.current = node
           if (node) {
             stampBox(node, { width: 2000, height: 600 })
-            node.getBoundingClientRect = () =>
-              rect({ left: 0, top: 0, width: 2000, height: 600 })
+            node.getBoundingClientRect = () => {
+              const camera = cameraState()
+              return rect({
+                left: camera.pan.x,
+                top: camera.pan.y,
+                width: 2000 * camera.zoom,
+                height: 600 * camera.zoom,
+              })
+            }
           }
         }}
       >
@@ -140,13 +168,15 @@ function FocusHarness({ selected }: { selected: 'a' | 'b' }) {
             ref={(node) => {
               if (!node) return
               stampBox(node, { width: 800, height: 500 })
-              node.getBoundingClientRect = () =>
-                rect({
-                  left: index * 1000,
-                  top: 0,
-                  width: 800,
-                  height: 500,
+              node.getBoundingClientRect = () => {
+                const camera = cameraState()
+                return rect({
+                  left: camera.pan.x + index * 1000 * camera.zoom,
+                  top: camera.pan.y,
+                  width: 800 * camera.zoom,
+                  height: 500 * camera.zoom,
                 })
+              }
             }}
           />
         ))}
@@ -285,14 +315,11 @@ describe('viewport camera flights', () => {
     const beforeRetarget = cameraState().pan.x
 
     target.left = 400
-    act(() => {
-      expect(refitCamera()).toBe(true)
-    })
+    act(() => flushFrame(180))
     expect(cameraState().pan.x).toBe(beforeRetarget)
     expect(cameraState().moving).toBe(true)
 
     act(() => {
-      flushFrame(180)
       flushFrame(900)
     })
     expect(cameraState().moving).toBe(false)
@@ -306,6 +333,7 @@ describe('viewport camera flights', () => {
         resetKey="initial"
         target={target}
         cameraStateKey="desktop:slice:camera-flight-test"
+        cameraDestinationKey="scenario-a"
       />,
     )
     act(() => {
@@ -321,6 +349,7 @@ describe('viewport camera flights', () => {
         resetKey="return"
         target={target}
         cameraStateKey="desktop:slice:camera-flight-test"
+        cameraDestinationKey="scenario-a"
       />,
     )
 
@@ -337,6 +366,110 @@ describe('viewport camera flights', () => {
     })
   })
 
+  it('rejects a stored transform for a different semantic destination', () => {
+    const target = { left: 0, top: 0, width: 1000, height: 600 }
+    const first = render(
+      <Harness
+        resetKey="initial"
+        target={target}
+        cameraStateKey="desktop:slice:destination-test"
+        cameraDestinationKey="scenario-a"
+      />,
+    )
+    act(() => {
+      flushFrame(0)
+      flushFrame(16)
+      panCamera(125, -40)
+    })
+    first.unmount()
+
+    render(
+      <Harness
+        resetKey="return"
+        target={target}
+        cameraStateKey="desktop:slice:destination-test"
+        cameraDestinationKey="scenario-b"
+      />,
+    )
+
+    expect(cameraState().pan).toEqual({ x: 0, y: 0 })
+    act(() => {
+      flushFrame(32)
+      flushFrame(48)
+    })
+    expect(cameraState().pan).toEqual({ x: 0, y: 0 })
+  })
+
+  it('rejects a stored transform when the destination geometry changed', () => {
+    const target = { left: 0, top: 0, width: 1000, height: 600 }
+    const first = render(
+      <Harness
+        resetKey="initial"
+        target={target}
+        cameraStateKey="desktop:slice:geometry-test"
+        cameraDestinationKey="scenario-a"
+      />,
+    )
+    act(() => {
+      flushFrame(0)
+      flushFrame(16)
+      panCamera(125, -40)
+    })
+    first.unmount()
+    target.left = 250
+
+    render(
+      <Harness
+        resetKey="return"
+        target={target}
+        cameraStateKey="desktop:slice:geometry-test"
+        cameraDestinationKey="scenario-a"
+      />,
+    )
+
+    expect(cameraState().pan).toEqual({ x: 0, y: 0 })
+  })
+
+  it('keeps a manual pan made while a new destination is still settling', () => {
+    const target = { left: 0, top: 0, width: 1000, height: 600 }
+    const view = render(<Harness resetKey="initial" target={target} />)
+    act(() => {
+      flushFrame(0)
+      flushFrame(16)
+    })
+
+    target.left = 500
+    view.rerender(<Harness resetKey="next" target={target} />)
+    act(() => panCamera(75, 20))
+    act(() => {
+      flushFrame(32)
+      flushFrame(48)
+      flushFrame(64)
+    })
+
+    expect(cameraState()).toMatchObject({
+      moving: false,
+      pan: { x: 75, y: 20 },
+    })
+  })
+
+  it('reports cancellation to a caller waiting on a camera fit', async () => {
+    const target = { left: 0, top: 0, width: 1000, height: 600 }
+    render(<Harness resetKey="initial" target={target} />)
+    act(() => {
+      flushFrame(0)
+      flushFrame(16)
+    })
+
+    target.left = 600
+    const outcome = refitCamera()
+    expect(outcome).not.toBe(false)
+    act(() => flushFrame(32))
+    act(() => panCamera(10, 0))
+
+    await expect(outcome).resolves.toMatchObject({ kind: 'cancelled' })
+  })
+
   it('transfers visible focus using the flight sample instead of a second clock', () => {
     const view = render(<FocusHarness selected="a" />)
     act(() => {
@@ -345,15 +478,17 @@ describe('viewport camera flights', () => {
     })
 
     view.rerender(<FocusHarness selected="b" />)
+    const focus = (id: string) =>
+      view.container.querySelector<HTMLElement>(
+        `[data-focus-slide-id="${id}"]`,
+      )!
+    expect(Number(focus('a').style.opacity)).toBe(1)
+    expect(Number(focus('b').style.opacity)).toBeCloseTo(0.3)
     act(() => {
       flushFrame(32)
       flushFrame(48)
       flushFrame(64)
     })
-    const focus = (id: string) =>
-      view.container.querySelector<HTMLElement>(
-        `[data-focus-slide-id="${id}"]`,
-      )!
     expect(Number(focus('a').style.opacity)).toBe(1)
     expect(Number(focus('b').style.opacity)).toBeCloseTo(0.3)
 
@@ -367,6 +502,8 @@ describe('viewport camera flights', () => {
     expect(originOpacity + destinationOpacity).toBeCloseTo(1.3)
 
     act(() => flushFrame(800))
+    expect(cameraState().moving).toBe(false)
+    expect(focus('a').dataset.canvasFocusDimmed).toBe('')
     expect(focus('a').style.opacity).toBe('0.3')
     expect(focus('b').style.opacity).toBe('')
   })

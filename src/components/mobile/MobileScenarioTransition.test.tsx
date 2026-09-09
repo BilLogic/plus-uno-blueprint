@@ -5,18 +5,11 @@ import { MobileScenarioTransition } from '@/components/mobile/MobileScenarioTran
 import { MOTION_FADE_MS } from '@/lib/motion'
 
 describe('MobileScenarioTransition', () => {
-  let nextFrame: FrameRequestCallback | null
+  let revealIncoming: (() => void) | null
 
   beforeEach(() => {
     vi.useFakeTimers()
-    nextFrame = null
-    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
-      nextFrame = callback
-      return 1
-    })
-    vi.stubGlobal('cancelAnimationFrame', () => {
-      nextFrame = null
-    })
+    revealIncoming = null
   })
 
   afterEach(() => {
@@ -27,7 +20,10 @@ describe('MobileScenarioTransition', () => {
   it('fades out the old world, swaps while hidden, then reveals the new world', () => {
     const view = render(
       <MobileScenarioTransition scenarioId="scenario-a">
-        {(scenarioId) => <div data-scenario={scenarioId} />}
+        {(scenarioId, onFitReady) => {
+          revealIncoming = onFitReady
+          return <div data-scenario={scenarioId} />
+        }}
       </MobileScenarioTransition>,
     )
     const surface = () =>
@@ -40,7 +36,10 @@ describe('MobileScenarioTransition', () => {
 
     view.rerender(
       <MobileScenarioTransition scenarioId="scenario-b">
-        {(scenarioId) => <div data-scenario={scenarioId} />}
+        {(scenarioId, onFitReady) => {
+          revealIncoming = onFitReady
+          return <div data-scenario={scenarioId} />
+        }}
       </MobileScenarioTransition>,
     )
     expect(surface().dataset.mobileScenarioSwap).toBe('out')
@@ -50,8 +49,9 @@ describe('MobileScenarioTransition', () => {
     expect(surface().dataset.mobileScenarioSwap).toBe('in')
     expect(scenario().dataset.scenario).toBe('scenario-b')
 
-    act(() => nextFrame?.(MOTION_FADE_MS))
+    act(() => revealIncoming?.())
     expect(surface().dataset.mobileScenarioSwap).toBe('idle')
     expect(scenario().dataset.scenario).toBe('scenario-b')
+    expect(surface().dataset.editorView).toBe('true')
   })
 })

@@ -281,6 +281,8 @@ type ServiceOverviewViewProps = {
   onRevealStage?: (stage: number) => void
   /** Session-local identity for restoring this canvas after a tab remount. */
   cameraStateKey?: string
+  /** Notifies an embedding transition after this destination is fitted. */
+  onInitialFitReady?: () => void
 }
 
 /**
@@ -298,6 +300,7 @@ function ServiceOverviewViewImpl({
   floatingChrome,
   onRevealStage,
   cameraStateKey,
+  onInitialFitReady,
 }: ServiceOverviewViewProps = {}) {
   const overviewRef = useRef<HTMLDivElement>(null)
   const [overviewEl, setOverviewEl] = useState<HTMLDivElement | null>(null)
@@ -560,6 +563,9 @@ function ServiceOverviewViewImpl({
   const fitKey = overviewReady
     ? `service-canvas:${view}:${cameraTargetId ?? 'none'}:${phases.length}-${scenarioIds.length}:${focusNonce}:${focusedComparisonCameraKey}`
     : `service-canvas:loading:${skeletonPhases.map((phase) => phase.scenarioCount).join('-') || 'unknown'}`
+  const cameraDestinationKey = overviewReady
+    ? `service-canvas:${view}:${cameraTargetId ?? 'none'}:${phases.length}-${scenarioIds.length}:${focusedComparisonCameraKey}`
+    : fitKey
 
   // The cell-detail panel clears its selection when this changes, so it must
   // track navigation only — never the camera's own bookkeeping. `fitKey`
@@ -843,6 +849,10 @@ function ServiceOverviewViewImpl({
   const noPathsSelected =
     pathsByScenario.size > 0 && overviewSelectedPathIds.length === 0
 
+  useLayoutEffect(() => {
+    if (contentSettled && noPathsSelected) onInitialFitReady?.()
+  }, [contentSettled, noPathsSelected, onInitialFitReady])
+
   const postToPreLoop = soloPhase
     ? null
     : getOverviewPostToPreLoopTransition(phases)
@@ -1046,6 +1056,8 @@ function ServiceOverviewViewImpl({
                 cameraStateKey={
                   cameraStateKey ?? (mobileShell ? undefined : 'desktop:blueprint')
                 }
+                cameraDestinationKey={cameraDestinationKey}
+                onFitReady={contentSettled ? onInitialFitReady : undefined}
               >
                 <DeferredSkeleton
                   loading={!overviewSettled}

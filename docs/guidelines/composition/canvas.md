@@ -161,10 +161,12 @@ contract in short:
 - Exactly one camera animation per intent; reduced motion makes every fit a
   jump. What holds that up — one writer per navigation, geometric scale
   interpolation, and a fit that waits for its target to settle — is
-  [motion](../foundations/motion.md#what-exactly-one-camera-animation-per-intent-rests-on). Automatic travel uses one 420 ms duration and a symmetric sine
-  ease-in-out across every route, keeping camera movement synchronized with
-  its focus fades. Manual wheel, pinch, drag, and keyboard input remains
-  immediate and never runs through this animation clock.
+  [motion](../foundations/motion.md#what-exactly-one-camera-animation-per-intent-rests-on).
+  Automatic travel follows a bounded distance-aware camera flight: zoom is
+  geometric, screen-space travel is monotonic, and compatible velocity carries
+  across superseding destinations. Focus emphasis reads the same flight's
+  progress. Manual wheel, pinch, drag, and keyboard input remains immediate
+  and cancels the automatic flight.
 - Wheel and trackpad zoom preserve the world point beneath the cursor. A
   two-finger pinch maps its previous midpoint directly to its current midpoint,
   combining scale and finger drift in one transform instead of applying drift

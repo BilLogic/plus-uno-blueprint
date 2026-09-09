@@ -337,8 +337,8 @@ export function MobileShell() {
             ) : hasSelection ? (
               <StoryboardWalkthroughShell>
                 <MobileScenarioTransition scenarioId={soloScenarioId}>
-                  {(displayedScenarioId) => (
-                    <div className="contents" data-editor-view>
+                  {(displayedScenarioId, onIncomingFitReady) => (
+                    <div className="contents">
                       {/* Scoped to ONE SCENARIO, not to a phase.
 
                           A phone has no phase lane and no canvas navigation —
@@ -363,6 +363,7 @@ export function MobileShell() {
                         soloScenarioId={displayedScenarioId ?? undefined}
                         soloPhaseId={selectedPhaseId ?? undefined}
                         renderHeader={() => null}
+                        onInitialFitReady={onIncomingFitReady}
                       />
                     </div>
                   )}
