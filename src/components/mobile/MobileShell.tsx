@@ -9,6 +9,7 @@ import {
 import { MobileAgentSheet } from '@/components/mobile/MobileAgentSheet'
 import { MobileAgentFab } from '@/components/mobile/MobileAgentFab'
 import { MobilePathSelector } from '@/components/mobile/MobilePathSelector'
+import { MobileScenarioTransition } from '@/components/mobile/MobileScenarioTransition'
 import { CanvasModeProvider } from '@/components/editor/CanvasModeProvider'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
 import { StoryboardWalkthroughShell } from '@/components/blueprint/StoryboardWalkthroughShell'
@@ -133,7 +134,6 @@ export function MobileShell() {
     if (!selectedPhaseId) return null
     return scenariosByPhase.get(selectedPhaseId)?.[0]?.id ?? null
   }, [selectedScenarioId, selectedPhaseId, scenariosByPhase])
-
   const scenario = slides.find((slide) => slide.id === selectedScenarioId)
   const phase = slides.find((slide) => slide.id === selectedPhaseId)
   // Slice surfaces come from the shared tab store: a `slice` tab is the
@@ -336,35 +336,37 @@ export function MobileShell() {
               </div>
             ) : hasSelection ? (
               <StoryboardWalkthroughShell>
-                <div
-                  className="absolute inset-0 flex min-h-0 flex-col"
-                  data-editor-view
-                >
-                  {/* Scoped to ONE SCENARIO, not to a phase.
+                <MobileScenarioTransition scenarioId={soloScenarioId}>
+                  {(displayedScenarioId) => (
+                    <div className="contents" data-editor-view>
+                      {/* Scoped to ONE SCENARIO, not to a phase.
 
-                      A phone has no phase lane and no canvas navigation —
-                      the drawer is the only way to move — so a sibling
-                      scenario on the board is a destination the shell
-                      cannot properly take you to, drawn at a size the
-                      device pays for. A phase row is up to seven full
-                      boards; rendering the set on a phone is what took the
-                      renderer down. One selection, one board.
+                          A phone has no phase lane and no canvas navigation —
+                          the drawer is the only way to move — so a sibling
+                          scenario on the board is a destination the shell
+                          cannot properly take you to, drawn at a size the
+                          device pays for. A phase row is up to seven full
+                          boards; rendering the set on a phone is what took the
+                          renderer down. One selection, one board.
 
-                      `soloScenarioId` wins over `soloPhaseId` inside
-                      ServiceOverviewView, so a phase-only selection (the
-                      agent bridge and boot links can still produce one)
-                      resolves to that phase's first scenario rather than
-                      falling back to the whole row.
+                          `soloScenarioId` wins over `soloPhaseId` inside
+                          ServiceOverviewView, so a phase-only selection (the
+                          agent bridge and boot links can still produce one)
+                          resolves to that phase's first scenario rather than
+                          falling back to the whole row.
 
-                      The sticky phase header is suppressed — the shell's
-                      own top bar already names the selection, and two bars
-                      saying the same thing read as clutter. */}
-                  <ServiceOverviewView
-                    soloScenarioId={soloScenarioId ?? undefined}
-                    soloPhaseId={selectedPhaseId ?? undefined}
-                    renderHeader={() => null}
-                  />
-                </div>
+                          The sticky phase header is suppressed — the shell's
+                          own top bar already names the selection, and two bars
+                          saying the same thing read as clutter. */}
+                      <ServiceOverviewView
+                        key={displayedScenarioId ?? 'none'}
+                        soloScenarioId={displayedScenarioId ?? undefined}
+                        soloPhaseId={selectedPhaseId ?? undefined}
+                        renderHeader={() => null}
+                      />
+                    </div>
+                  )}
+                </MobileScenarioTransition>
               </StoryboardWalkthroughShell>
             ) : (
               <MobileEmptyState onOpenNav={() => setNavOpen(true)} />

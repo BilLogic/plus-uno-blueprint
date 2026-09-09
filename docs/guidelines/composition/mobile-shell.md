@@ -1,13 +1,14 @@
 ---
 audience: designers, developers
 summary: The one forked surface — the phone's view-only, scenario-scoped canvas, its chrome, the single-select path control, and the non-goals that are decided rather than deferred.
-sources: src/components/mobile/MobileShell.tsx, src/components/mobile/MobileNavSheet.tsx, src/components/mobile/MobilePathSelector.tsx, src/hooks/useMobileShell.ts, docs/plans/2026-08-16-002-feat-mobile-shell-implementation-plan.md
+sources: src/components/mobile/MobileShell.tsx, src/components/mobile/MobileScenarioTransition.tsx, src/components/mobile/MobileNavSheet.tsx, src/components/mobile/MobilePathSelector.tsx, src/hooks/useMobileShell.ts, docs/plans/2026-08-16-002-feat-mobile-shell-implementation-plan.md
 claims:
   - src/components/mobile/MobileShell.tsx
+  - src/components/mobile/MobileScenarioTransition.tsx
   - src/components/mobile/MobileTopBar.tsx
   - src/components/mobile/MobileNavSheet.tsx
   - src/components/mobile/MobilePathSelector.tsx
-last-reviewed: 2026-08-26
+last-reviewed: 2026-09-09
 ---
 
 # Mobile shell
@@ -33,9 +34,11 @@ reading view. An earlier vertical "reader" existed and was deleted in the
   wall.
 - **One surface: the shared canvas, scoped to ONE SCENARIO.** The phone renders
   a single board rather than the whole service (rendering the whole board is
-  what used to jam the main thread). Navigation is a camera move on that canvas
-  — picking a scenario in the drawer frames it; there is no view toggle and no
-  fold animation.
+  what used to jam the main thread). Picking a different scenario replaces that
+  spatial world: the outgoing board fades out, the incoming board mounts and
+  fits while hidden, then fades in. It is deliberately not a camera flight
+  between unrelated coordinate systems, and it never mounts two heavy boards
+  at once.
 
   The scope is a scenario, not a phase, and the difference is load-bearing. A
   phase row is up to seven full boards; drawing the set on a phone took the

@@ -279,6 +279,8 @@ type ServiceOverviewViewProps = {
    * flag to get wrong.
    */
   onRevealStage?: (stage: number) => void
+  /** Session-local identity for restoring this canvas after a tab remount. */
+  cameraStateKey?: string
 }
 
 /**
@@ -295,6 +297,7 @@ function ServiceOverviewViewImpl({
   firstStageLabel = 'Loading structure…',
   floatingChrome,
   onRevealStage,
+  cameraStateKey,
 }: ServiceOverviewViewProps = {}) {
   const overviewRef = useRef<HTMLDivElement>(null)
   const [overviewEl, setOverviewEl] = useState<HTMLDivElement | null>(null)
@@ -451,6 +454,13 @@ function ServiceOverviewViewImpl({
     }
     return ids
   }, [pathsByScenario, resolveDrawnPathIds])
+  const focusedSelectedPathIds = useMemo(() => {
+    if (!focusedScenarioId) return []
+    return resolveDrawnPathIds(
+      focusedScenarioId,
+      pathsByScenario.get(focusedScenarioId) ?? [],
+    )
+  }, [focusedScenarioId, pathsByScenario, resolveDrawnPathIds])
 
   const overviewReady = !slidesLoading && !blueprintsLoading
   // Content holds until the bar has visibly REACHED 100%: readiness flips
@@ -486,7 +496,7 @@ function ServiceOverviewViewImpl({
   const cameraSurface = {
     mobileShell,
     isDetail,
-    selectedPathCount: overviewSelectedPathIds.length,
+    selectedPathCount: focusedSelectedPathIds.length,
   }
   const minFitZoom = getMinFitZoom(cameraSurface)
   const semanticZoomThreshold = getSemanticZoomThreshold(cameraSurface)
@@ -544,7 +554,7 @@ function ServiceOverviewViewImpl({
   // recenters after panning away.
   const focusedComparisonCameraKey = getFocusedComparisonCameraKey({
     isFocusedScenario: isSubslide(activeSlide),
-    selectedPathIds: overviewSelectedPathIds,
+    selectedPathIds: focusedSelectedPathIds,
     displayViewType: getScenarioDisplayViewType(activeSlide) ?? 'stacked',
   })
   const fitKey = overviewReady
@@ -1033,6 +1043,9 @@ function ServiceOverviewViewImpl({
                 className="absolute inset-0"
                 panIgnoreSelector={OVERVIEW_PAN_IGNORE}
                 focusCellsKey={focusedScenarioId ?? soloScenarioId ?? undefined}
+                cameraStateKey={
+                  cameraStateKey ?? (mobileShell ? undefined : 'desktop:blueprint')
+                }
               >
                 <DeferredSkeleton
                   loading={!overviewSettled}

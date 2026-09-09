@@ -43,6 +43,7 @@ type ZoomPanViewportProps = {
    * for the difference ledger, the divergence strip and agent commands.
    */
   focusCellsKey?: string
+  cameraStateKey?: string
 }
 
 /** Zoom/pan canvas wrapper. Provides the annotation context its layer and toolbar both read. */
@@ -71,6 +72,7 @@ function ZoomPanViewportInner({
   refitOnResize = true,
   onResetView,
   focusCellsKey,
+  cameraStateKey,
 }: ZoomPanViewportProps) {
   const { isAnnotating } = useCanvasAnnotationTool()
   const {
@@ -101,6 +103,7 @@ function ZoomPanViewportInner({
     fitBottomInset,
     animateFit,
     refitOnResize,
+    cameraStateKey,
   })
 
   usePublishCanvasZoomChrome(onResetView)

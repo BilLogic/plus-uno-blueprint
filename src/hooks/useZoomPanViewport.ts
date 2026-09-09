@@ -12,13 +12,18 @@ import {
 } from '@/lib/canvasKeyboardState'
 import { isEditableKeyboardTarget } from '@/lib/keyboardTarget'
 import {
-  createCameraTransitionClock,
-  easeCameraTransition,
-  interpolateCameraTransform,
+  CAMERA_FLIGHT_MAX_MS,
+  createCameraFlightPlan,
   transformCameraAroundPoint,
+  type CameraTransform,
   type CameraTransitionResult,
+  type CameraVelocity,
 } from '@/lib/cameraTransition'
 import { isCanvasResizeRefitSuppressed } from '@/lib/canvasChromeResize'
+import {
+  readCanvasViewState,
+  writeCanvasViewState,
+} from '@/lib/canvasViewState'
 import {
   pulseBlueprintCells,
   type FocusCellsResult,
@@ -39,7 +44,7 @@ import {
   normalizeWheelDelta,
   wheelZoomScaleFactor,
 } from '@/lib/canvasWheelDelta'
-import { MOTION_CAMERA_MS, prefersReducedMotion } from '@/lib/motion'
+import { prefersReducedMotion } from '@/lib/motion'
 import {
   BLUEPRINT_VIEWPORT_ARTBOARD_MARGIN,
   BLUEPRINT_VIEWPORT_FIT_TOP_INSET,
@@ -100,6 +105,8 @@ type UseZoomPanViewportOptions = {
    * on it rather than as a map. See `SEMANTIC_ZOOM_THRESHOLD`.
    */
   semanticZoomThreshold?: number
+  /** Session-local identity used to restore this canvas across a tab remount. */
+  cameraStateKey?: string
 }
 
 /**
@@ -245,6 +252,44 @@ function isSameTransform(
   )
 }
 
+type FocusPaintSnapshot = {
+  element: HTMLElement
+  opacity: string
+  transition: string
+}
+
+type CameraFocusTransfer = {
+  origin: FocusPaintSnapshot[]
+  destination: FocusPaintSnapshot[]
+}
+
+function focusPaintElements(target: HTMLElement | null): HTMLElement[] {
+  if (!target) return []
+  if (target.matches('[data-focus-slide-id]')) return [target]
+  if (!target.matches('[data-canvas-phase-section]')) return []
+  return [
+    ...target.querySelectorAll<HTMLElement>(
+      ':scope > [data-phase-frame], :scope > [data-phase-title-badge], [data-focus-slide-id]',
+    ),
+  ]
+}
+
+function captureFocusPaint(elements: readonly HTMLElement[]) {
+  return elements.map((element) => ({
+    element,
+    opacity: element.style.opacity,
+    transition: element.style.transition,
+  }))
+}
+
+function restoreFocusPaint(transfer: CameraFocusTransfer | null) {
+  if (!transfer) return
+  for (const snapshot of [...transfer.origin, ...transfer.destination]) {
+    snapshot.element.style.opacity = snapshot.opacity
+    snapshot.element.style.transition = snapshot.transition
+  }
+}
+
 export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   const {
     resetKey,
@@ -257,11 +302,12 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     fitTopInset = BLUEPRINT_VIEWPORT_FIT_TOP_INSET,
     fitBottomInset = 0,
     animateFit = false,
-    fitDurationMs = MOTION_CAMERA_MS,
+    fitDurationMs,
     refitOnResize = true,
     refitDebounceMs = 200,
     suppressResizeRefit = false,
     semanticZoomThreshold = SEMANTIC_ZOOM_THRESHOLD,
+    cameraStateKey,
   } = options
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -291,12 +337,22 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     setContainerNode(node)
   }, [])
   const contentRef = useRef<HTMLDivElement>(null)
-  const [pan, setPan] = useState({ x: 0, y: 0 })
-  const [zoom, setZoom] = useState(1)
+  const [initialCamera] = useState(() => {
+    const restored = cameraStateKey
+      ? readCanvasViewState(cameraStateKey)
+      : undefined
+    return {
+      transform: restored ?? { pan: { x: 0, y: 0 }, zoom: 1 },
+      restored: restored !== undefined,
+    }
+  })
+  const [pan, setPan] = useState(initialCamera.transform.pan)
+  const [zoom, setZoom] = useState(initialCamera.transform.zoom)
   const [isPanning, setIsPanning] = useState(false)
   const [isSpaceHeld, setIsSpaceHeld] = useState(false)
   const panStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 })
-  const transformRef = useRef({ pan: { x: 0, y: 0 }, zoom: 1 })
+  const transformRef = useRef(initialCamera.transform)
+  const restoredCameraPendingRef = useRef(initialCamera.restored)
   const pendingFitRef = useRef(false)
   /**
    * Whether the fit `pendingFitRef` still owes should ANIMATE. The resize
@@ -318,6 +374,14 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   const fitAnimationResolveRef = useRef<
     ((result: CameraTransitionResult) => void) | null
   >(null)
+  const fitAnimationRetargetRef = useRef<
+    ((target: CameraTransform) => void) | null
+  >(null)
+  const fitAnimationVelocityRef = useRef<CameraVelocity>({
+    pan: { x: 0, y: 0 },
+    zoomPerMs: 0,
+  })
+  const carriedFitVelocityRef = useRef<CameraVelocity | undefined>(undefined)
   /**
    * False until this viewport instance has framed content once. The first
    * fit jumps: animating it would swoop in from the unfitted origin
@@ -392,22 +456,37 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
    * above the fit effect, so it is current by the time that effect reads it.
    */
   const animateFitRef = useRef(animateFit)
+  const focusTargetRef = useRef<HTMLElement | null>(null)
+  const pendingFocusTransferRef = useRef<CameraFocusTransfer | null>(null)
+  const activeFocusTransferRef = useRef<CameraFocusTransfer | null>(null)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     animateFitRef.current = animateFit
   }, [animateFit])
 
   const cancelFitAnimation = useCallback(
     (kind: 'cancelled' | 'superseded' = 'cancelled') => {
+      restoreFocusPaint(activeFocusTransferRef.current)
+      activeFocusTransferRef.current = null
+      if (kind === 'cancelled') pendingFocusTransferRef.current = null
+      carriedFitVelocityRef.current =
+        kind === 'superseded' ? fitAnimationVelocityRef.current : undefined
       if (fitAnimationRef.current !== null) {
         cancelAnimationFrame(fitAnimationRef.current)
         fitAnimationRef.current = null
         fitAnimationTargetRef.current = null
+        fitAnimationRetargetRef.current = null
         fitAnimationResolveRef.current?.({
           kind,
           transform: transformRef.current,
         })
         fitAnimationResolveRef.current = null
+      }
+      if (kind === 'cancelled') {
+        fitAnimationVelocityRef.current = {
+          pan: { x: 0, y: 0 },
+          zoomPerMs: 0,
+        }
       }
     },
     [],
@@ -450,7 +529,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     ): Promise<CameraTransitionResult> => {
       cancelFitAnimation('superseded')
       const from = transformRef.current
-      const target = { pan: nextPan, zoom: nextZoom }
+      let target = { pan: nextPan, zoom: nextZoom }
 
       /*
         The viewport is read PER FRAME, not snapshotted.
@@ -479,6 +558,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       // centre.
       const initialViewport = readViewport()
       if (initialViewport.width <= 0 || initialViewport.height <= 0) {
+        pendingFocusTransferRef.current = null
         commitTransform(nextPan, nextZoom, true, nextZoom)
         return Promise.resolve<CameraTransitionResult>({
           kind: 'completed',
@@ -487,29 +567,79 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       }
 
       fitAnimationTargetRef.current = target
-      const progressAt = createCameraTransitionClock(fitDurationMs)
+      activeFocusTransferRef.current = pendingFocusTransferRef.current
+      pendingFocusTransferRef.current = null
+      let plan = createCameraFlightPlan({
+        from,
+        to: target,
+        viewport: initialViewport,
+        ...(fitDurationMs === undefined ? {} : { durationMs: fitDurationMs }),
+        initialVelocity: carriedFitVelocityRef.current,
+      })
+      carriedFitVelocityRef.current = undefined
 
       return new Promise((resolve) => {
         fitAnimationResolveRef.current = resolve
-        const step = (now: number) => {
-          const t = progressAt(now)
+        let firstFrameAt: number | null = null
+        let lastFrameAt: number | null = null
+        fitAnimationRetargetRef.current = (nextTarget) => {
+          if (isSameTransform(target, nextTarget)) return
           const viewport = readViewport()
-          const next = interpolateCameraTransform(
-            from,
-            target,
+          const safeViewport =
             viewport.width > 0 && viewport.height > 0
               ? viewport
-              : initialViewport,
-            easeCameraTransition(t),
+              : initialViewport
+          target = nextTarget
+          fitAnimationTargetRef.current = nextTarget
+          plan = createCameraFlightPlan({
+            from: transformRef.current,
+            to: nextTarget,
+            viewport: safeViewport,
+            ...(fitDurationMs === undefined
+              ? {}
+              : { durationMs: fitDurationMs }),
+            initialVelocity: fitAnimationVelocityRef.current,
+          })
+          firstFrameAt = lastFrameAt
+        }
+        const step = (now: number) => {
+          lastFrameAt = now
+          firstFrameAt ??= now
+          const sample = plan.sample(now - firstFrameAt)
+          const focusTransfer = activeFocusTransferRef.current
+          if (focusTransfer) {
+            const originOpacity = 1 - sample.progress * 0.7
+            const destinationOpacity = 0.3 + sample.progress * 0.7
+            for (const snapshot of focusTransfer.origin) {
+              snapshot.element.style.transition = 'none'
+              snapshot.element.style.opacity = String(originOpacity)
+            }
+            for (const snapshot of focusTransfer.destination) {
+              snapshot.element.style.transition = 'none'
+              snapshot.element.style.opacity = String(destinationOpacity)
+            }
+          }
+          fitAnimationVelocityRef.current = sample.velocity
+          commitTransform(
+            sample.transform.pan,
+            sample.transform.zoom,
+            sample.done,
+            target.zoom,
           )
-          commitTransform(next.pan, next.zoom, t === 1, nextZoom)
-          if (t < 1) {
+          if (!sample.done) {
             fitAnimationRef.current = requestAnimationFrame(step)
             return
           }
           fitAnimationRef.current = null
           fitAnimationTargetRef.current = null
+          fitAnimationRetargetRef.current = null
           fitAnimationResolveRef.current = null
+          fitAnimationVelocityRef.current = {
+            pan: { x: 0, y: 0 },
+            zoomPerMs: 0,
+          }
+          restoreFocusPaint(activeFocusTransferRef.current)
+          activeFocusTransferRef.current = null
           resolve({ kind: 'completed', transform: target })
         }
         fitAnimationRef.current = requestAnimationFrame(step)
@@ -700,14 +830,24 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       const shouldAnimate =
         (options?.animate ?? animateFitRef.current) && !prefersReducedMotion()
       if (shouldAnimate) {
+        if (isSameTransform(transformRef.current, next)) {
+          pendingFocusTransferRef.current = null
+          cancelFitAnimation('superseded')
+          return true
+        }
         const activeTarget = fitAnimationTargetRef.current
         if (
           !activeTarget ||
           !isSameTransform(activeTarget, { pan: next.pan, zoom: next.zoom })
         ) {
-          void animateTransform(next.pan, next.zoom)
+          if (activeTarget && fitAnimationRetargetRef.current) {
+            fitAnimationRetargetRef.current(next)
+          } else {
+            void animateTransform(next.pan, next.zoom)
+          }
         }
       } else {
+        pendingFocusTransferRef.current = null
         /*
           Cancel first. Every other camera entry point in this file does
           (`zoomAtPoint`, `zoomBetweenPoints`, `beginPan`, `panBy`, the wheel
@@ -803,6 +943,53 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
 
   useLayoutEffect(() => {
     if (resetKey === undefined) return
+    // A newer semantic destination owns the camera immediately. Waiting for
+    // its geometry must not leave the previous flight visibly pursuing an
+    // intent the reader has already replaced. Supersession carries the live
+    // compatible velocity into the flight that starts after settling.
+    cancelFitAnimation('superseded')
+    const content = contentRef.current
+    const nextFocusTarget =
+      content?.querySelector<HTMLElement>(fitSelector) ?? null
+    const previousFocusTarget = focusTargetRef.current
+    const originPaint = focusPaintElements(previousFocusTarget)
+    const destinationPaint = focusPaintElements(nextFocusTarget)
+    pendingFocusTransferRef.current =
+      previousFocusTarget &&
+      nextFocusTarget &&
+      previousFocusTarget !== nextFocusTarget &&
+      originPaint.length > 0 &&
+      destinationPaint.length > 0
+        ? {
+            origin: captureFocusPaint(originPaint),
+            destination: captureFocusPaint(destinationPaint),
+          }
+        : null
+    focusTargetRef.current = nextFocusTarget
+    if (restoredCameraPendingRef.current) {
+      pendingFocusTransferRef.current = null
+      restoredCameraPendingRef.current = false
+      const container = containerRef.current
+      const restoredContent = contentRef.current
+      const restored = transformRef.current
+      const restoredIntersectsCanvas =
+        container !== null &&
+        restoredContent !== null &&
+        restored.zoom >= MIN_ZOOM &&
+        restored.zoom <= MAX_ZOOM &&
+        restored.pan.x + restoredContent.scrollWidth * restored.zoom > 0 &&
+        restored.pan.y + restoredContent.scrollHeight * restored.zoom > 0 &&
+        restored.pan.x < container.clientWidth &&
+        restored.pan.y < container.clientHeight
+      if (restoredIntersectsCanvas) {
+        hasFittedRef.current = true
+        userAdjustedViewRef.current = true
+        pendingFitRef.current = false
+        commitTransform(restored.pan, restored.zoom, true)
+        return
+      }
+      commitTransform({ x: 0, y: 0 }, 1, true)
+    }
     pendingFitRef.current = true
     userAdjustedViewRef.current = false
 
@@ -833,7 +1020,14 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     fitSettlingRef.current = true
     let frame = 0
     let polls = 0
-    let lastSize: { width: number; height: number } | null = null
+    let lastGeometry: {
+      left: number
+      top: number
+      width: number
+      height: number
+      viewportWidth: number
+      viewportHeight: number
+    } | null = null
     let lastTarget: HTMLElement | null = null
 
     const stop = () => {
@@ -862,9 +1056,19 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     const step = () => {
       const content = contentRef.current
       const target = content?.querySelector<HTMLElement>(fitSelector) ?? content
-      const size = target
-        ? { width: target.offsetWidth, height: target.offsetHeight }
-        : null
+      const container = containerRef.current
+      const bounds =
+        content && target
+          ? measureFitBounds(content, target, transformRef.current.zoom)
+          : null
+      const geometry =
+        bounds && container
+          ? {
+              ...bounds,
+              viewportWidth: container.clientWidth,
+              viewportHeight: container.clientHeight,
+            }
+          : null
       /*
         Three things have to be true to call this settled, and only the last
         one used to be checked.
@@ -881,17 +1085,26 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
 
         And the same size, within a pixel of integer `offsetWidth` rounding.
       */
-      const measurable = size !== null && size.width > 0 && size.height > 0
+      const measurable =
+        geometry !== null &&
+        geometry.width > 0 &&
+        geometry.height > 0 &&
+        geometry.viewportWidth > 0 &&
+        geometry.viewportHeight > 0
       const settled =
         measurable &&
-        lastSize !== null &&
+        lastGeometry !== null &&
         target === lastTarget &&
-        Math.abs(size.width - lastSize.width) <= 1 &&
-        Math.abs(size.height - lastSize.height) <= 1
+        Math.abs(geometry.left - lastGeometry.left) <= 1 &&
+        Math.abs(geometry.top - lastGeometry.top) <= 1 &&
+        Math.abs(geometry.width - lastGeometry.width) <= 1 &&
+        Math.abs(geometry.height - lastGeometry.height) <= 1 &&
+        Math.abs(geometry.viewportWidth - lastGeometry.viewportWidth) <= 1 &&
+        Math.abs(geometry.viewportHeight - lastGeometry.viewportHeight) <= 1
 
       if (settled && runFit()) return
 
-      lastSize = measurable ? size : null
+      lastGeometry = measurable ? geometry : null
       lastTarget = target
       // Bounded, like `refitWhenIdle` below. A target that never goes quiet
       // — an oscillating measurement, a selector that keeps missing — would
@@ -906,7 +1119,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     frame = requestAnimationFrame(step)
 
     // Backstop for content that will not go quiet in time — the ease is
-    // 420 ms, and a fit that starts later than this reads as a hang. Late
+    // A fit that starts later than the nominal camera beat reads as a hang. Late
     // growth after it is the resize observer's correction to make. It also
     // ENDS the loop: leaving the rAF running past the backstop was a
     // permanent per-frame forced layout for the life of the view.
@@ -916,7 +1129,22 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       fitSettlingRef.current = false
       stop()
     }
-  }, [resetKey, fitSelector, runPendingFit])
+  }, [
+    resetKey,
+    fitSelector,
+    runPendingFit,
+    cancelFitAnimation,
+    commitTransform,
+  ])
+
+  useEffect(
+    () => () => {
+      if (cameraStateKey) {
+        writeCanvasViewState(cameraStateKey, transformRef.current)
+      }
+    },
+    [cameraStateKey],
+  )
 
   useEffect(() => {
     return () => cancelFitAnimation()
@@ -973,6 +1201,13 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         // Checked as the resize is observed, not when the debounce fires:
         // the chrome window closes before a 200 ms debounce would elapse.
         if (suppressResizeRefit || isCanvasResizeRefitSuppressed()) return
+        // Geometry changed under an active navigation. Recompute its target
+        // through the normal fit policy and retarget the same flight/promise;
+        // never wait for it to land and then apply a corrective snap.
+        if (fitAnimationRef.current !== null) {
+          fitToView({ animate: true })
+          return
+        }
         window.clearTimeout(debounceTimer)
         /*
           The content laid out further than the fit ever saw, on a camera the
@@ -1010,7 +1245,9 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
           would interrupt, so it goes through.
         */
         let refitPolls = 0
-        const maxRefitPolls = Math.ceil((fitDurationMs * 2) / 50)
+        const maxRefitPolls = Math.ceil(
+          ((fitDurationMs ?? CAMERA_FLIGHT_MAX_MS) * 2) / 50,
+        )
         const refitWhenIdle = () => {
           if (fitAnimationRef.current !== null && refitPolls < maxRefitPolls) {
             refitPolls += 1
@@ -1710,7 +1947,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         return { kind: 'miss', missing: [...cellIds] }
       }
 
-      focusGenerationRef.current += 1
+      const generation = ++focusGenerationRef.current
       const found: HTMLElement[] = []
       const missing: string[] = []
       for (const cellId of cellIds) {
@@ -1750,6 +1987,9 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       if (animate) completion = (await animateTransform(nextPan, nextZoom)).kind
       else commitTransform(nextPan, nextZoom, true)
 
+      if (generation !== focusGenerationRef.current) {
+        return { kind: 'flown', completion: 'superseded' }
+      }
       pulseBlueprintCells(found)
       return { kind: 'flown', completion }
     },
