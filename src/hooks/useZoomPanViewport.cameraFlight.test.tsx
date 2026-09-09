@@ -135,7 +135,8 @@ function FocusHarness({ selected }: { selected: 'a' | 'b' }) {
           <div
             key={id}
             data-focus-slide-id={id}
-            style={{ opacity: selected === id ? 1 : 0.3 }}
+            data-canvas-focus-dimmed={selected === id ? undefined : ''}
+            style={{ opacity: selected === id ? undefined : 0.3 }}
             ref={(node) => {
               if (!node) return
               stampBox(node, { width: 800, height: 500 })
@@ -367,6 +368,39 @@ describe('viewport camera flights', () => {
 
     act(() => flushFrame(800))
     expect(focus('a').style.opacity).toBe('0.3')
-    expect(focus('b').style.opacity).toBe('1')
+    expect(focus('b').style.opacity).toBe('')
+  })
+
+  it('clears the superseded emphasis before transferring the newer intent', () => {
+    const view = render(<FocusHarness selected="a" />)
+    act(() => {
+      flushFrame(0)
+      flushFrame(16)
+    })
+
+    view.rerender(<FocusHarness selected="b" />)
+    act(() => {
+      flushFrame(32)
+      flushFrame(48)
+      flushFrame(64)
+      flushFrame(180)
+    })
+    view.rerender(<FocusHarness selected="a" />)
+    act(() => {
+      flushFrame(196)
+      flushFrame(212)
+      flushFrame(228)
+    })
+
+    const focus = (id: string) =>
+      view.container.querySelector<HTMLElement>(
+        `[data-focus-slide-id="${id}"]`,
+      )!
+    expect(Number(focus('b').style.opacity)).toBe(1)
+    expect(Number(focus('a').style.opacity)).toBeCloseTo(0.3)
+
+    act(() => flushFrame(900))
+    expect(focus('b').style.opacity).toBe('0.3')
+    expect(focus('a').style.opacity).toBe('')
   })
 })

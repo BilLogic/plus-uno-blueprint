@@ -254,7 +254,6 @@ function isSameTransform(
 
 type FocusPaintSnapshot = {
   element: HTMLElement
-  opacity: string
   transition: string
 }
 
@@ -277,7 +276,6 @@ function focusPaintElements(target: HTMLElement | null): HTMLElement[] {
 function captureFocusPaint(elements: readonly HTMLElement[]) {
   return elements.map((element) => ({
     element,
-    opacity: element.style.opacity,
     transition: element.style.transition,
   }))
 }
@@ -285,7 +283,11 @@ function captureFocusPaint(elements: readonly HTMLElement[]) {
 function restoreFocusPaint(transfer: CameraFocusTransfer | null) {
   if (!transfer) return
   for (const snapshot of [...transfer.origin, ...transfer.destination]) {
-    snapshot.element.style.opacity = snapshot.opacity
+    snapshot.element.style.opacity = snapshot.element.closest(
+      '[data-canvas-focus-dimmed]',
+    )
+      ? '0.3'
+      : ''
     snapshot.element.style.transition = snapshot.transition
   }
 }
