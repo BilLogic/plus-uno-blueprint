@@ -580,6 +580,15 @@ export function setCellDependency(
     source_cell_id: input.sourceCellId,
     target_cell_id: input.targetCellId,
     kind: input.kind ?? 'leads_to',
+    // `name` is omitted rather than sent as null, and the difference is not
+    // cosmetic: this function upserts `do update set name = excluded.name`, so
+    // a null would ERASE the sentence on any edge an author happens to edit —
+    // while the row still renders it as a badge, because the change to stop
+    // rendering it is upstream's and has not arrived. Omitting leaves the
+    // column alone, which is what "retired" means until stage 2 drops it.
+    // PostgREST resolves by the argument names it is given and the generated
+    // type marks this one optional; no gate here can exercise that, so watch
+    // the first add on a deployed build.
     note: input.note ?? null,
   })
 }

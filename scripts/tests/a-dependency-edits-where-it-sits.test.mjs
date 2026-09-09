@@ -177,33 +177,46 @@ test('the drawn kind the proof counts is the kind the canvas filters on', () => 
 
 /* ------------------------------------------------- retiring `name`, stage 1 */
 
-test('the backfill raises unless exactly eight names move', () => {
+test('the backfill asserts a post-condition, not a count', () => {
   const sql = read(BACKFILL_MIGRATION)
-  assert.match(sql, /if moved_count <> 8 then/)
-  assert.match(sql, /expected to move 8 names into note, moved %/)
-  // The post-condition beside it, which is the assertion that survives an
-  // empty database and every later one: nothing is left holding a name and no
-  // note. It is what a reader should look at first when this file goes red.
+
+  // The assertion that survives an empty database and every later one:
+  // nothing is left holding a name and no note. It is the actual
+  // post-condition of the move, it is vacuously true where there is nothing
+  // to move, and it still catches the failure a count was reaching for — a
+  // `where` that has drifted past its rows matches nothing, reports success,
+  // and leaves every one of them stranded here.
   assert.match(sql, /rows still carry a name and no note/)
+
+  // No census. An earlier draft raised unless exactly eight rows moved, which
+  // is a fact about what this table held on one morning rather than about the
+  // statement — ADR 0009 refuses those, and it would have cost this file the
+  // ability to replay.
+  assert.doesNotMatch(sql, /moved_count/)
+  assert.doesNotMatch(sql, /<> 8/)
+
   // It copies. A drop here would make stage 2 a consequence of running stage 1
   // rather than a decision — asked of the statements, because the header names
   // stage 2 in prose on purpose.
   assert.doesNotMatch(statementsOnly(sql), /drop column/i)
 
   // Red.
-  assert.doesNotMatch(sql.replace('if moved_count <> 8 then', 'if false then'), /if moved_count <> 8 then/)
+  assert.doesNotMatch(
+    sql.replace('rows still carry a name and no note', 'rows were fine actually'),
+    /rows still carry a name and no note/,
+  )
 })
 
-test('the count that cannot replay is recorded as deliberate', () => {
-  // On an empty database the right number to move is zero, so the assertion
-  // fires and the file cannot replay. That is the price of the count, and
-  // ADR 0009 says the price is paid in this file rather than argued away.
+test('the backfill is not in the replay baseline', () => {
+  // The set of files that cannot replay may shrink and never grow. With the
+  // count gone this one replays against an empty database — the move matches
+  // nothing, the post-condition is vacuously true — so it must not be listed.
   const baseline = JSON.parse(read(BASELINE))
   assert.ok(
-    baseline.failing.includes('20260909040000_the_eight_names_were_always_notes.sql'),
-    'the backfill is not recorded as unable to replay',
+    !baseline.failing.includes('20260909040000_the_eight_names_were_always_notes.sql'),
+    'the backfill is recorded as unable to replay, but it replays',
   )
-  assert.match(baseline.why, /20260909040000/)
+  assert.doesNotMatch(baseline.why, /20260909040000/)
 })
 
 test('neither the editor nor the agent tool writes name any more', () => {
@@ -217,7 +230,12 @@ test('neither the editor nor the agent tool writes name any more', () => {
     const body =
       rpc.match(new RegExp(`export function ${wrapper}\\(([\\s\\S]*?)\\n\\}`))?.[0] ?? ''
     assert.notEqual(body, '', `${wrapper} is gone`)
-    assert.doesNotMatch(body, /\bname\b/, `${wrapper} still names the retired column`)
+    // Comments stripped first. The rule is about what the wrapper SENDS, and
+    // the reason `name` is omitted rather than nulled has to be sayable in the
+    // code that omits it — a test that forbids the word outright forbids its
+    // own explanation.
+    const code = body.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
+    assert.doesNotMatch(code, /\bname\b/, `${wrapper} still names the retired column`)
     assert.match(body, /\bnote\b/, `${wrapper} does not carry the note`)
   }
 

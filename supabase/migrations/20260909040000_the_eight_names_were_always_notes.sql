@@ -34,47 +34,31 @@
 -- in this series does. It is deliberately NOT here: a drop hidden inside a
 -- backfill is a decision made by whoever ran the backfill.
 --
--- ── WHY A COUNT, WHEN A COUNT IS USUALLY A CENSUS ─────────────────────────
+-- ── WHY THERE IS NO COUNT ─────────────────────────────────────────────────
 --
--- ADR 0009's rule is that a migration asserts INVARIANTS, never censuses —
--- a count of rows somebody else authored is a fact about a moment, and a
--- migration that asserts one fails forever afterwards for reasons that are
--- nobody's fault.
+-- An earlier draft raised unless exactly eight rows moved. That is a census
+-- wearing an invariant's clothes, and ADR 0009 refuses it: eight is a property
+-- of what this table held on one morning, not of the statement below. It would
+-- have made this file unable to replay against an empty database, where the
+-- correct number to move is zero, and bought a permanent entry in
+-- `migration-replay-baseline.json` for it.
 --
--- Eight is different, and the difference is that THIS STATEMENT is what makes
--- it true. The update below is the only thing that moves a name into a note;
--- the number it moves is a property of the update, not of the table it found.
--- The failure it guards is real and silent: a `where` clause that has drifted
--- past the rows it was written for matches nothing, reports success, and
--- leaves eight sentences behind a field the app has stopped reading.
---
--- The cost is honest and is recorded rather than argued away: this file
--- CANNOT replay against an empty database, where the correct number to move is
--- zero, so it joins `docs/reference/migration-replay-baseline.json` as an
--- `assertion` failure. That is the trade the count buys.
---
--- The second assertion is the one that survives a replay and every later
--- database: no row is left carrying a name with no note. It is the actual
--- post-condition, it is vacuously true where there is nothing to move, and it
--- is what a reader should look at first when this file goes red.
+-- The hazard the count was reaching for is real — a `where` clause that has
+-- drifted past the rows it was written for matches nothing, reports success,
+-- and leaves the sentences behind a field the app has stopped reading. But the
+-- post-condition below already catches exactly that: a move that matched
+-- nothing leaves every one of those rows carrying a name and no note, and the
+-- assertion fires. It is true of every database, forever, and vacuous where
+-- there is nothing to move.
 
 do $move_names_into_notes$
 declare
-  moved_count integer;
   stranded integer;
 begin
-  with moved as (
-    update public.cell_dependencies
-       set note = btrim(name), updated_at = now()
-     where nullif(btrim(coalesce(name, '')), '') is not null
-       and nullif(btrim(coalesce(note, '')), '') is null
-    returning 1
-  )
-  select count(*) into moved_count from moved;
-
-  if moved_count <> 8 then
-    raise exception 'expected to move 8 names into note, moved %', moved_count;
-  end if;
+  update public.cell_dependencies
+     set note = btrim(name), updated_at = now()
+   where nullif(btrim(coalesce(name, '')), '') is not null
+     and nullif(btrim(coalesce(note, '')), '') is null;
 
   select count(*) into stranded
     from public.cell_dependencies
