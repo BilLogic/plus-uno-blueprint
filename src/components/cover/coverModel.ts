@@ -106,7 +106,7 @@ export type CoverSection =
 /**
  * One service's cover page — the copy shown when that service is the active
  * one. A deployment supplies one per service it holds; the active-service
- * choice (#336's selector / the URL slug) picks which page renders.
+ * choice — this tab's selector, or the URL slug — picks which page renders.
  */
 export type CoverServicePage = {
   /**
@@ -119,7 +119,7 @@ export type CoverServicePage = {
 }
 
 /**
- * The deployment's services index (#303/#336) — the body of the services tab.
+ * The deployment's services index — the body of the services tab.
  * It is one page per service rather than a single fixed set of sections: the
  * active service picks its own page.
  *
