@@ -168,23 +168,26 @@ wraps annotation + selection providers) → the transform layer
   onto the content element. Nothing on that path may cause a render.
 - **Semantic zoom** is stamped from the same transform writer: below
   `SEMANTIC_ZOOM_THRESHOLD` the board gets `data-semantic-tier="blocks"`
-  and a `--semantic-label-boost` counter-scale variable. All styling for
-  the tier lives in `src/styles/blueprint.css` under
+  and a `--semantic-label-boost` counter-scale variable. A zoom-in that
+  would leave that tier keeps it and marks the named destination with
+  `data-camera-flight-reveal` so only that subtree shows cell text —
+  flipping the whole board on takeoff was the overview → scenario hitch.
+  All styling for the tier lives in `src/styles/blueprint.css` under
   `[data-semantic-tier]`. The visual encoding is owned by
   [guidelines/foundations/data-viz.md](../guidelines/foundations/data-viz.md).
 - **Camera**: fit-to-view measures `fitSelector` bounds; `focusCells`
   registers per-viewport in a module registry (`src/lib/canvasFocusCells.ts`)
   so portalled surfaces (ledger drawer, agent commands) can fly the camera
-  without a React path to it. Programmatic motion keeps pan and zoom coupled —
-  the viewport centre interpolates linearly, the scale as a ratio — has one
-  cancellable owner, and starts navigation flights against the already-mounted
-  target before the concurrent focus-state render. A matching post-navigation
-  fit joins that flight instead of restarting it; **"matching" is doing real
-  work there**, and the layout invariants that keep it matching are in
-  [guidelines/foundations/motion.md](../guidelines/foundations/motion.md) under "What 'exactly one camera animation per
-  intent' rests on". A fit also waits for its target to measure the same size
-  on two consecutive frames before it flies, so it never aims at half-grown
-  geometry.
+  without a React path to it. Programmatic motion is one **camera flight**:
+  the destination approaches monotonically in screen space, scale changes as
+  a ratio, and duration is bounded but distance-aware. One cancellable owner
+  carries compatible momentum into a newer intent, retargets from live state
+  when geometry changes, and imperatively publishes the same sampled progress
+  to transform and transient focus without per-frame React renders. A fit
+  takes off once the named target exists and retargets while live, so a
+  still-moving header or row does not hold the camera on the settle
+  backstop. The lifecycle
+  invariants are in [motion](../guidelines/foundations/motion.md#what-exactly-one-camera-flight-per-intent-rests-on).
 - **Input ownership**: pointer streams enter through native capture so a lane
   or cell cannot hide pointerdown with `stopPropagation`. Precedence is
   decided in one place — `handlePointerDown` in `useZoomPanViewport.ts` —

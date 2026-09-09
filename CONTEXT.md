@@ -76,6 +76,9 @@ not against a second copy of it — by
 ## Words this instance also uses
 
 **canvas** — the pan/zoom surface the board is drawn on.
+**camera flight** — automatic movement between two views of one stable canvas.
+It preserves where the destination sits relative to the origin; replacing the
+canvas content is a different kind of transition, not a camera flight.
 **compare** — the surface that puts two or more paths of one scenario against
 each other.
 **design mode** — the canvas mode in which cells become editable. Its opposite is

@@ -1,8 +1,8 @@
 ---
 audience: designers
 summary: The motion vocabulary, the drift test that pins it, the reduced-motion policy, and the list of moments that deliberately do not animate.
-sources: src/styles/animations.css, src/lib/motion.ts, src/lib/motion.test.ts, docs/plans/2026-07-30-001-fix-loading-and-motion-system-plan.md
-last-reviewed: 2026-08-25
+sources: src/styles/animations.css, src/lib/motion.ts, src/lib/cameraTransition.ts, src/hooks/useZoomPanViewport.ts, docs/plans/2026-07-30-001-fix-loading-and-motion-system-plan.md
+last-reviewed: 2026-09-09
 ---
 
 # Motion
@@ -18,14 +18,17 @@ rather than per-screen inventions. Five duration tokens and two easing profiles:
 | `--motion-micro`                            | Hover, badges, threshold fades, panel exits                                                            |
 | `--motion-fade` (+ `--motion-fade-stagger`) | Opacity crossfades, and the offset between an out/in pair                                              |
 | `--motion-structural`                       | Width/size changes — sidebar collapse, presentation wipe                                               |
-| `--motion-camera`                           | Programmatic camera flights and their synchronized focus fades (420 ms)                                |
+| `--motion-camera`                           | Nominal camera reference and non-flight camera-adjacent CSS                                             |
 | `--ease-structural`                         | The quintic-out ease for structural moves (a Tailwind `@theme` key, so `ease-structural` is a utility) |
-| `--ease-camera`                             | The symmetric sine-like ease for automatic camera travel and its focus fades                           |
+| `--ease-camera`                             | The symmetric ease family for camera-adjacent CSS                                                       |
 
 Values live in two homes that must agree: `src/styles/animations.css` (CSS)
 and `src/lib/motion.ts` (JS that has to wait for them, plus
 `prefersReducedMotion()`). Illustratively: micro 150ms, fade 200ms + 75ms
-stagger, structural 320ms, camera 420ms — but the files own the numbers.
+stagger, structural 320ms, and camera 420ms as a nominal reference — but
+automatic camera flights derive a 240–650ms duration from screen-space travel
+and logarithmic zoom distance. The camera-flight model owns that bound; route
+call sites do not choose timing.
 Durations are consumed as `duration-(--motion-structural)` since Tailwind v4
 has no duration namespace.
 
@@ -85,14 +88,15 @@ non-animations (rationale in the 2026-07-30 motion plan):
   `transition-[filter,opacity]`. The rule stands and the call site is wrong;
   whether the panel's single filtered surface is cheap enough to be a named
   exception is a perf question this doc cannot settle. Filed, not swept.
-- Exactly **one camera animation per user intent** — a boot, a phase click, a
-  flight; never a restarted or doubled ease. All automatic fits use the same
-  420 ms clock and sine ease so the camera and focus fades settle together.
+- Exactly **one camera flight per user intent** — a boot, a phase click, a
+  flight; never a restarted or doubled ease. Automatic fits use one bounded,
+  distance-aware model. Its sampled progress drives both transform and
+  transient focus, so they settle together without parallel clocks.
 
 Loading follows the same restraint: one deferred skeleton per surface,
 all-or-nothing swap — see [components](../components/overview.md#empty-loading-and-error-states).
 
-## What "exactly one camera animation per intent" rests on
+## What "exactly one camera flight per intent" rests on
 
 The rule above is not self-enforcing. Three invariants hold it up, and each
 has been broken at least once — always with the same symptom, a navigation
@@ -108,11 +112,10 @@ margin 48, no insets) while the settled fit uses the *focused* view's
 (`MAX_ZOOM`, margin 20, 56px insets), and navigating also mounts the sticky
 header, which changes the container's height. `fitToView` skips a second
 animation only when the targets match, so that skip could never fire: every
-click ran a 420 ms glide superseded partway by another, and a sine ease
-restarted from a moving camera departs at zero velocity — glide, brake,
-glide. `createCameraTransitionClock` already covers the latency the
-pre-flight was for, by starting the ease's clock on the first frame the
-browser can draw.
+click ran one glide superseded partway by another, and the replacement
+restarted from zero velocity — glide, brake, glide. The current flight starts
+on the first drawable frame and carries compatible live momentum when a newer
+intent supersedes it.
 
 Keep this property when adding camera entry points: an imperative flight and
 a fit-key flight for the same intent will fight unless they compute the same
@@ -132,23 +135,43 @@ is exactly the case the exclusion was introduced for. Where a hot estimate
 for the focused scenario is strictly the row maximum, focusing it does shrink
 the row. Fixing that properly means fixing the estimator, not the exclusion.
 
-**2. Scale interpolates geometrically, not linearly.** Zoom is the reciprocal
+**2. The destination approaches in screen space while scale interpolates
+geometrically.** Zoom is the reciprocal
 of the visible rect's width, so interpolating width linearly makes the
 perceived rate hyperbolic and the ease curve decorative. Measured on a real
 zoom-out before this was fixed: 78% of the perceived travel was done by the
 halfway frame, 98% by 74% of the duration — the camera flew out and then
-hung, which reads exactly as overshoot. `interpolateCameraTransform`
-interpolates the viewport **centre** linearly and the **scale** as a ratio
-(`z0·(z1/z0)^t`), which is what makes the ease symmetric between zooming in
-and zooming out. `cameraTransition.test.ts` pins equal ratios per quarter.
+hung, which reads exactly as overshoot. A world-linear viewport centre is
+still insufficient: under a large zoom-in it can make the destination move
+farther away on screen before returning. `interpolateCameraTransform` instead
+moves the final viewpoint monotonically toward the screen centre and changes
+**scale** as a ratio (`z0·(z1/z0)^t`). `cameraTransition.test.ts` pins both
+properties densely.
 
-**3. A fit waits for its target's layout to settle.** Compare panels reach
-their real size across more than one commit, so the fit scheduled by a fit-key
-change holds until the target measures the same size on two consecutive frames
-(250 ms backstop). Without it the ease aims at half-grown geometry and the
-resize observer's correction lands as a snap on top of the finished ease. The
-resize observer's own owed-fit branch stands down while that loop is watching,
-since the resizes it sees are the ones being waited out.
+**3. A fit takes off once the named target exists, and retargets while live.**
+Compare panels reach
+their real size across more than one commit. The flight starts once the
+intended element is measurable for two frames — not once its box and the
+viewport have frozen. Waiting for left/top/width/height to agree made
+overview → scenario sit on the 250 ms backstop: focusing a scenario mounts
+a sticky header and can reshuffle row height, so consecutive frames rarely
+match. Overview → phase barely churns, which is why it already felt
+immediate. Late growth after takeoff is a live replan from the current
+transform and velocity, not a second animation or a landing snap. The
+resize observer's owed-fit branch stands down while the settle loop is
+watching, since the resizes it sees are the ones being waited out. The
+250 ms backstop remains for a target that never appears.
+
+**3a. A zoom-in from the blocks tier does not paint the whole board.** Below
+`SEMANTIC_ZOOM_THRESHOLD` cells are density blocks. Overview → phase lands
+still below it, so takeoff is cheap. Overview → scenario lands above it:
+stamping that destination zoom on the canvas root used to reveal every
+cell's text on the first camera frame, a style/paint burst of hundreds of
+milliseconds before anything moved — and the inverse path paid the hide
+on the way back. The flight now keeps the blocks mark and sets
+`data-camera-flight-reveal` on the named target so only that subtree
+shows text. Wheel and pinch still follow the live zoom and will leave
+the tier when the reader asks.
 
 ## The vendored layer's exemption
 

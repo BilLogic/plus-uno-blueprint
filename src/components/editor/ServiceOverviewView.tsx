@@ -279,6 +279,10 @@ type ServiceOverviewViewProps = {
    * flag to get wrong.
    */
   onRevealStage?: (stage: number) => void
+  /** Session-local identity for restoring this canvas after a tab remount. */
+  cameraStateKey?: string
+  /** Notifies an embedding transition after this destination is fitted. */
+  onInitialFitReady?: () => void
 }
 
 /**
@@ -295,6 +299,8 @@ function ServiceOverviewViewImpl({
   firstStageLabel = 'Loading structure…',
   floatingChrome,
   onRevealStage,
+  cameraStateKey,
+  onInitialFitReady,
 }: ServiceOverviewViewProps = {}) {
   const overviewRef = useRef<HTMLDivElement>(null)
   const [overviewEl, setOverviewEl] = useState<HTMLDivElement | null>(null)
@@ -372,9 +378,8 @@ function ServiceOverviewViewImpl({
     and a sine ease restarted from a moving camera departs at zero velocity:
     glide, brake, glide.
 
-    `createCameraTransitionClock` already solves the latency this was for —
-    it starts the ease's clock on the first frame the browser can draw, so
-    reconciliation cannot eat the animation. One writer, one ease.
+    `createCameraFlightPlan` starts the flight from the first drawable frame,
+    so reconciliation cannot eat the animation. One writer, one flight.
   */
   const openCanvasDetail = useCallback(
     (slideId: string) => {
@@ -451,6 +456,13 @@ function ServiceOverviewViewImpl({
     }
     return ids
   }, [pathsByScenario, resolveDrawnPathIds])
+  const focusedSelectedPathIds = useMemo(() => {
+    if (!focusedScenarioId) return []
+    return resolveDrawnPathIds(
+      focusedScenarioId,
+      pathsByScenario.get(focusedScenarioId) ?? [],
+    )
+  }, [focusedScenarioId, pathsByScenario, resolveDrawnPathIds])
 
   const overviewReady = !slidesLoading && !blueprintsLoading
   // Content holds until the bar has visibly REACHED 100%: readiness flips
@@ -486,7 +498,7 @@ function ServiceOverviewViewImpl({
   const cameraSurface = {
     mobileShell,
     isDetail,
-    selectedPathCount: overviewSelectedPathIds.length,
+    selectedPathCount: focusedSelectedPathIds.length,
   }
   const minFitZoom = getMinFitZoom(cameraSurface)
   const semanticZoomThreshold = getSemanticZoomThreshold(cameraSurface)
@@ -544,12 +556,15 @@ function ServiceOverviewViewImpl({
   // recenters after panning away.
   const focusedComparisonCameraKey = getFocusedComparisonCameraKey({
     isFocusedScenario: isSubslide(activeSlide),
-    selectedPathIds: overviewSelectedPathIds,
+    selectedPathIds: focusedSelectedPathIds,
     displayViewType: getScenarioDisplayViewType(activeSlide) ?? 'stacked',
   })
   const fitKey = overviewReady
     ? `service-canvas:${view}:${cameraTargetId ?? 'none'}:${phases.length}-${scenarioIds.length}:${focusNonce}:${focusedComparisonCameraKey}`
     : `service-canvas:loading:${skeletonPhases.map((phase) => phase.scenarioCount).join('-') || 'unknown'}`
+  const cameraDestinationKey = overviewReady
+    ? `service-canvas:${view}:${cameraTargetId ?? 'none'}:${phases.length}-${scenarioIds.length}:${focusedComparisonCameraKey}`
+    : fitKey
 
   // The cell-detail panel clears its selection when this changes, so it must
   // track navigation only — never the camera's own bookkeeping. `fitKey`
@@ -833,6 +848,17 @@ function ServiceOverviewViewImpl({
   const noPathsSelected =
     pathsByScenario.size > 0 && overviewSelectedPathIds.length === 0
 
+  const handleInitialFitReady = useCallback(() => {
+    // Loading-skeleton fits are not a destination. The callback is still
+    // passed from the first render so the content fit cannot finish in the
+    // layout-effect window before a passive `contentSettled` flip supplies it.
+    if (overviewReady) onInitialFitReady?.()
+  }, [onInitialFitReady, overviewReady])
+
+  useLayoutEffect(() => {
+    if (contentSettled && noPathsSelected) onInitialFitReady?.()
+  }, [contentSettled, noPathsSelected, onInitialFitReady])
+
   const postToPreLoop = soloPhase
     ? null
     : getOverviewPostToPreLoopTransition(phases)
@@ -1033,6 +1059,12 @@ function ServiceOverviewViewImpl({
                 className="absolute inset-0"
                 panIgnoreSelector={OVERVIEW_PAN_IGNORE}
                 focusCellsKey={focusedScenarioId ?? soloScenarioId ?? undefined}
+                cameraStateKey={
+                  cameraStateKey ?? (mobileShell ? undefined : 'desktop:blueprint')
+                }
+                cameraDestinationKey={cameraDestinationKey}
+                cameraOutcomeKey={cameraTargetId ?? undefined}
+                onFitReady={handleInitialFitReady}
               >
                 <DeferredSkeleton
                   loading={!overviewSettled}

@@ -1,9 +1,15 @@
 ---
 date: 2026-08-19
 topic: camera-motion-policy
+status: superseded
+distilled-into: docs/guidelines/foundations/motion.md
 ---
 
 # Camera Motion Policy
+
+> Historical exploration. The current contract is maintained in
+> [Motion](../guidelines/foundations/motion.md); its distance-aware flight
+> model supersedes the fixed-duration policy below.
 
 ## What We're Building
 

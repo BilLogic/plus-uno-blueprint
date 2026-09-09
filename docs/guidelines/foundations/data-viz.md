@@ -46,7 +46,10 @@ cell text is smudge, so the overview switches encodings: cells render as
 **flat blocks** and phase title badges **counter-scale** to hold a constant
 on-screen size. What the tier communicates is the **density map** — journey
 length, cells per phase, above/below the line of visibility — with the phase
-labels as the only legible text. The CSS in `src/styles/blueprint.css`
+labels as the only legible text. A zoom-in that would leave the tier (overview
+→ a scenario) keeps the density encoding on the board and reveals only the
+named destination (`data-camera-flight-reveal`); flipping every cell on
+takeoff was a hitch, not a reading. The CSS in `src/styles/blueprint.css`
 (SEMANTIC ZOOM block) owns the fill choices; its forced-colors restatement
 redraws the blocks in `CanvasText` so the density map survives High Contrast.
 Focused multi-path comparisons use a lower cutoff because their fitted frame is
