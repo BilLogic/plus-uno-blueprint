@@ -392,7 +392,7 @@ export const PANEL_COLUMNS = Object.freeze({
   services: ['summary', 'entity_examples'],
   business_models: ['funding', 'pricing', 'delivery_cost', 'revenue_model', 'partners'],
   stakeholders: ['name', 'kind', 'summary', 'aliases'],
-  evidence: ['kind', 'title', 'ref', 'excerpt'],
+  evidence: ['kind', 'title', 'note'],
   audit_findings: ['status', 'severity', 'summary', 'run_id', 'cell_ids', 'cell_keys', 'source'],
   slices: ['title', 'summary', 'kind', 'actor', 'authorship'],
   touchpoints: ['name', 'updated_at'],

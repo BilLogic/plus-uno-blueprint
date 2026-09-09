@@ -166,15 +166,17 @@ function KindHint({ kind }: { kind: DependencyKind }) {
  * LABELLED, and the label is not the placeholder — the rule #548 established on
  * the evidence form: a placeholder describes the box only until somebody types
  * into it, which is exactly when a half-filled form most needs to say what its
- * boxes hold. The word "optional" sits beside the name in the same lighter
- * weight the evidence form uses, so the two panels say "you may leave this
- * empty" the same way.
+ * boxes hold.
  *
- * The pair are not one component yet. `PanelSectionLabel` is this app's shared
- * section label and it is in the reconciled set, so giving it an `optional`
- * half is a change that goes upstream to the template first. Until it does,
- * this and `CellEvidenceTab`'s `FieldLabel` are the same six lines twice, on
- * purpose and recorded.
+ * THE TWO PANELS NO LONGER SAY IT THE SAME WAY, and that is worth recording
+ * rather than leaving to be found. #548 gave both this row and the evidence
+ * form the word "optional" beside the name; #553 moved the evidence form onto
+ * `panelShell`'s `Field`, which marks the field that CANNOT be left empty with
+ * an asterisk and says nothing about the ones that can. Every other panel in
+ * this app already reads that way, so the evidence form joined the majority
+ * and this row is now the last place the word appears. Moving it is a
+ * one-line change and belongs with whoever next has a reason to open this
+ * file; what it is not is an accident.
  */
 function NoteField({
   value,

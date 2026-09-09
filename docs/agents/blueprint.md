@@ -257,9 +257,9 @@ Content at lane × step intersection, within one path.
 | `value_props` | Array of {for, value} — value generated per beneficiary (user, business, actor). |
 
 ### `evidence`
-Provenance rows for cells and proposition questions. A cell with zero rows is an ASSUMPTION (derived, never stored). Restricted SELECT: excerpts may hold interview content.
+Provenance rows for cells and proposition questions. A cell with zero rows is an ASSUMPTION (derived, never stored). Restricted SELECT: a note may hold interview content.
 
-2 of 14 columns described.
+3 of 13 columns described.
 
 | Column | Meaning |
 |---|---|
@@ -268,12 +268,11 @@ Provenance rows for cells and proposition questions. A cell with zero rows is an
 | `cell_key` | — |
 | `created_at` | — |
 | `created_by` | — |
-| `excerpt` | — |
 | `id` | — |
 | `kind` | — |
+| `note` | The one thing worth keeping about this source, in the author's own words: a quotation, an observation, or a link. A URL written here renders as a link wherever the source is displayed. |
 | `observed_at` | Date-only by design (timestamps could re-identify participants). |
 | `proposition_question_key` | — |
-| `ref` | — |
 | `service_id` | — |
 | `title` | — |
 | `updated_at` | — |

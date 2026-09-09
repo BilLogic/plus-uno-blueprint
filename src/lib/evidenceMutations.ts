@@ -26,8 +26,16 @@ export type EvidenceDraft = {
   cellKey: string
   kind: EvidenceKind
   title: string
-  ref: string | null
-  excerpt: string | null
+  /**
+   * The one thing worth keeping about this source, in the author's own words.
+   *
+   * `ref` and `excerpt` were both here, and both are gone (20260909060000):
+   * `excerpt` IS this column, renamed, and `ref` was dropped after 66 rows
+   * left it empty. A quotation is one thing an author might write here, an
+   * observation is another, and a URL is a third — the panel linkifies one
+   * written inside the note, which is the whole job `ref` was carrying.
+   */
+  note: string | null
 }
 
 /**
@@ -58,8 +66,7 @@ export async function addEvidence(
       cell_key: draft.cellKey,
       kind: draft.kind,
       title,
-      ref: draft.ref?.trim() || null,
-      excerpt: draft.excerpt?.trim() || null,
+      note: draft.note?.trim() || null,
     })
     .select('id')
     .single()
@@ -113,8 +120,7 @@ export async function deleteEvidence(
 export type EvidenceUpdate = {
   kind?: EvidenceKind
   title?: string
-  ref?: string | null
-  excerpt?: string | null
+  note?: string | null
 }
 
 /**
@@ -133,7 +139,7 @@ export async function updateEvidence(
 ): Promise<void> {
   const { data: before, error: readError } = await client
     .from('evidence')
-    .select('id, kind, title, ref, excerpt')
+    .select('id, kind, title, note')
     .eq('id', evidenceId)
     .maybeSingle()
   if (readError) throw toAuthoringError(readError)
@@ -142,11 +148,7 @@ export async function updateEvidence(
   const next = {
     kind: update.kind ?? before.kind,
     title: update.title?.trim() || before.title,
-    ref: update.ref === undefined ? before.ref : update.ref?.trim() || null,
-    excerpt:
-      update.excerpt === undefined
-        ? before.excerpt
-        : update.excerpt?.trim() || null,
+    note: update.note === undefined ? before.note : update.note?.trim() || null,
   }
 
   const { error } = await client
@@ -166,8 +168,7 @@ export async function updateEvidence(
           update: {
             kind: before.kind as EvidenceKind,
             title: before.title,
-            ref: before.ref,
-            excerpt: before.excerpt,
+            note: before.note,
           },
         },
       },

@@ -547,16 +547,41 @@ const GRANT_MIGRATION_FILES = [
 ]
 
 /**
+ * Columns the grant migration named that a LATER migration dropped outright,
+ * with nothing taking their place — so there is no rename to read them
+ * through, and nothing for `PANEL_COLUMNS` to declare.
+ *
+ * A named list rather than a rule inferred from the rename map, because the
+ * map is renames and says so: a drop that appeared there as a `was` with no
+ * `is` would be a third meaning for a column the map exists to give one
+ * meaning to. Each entry says which migration dropped it, in a sentence a
+ * stranger can check against the file.
+ */
+export const DROPPED_SINCE_GRANT = Object.freeze([
+  {
+    column: 'evidence.ref',
+    because:
+      'A source carries one note (20260909060000). The locator was filled on ' +
+      'zero of 66 rows and its job — reaching a source that lives on the web — ' +
+      'is done by a URL written inside the note, which renders as a link. The ' +
+      'migration refuses to run rather than destroy a locator it cannot turn ' +
+      'into a sentence.',
+  },
+])
+
+/**
  * A column the grant migration named under a spelling a LATER migration
  * retired. Postgres moves a column's grants with the column, so the grant
  * still stands under the new name — and the file is frozen text that must not
  * be edited to say so. Read it through the rename map instead: a `was` of the
  * form `table.column` in a row whose migration post-dates the grant becomes
  * its `is`. A `was` whose `is` sits on ANOTHER table is a column that left —
- * Postgres drops a column's grants with it — and comes back as null.
+ * Postgres drops a column's grants with it — and comes back as null. A column
+ * on `DROPPED_SINCE_GRANT` left the same way and comes back as null too.
  * Anything else is returned as written.
  */
 function renamedSince(entry) {
+  if (DROPPED_SINCE_GRANT.some((one) => one.column === entry)) return null
   for (const row of RENAME_MAP) {
     if (!row.migrations.some((version) => version > GRANT_MIGRATION)) continue
     const at = row.was.indexOf(entry)

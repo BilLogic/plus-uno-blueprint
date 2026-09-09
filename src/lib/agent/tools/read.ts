@@ -383,7 +383,7 @@ export async function listCellDependencies(
 }
 
 const EVIDENCE_SELECT =
-  'id, cell_id, kind, title, ref, excerpt, observed_at, created_at'
+  'id, cell_id, kind, title, note, observed_at, created_at'
 
 /** One evidence row as a line — the shape both evidence readers render. */
 function evidenceLine(row: {
@@ -391,13 +391,11 @@ function evidenceLine(row: {
   cell_id: string | null
   kind: string
   title: string
-  ref: string | null
   observed_at: string | null
 }): string {
-  const ref = row.ref ? ` ref=${row.ref}` : ''
   const seen = row.observed_at ? ` observed=${row.observed_at.slice(0, 10)}` : ''
   const cell = row.cell_id ? ` cell=${row.cell_id}` : ''
-  return `[${row.kind}] "${row.title}"${ref}${seen}${cell} (${row.id})`
+  return `[${row.kind}] "${row.title}"${seen}${cell} (${row.id})`
 }
 
 /**
@@ -428,7 +426,7 @@ export async function listEvidence(
   ].join('\n')
 }
 
-/** Named evidence rows in full — excerpt included. */
+/** Named evidence rows in full — the note included. */
 export async function getEvidence(
   client: Client,
   ids: string[],
@@ -442,7 +440,7 @@ export async function getEvidence(
   if (!data || data.length === 0) return 'No evidence with those ids.'
   const sections = data.map((row) => {
     const lines = [evidenceLine(row)]
-    if (row.excerpt) lines.push(`  excerpt: ${row.excerpt}`)
+    if (row.note) lines.push(`  note: ${row.note}`)
     return lines.join('\n')
   })
   const missing = ids.filter((id) => !data.some((row) => row.id === id))

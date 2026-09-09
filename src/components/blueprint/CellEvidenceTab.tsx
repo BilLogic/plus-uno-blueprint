@@ -6,7 +6,6 @@ import {
   CircleDashed,
   ClipboardList,
   Eye,
-  ExternalLink,
   FileText,
   Lightbulb,
   MessageSquare,
@@ -19,13 +18,12 @@ import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { OptionSelect } from '@/components/blueprint/OptionSelect'
-import { PANEL_TEXTAREA_CLASS } from '@/components/blueprint/panelShell'
+import { Field, PANEL_TEXTAREA_CLASS } from '@/components/blueprint/panelShell'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { invalidateEvidence, useEvidence } from '@/hooks/useEvidence'
 import { addEvidence } from '@/lib/evidenceMutations'
-import { PANEL_TEXT } from '@/lib/panelText'
+import { linkedTextSegments } from '@/lib/linkedText'
 import { resolveFirstServiceId } from '@/lib/service'
-import { safeExternalHref } from '@/lib/sliceCells'
 import { errorMessage } from '@/lib/utils'
 import type { Database, Evidence } from '@/types/database'
 
@@ -70,58 +68,46 @@ function kindIcon(kind: string) {
   return <Icon className="mt-px size-3.5 shrink-0 text-muted-foreground" aria-hidden />
 }
 
+/**
+ * A saved source: one title, one kind, one note, one text treatment.
+ *
+ * It wore three at once — a monospaced link, an italic passage, and the rule
+ * down that passage's left edge — which is three ways of saying "this text is
+ * different", stacked in a panel 264 pixels wide. The kind is a quiet suffix
+ * after the title now, so the icon reinforces it rather than carrying it
+ * alone, and a URL written inside the note is the link: `ref` had a field of
+ * its own for 66 rows and was filled zero times.
+ */
 function EvidenceRow({ row }: { row: Evidence }) {
-  const refHref = safeExternalHref(row.ref)
   return (
     <li className="flex items-start gap-2 border-b border-muted py-2 last:border-0">
       {kindIcon(row.kind)}
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <p className="text-xs font-medium text-foreground">{row.title}</p>
-        {refHref ? (
-          <a
-            href={refHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex w-fit min-w-0 items-center gap-1 text-2xs text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ExternalLink className="size-3 shrink-0" aria-hidden />
-            {/* A citation ref or URL — machine data, and mono keeps a truncated
-                one scannable character by character. */}
-            <span className="truncate font-mono">{row.ref}</span>
-          </a>
-        ) : null}
-        {row.excerpt ? (
-          <p className="border-l-2 border-border pl-2 text-2xs leading-snug text-muted-foreground italic">
-            {row.excerpt}
+        <p className="text-xs font-medium break-words text-foreground">
+          {row.title}{' '}
+          <span className="font-normal text-muted-foreground">{row.kind}</span>
+        </p>
+        {row.note ? (
+          <p className="text-2xs leading-snug break-words text-muted-foreground">
+            {linkedTextSegments(row.note).map((segment, index) =>
+              segment.kind === 'link' ? (
+                <a
+                  key={index}
+                  href={segment.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 transition-colors hover:text-foreground"
+                >
+                  {segment.text}
+                </a>
+              ) : (
+                <span key={index}>{segment.text}</span>
+              ),
+            )}
           </p>
         ) : null}
       </div>
     </li>
-  )
-}
-
-/**
- * A field's name, in the panel's own eyebrow type, and — where the field can
- * be left empty — the word that says so.
- *
- * Every field in this form carries one. A placeholder cannot do this job: it
- * describes the field only until someone types into it, which is exactly when
- * a half-filled form most needs to say what its boxes hold.
- */
-function FieldLabel({
-  text,
-  optional = false,
-}: {
-  text: string
-  optional?: boolean
-}) {
-  return (
-    <span className={PANEL_TEXT.sectionLabel}>
-      {text}
-      {optional ? (
-        <span className="font-normal text-muted-foreground/70"> · optional</span>
-      ) : null}
-    </span>
   )
 }
 
@@ -137,8 +123,7 @@ function AddSourceForm({
   const [open, setOpen] = useState(false)
   const [kind, setKind] = useState<EvidenceKind>('interview')
   const [title, setTitle] = useState('')
-  const [ref, setRef] = useState('')
-  const [excerpt, setExcerpt] = useState('')
+  const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -174,13 +159,11 @@ function AddSourceForm({
         cellKey: cellId,
         kind,
         title: title.trim(),
-        ref: ref.trim() || null,
-        excerpt: excerpt.trim() || null,
+        note: note.trim() || null,
       })
       setOpen(false)
       setTitle('')
-      setRef('')
-      setExcerpt('')
+      setNote('')
       onAdded()
     } catch (submitError) {
       setError(
@@ -198,6 +181,18 @@ function AddSourceForm({
         void handleSubmit(event)
       }}
     >
+      {/* Three fields, one group, no rule between them. The rule used to argue
+          that what a source IS and what a source SAYS are different questions;
+          authors did not experience them as different questions, and the two
+          boxes under it held one locator (never) and one quotation (twice, in
+          66 rows, once with a summary).
+
+          `Field` supplies the label, and the asterisk it draws on Title is
+          this panel's only signal that a field cannot be left empty — so the
+          absence of one on Note is what says Note is optional. The word
+          "optional" is not printed beside it: the panel already has one
+          vocabulary for this and a second is a second thing to keep true. */}
+
       {/* A kind is a short enum and a title is a sentence, so they share a
           row. Stacked, they were two of four full-width boxes in a panel 264px
           wide, and the enum was as wide as the sentence. */}
@@ -207,64 +202,47 @@ function AddSourceForm({
             came up two pixels short and clipped the one kind nobody would
             notice was clipped. A title is free text and scrolls; a kind is
             chosen by reading it, so the enum takes the fixed column. */}
-        <div className="flex w-32 shrink-0 flex-col gap-1">
-          <FieldLabel text="Kind" />
-          {/*
-            The panel's own select — the same control the Status and Role
-            fields wear, and the reason its trigger class exists. What stood
-            here was a native `<select>` carrying its own radius, its own
-            border token, no hover state and `font-mono`, which made a source
-            kind read as machine data and clipped the value it was showing:
-            28px of box, 8px of the forms plugin's padding at each end, and a
-            16px line in the 10px that were left.
-          */}
-          <OptionSelect
-            value={kind}
-            onChange={setKind}
-            options={KIND_OPTIONS}
-            aria-label="Kind"
-          />
+        <div className="w-32 shrink-0">
+          <Field label="Kind">
+            {/*
+              The panel's own select — the same control the Status and Role
+              fields wear, and the reason its trigger class exists. What stood
+              here was a native `<select>` carrying its own radius, its own
+              border token, no hover state and `font-mono`, which made a source
+              kind read as machine data and clipped the value it was showing:
+              28px of box, 8px of the forms plugin's padding at each end, and a
+              16px line in the 10px that were left.
+            */}
+            <OptionSelect
+              value={kind}
+              onChange={setKind}
+              options={KIND_OPTIONS}
+              aria-label="Kind"
+            />
+          </Field>
         </div>
-        <label className="flex min-w-0 flex-1 flex-col gap-1">
-          <FieldLabel text="Title" />
-          <Input
-            required
-            placeholder="e.g. Session observation, P3"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-          />
-        </label>
+        <div className="min-w-0 flex-1">
+          <Field label="Title" required>
+            <Input
+              required
+              aria-label="Title"
+              placeholder="e.g. Session observation, P3"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+            />
+          </Field>
+        </div>
       </div>
-      <label className="flex flex-col gap-1">
-        <FieldLabel text="Link or reference" optional />
-        <Input
-          placeholder="A URL, or where in the document it sits"
-          value={ref}
-          onChange={(event) => setRef(event.target.value)}
+      <Field label="Note">
+        <textarea
+          rows={3}
+          aria-label="Note"
+          placeholder="Anything worth keeping — a quotation, an observation, a link"
+          className={PANEL_TEXTAREA_CLASS}
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
         />
-      </label>
-      {/*
-        Under a rule, because what the source SAYS is a different question from
-        what the source IS, and the answer is written in someone else's words.
-
-        The ticket asks for two fields here — the quote, and the author's own
-        remark about it. This deployment has one: `evidence.note` was dropped
-        by 20260830190000, which asserted it held nothing first, and
-        `scripts/tests/one-spelling-each.test.mjs` owns that invariant. The
-        group is the shape; the second field is upstream's to keep.
-      */}
-      <div className="flex flex-col gap-2 border-t border-border pt-2.5">
-        <label className="flex flex-col gap-1">
-          <FieldLabel text="Quote from the source" optional />
-          <textarea
-            rows={2}
-            placeholder="Their words, not a summary of them"
-            className={PANEL_TEXTAREA_CLASS}
-            value={excerpt}
-            onChange={(event) => setExcerpt(event.target.value)}
-          />
-        </label>
-      </div>
+      </Field>
       {error ? (
         /* The source was not saved — an error, not a caution. */
         <Alert variant="destructive">

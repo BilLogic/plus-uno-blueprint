@@ -71,7 +71,6 @@ const connection = (patch: Partial<BlueprintCellConnection> = {}): BlueprintCell
   stepIndex: 1,
   kind: 'connection',
   linkKind: 'leads_to',
-  linkName: null,
   linkNote: 'the sentence this edge arrived with',
   isTech: false,
   techItems: [],

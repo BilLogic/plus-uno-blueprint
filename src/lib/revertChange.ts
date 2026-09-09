@@ -311,7 +311,7 @@ export async function executeRevert(
       // `updateEvidence` builds this payload inline from its own `select` of
       // the row it is about to write, and narrows the raw column with
       // `before.kind as EvidenceKind`. So the boundary proves the OBJECT is
-      // this build's — the four keys are there, at the JS types the compiler
+      // this build's — the three keys are there, at the JS types the compiler
       // saw — while `kind`'s membership of the union is the database's word,
       // not ours. A parse here would be the wrong instrument: the value is
       // going straight back to the column it came out of, so refusing a kind
