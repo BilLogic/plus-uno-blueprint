@@ -161,7 +161,7 @@ contract in short:
 - Exactly one camera animation per intent; reduced motion makes every fit a
   jump. What holds that up — one writer per navigation, geometric scale
   interpolation, and a fit that waits for its target to settle — is
-  [motion](../foundations/motion.md#what-exactly-one-camera-animation-per-intent-rests-on).
+  [motion](../foundations/motion.md#what-exactly-one-camera-flight-per-intent-rests-on).
   Automatic travel follows a bounded distance-aware camera flight: zoom is
   geometric, screen-space travel is monotonic, and compatible velocity carries
   across superseding destinations. Focus emphasis reads the same flight's

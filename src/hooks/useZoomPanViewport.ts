@@ -20,6 +20,7 @@ import {
   type CameraVelocity,
 } from '@/lib/cameraTransition'
 import { isCanvasResizeRefitSuppressed } from '@/lib/canvasChromeResize'
+import { publishCanvasNavigationOutcome } from '@/lib/canvasNavigationOutcome'
 import {
   beginCanvasViewState,
   writeCanvasViewState,
@@ -112,6 +113,8 @@ type UseZoomPanViewportOptions = {
   cameraDestinationKey?: string
   /** Called after the current reset destination has a committed fit. */
   onFitReady?: () => void
+  /** Semantic selection id used to report an exact navigation outcome. */
+  cameraOutcomeKey?: string
 }
 
 /**
@@ -272,6 +275,7 @@ function isSameFitGeometry(
 
 type FocusPaintSnapshot = {
   element: HTMLElement
+  opacity: string
   transition: string
 }
 
@@ -294,6 +298,7 @@ function focusPaintElements(target: HTMLElement | null): HTMLElement[] {
 function captureFocusPaint(elements: readonly HTMLElement[]) {
   return elements.map((element) => ({
     element,
+    opacity: element.style.opacity,
     transition: element.style.transition,
   }))
 }
@@ -301,11 +306,7 @@ function captureFocusPaint(elements: readonly HTMLElement[]) {
 function restoreFocusPaint(transfer: CameraFocusTransfer | null) {
   if (!transfer) return
   for (const snapshot of [...transfer.origin, ...transfer.destination]) {
-    snapshot.element.style.opacity = snapshot.element.closest(
-      '[data-canvas-focus-dimmed]',
-    )
-      ? '0.3'
-      : ''
+    snapshot.element.style.opacity = snapshot.opacity
     snapshot.element.style.transition = snapshot.transition
   }
 }
@@ -344,6 +345,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     cameraStateKey,
     cameraDestinationKey = resetKey ?? fitSelector,
     onFitReady,
+    cameraOutcomeKey,
   } = options
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -446,6 +448,8 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
    */
   const fitSettlingRef = useRef(false)
   const navigationGenerationRef = useRef(0)
+  const pendingSemanticOutcomeKeyRef = useRef<string | null>(null)
+  const semanticOutcomeGenerationRef = useRef(0)
   /**
    * Portrait/landscape, for the rotation rule in the resize observer.
    *
@@ -522,12 +526,8 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     (kind: 'cancelled' | 'superseded' = 'cancelled') => {
       restoreFocusPaint(activeFocusTransferRef.current)
       activeFocusTransferRef.current = null
+      restoreFocusPaint(pendingFocusTransferRef.current)
       if (kind === 'cancelled') pendingFocusTransferRef.current = null
-      if (kind === 'cancelled') {
-        navigationGenerationRef.current += 1
-        pendingFitRef.current = false
-        fitSettlingRef.current = false
-      }
       carriedFitVelocityRef.current =
         kind === 'superseded' ? fitAnimationVelocityRef.current : undefined
       if (fitAnimationRef.current !== null) {
@@ -553,12 +553,38 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     [],
   )
 
+  const resolveSemanticOutcome = useCallback(
+    (result: CameraTransitionResult) => {
+      const key = pendingSemanticOutcomeKeyRef.current
+      if (!key) return
+      pendingSemanticOutcomeKeyRef.current = null
+      semanticOutcomeGenerationRef.current += 1
+      publishCanvasNavigationOutcome(key, result)
+    },
+    [],
+  )
+
+  const cancelCameraNavigation = useCallback(() => {
+    resolveSemanticOutcome({
+      kind: 'cancelled',
+      transform: transformRef.current,
+    })
+    navigationGenerationRef.current += 1
+    pendingFitRef.current = false
+    fitSettlingRef.current = false
+    cancelFitAnimation()
+  }, [cancelFitAnimation, resolveSemanticOutcome])
+
   const supersedeCameraNavigation = useCallback(() => {
+    resolveSemanticOutcome({
+      kind: 'superseded',
+      transform: transformRef.current,
+    })
     navigationGenerationRef.current += 1
     pendingFitRef.current = false
     fitSettlingRef.current = false
     cancelFitAnimation('superseded')
-  }, [cancelFitAnimation])
+  }, [cancelFitAnimation, resolveSemanticOutcome])
 
   const commitTransform = useCallback(
     (
@@ -652,6 +678,9 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         fitAnimationResolveRef.current = resolve
         let firstFrameAt: number | null = null
         let lastFrameAt: number | null = null
+        let lastRetargetAt = Number.NEGATIVE_INFINITY
+        let focusProgress = 0
+        let segmentFocusStart = 0
         fitAnimationRetargetRef.current = (nextTarget) => {
           if (isSameTransform(target, nextTarget)) return
           const viewport = readViewport()
@@ -670,19 +699,29 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
               : { durationMs: fitDurationMs }),
             initialVelocity: fitAnimationVelocityRef.current,
           })
+          segmentFocusStart = focusProgress
           firstFrameAt = lastFrameAt
+          lastRetargetAt = lastFrameAt ?? lastRetargetAt
         }
         const step = (now: number) => {
           lastFrameAt = now
           if (activeFlightTracksFitRef.current) {
             const liveTarget = computeLiveFitRef.current?.()
-            if (liveTarget && !isSameTransform(target, liveTarget)) {
+            if (
+              liveTarget &&
+              !isSameTransform(target, liveTarget) &&
+              now - lastRetargetAt >= 64
+            ) {
               fitAnimationRetargetRef.current?.(liveTarget)
             }
           }
           firstFrameAt ??= now
           const sample = plan.sample(now - firstFrameAt)
-          applyFocusPaint(activeFocusTransferRef.current, sample.progress)
+          focusProgress = Math.max(
+            focusProgress,
+            segmentFocusStart + (1 - segmentFocusStart) * sample.progress,
+          )
+          applyFocusPaint(activeFocusTransferRef.current, focusProgress)
           fitAnimationVelocityRef.current = sample.velocity
           commitTransform(
             sample.transform.pan,
@@ -750,7 +789,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       const el = containerRef.current
       if (!el) return
 
-      cancelFitAnimation()
+      cancelCameraNavigation()
       userAdjustedViewRef.current = true
 
       const rect = el.getBoundingClientRect()
@@ -767,7 +806,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
 
       commitTransform(next.pan, next.zoom, syncReact)
     },
-    [cancelFitAnimation, commitTransform],
+    [cancelCameraNavigation, commitTransform],
   )
 
   const zoomBetweenPoints = useCallback(
@@ -782,7 +821,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       const el = containerRef.current
       if (!el) return
 
-      cancelFitAnimation()
+      cancelCameraNavigation()
       userAdjustedViewRef.current = true
 
       const rect = el.getBoundingClientRect()
@@ -795,7 +834,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       )
       commitTransform(next.pan, next.zoom, syncReact)
     },
-    [cancelFitAnimation, commitTransform],
+    [cancelCameraNavigation, commitTransform],
   )
 
   /**
@@ -904,31 +943,35 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       if (!next) return false
 
       const shouldAnimate =
-        (options?.animate ?? animateFitRef.current) && !prefersReducedMotion()
+        (options?.animate ?? animateFitRef.current) &&
+        !prefersReducedMotion() &&
+        !document.hidden
+      let outcome: Promise<CameraTransitionResult>
       if (shouldAnimate) {
         if (isSameTransform(transformRef.current, next)) {
-          pendingFocusTransferRef.current = null
           cancelFitAnimation('superseded')
-          return Promise.resolve<CameraTransitionResult>({
+          pendingFocusTransferRef.current = null
+          outcome = Promise.resolve<CameraTransitionResult>({
             kind: 'completed',
             transform: next,
           })
-        }
-        const activeTarget = fitAnimationTargetRef.current
-        if (
-          !activeTarget ||
-          !isSameTransform(activeTarget, { pan: next.pan, zoom: next.zoom })
-        ) {
-          if (activeTarget && fitAnimationRetargetRef.current) {
-            fitAnimationRetargetRef.current(next)
-            return fitAnimationPromiseRef.current!
+        } else {
+          const activeTarget = fitAnimationTargetRef.current
+          if (
+            !activeTarget ||
+            !isSameTransform(activeTarget, { pan: next.pan, zoom: next.zoom })
+          ) {
+            if (activeTarget && fitAnimationRetargetRef.current) {
+              fitAnimationRetargetRef.current(next)
+              outcome = fitAnimationPromiseRef.current!
+            } else {
+              outcome = animateTransform(next.pan, next.zoom, true)
+            }
           } else {
-            return animateTransform(next.pan, next.zoom, true)
+            outcome = fitAnimationPromiseRef.current!
           }
         }
-        return fitAnimationPromiseRef.current!
       } else {
-        pendingFocusTransferRef.current = null
         /*
           Cancel first. Every other camera entry point in this file does
           (`zoomAtPoint`, `zoomBetweenPoints`, `beginPan`, `panBy`, the wheel
@@ -946,7 +989,12 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
           the pre-layout framing the instant the tab is looked at.
         */
         cancelFitAnimation()
+        pendingFocusTransferRef.current = null
         commitTransform(next.pan, next.zoom, true)
+        outcome = Promise.resolve<CameraTransitionResult>({
+          kind: 'completed',
+          transform: next,
+        })
       }
       const content = contentRef.current
       if (content) {
@@ -977,10 +1025,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
           )
         })
       }
-      return Promise.resolve<CameraTransitionResult>({
-        kind: 'completed',
-        transform: next,
-      })
+      return outcome
     },
     [animateTransform, cancelFitAnimation, commitTransform, computeFitTransform],
   )
@@ -1016,10 +1061,10 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   )
 
   const resetView = useCallback(() => {
-    cancelFitAnimation()
+    cancelCameraNavigation()
     userAdjustedViewRef.current = false
     commitTransform({ x: 0, y: 0 }, 1, true)
-  }, [cancelFitAnimation, commitTransform])
+  }, [cancelCameraNavigation, commitTransform])
 
   useLayoutEffect(() => {
     const { pan: p, zoom: z } = transformRef.current
@@ -1032,8 +1077,14 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     // its geometry must not leave the previous flight visibly pursuing an
     // intent the reader has already replaced. Supersession carries the live
     // compatible velocity into the flight that starts after settling.
+    resolveSemanticOutcome({
+      kind: 'superseded',
+      transform: transformRef.current,
+    })
     cancelFitAnimation('superseded')
     const navigationGeneration = ++navigationGenerationRef.current
+    pendingSemanticOutcomeKeyRef.current = cameraOutcomeKey ?? null
+    const semanticOutcomeGeneration = ++semanticOutcomeGenerationRef.current
     const content = contentRef.current
     const nextFocusTarget =
       content?.querySelector<HTMLElement>(fitSelector) ?? null
@@ -1086,6 +1137,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         userAdjustedViewRef.current = true
         pendingFitRef.current = false
         commitTransform(restored.pan, restored.zoom, true)
+        resolveSemanticOutcome({ kind: 'completed', transform: restored })
         onFitReadyRef.current?.()
         return
       }
@@ -1160,6 +1212,9 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       fitSettlingRef.current = false
       stop()
       void outcome.then((result) => {
+        if (semanticOutcomeGeneration === semanticOutcomeGenerationRef.current) {
+          resolveSemanticOutcome(result)
+        }
         if (
           result.kind === 'completed' &&
           navigationGeneration === navigationGenerationRef.current
@@ -1259,6 +1314,8 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     runPendingFit,
     cancelFitAnimation,
     commitTransform,
+    cameraOutcomeKey,
+    resolveSemanticOutcome,
   ])
 
   useEffect(
@@ -1275,8 +1332,8 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   )
 
   useEffect(() => {
-    return () => cancelFitAnimation()
-  }, [cancelFitAnimation])
+    return () => cancelCameraNavigation()
+  }, [cancelCameraNavigation])
 
   useEffect(() => {
     const content = contentRef.current
@@ -1516,7 +1573,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         }
         e.preventDefault()
         e.stopImmediatePropagation()
-        cancelFitAnimation()
+        cancelCameraNavigation()
         userAdjustedViewRef.current = true
         const { pan: p, zoom: z } = transformRef.current
         commitTransform(
@@ -1539,7 +1596,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       capture: true,
     })
     return () => window.removeEventListener('wheel', onWheel, { capture: true })
-  }, [cancelFitAnimation, commitTransform, syncZoomToReact, zoomAtPoint])
+  }, [cancelCameraNavigation, commitTransform, syncZoomToReact, zoomAtPoint])
 
   /**
    * Touch gestures ride the SAME Pointer Events as mouse pan — no parallel
@@ -1584,7 +1641,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
 
   const beginPan = useCallback(
     (clientX: number, clientY: number) => {
-      cancelFitAnimation()
+      cancelCameraNavigation()
       userAdjustedViewRef.current = true
       isPanningRef.current = true
       setIsPanning(true)
@@ -1595,7 +1652,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         panY: transformRef.current.pan.y,
       }
     },
-    [cancelFitAnimation],
+    [cancelCameraNavigation],
   )
 
   const endPan = useCallback(() => {
@@ -1640,7 +1697,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
               // A pointer that lifted between the map write and here.
             }
           }
-          cancelFitAnimation()
+          cancelCameraNavigation()
           userAdjustedViewRef.current = true
           return
         }
@@ -1696,7 +1753,13 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       }
       beginPan(e.clientX, e.clientY)
     },
-    [beginPan, cancelFitAnimation, endPan, panEnabled, panIgnoreSelector],
+    [
+      beginPan,
+      cancelCameraNavigation,
+      endPan,
+      panEnabled,
+      panIgnoreSelector,
+    ],
   )
 
   useEffect(() => {
@@ -2118,7 +2181,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       if (generation !== focusGenerationRef.current) {
         return { kind: 'flown', completion: 'superseded' }
       }
-      pulseBlueprintCells(found)
+      if (completion === 'completed') pulseBlueprintCells(found)
       return { kind: 'flown', completion }
     },
     [animateTransform, commitTransform, supersedeCameraNavigation],
@@ -2140,7 +2203,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
 
   const panBy = useCallback(
     (dx: number, dy: number) => {
-      cancelFitAnimation()
+      cancelCameraNavigation()
       userAdjustedViewRef.current = true
       const current = transformRef.current
       commitTransform(
@@ -2149,7 +2212,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         true,
       )
     },
-    [cancelFitAnimation, commitTransform],
+    [cancelCameraNavigation, commitTransform],
   )
 
   const getCameraState = useCallback(

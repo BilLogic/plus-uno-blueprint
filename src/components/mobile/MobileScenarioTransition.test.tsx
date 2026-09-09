@@ -54,4 +54,31 @@ describe('MobileScenarioTransition', () => {
     expect(scenario().dataset.scenario).toBe('scenario-b')
     expect(surface().dataset.editorView).toBe('true')
   })
+
+  it('reveals the current world when a pending swap reverses before commit', () => {
+    const view = render(
+      <MobileScenarioTransition scenarioId="scenario-a">
+        {(scenarioId) => <div data-scenario={scenarioId} />}
+      </MobileScenarioTransition>,
+    )
+    const surface = () =>
+      view.container.querySelector<HTMLElement>('[data-mobile-scenario-swap]')!
+
+    view.rerender(
+      <MobileScenarioTransition scenarioId="scenario-b">
+        {(scenarioId) => <div data-scenario={scenarioId} />}
+      </MobileScenarioTransition>,
+    )
+    expect(surface().dataset.mobileScenarioSwap).toBe('out')
+
+    view.rerender(
+      <MobileScenarioTransition scenarioId="scenario-a">
+        {(scenarioId) => <div data-scenario={scenarioId} />}
+      </MobileScenarioTransition>,
+    )
+    expect(surface().dataset.mobileScenarioSwap).toBe('idle')
+    act(() => vi.advanceTimersByTime(MOTION_FADE_MS))
+    expect(surface().dataset.mobileScenarioSwap).toBe('idle')
+  })
+
 })

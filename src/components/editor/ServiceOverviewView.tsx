@@ -378,9 +378,8 @@ function ServiceOverviewViewImpl({
     and a sine ease restarted from a moving camera departs at zero velocity:
     glide, brake, glide.
 
-    `createCameraTransitionClock` already solves the latency this was for —
-    it starts the ease's clock on the first frame the browser can draw, so
-    reconciliation cannot eat the animation. One writer, one ease.
+    `createCameraFlightPlan` starts the flight from the first drawable frame,
+    so reconciliation cannot eat the animation. One writer, one flight.
   */
   const openCanvasDetail = useCallback(
     (slideId: string) => {
@@ -849,6 +848,13 @@ function ServiceOverviewViewImpl({
   const noPathsSelected =
     pathsByScenario.size > 0 && overviewSelectedPathIds.length === 0
 
+  const handleInitialFitReady = useCallback(() => {
+    // Loading-skeleton fits are not a destination. The callback is still
+    // passed from the first render so the content fit cannot finish in the
+    // layout-effect window before a passive `contentSettled` flip supplies it.
+    if (overviewReady) onInitialFitReady?.()
+  }, [onInitialFitReady, overviewReady])
+
   useLayoutEffect(() => {
     if (contentSettled && noPathsSelected) onInitialFitReady?.()
   }, [contentSettled, noPathsSelected, onInitialFitReady])
@@ -1057,7 +1063,8 @@ function ServiceOverviewViewImpl({
                   cameraStateKey ?? (mobileShell ? undefined : 'desktop:blueprint')
                 }
                 cameraDestinationKey={cameraDestinationKey}
-                onFitReady={contentSettled ? onInitialFitReady : undefined}
+                cameraOutcomeKey={cameraTargetId ?? undefined}
+                onFitReady={handleInitialFitReady}
               >
                 <DeferredSkeleton
                   loading={!overviewSettled}

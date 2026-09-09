@@ -45,6 +45,7 @@ type ZoomPanViewportProps = {
   focusCellsKey?: string
   cameraStateKey?: string
   cameraDestinationKey?: string
+  cameraOutcomeKey?: string
   onFitReady?: () => void
 }
 
@@ -76,6 +77,7 @@ function ZoomPanViewportInner({
   focusCellsKey,
   cameraStateKey,
   cameraDestinationKey,
+  cameraOutcomeKey,
   onFitReady,
 }: ZoomPanViewportProps) {
   const { isAnnotating } = useCanvasAnnotationTool()
@@ -109,6 +111,7 @@ function ZoomPanViewportInner({
     refitOnResize,
     cameraStateKey,
     cameraDestinationKey,
+    cameraOutcomeKey,
     onFitReady,
   })
 

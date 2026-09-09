@@ -4,6 +4,8 @@ import { act, cleanup, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useZoomPanViewport } from '@/hooks/useZoomPanViewport'
 import type { CameraTransitionResult } from '@/lib/cameraTransition'
+import { waitForCanvasNavigationOutcome } from '@/lib/canvasNavigationOutcome'
+import type { FocusCellsResult } from '@/lib/canvasFocusCells'
 
 type Rect = { left: number; top: number; width: number; height: number }
 
@@ -48,17 +50,22 @@ let cameraState: () => {
 }
 let panCamera: (dx: number, dy: number) => void
 let refitCamera: () => false | Promise<CameraTransitionResult>
+let focusCamera: (ids: string[]) => Promise<FocusCellsResult>
 
 function Harness({
   resetKey,
   target,
   cameraStateKey,
   cameraDestinationKey,
+  cameraOutcomeKey,
+  onFitReady,
 }: {
   resetKey: string
   target: Rect
   cameraStateKey?: string
   cameraDestinationKey?: string
+  cameraOutcomeKey?: string
+  onFitReady?: () => void
 }) {
   const camera = useZoomPanViewport({
     resetKey,
@@ -70,10 +77,13 @@ function Harness({
     refitOnResize: false,
     cameraStateKey,
     cameraDestinationKey,
+    cameraOutcomeKey,
+    onFitReady,
   })
   cameraState = camera.getCameraState
   panCamera = camera.panBy
   refitCamera = () => camera.fitToView({ animate: true })
+  focusCamera = camera.focusCells
 
   return (
     <div
@@ -104,6 +114,7 @@ function Harness({
       >
         <div
           data-target=""
+          data-blueprint-cell="cell-1"
           ref={(node) => {
             if (!node) return
             stampBox(node, target)
@@ -123,7 +134,7 @@ function Harness({
   )
 }
 
-function FocusHarness({ selected }: { selected: 'a' | 'b' }) {
+function FocusHarness({ selected }: { selected: 'a' | 'b' | 'c' }) {
   const camera = useZoomPanViewport({
     resetKey: selected,
     fitSelector: `[data-focus-slide-id="${selected}"]`,
@@ -134,6 +145,7 @@ function FocusHarness({ selected }: { selected: 'a' | 'b' }) {
     refitOnResize: false,
   })
   cameraState = camera.getCameraState
+  panCamera = camera.panBy
 
   return (
     <div
@@ -159,12 +171,11 @@ function FocusHarness({ selected }: { selected: 'a' | 'b' }) {
           }
         }}
       >
-        {(['a', 'b'] as const).map((id, index) => (
+        {(['a', 'b', 'c'] as const).map((id, index) => (
           <div
             key={id}
             data-focus-slide-id={id}
             data-canvas-focus-dimmed={selected === id ? undefined : ''}
-            style={{ opacity: selected === id ? undefined : 0.3 }}
             ref={(node) => {
               if (!node) return
               stampBox(node, { width: 800, height: 500 })
@@ -194,6 +205,7 @@ beforeEach(() => {
     return id
   })
   vi.stubGlobal('cancelAnimationFrame', (id: number) => frames.delete(id))
+  vi.stubGlobal('CSS', { escape: (value: string) => value })
   vi.stubGlobal(
     'ResizeObserver',
     class {
@@ -210,6 +222,23 @@ afterEach(() => {
 })
 
 describe('viewport camera flights', () => {
+  it('reports readiness from the viewport that consumed the fit', async () => {
+    const onFitReady = vi.fn()
+    render(
+      <Harness
+        resetKey="initial"
+        target={{ left: 0, top: 0, width: 1000, height: 600 }}
+        onFitReady={onFitReady}
+      />,
+    )
+    await act(async () => {
+      flushFrame(0)
+      flushFrame(16)
+      await Promise.resolve()
+    })
+    expect(onFitReady).toHaveBeenCalledTimes(1)
+  })
+
   it('finishes a nearby recenter inside the distance-aware timing floor', () => {
     const view = render(
       <Harness
@@ -326,6 +355,31 @@ describe('viewport camera flights', () => {
     expect(cameraState().pan.x).toBeCloseTo(-400)
   })
 
+  it('keeps advancing while the live target moves on consecutive frames', () => {
+    const target = { left: 0, top: 0, width: 1000, height: 600 }
+    const view = render(<Harness resetKey="initial" target={target} />)
+    act(() => {
+      flushFrame(0)
+      flushFrame(16)
+    })
+
+    target.left = 700
+    view.rerender(<Harness resetKey="moving" target={target} />)
+    act(() => {
+      flushFrame(32)
+      flushFrame(48)
+      flushFrame(64)
+    })
+    const startedAt = cameraState().pan.x
+    for (const at of [80, 96, 112, 128, 144, 160]) {
+      target.left += 8
+      act(() => flushFrame(at))
+    }
+
+    expect(cameraState().pan.x).not.toBeCloseTo(startedAt)
+    expect(cameraState().moving).toBe(true)
+  })
+
   it('restores the live transform before a returning canvas schedules a fit', () => {
     const target = { left: 0, top: 0, width: 1000, height: 600 }
     const first = render(
@@ -439,7 +493,10 @@ describe('viewport camera flights', () => {
     })
 
     target.left = 500
-    view.rerender(<Harness resetKey="next" target={target} />)
+    const navigation = waitForCanvasNavigationOutcome('next')
+    view.rerender(
+      <Harness resetKey="next" target={target} cameraOutcomeKey="next" />,
+    )
     act(() => panCamera(75, 20))
     act(() => {
       flushFrame(32)
@@ -451,6 +508,28 @@ describe('viewport camera flights', () => {
       moving: false,
       pan: { x: 75, y: 20 },
     })
+    return expect(navigation.promise).resolves.toMatchObject({
+      kind: 'cancelled',
+    })
+  })
+
+  it('reports a pending semantic destination as superseded', async () => {
+    const target = { left: 0, top: 0, width: 1000, height: 600 }
+    const view = render(<Harness resetKey="initial" target={target} />)
+    act(() => {
+      flushFrame(0)
+      flushFrame(16)
+    })
+
+    const first = waitForCanvasNavigationOutcome('first')
+    view.rerender(
+      <Harness resetKey="first" target={target} cameraOutcomeKey="first" />,
+    )
+    view.rerender(
+      <Harness resetKey="second" target={target} cameraOutcomeKey="second" />,
+    )
+
+    await expect(first.promise).resolves.toMatchObject({ kind: 'superseded' })
   })
 
   it('reports cancellation to a caller waiting on a camera fit', async () => {
@@ -468,6 +547,27 @@ describe('viewport camera flights', () => {
     act(() => panCamera(10, 0))
 
     await expect(outcome).resolves.toMatchObject({ kind: 'cancelled' })
+  })
+
+  it('does not pulse a cell after its focus flight is cancelled', async () => {
+    const target = { left: 0, top: 0, width: 100, height: 100 }
+    const view = render(<Harness resetKey="initial" target={target} />)
+    act(() => {
+      flushFrame(0)
+      flushFrame(16)
+    })
+    target.left = 800
+    const outcome = focusCamera(['cell-1'])
+    act(() => flushFrame(32))
+    act(() => panCamera(10, 0))
+
+    await expect(outcome).resolves.toMatchObject({
+      kind: 'flown',
+      completion: 'cancelled',
+    })
+    expect(
+      view.container.querySelector('[data-blueprint-cell-pulse]'),
+    ).toBeNull()
   })
 
   it('transfers visible focus using the flight sample instead of a second clock', () => {
@@ -504,7 +604,7 @@ describe('viewport camera flights', () => {
     act(() => flushFrame(800))
     expect(cameraState().moving).toBe(false)
     expect(focus('a').dataset.canvasFocusDimmed).toBe('')
-    expect(focus('a').style.opacity).toBe('0.3')
+    expect(focus('a').style.opacity).toBe('')
     expect(focus('b').style.opacity).toBe('')
   })
 
@@ -537,7 +637,52 @@ describe('viewport camera flights', () => {
     expect(Number(focus('a').style.opacity)).toBeCloseTo(0.3)
 
     act(() => flushFrame(900))
-    expect(focus('b').style.opacity).toBe('0.3')
+    expect(focus('b').style.opacity).toBe('')
     expect(focus('a').style.opacity).toBe('')
+  })
+
+  it('restores pending focus paint across a three-target supersession and manual cancel', () => {
+    const view = render(<FocusHarness selected="a" />)
+    act(() => {
+      flushFrame(0)
+      flushFrame(16)
+    })
+    const focus = (id: string) =>
+      view.container.querySelector<HTMLElement>(
+        `[data-focus-slide-id="${id}"]`,
+      )!
+
+    view.rerender(<FocusHarness selected="b" />)
+    expect(focus('a').style.opacity).toBe('1')
+    view.rerender(<FocusHarness selected="c" />)
+    expect(focus('a').style.opacity).toBe('')
+    expect(focus('b').style.opacity).toBe('1')
+    expect(focus('c').style.opacity).toBe('0.3')
+
+    act(() => panCamera(12, 0))
+    expect(focus('a').style.opacity).toBe('')
+    expect(focus('b').style.opacity).toBe('')
+    expect(focus('c').style.opacity).toBe('')
+  })
+
+  it('clears imperative focus paint when reduced motion commits immediately', () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: true }))
+    const view = render(<FocusHarness selected="a" />)
+    act(() => {
+      flushFrame(0)
+      flushFrame(16)
+    })
+    view.rerender(<FocusHarness selected="b" />)
+    act(() => {
+      flushFrame(32)
+      flushFrame(48)
+    })
+    const focus = (id: string) =>
+      view.container.querySelector<HTMLElement>(
+        `[data-focus-slide-id="${id}"]`,
+      )!
+    expect(focus('a').style.opacity).toBe('')
+    expect(focus('b').style.opacity).toBe('')
+    expect(cameraState().moving).toBe(false)
   })
 })

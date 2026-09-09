@@ -23,7 +23,10 @@ export function MobileScenarioTransition({
   const [phase, setPhase] = useState<'idle' | 'out' | 'in'>('idle')
 
   useEffect(() => {
-    if (scenarioId === displayedScenarioRef.current) return
+    if (scenarioId === displayedScenarioRef.current) {
+      setPhase('idle')
+      return
+    }
     if (displayedScenarioRef.current === null || prefersReducedMotion()) {
       displayedScenarioRef.current = scenarioId
       setDisplayedScenarioId(scenarioId)
