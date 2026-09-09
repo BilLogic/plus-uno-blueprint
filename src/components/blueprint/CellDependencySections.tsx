@@ -15,6 +15,11 @@ import {
   InboundRowPencil,
   type DependencyEditing,
 } from '@/components/blueprint/CellDependencyEditor'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import type {
   BlueprintCellConnection,
@@ -26,7 +31,6 @@ import {
 } from '@/lib/dependencyValidation'
 import type { DependencyKind } from '@/lib/authoringRpc'
 import { PANEL_TEXT } from '@/lib/panelText'
-import { ROW_REVEAL_CLASS } from '@/lib/rowReveal'
 import { cn } from '@/lib/utils'
 
 export type CellDependencyTechEntry = {
@@ -87,19 +91,35 @@ function DirectionIcon({ direction }: { direction: RowDirection }) {
 }
 
 /**
- * The why-line waits for a reader.
+ * The why-line waits for a reader, and asks one row's space to do it in.
  *
- * A dependency row already says WHAT it points at — the lane, the step, the
- * edge's own name. The note says WHY the edge exists, which is worth reading
- * on one row at a time and not worth reading down a list of eight. Static, it
- * doubled the height of every row that had one and made the list's shape
- * depend on how talkative its author had been.
+ * A dependency row already says WHAT it points at — the lane and the step.
+ * The note says WHY the edge exists, which is worth reading one row at a time
+ * and not worth reading down a list of eight. Revealed by opacity it still
+ * held its line, so a list of eight rows drew sixteen and the list's shape
+ * depended on how talkative its author had been. Read from a tooltip, eight
+ * rows draw eight.
  *
- * Revealed rather than removed, by the one rule {@link ROW_REVEAL_CLASS}
- * states for every row control that waits for a reader — the resource list's
- * drag handle is the other (#549).
+ * A tooltip is not an accessible name — `IconTooltip` states that rule, and
+ * this Base UI version is the proof of it: the popup carries neither
+ * `role="tooltip"` nor an `aria-describedby` back to the trigger, and the
+ * trigger's hover interaction is `mouseOnly`, so a touch never opens it at
+ * all. The sentence therefore stays in the DOM, inside the row's own button,
+ * and only a FINE pointer trades the printed line for the popup: a screen
+ * reader reads the note as part of the row's name, a touch reader sees it
+ * printed where it has always been, and a keyboard reader gets the popup
+ * because the same trigger opens on focus as well as on hover.
+ *
+ * Conditioned on the pointer being fine rather than on its not being coarse,
+ * so a device reporting no pointer at all — where nothing hovers and nothing
+ * taps — keeps the printed line rather than losing it to a rule about mice.
+ *
+ * `ROW_REVEAL_CLASS` stays where it is; this file is simply no longer one of
+ * its callers. The resource list's drag handle is the other, and opacity is
+ * the right rule for a CONTROL, which has to stay where the cursor expects to
+ * find it. It was only ever the wrong rule for prose (#549).
  */
-const WHY_LINE_REVEAL_CLASS = ROW_REVEAL_CLASS
+const WHY_LINE_QUIET_CLASS = '[@media(pointer:fine)]:sr-only'
 
 /** Lane and step, as the row itself says them — and as the pencil names them. */
 function connectionRowLabel(connection: BlueprintCellConnection): string {
@@ -131,6 +151,55 @@ function DependencyRow({
   }
   const clearPreview = () => detail?.setPreviewHover(null)
 
+  /*
+    The row's one button, lifted out of the tree so the tooltip can take it as
+    its trigger without a wrapper element in between. `TooltipTrigger` renders
+    INTO this button rather than around it, which is what makes the focusable
+    thing and the hovered thing the same thing — and so the popup opens on a
+    keyboard tab as well as under a mouse.
+  */
+  const row = (
+    <button
+      type="button"
+      className="flex min-w-0 flex-col items-stretch gap-0.5 text-left text-foreground/85 transition-colors hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+      onMouseEnter={() => preview(null)}
+      onMouseLeave={clearPreview}
+      onFocus={() => preview(null)}
+      onBlur={clearPreview}
+      onClick={() => {
+        clearPreview()
+        onCellSelect(connection.cellId)
+      }}
+    >
+      <span className="flex min-w-0 items-center gap-[7px]">
+        <DirectionIcon direction={direction} />
+        <span className="min-w-0 truncate font-normal text-foreground/90">
+          {connection.laneName}
+          <span className="text-muted-foreground">
+            {' '}
+            · Step {connection.stepIndex + 1}
+          </span>
+        </span>
+      </span>
+      {connection.contentPreview && !connection.isTech ? (
+        <span className={cn('truncate text-2xs text-muted-foreground', detailIndentClass)}>
+          {connection.contentPreview}
+        </span>
+      ) : null}
+      {connection.linkNote ? (
+        <span
+          className={cn(
+            WHY_LINE_QUIET_CLASS,
+            'text-2xs leading-snug text-muted-foreground italic',
+            detailIndentClass,
+          )}
+        >
+          {connection.linkNote}
+        </span>
+      ) : null}
+    </button>
+  )
+
   return (
     <li
       className={cn(
@@ -144,50 +213,14 @@ function DependencyRow({
           action ? 'pr-8' : undefined,
         )}
       >
-        <button
-          type="button"
-          className="flex min-w-0 flex-col items-stretch gap-0.5 text-left text-foreground/85 transition-colors hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
-          onMouseEnter={() => preview(null)}
-          onMouseLeave={clearPreview}
-          onFocus={() => preview(null)}
-          onBlur={clearPreview}
-          onClick={() => {
-            clearPreview()
-            onCellSelect(connection.cellId)
-          }}
-        >
-          <span className="flex min-w-0 items-center gap-[7px]">
-            <DirectionIcon direction={direction} />
-            <span className="min-w-0 truncate font-normal text-foreground/90">
-              {connection.laneName}
-              <span className="text-muted-foreground">
-                {' '}
-                · Step {connection.stepIndex + 1}
-              </span>
-            </span>
-            {connection.linkName ? (
-              <span className="shrink-0 rounded-full border border-border bg-muted px-1.5 py-px text-3xs leading-tight text-muted-foreground">
-                {connection.linkName}
-              </span>
-            ) : null}
-          </span>
-          {connection.contentPreview && !connection.isTech ? (
-            <span className={cn('truncate text-2xs text-muted-foreground', detailIndentClass)}>
-              {connection.contentPreview}
-            </span>
-          ) : null}
-          {connection.linkNote ? (
-            <span
-              className={cn(
-                WHY_LINE_REVEAL_CLASS,
-                'text-2xs leading-snug text-muted-foreground italic',
-                detailIndentClass,
-              )}
-            >
-              {connection.linkNote}
-            </span>
-          ) : null}
-        </button>
+        {connection.linkNote ? (
+          <Tooltip>
+            <TooltipTrigger render={row} />
+            <TooltipContent>{connection.linkNote}</TooltipContent>
+          </Tooltip>
+        ) : (
+          row
+        )}
         {connection.isTech && connection.techItems.length > 0 ? (
           <span className={cn('flex flex-wrap gap-1 pt-0.5', detailIndentClass)}>
             {connection.techItems.map((item) => (
@@ -277,17 +310,14 @@ type CellDependencySectionsProps = {
  * it does not own. The headings, the grouping and the reading order are the
  * same in both modes, because they are the same list.
  *
- * WHAT #550 ASKED FOR AND DID NOT GET, so the next reader does not think it
- * was forgotten: READ mode is untouched. The why-line was to move into a
- * tooltip and the `linkName` badge was to stop rendering, and both are pinned
- * from outside this repository. `cellDependencyWhyLine.test.tsx` is enrolled
- * in the reconciled set as byte-identical to the template's copy, and it
- * asserts the reveal rule's exact class names and that a `linkName` renders —
- * so either change turns a shared test red, and the fix is not to unenrol it.
- * Both belong upstream in `agentic-service-blueprinting`, together with the
- * template's own copy of this component, and arrive here as a version bump.
- * Nothing below read mode depends on them: the edit half, the note field and
- * `update_cell_dependency` all landed.
+ * READ MODE MOVED TOO, and it moved from outside this repository. The
+ * why-line reads from a tooltip and the `linkName` badge is no longer drawn;
+ * both were asked for by #550 and both are asserted by
+ * `cellDependencyWhyLine.test.tsx`, which is enrolled in the reconciled set as
+ * byte-identical to the template's copy. So the changes went upstream first
+ * and arrived here with the pin at asb 1.16.0 — the test was adopted whole,
+ * and this component, which has drifted about a hundred lines from the
+ * template's, matches its behaviour rather than its bytes.
  */
 export function CellDependencySections({
   connections,
