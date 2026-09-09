@@ -7,8 +7,7 @@ import type { BlueprintCell } from '@/types/blueprint'
  *
  * Replaces `useCellSpec` and `useCellContent`, which each fetched a handful of
  * columns for one cell on panel open — up to three round-trips per cell, for
- * fields the board can carry for 2% more payload. See
- * docs/plans/2026-08-21-001-refactor-skeleton-loading-fidelity-plan.md.
+ * fields the board can carry for 2% more payload.
  *
  * Synchronous by construction: there is nothing to wait for, which is why the
  * two skeletons those hooks needed are gone rather than reshaped.

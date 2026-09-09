@@ -1,7 +1,7 @@
 ---
 audience: service designers, practitioners
 summary: The four blueprint practices (map, audit, what-if, slice), the compare workflow, findings triage, and where each practice is specified.
-sources: agentic-service-blueprinting skills/, agentic-service-blueprinting references/, docs/plans/2026-08-08-003-docs-information-architecture-plan.md
+sources: agentic-service-blueprinting skills/, agentic-service-blueprinting references/
 last-reviewed: 2026-08-08
 ---
 

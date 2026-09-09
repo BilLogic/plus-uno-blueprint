@@ -6,10 +6,8 @@
  * and `agent_messages` each carried one policy — `for all to authenticated using
  * (true) with check (true)` — while the other seventeen carried 27 RESTRICTIVE
  * companions gating on `is_service_account()`. Nothing compared them. The gap
- * was written down twice (`20260805150000_service_account_tier.sql` calls it a
- * KNOWN GAP; `docs/plans/2026-08-19-004-…-plan.md` calls it "a pre-existing gap
- * … it deserves its own fix regardless") and survived both notices, because a
- * comment is not a control. It stopped being theoretical on 2026-08-07, when an
+ * was written down (`20260805150000_service_account_tier.sql` calls it a KNOWN
+ * GAP) and survived the notice, because a comment is not a control. It stopped being theoretical on 2026-08-07, when an
  * account with `raw_app_meta_data->>'role'` NULL appeared in `auth.users` and
  * could read all 33 sessions and 340 messages.
  *

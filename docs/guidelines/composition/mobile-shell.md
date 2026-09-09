@@ -1,7 +1,7 @@
 ---
 audience: designers, developers
 summary: The one forked surface — the phone's view-only, scenario-scoped canvas, its chrome, the single-select path control, and the non-goals that are decided rather than deferred.
-sources: src/components/mobile/MobileShell.tsx, src/components/mobile/MobileScenarioTransition.tsx, src/components/mobile/MobileNavSheet.tsx, src/components/mobile/MobilePathSelector.tsx, src/hooks/useMobileShell.ts, docs/plans/2026-08-16-002-feat-mobile-shell-implementation-plan.md
+sources: src/components/mobile/MobileShell.tsx, src/components/mobile/MobileScenarioTransition.tsx, src/components/mobile/MobileNavSheet.tsx, src/components/mobile/MobilePathSelector.tsx, src/hooks/useMobileShell.ts
 claims:
   - src/components/mobile/MobileShell.tsx
   - src/components/mobile/MobileScenarioTransition.tsx

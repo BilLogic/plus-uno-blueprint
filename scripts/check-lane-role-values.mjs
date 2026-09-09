@@ -59,11 +59,10 @@
  *
  * ── WHAT IS EXEMPT ────────────────────────────────────────────────────────
  *
- * DATED RECORDS keep the spelling they were written with. A plan, a piece of
- * ideation, a brainstorm, an ADR, an archived export, a migration and a
- * changelog entry are all records OF A DAY, and rewriting one to agree with
- * today's schema falsifies it. Same list, same reasoning as
- * `scripts/swept-docs.mjs`.
+ * DATED RECORDS keep the spelling they were written with. An ADR, an archived
+ * export, a migration and a changelog entry are all records OF A DAY, and
+ * rewriting one to agree with today's schema falsifies it. Same reasoning as
+ * `scripts/swept-docs.mjs`, over a wider list.
  *
  * TEST FILES, for the two reasons `check-database-names.mjs` gives for the
  * same exclusion. A test that names a dead value fails the moment it runs,
@@ -134,9 +133,6 @@ const SELF = 'scripts/check-lane-role-values.mjs'
  * and the archived exports, none of which is a document that sweep reads.
  */
 export const DATED_RECORDS = [
-  'docs/plans/',
-  'docs/ideation/',
-  'docs/brainstorms/',
   'docs/adr/',
   'docs/archive/',
   'supabase/migrations/',

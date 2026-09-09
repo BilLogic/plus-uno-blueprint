@@ -1,5 +1,4 @@
 -- Derived layer: slices, findings, evidence, propositions + cell/lane/phase spec fields.
--- Plan: agentic-service-blueprinting docs/plans/2026-07-29-002 (stage 1: uno-blueprint).
 --
 -- Design invariants encoded here:
 --   * Derived tables reference cells SOFTLY (uuid / uuid[], no FK) — the importer's

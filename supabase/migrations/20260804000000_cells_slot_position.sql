@@ -1,6 +1,6 @@
--- Stage 2 of the tech-cell split (docs/plans/2026-08-04-001): a slot may
--- hold several cells, ordered by slot_position. Every existing cell is 0,
--- so nothing changes until the stage-3 data migration populates siblings.
+-- Stage 2 of the tech-cell split: a slot may hold several cells, ordered by
+-- slot_position. Every existing cell is 0, so nothing changes until the
+-- stage-3 data migration populates siblings.
 alter table public.cells add column slot_position int not null default 0;
 
 alter table public.cells

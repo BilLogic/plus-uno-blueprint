@@ -58,7 +58,6 @@ const ROUTING = [
   ['Deploy, rollback, environments, monitoring, troubleshooting', 'docs/engineering/operations.md'],
   ['Anything crossing a repo boundary — the database, uno-bot, the deploy', 'docs/connectors/overview.md'],
   ['Merge from the template, or find out what is still PLUS-specific here', 'docs/engineering/template-relationship.md'],
-  ['Is this plan file still true?', 'its frontmatter `status` + `distilled-into`'],
 ]
 
 function frontmatter(text) {
@@ -124,13 +123,13 @@ Five files at the root, each answering one question:
 [CONTEXT](CONTEXT.md) *what do these words mean*, this file *where do I go*,
 and [AGENTS](AGENTS.md) *what must I not do*.
 
-Under \`docs/\`, three lanes, never mixed: **reference** (below — living,
-always true), **history** (\`docs/plans/\`, \`docs/ideation/\`,
-\`docs/brainstorms/\` — decision-era snapshots, content never edited; check a
-plan's frontmatter \`status\`/\`distilled-into\` before treating it as truth),
-and the **queue** ([GitHub Issues](https://github.com/BilLogic/plus-uno-blueprint/issues) —
+Under \`docs/\`, two lanes, never mixed: **reference** (below — living,
+always true, with \`docs/adr/\` recording the decisions that are hard to
+reverse) and the **queue**
+([GitHub Issues](https://github.com/BilLogic/plus-uno-blueprint/issues) —
 assignment, closing and cross-repo links are things a folder of markdown
-cannot do).
+cannot do). Everything else that used to be written down — the plans, the
+ideation, the brainstorms — is git history.
 
 ## Route by task
 
@@ -159,7 +158,7 @@ Read in order and stop where it says to; each path is short on purpose.
 ## Every reference doc
 
 Every living doc under \`docs/\`, with the one-line summary from its own
-frontmatter. History is deliberately absent, and the queue does not live here.
+frontmatter. The queue does not live here.
 
 | Doc | Audience | What it answers |
 |---|---|---|

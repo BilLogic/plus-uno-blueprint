@@ -1,7 +1,7 @@
 ---
 audience: developers
 summary: The quality bar — token discipline against the Supabase benchmark, comment philosophy, what earns a test and how to run them, tooling traps, review workflow.
-sources: AGENTS.md, src/styles/blueprint.css, scripts/tests/, todos/020-pending-p3-mobile-v1-followups.md, docs/plans/
+sources: AGENTS.md, src/styles/blueprint.css, scripts/tests/
 last-reviewed: 2026-08-25
 ---
 
@@ -163,11 +163,13 @@ review, data-integrity review, harness review) run against the diff or
 subsystem, and their findings are fixed same-session where cheap. What
 survives a session becomes either:
 
-- a **todo** — `todos/NNN-{pending|complete}-pN-slug.md`, ranked, with
-  enough context to act on cold; or
-- a **plan** — `docs/plans/YYYY-MM-DD-NNN-*.md` for work that needs
-  design before code. Plans are history once executed: check frontmatter
-  `status`/`distilled-into` before trusting one.
+- an **issue** — a GitHub Issue on `BilLogic/plus-uno-blueprint`, ranked by
+  label, with enough context to act on cold. Design work for it — the plan,
+  the options weighed, what was rejected — is written in the issue and its
+  comments, and lands as commits; or
+- an **ADR** — `docs/adr/` when the outcome is a decision that is hard to
+  reverse, surprising without its context, or a live trade-off a later reader
+  would otherwise reopen.
 
 Migration-borne security fixes carry their review provenance in the
 migration comment itself (see `20260805170000_service_tier_rpc_enforcement.sql`)

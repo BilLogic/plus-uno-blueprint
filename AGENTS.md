@@ -22,9 +22,6 @@ newer; say so and follow the code.
    `docs/product/01-overview.md`.
 4. **Placement** — where a task belongs, when nothing above answers it:
    `docs/engineering/codebase-guide.md`.
-5. **History** — `docs/plans/`, `docs/ideation/` and `docs/brainstorms/` are
-   decision-era snapshots; read frontmatter `status` / `distilled-into` before
-   acting on one.
 
 ## Security lines (non-negotiable — inline by rule, so they bind before any pointer fires)
 

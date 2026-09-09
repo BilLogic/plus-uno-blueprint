@@ -1,7 +1,7 @@
 ---
 audience: everyone
 summary: What uno-blueprint is in plain words, who it is for, the surfaces at a glance, and who can look vs. edit.
-sources: docs/plans/2026-08-06-001-plan-access-model-three-personas.md, docs/plans/2026-08-08-001-feat-mobile-responsive-blueprint-plan.md, src/components/editor/EditorShell.tsx
+sources: src/components/editor/EditorShell.tsx
 last-reviewed: 2026-08-18
 ---
 

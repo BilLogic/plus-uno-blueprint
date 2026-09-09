@@ -223,8 +223,8 @@ test('a bare filename names a shape, not a place, and is skipped', () => {
 })
 
 test('a directory pointer resolves against the directory', () => {
-  const r = repo('## Routes\n\n- **History** — `docs/plans/` is decision-era snapshots.\n', {
-    'docs/plans/one.md': '',
+  const r = repo('## Routes\n\n- **Boundaries** — `docs/connectors/` is every repo edge.\n', {
+    'docs/connectors/one.md': '',
   })
   try {
     assert.deepEqual(sweep(r.root).failures, [])

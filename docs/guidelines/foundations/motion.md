@@ -1,7 +1,7 @@
 ---
 audience: designers
 summary: The motion vocabulary, the drift test that pins it, the reduced-motion policy, and the list of moments that deliberately do not animate.
-sources: src/styles/animations.css, src/lib/motion.ts, src/lib/cameraTransition.ts, src/hooks/useZoomPanViewport.ts, docs/plans/2026-07-30-001-fix-loading-and-motion-system-plan.md
+sources: src/styles/animations.css, src/lib/motion.ts, src/lib/cameraTransition.ts, src/hooks/useZoomPanViewport.ts
 last-reviewed: 2026-09-09
 ---
 

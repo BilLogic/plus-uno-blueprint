@@ -1,7 +1,7 @@
 ---
 audience: designers, developers
 summary: The board and the chrome around it — click grammar, canvas modes, panel-as-selection, camera behaviour, the phase-row height contract and the touch contract.
-sources: src/components/blueprint/BlueprintCellButton.tsx, src/contexts/canvasModeContext.ts, src/hooks/useZoomPanViewport.ts, src/lib/canvasScrollRegions.ts, docs/plans/2026-07-30-001-fix-loading-and-motion-system-plan.md
+sources: src/components/blueprint/BlueprintCellButton.tsx, src/contexts/canvasModeContext.ts, src/hooks/useZoomPanViewport.ts, src/lib/canvasScrollRegions.ts
 claims:
   - src/components/blueprint/BlueprintArrowMarkerDefs.tsx
   - src/components/blueprint/BlueprintCellButton.tsx

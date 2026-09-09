@@ -30,20 +30,21 @@ live* → [`docs/engineering/codebase-guide.md`](docs/engineering/codebase-guide
 
 ## How `docs/` is arranged
 
-Three lanes, never mixed.
+Two lanes, never mixed.
 
 - **Reference** — living, always true. `product/` (what the thing is and how to
   read it), `guidelines/` (the design system: `foundations/`, `components/`,
   `composition/`), `engineering/` (how the code works), `reference/` (fixed
   vocabularies and id maps), `adr/` (decisions that are surprising or hard to
   reverse), `connectors/` (everything crossing a repo boundary).
-- **History** — `plans/`, `ideation/`, `brainstorms/`. Decision-era snapshots,
-  never edited after the fact. Check a plan's frontmatter `status` before
-  treating it as current. Plans written before 2026-08-26 link to `todos/NNN`;
-  that folder is gone and those links are left as written, because editing a
-  snapshot's content is the one thing a snapshot must not do.
 - **The queue** — [GitHub Issues](https://github.com/BilLogic/plus-uno-blueprint/issues),
   not a folder in the tree.
+
+Anything that is neither a living reference nor an open ticket is git history.
+Working documents — plans, ideation, brainstorms — are written in the issue
+they belong to and land as commits; a decision worth outliving its ticket
+becomes an ADR. `docs/archive/` is not a third lane: it holds forensic
+evidence about the database, and states its own reason for being kept.
 
 `overview.md` is authored; `index.md` is generated. Every doc carries a
 frontmatter `summary`, and a doc without one fails the index build.
