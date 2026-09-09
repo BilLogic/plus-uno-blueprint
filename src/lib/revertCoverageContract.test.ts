@@ -88,6 +88,10 @@ const RPC_BACKED = new Set([
   // a returned inverse; the inverse of each is itself an RPC.
   'set_placement_touchpoint',
   'restore_placement',
+  // #550. Shipped with 20260909030000: editing an edge in place is one
+  // function, self-inverse with the row it returns, reached through the
+  // default branch.
+  'update_cell_dependency',
 ])
 
 /** `fn: 'name'` inside a recorded RevertSpec. */

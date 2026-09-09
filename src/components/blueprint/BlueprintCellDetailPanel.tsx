@@ -5,13 +5,11 @@ import {
   Link2,
   PanelRightClose,
   PanelRightOpen,
-  Plus,
   Workflow,
   X,
 } from 'lucide-react'
 import { ArrowLeft } from 'lucide-react'
 import { describeLaneRole, getLaneRole } from '@/lib/laneRoles'
-import { CellDependencyEditor } from '@/components/blueprint/CellDependencyEditor'
 import { CompareDifferencesSurface } from '@/components/blueprint/CompareDifferencesSurface'
 import { CellDependencySections } from '@/components/blueprint/CellDependencySections'
 import { CellEvidenceTab } from '@/components/blueprint/CellEvidenceTab'
@@ -291,7 +289,6 @@ function BlueprintCellDetailPanelBody() {
     ]
     return () => unregister.forEach((fn) => fn())
   }, [clearSelection])
-  const [addingDependency, setAddingDependency] = useState(false)
   const { canWrite } = useSupabase()
   // View mode presents everything read-only; every edit affordance in this
   // panel — pencils, Add dependency, resource editing — is Edit-mode only.
@@ -360,14 +357,15 @@ function BlueprintCellDetailPanelBody() {
   }
 
   // A new cell always opens on Dependencies (state reset during render).
-  // The arrow editor closes with it — a half-typed arrow carried onto a
-  // different cell would be pointing away from somewhere nobody is looking.
+  // The dependency list's own edit state — which row is open for naming, and
+  // whether a draft row is showing — resets with it, by the `key` on the list
+  // below: a half-typed arrow carried onto a different cell would be pointing
+  // away from somewhere nobody is looking.
   const currentCellId = currentSelection?.paths[0]?.cellId
   const [lastCellId, setLastCellId] = useState(currentCellId)
   if (lastCellId !== currentCellId) {
     setLastCellId(currentCellId)
     setActiveTab('dependencies')
-    setAddingDependency(false)
   }
 
   useEffect(() => {
@@ -742,7 +740,7 @@ function BlueprintCellDetailPanelBody() {
           connection.laneName,
         ),
         kind: connection.linkKind,
-        name: connection.linkName,
+        note: connection.linkNote,
       })),
     [connections.outgoing],
   )
@@ -1087,6 +1085,32 @@ function BlueprintCellDetailPanelBody() {
       scrollBlueprintTouchpointCellIntoView(cellId, techItem)
     })
   }
+
+  /*
+    Edit mode's half of the Dependencies list.
+
+    Null in view mode, and null is what makes the list read-only — the same
+    component either way. The panel supplies the three facts the rows cannot
+    work out for themselves (who the source is, where an arrow may point, and
+    what already exists) plus the one navigation only the panel can perform.
+  */
+  const dependencyEditing =
+    canEdit && dependencySource
+      ? {
+          source: dependencySource,
+          candidates: dependencyCandidates,
+          existing: existingDependencies,
+          // The pencil NAVIGATES: the panel swaps to the cell that owns the
+          // arrow, exactly the way clicking any other row here does. Not a
+          // second panel, and not an inline editor for someone else's row —
+          // the ownership rule is that a cell edits only the arrows it is the
+          // source of, and this is how the other direction stays reachable.
+          onEditFromOwner: (cellId: string) => {
+            setActiveTab('dependencies')
+            handleConnectionSelect(cellId)
+          },
+        }
+      : null
 
   const pathName = pathEntry?.pathName.trim() ?? ''
   const scenarioName = selection.scenarioName.trim()
@@ -1502,36 +1526,15 @@ function BlueprintCellDetailPanelBody() {
                 */}
                 <div className="flex min-h-56 flex-col gap-5 px-4 pt-4 pb-4">
                   {activeTab === 'dependencies' ? (
-                    <>
-                      <CellDependencySections
-                        connections={connections}
-                        otherTech={otherTechEntries}
-                        selectedLaneRowPosition={selectedLaneRowPosition}
-                        onCellSelect={handleConnectionSelect}
-                        onTechSelect={handleTechSelect}
-                      />
-                      {canEdit && dependencySource ? (
-                        addingDependency ? (
-                          <CellDependencyEditor
-                            source={dependencySource}
-                            candidates={dependencyCandidates}
-                            existing={existingDependencies}
-                            onDone={() => setAddingDependency(false)}
-                          />
-                        ) : (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 self-start px-2 text-xs text-muted-foreground hover:text-foreground"
-                            onClick={() => setAddingDependency(true)}
-                          >
-                            <Plus className="size-3" aria-hidden />
-                            Add dependency
-                          </Button>
-                        )
-                      ) : null}
-                    </>
+                    <CellDependencySections
+                      key={resolvedCellId ?? 'no-cell'}
+                      connections={connections}
+                      otherTech={otherTechEntries}
+                      selectedLaneRowPosition={selectedLaneRowPosition}
+                      editing={dependencyEditing}
+                      onCellSelect={handleConnectionSelect}
+                      onTechSelect={handleTechSelect}
+                    />
                   ) : null}
                   {activeTab === 'evidence' ? (
                     <CellEvidenceTab cellId={resolvedCellId} />
