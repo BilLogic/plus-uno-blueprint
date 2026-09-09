@@ -563,8 +563,8 @@ export function reorderLanes(
  *
  * `name` is not an argument here any more. The column is retired (#550) — it
  * was only ever used as a note, by all eight rows that had one — and the
- * function still declares it with a default, which is what lets this stop
- * sending it rather than having to send a null that would erase one.
+ * function still declares it with a default, so a caller that has nothing to
+ * say about it can say nothing.
  */
 export function setCellDependency(
   client: Client,
@@ -580,12 +580,26 @@ export function setCellDependency(
     source_cell_id: input.sourceCellId,
     target_cell_id: input.targetCellId,
     kind: input.kind ?? 'leads_to',
-    // `name` is omitted rather than sent as null, and the difference is not
-    // cosmetic: this function upserts `do update set name = excluded.name`, so
-    // a null would ERASE the sentence on any edge an author happens to edit —
-    // while the row still renders it as a badge, because the change to stop
-    // rendering it is upstream's and has not arrived. Omitting leaves the
-    // column alone, which is what "retired" means until stage 2 drops it.
+    // `name` is omitted, and omitting it is NOT what keeps the column safe.
+    // An earlier version of this comment said it was: send a null and the
+    // upsert erases the sentence, omit the argument and the column is left
+    // alone. Only the first half was ever true. The argument DEFAULTS to null,
+    // so the two calls are the same call by the time the function sees them,
+    // and until `20260909050000` a bare add erased the words on any edge that
+    // already existed — whether or not this line sent the null itself.
+    //
+    // What keeps the column safe is that migration: the conflict clause
+    // coalesces both prose columns against the row already there, so an
+    // omitted argument means "leave it as it was" and only a supplied one
+    // replaces. That is a property of the database, not of the shape of this
+    // object, and it holds for the agent tool's calls too — which is where the
+    // erasure was actually reachable, since nothing here can add onto an edge
+    // the panel's validation has already refused as a duplicate.
+    //
+    // So `name` is omitted for the ordinary reason: the app has no business
+    // writing a column that is retired (#550), and stage 2 drops it. What the
+    // omission buys is honesty, not protection.
+    //
     // PostgREST resolves by the argument names it is given and the generated
     // type marks this one optional; no gate here can exercise that, so watch
     // the first add on a deployed build.
