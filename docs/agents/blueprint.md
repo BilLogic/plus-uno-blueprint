@@ -205,8 +205,8 @@ Dependency from one cell to another
 | `created_at` | — |
 | `id` | — |
 | `kind` | leads_to = temporal (this cell makes the other happen; drawn as an arrow); enables = functional (the other must already be in place). enables renders in the panel only. |
-| `name` | The word on the arrow, e.g. a channel tag like "Email". A name because it is what a reader navigates the dependency by; it was `label`, which said how it renders rather than what it is. |
-| `note` | Why this edge exists, in the author's own words — rendered as the why-line under the dependency row, revealed on hover. Distinct from name, which is the word ON the arrow (a channel, a hand-off): name says what the edge is called, note says why it is there. Null means no stated reason, which is not the same as no reason. |
+| `name` | RETIRED (#550), and kept only so stage 1 is reversible. Documented as the word ON the arrow, it was never used as one: all 8 rows that carried it carried a sentence about why the edge exists, and 20260909040000 copied every one of them into note. Nothing writes it any more — not set_cell_dependency's argument, not the editor, not the agent tool. The dependency row still RENDERS it as a badge, because that row is held byte-identical to the template's and the change to stop belongs upstream; stage 2 drops the column and that badge together, and is a separate decision. |
+| `note` | Anything worth knowing about this dependency, in the author's own words — rendered as the line under the dependency row, revealed on hover. General purpose, not "why this edge exists": the same kind of aside paths.note and scenarios.note carry, and since #550 the ONE prose field an edge has. Null means nothing was recorded, which is not the same as nothing worth recording. |
 | `source_cell_id` | — |
 | `target_cell_id` | — |
 | `updated_at` | — |
