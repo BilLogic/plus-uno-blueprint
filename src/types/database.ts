@@ -1286,6 +1286,10 @@ export type Database = {
         Args: { path_id: string; step_ids: string[] }
         Returns: undefined
       }
+      restore_cell_content: {
+        Args: { cell_id: string; content: string }
+        Returns: undefined
+      }
       restore_cell_dependency: {
         Args: { dependency_id: string; name: string | null; note: string | null }
         Returns: undefined
@@ -1399,7 +1403,7 @@ export type Database = {
           path_id: string
           step_id: string
         }
-        Returns: string
+        Returns: Json
       }
       value_sets: {
         Args: never

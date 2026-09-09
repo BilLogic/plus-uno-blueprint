@@ -185,7 +185,10 @@ test('the shipped harness prose states nothing the template states', () => {
   assert.deepEqual(failures, [])
   assert.ok(documents.length > 0)
   // The census is the evidence the sweep looked at something. It was 77 blocks
-  // when this landed; the assertion is a floor rather than the number, because
-  // a document growing a paragraph is not a reason to edit a test.
-  assert.ok(compared > 50, `expected the sweep to compare real prose, saw ${compared} block(s)`)
+  // when this landed and 39 after #566 cut this deployment's restatement of the
+  // shared model out of `CONTEXT.md`; the assertion is a floor rather than the
+  // number, because neither a document growing a paragraph nor one giving way
+  // to a pointer is a reason to edit a test. What it still catches is a subject
+  // that has quietly emptied — a sweep comparing nothing reports green.
+  assert.ok(compared > 25, `expected the sweep to compare real prose, saw ${compared} block(s)`)
 })

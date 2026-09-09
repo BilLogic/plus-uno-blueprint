@@ -10,9 +10,10 @@ newer; say so and follow the code.
 
 ## Boot protocol (read this order, load on demand)
 
-1. **Vocabulary** — the words this codebase fixes, and what each is bound to in
-   the schema: `CONTEXT.md`. Definitions only, so it is cheap; a term it fixes
-   keeps the spelling it has there.
+1. **Vocabulary** — the words this codebase fixes: `CONTEXT.md`. Definitions
+   only, so it is cheap. It defines this instance's own words and points at the
+   template's copy for the model the two share; a term it fixes keeps the
+   spelling it has there.
 2. **Routing** — `INDEX.md` (root, GENERATED) is the map: a task-routing table
    plus every living doc's one-line summary. Route by TASK row.
 3. **Writes** of any kind read `docs/engineering/access-and-security.md` first —

@@ -50,10 +50,30 @@ test('the snapshot is a new array per change, so subscribers re-render', () => {
 test('changes are named by what was done, never by table', () => {
   assert.equal(describeChange(entry('add_step', { name: 'Greet' })), 'Added step “Greet”')
   assert.equal(describeChange(entry('add_step', {})), 'Added a step')
-  assert.equal(describeChange(entry('upsert_cell', {})), 'Added a cell')
   assert.equal(describeChange(entry('remove_lane', {})), 'Deleted a lane')
+  // The two upserts are named by which half they took, and the half is read
+  // off the derived inverse — see `authoringSession.test.ts`. An entry with no
+  // inverse is the update half whose before-state did not come back, so these
+  // two read as edits here rather than as creates. That is a change: they used
+  // to say "Added a cell" and "Connected two cells" over a write that had
+  // edited one, which is the defect in the only place a person sees it.
+  assert.equal(describeChange(entry('upsert_cell', {})), 'Edited a cell’s text')
   assert.equal(
     describeChange(entry('set_cell_dependency', {})),
+    'Edited a connection',
+  )
+  assert.equal(
+    describeChange({
+      ...entry('upsert_cell', {}),
+      revert: { fn: 'delete_cell', args: { cell_id: 'c1' } },
+    }),
+    'Added a cell',
+  )
+  assert.equal(
+    describeChange({
+      ...entry('set_cell_dependency', {}),
+      revert: { fn: 'clear_cell_dependency', args: { dependency_id: 'd1' } },
+    }),
     'Connected two cells',
   )
 })
