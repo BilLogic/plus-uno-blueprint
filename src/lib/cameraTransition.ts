@@ -75,6 +75,15 @@ const hermiteDerivative = (t: number, initialSlope: number) =>
   6 * t * (1 - t) + initialSlope * (1 - 4 * t + 3 * t * t)
 
 /**
+ * Resting flights still leave with a little speed. Smoothstep from a dead
+ * stop spends the first beat of a large zoom-in almost still — overview to
+ * a scenario reads as lag, even though the duration itself is fine. The
+ * hermite's end slope stays zero for any start slope, so arrivals still
+ * settle rather than hitting the destination at speed.
+ */
+const RESTING_FLIGHT_SLOPE = 0.55
+
+/**
  * Returns transition progress measured from the first frame the browser can
  * actually draw. Work scheduled before requestAnimationFrame (notably React
  * reconciliation for a large canvas) may block the main thread; counting
@@ -259,7 +268,13 @@ export function createCameraFlightPlan({
   )
   const screenInitialSlope =
     screenDistance > 0
-      ? Math.min(3, (screenSpeedToward * safeDuration) / screenDistance)
+      ? Math.min(
+          3,
+          Math.max(
+            RESTING_FLIGHT_SLOPE,
+            (screenSpeedToward * safeDuration) / screenDistance,
+          ),
+        )
       : 0
 
   const logZoomDelta = Math.log(toZoom / fromZoom)
@@ -273,7 +288,13 @@ export function createCameraFlightPlan({
   const zoomInitialSlope =
     logZoomDelta === 0
       ? 0
-      : Math.min(3, (logSpeedToward * safeDuration) / Math.abs(logZoomDelta))
+      : Math.min(
+          3,
+          Math.max(
+            RESTING_FLIGHT_SLOPE,
+            (logSpeedToward * safeDuration) / Math.abs(logZoomDelta),
+          ),
+        )
 
   return {
     durationMs: safeDuration,

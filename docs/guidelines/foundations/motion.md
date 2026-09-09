@@ -148,18 +148,30 @@ moves the final viewpoint monotonically toward the screen centre and changes
 **scale** as a ratio (`z0·(z1/z0)^t`). `cameraTransition.test.ts` pins both
 properties densely.
 
-**3. A fit waits for complete target geometry and retargets while live.**
+**3. A fit takes off once the named target exists, and retargets while live.**
 Compare panels reach
-their real size across more than one commit, so the fit scheduled by a fit-key
-change holds until the target measures the same geometry on two consecutive frames
-(250 ms backstop). Without it the ease aims at half-grown geometry and the
-resize observer's correction lands as a snap on top of the finished ease.
-Settling compares target identity, position, size, and viewport dimensions;
-equal width and height alone do not prove the target stopped moving. If
-geometry changes after takeoff, the active flight replans from its live
-transform and velocity rather than finishing stale and snapping. The resize
-observer's own owed-fit branch stands down while that loop is watching,
-since the resizes it sees are the ones being waited out.
+their real size across more than one commit. The flight starts once the
+intended element is measurable for two frames — not once its box and the
+viewport have frozen. Waiting for left/top/width/height to agree made
+overview → scenario sit on the 250 ms backstop: focusing a scenario mounts
+a sticky header and can reshuffle row height, so consecutive frames rarely
+match. Overview → phase barely churns, which is why it already felt
+immediate. Late growth after takeoff is a live replan from the current
+transform and velocity, not a second animation or a landing snap. The
+resize observer's owed-fit branch stands down while the settle loop is
+watching, since the resizes it sees are the ones being waited out. The
+250 ms backstop remains for a target that never appears.
+
+**3a. A zoom-in from the blocks tier does not paint the whole board.** Below
+`SEMANTIC_ZOOM_THRESHOLD` cells are density blocks. Overview → phase lands
+still below it, so takeoff is cheap. Overview → scenario lands above it:
+stamping that destination zoom on the canvas root used to reveal every
+cell's text on the first camera frame, a style/paint burst of hundreds of
+milliseconds before anything moved — and the inverse path paid the hide
+on the way back. The flight now keeps the blocks mark and sets
+`data-camera-flight-reveal` on the named target so only that subtree
+shows text. Wheel and pinch still follow the live zoom and will leave
+the tier when the reader asks.
 
 ## The vendored layer's exemption
 

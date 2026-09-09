@@ -168,8 +168,11 @@ wraps annotation + selection providers) → the transform layer
   onto the content element. Nothing on that path may cause a render.
 - **Semantic zoom** is stamped from the same transform writer: below
   `SEMANTIC_ZOOM_THRESHOLD` the board gets `data-semantic-tier="blocks"`
-  and a `--semantic-label-boost` counter-scale variable. All styling for
-  the tier lives in `src/styles/blueprint.css` under
+  and a `--semantic-label-boost` counter-scale variable. A zoom-in that
+  would leave that tier keeps it and marks the named destination with
+  `data-camera-flight-reveal` so only that subtree shows cell text —
+  flipping the whole board on takeoff was the overview → scenario hitch.
+  All styling for the tier lives in `src/styles/blueprint.css` under
   `[data-semantic-tier]`. The visual encoding is owned by
   [guidelines/foundations/data-viz.md](../guidelines/foundations/data-viz.md).
 - **Camera**: fit-to-view measures `fitSelector` bounds; `focusCells`
@@ -181,8 +184,9 @@ wraps annotation + selection providers) → the transform layer
   carries compatible momentum into a newer intent, retargets from live state
   when geometry changes, and imperatively publishes the same sampled progress
   to transform and transient focus without per-frame React renders. A fit
-  waits for target identity, position, size, and viewport geometry to settle,
-  so it never aims at a half-grown or still-moving target. The lifecycle
+  takes off once the named target exists and retargets while live, so a
+  still-moving header or row does not hold the camera on the settle
+  backstop. The lifecycle
   invariants are in [motion](../guidelines/foundations/motion.md#what-exactly-one-camera-flight-per-intent-rests-on).
 - **Input ownership**: pointer streams enter through native capture so a lane
   or cell cannot hide pointerdown with `stopPropagation`. Precedence is

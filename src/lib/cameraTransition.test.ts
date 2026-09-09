@@ -174,6 +174,9 @@ describe('camera transition', () => {
     )
     expect(opposing.sample(16).progress).toBeGreaterThan(0)
     expect(compatible.sample(400).transform).toEqual(destination)
+    // A rest takeoff still moves in the first beat — smoothstep-from-zero
+    // spent that beat almost still, which a large zoom-in reads as lag.
+    expect(resting.sample(40).progress).toBeGreaterThan(0.05)
   })
 
   it('stays finite for pure pan and nearly equal zoom', () => {

@@ -171,14 +171,14 @@ function applyTransformToElement(
   zoom: number,
   semanticThreshold: number,
   /**
-   * Zoom the TIER decision reads — the destination zoom during an animated
-   * fit, the live zoom everywhere else. Deciding the tier from the live zoom
-   * meant a navigation ease crossed the threshold mid-flight, and the
-   * hundreds of cell-content fades that flip triggers all began on that
-   * mid-ease frame — a style/paint burst in the busiest stretch of the
-   * animation, felt as the glide glitching. Stamped from the destination,
-   * the flip (and its fade) fires on frame one, where the ease is slowest
-   * and the change reads as the response to the click.
+   * Zoom the TIER decision reads. Live zoom during pinch/pan; a value the
+   * camera flight picks during an animated fit. Crossing the threshold on
+   * the live zoom mid-ease used to launch every cell's content paint in
+   * the busiest stretch of the glide. Zoom-out still stamps the
+   * destination (hiding text is cheap, and a shrinking page is the look
+   * we do not want). Zoom-in from the blocks tier keeps that tier and
+   * reveals only the named destination — flipping the whole board on
+   * frame one was the overview → scenario takeoff hitch.
    */
   tierZoom: number = zoom,
 ) {
@@ -220,6 +220,25 @@ function applyTransformToElement(
     const badges = el.querySelectorAll<HTMLElement>('[data-phase-title-badge]')
     for (const badge of badges) badge.style.scale = nextBoost
   }
+}
+
+/**
+ * Dataset key for `data-camera-flight-reveal`. CSS under the blocks tier
+ * skips the density encoding inside this subtree so the destination stays
+ * readable while the rest of the board does not leave blocks.
+ *
+ * @param next - Named fit target to reveal, or `null` to clear.
+ * @param previous - Last revealed node, so a retarget can move the mark.
+ * @returns The node now carrying the attribute, if any.
+ */
+function assignCameraFlightReveal(
+  next: HTMLElement | null,
+  previous: HTMLElement | null,
+): HTMLElement | null {
+  if (previous === next) return previous
+  if (previous) delete previous.dataset.cameraFlightReveal
+  if (next) next.dataset.cameraFlightReveal = ''
+  return next
 }
 
 function measureFitBounds(
@@ -512,6 +531,8 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
    * above the fit effect, so it is current by the time that effect reads it.
    */
   const animateFitRef = useRef(animateFit)
+  const fitSelectorRef = useRef(fitSelector)
+  const flightRevealElRef = useRef<HTMLElement | null>(null)
   const focusTargetRef = useRef<HTMLElement | null>(null)
   const pendingFocusTransferRef = useRef<CameraFocusTransfer | null>(null)
   const activeFocusTransferRef = useRef<CameraFocusTransfer | null>(null)
@@ -520,7 +541,8 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     animateFitRef.current = animateFit
     cameraDestinationKeyRef.current = cameraDestinationKey
     onFitReadyRef.current = onFitReady
-  }, [animateFit, cameraDestinationKey, onFitReady])
+    fitSelectorRef.current = fitSelector
+  }, [animateFit, cameraDestinationKey, onFitReady, fitSelector])
 
   const cancelFitAnimation = useCallback(
     (kind: 'cancelled' | 'superseded' = 'cancelled') => {
@@ -591,7 +613,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       nextPan: { x: number; y: number },
       nextZoom: number,
       syncReact = false,
-      /** See `applyTransformToElement` — animated fits pass their target. */
+      /** See `applyTransformToElement` — animated fits pass `stampFitSemanticTier`. */
       tierZoom?: number,
     ) => {
       transformRef.current = { pan: nextPan, zoom: nextZoom }
@@ -615,6 +637,33 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     // camera move.
     [],
   )
+
+  /**
+   * Pick the zoom the blocks-tier decision reads for a fit, and mark the
+   * named destination so its cells can opt out of the density encoding.
+   *
+   * Overview → scenario lands above `SEMANTIC_ZOOM_THRESHOLD`; stamping
+   * that zoom on the whole board painted every cell on takeoff (~500ms
+   * hitch). Overview → phase stays below the threshold and did not.
+   * While the board is already in blocks and the destination would leave
+   * it, keep the density encoding and reveal only the fit target.
+   *
+   * @param destZoom - Zoom the camera is flying toward.
+   * @returns Zoom the tier decision should read.
+   */
+  const stampFitSemanticTier = useCallback((destZoom: number): number => {
+    const content = contentRef.current
+    const threshold = semanticThresholdRef.current
+    const stayInBlocks =
+      content?.dataset.semanticTier === 'blocks' && destZoom >= threshold
+    const named =
+      content?.querySelector<HTMLElement>(fitSelectorRef.current) ?? null
+    flightRevealElRef.current = assignCameraFlightReveal(
+      stayInBlocks ? named : null,
+      flightRevealElRef.current,
+    )
+    return stayInBlocks ? threshold - Number.EPSILON : destZoom
+  }, [])
 
   const animateTransform = useCallback(
     (
@@ -654,7 +703,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       const initialViewport = readViewport()
       if (initialViewport.width <= 0 || initialViewport.height <= 0) {
         pendingFocusTransferRef.current = null
-        commitTransform(nextPan, nextZoom, true, nextZoom)
+        commitTransform(nextPan, nextZoom, true, stampFitSemanticTier(nextZoom))
         return Promise.resolve<CameraTransitionResult>({
           kind: 'completed',
           transform: target,
@@ -727,7 +776,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
             sample.transform.pan,
             sample.transform.zoom,
             sample.done,
-            target.zoom,
+            stampFitSemanticTier(target.zoom),
           )
           if (!sample.done) {
             fitAnimationRef.current = requestAnimationFrame(step)
@@ -752,7 +801,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       fitAnimationPromiseRef.current = flight
       return flight
     },
-    [cancelFitAnimation, commitTransform, fitDurationMs],
+    [cancelFitAnimation, commitTransform, fitDurationMs, stampFitSemanticTier],
   )
 
   /**
@@ -951,6 +1000,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         if (isSameTransform(transformRef.current, next)) {
           cancelFitAnimation('superseded')
           pendingFocusTransferRef.current = null
+          stampFitSemanticTier(next.zoom)
           outcome = Promise.resolve<CameraTransitionResult>({
             kind: 'completed',
             transform: next,
@@ -990,7 +1040,12 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         */
         cancelFitAnimation()
         pendingFocusTransferRef.current = null
-        commitTransform(next.pan, next.zoom, true)
+        commitTransform(
+          next.pan,
+          next.zoom,
+          true,
+          stampFitSemanticTier(next.zoom),
+        )
         outcome = Promise.resolve<CameraTransitionResult>({
           kind: 'completed',
           transform: next,
@@ -1012,22 +1067,34 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
           the counter-scale silently not happening, and nothing on screen
           says so. One frame later the board has laid out and the forced
           re-stamp finds them.
+
+          Keep the current blocks-tier mark. This used to pass the live zoom
+          with no `tierZoom`, so a zoom-in that had just decided to stay in
+          blocks (or had stamped destination, then this ran) flipped the
+          whole board on the takeoff frame.
         */
         requestAnimationFrame(() => {
           const el = contentRef.current
           if (!el) return
           delete el.dataset.semanticLabelBoost
+          const live = transformRef.current
+          const threshold = semanticThresholdRef.current
+          const tierZoom =
+            el.dataset.semanticTier === 'blocks'
+              ? threshold - Number.EPSILON
+              : live.zoom
           applyTransformToElement(
             el,
-            transformRef.current.pan,
-            transformRef.current.zoom,
-            semanticThresholdRef.current,
+            live.pan,
+            live.zoom,
+            threshold,
+            tierZoom,
           )
         })
       }
       return outcome
     },
-    [animateTransform, cancelFitAnimation, commitTransform, computeFitTransform],
+    [animateTransform, cancelFitAnimation, commitTransform, computeFitTransform, stampFitSemanticTier],
   )
 
   /**
@@ -1153,23 +1220,23 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     pendingFitAnimateRef.current = animate
 
     /*
-      Fit when the TARGET has stopped changing size, not on a fixed clock.
+      Take off once the NAMED target is measurable, not once its box has
+      stopped moving.
 
-      The old schedule (two frames, 150 ms backstop) fit against whatever
-      had laid out by then — and a comparison panel is mid-measurement
-      right then: its content mounts in one commit, a ResizeObserver
-      measures it, and the panel takes its real size a commit later. A
-      path toggled onto a focused scenario therefore eased toward a
-      half-grown panel, and the growth correction afterwards landed as a
-      visible snap on top of the ease — the "zoom messes up the page".
-      Waiting for two consecutive frames to measure the same target size
-      costs one frame on already-stable boards and buys a single clean
-      ease against final geometry everywhere else.
+      Waiting for left/top/width/height AND viewport size to freeze was
+      right when a finished ease could not retarget — a comparison panel
+      that grew after landing snapped. Flights now replan from live
+      geometry, so that wait is dead time. Overview → scenario is the
+      case that paid for it: focusing a scenario mounts a sticky header,
+      changes fit insets, and can reshuffle row height, so consecutive
+      frames rarely agree and the 250 ms backstop becomes the takeoff.
+      Overview → phase barely churns, which is why it already felt
+      immediate. Two frames of the same named element (not the content
+      fallback) is enough to prove the destination exists; live
+      retargeting follows the rest.
 
-      `fitSettlingRef` tells the resize observer's owed-fit branch to stay
-      out while this loop is watching — that branch re-fires the pending
-      fit on any content resize, which is precisely the mid-layout moment
-      this loop exists to wait out.
+      `fitSettlingRef` still keeps the resize observer's owed-fit branch
+      out while this loop is watching.
     */
     fitSettlingRef.current = true
     let frame = 0
@@ -1231,7 +1298,9 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         return
       }
       const content = contentRef.current
-      const target = content?.querySelector<HTMLElement>(fitSelector) ?? content
+      const matchedTarget =
+        content?.querySelector<HTMLElement>(fitSelector) ?? null
+      const target = matchedTarget ?? content
       const container = containerRef.current
       const bounds =
         content && target
@@ -1246,20 +1315,12 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
             }
           : null
       /*
-        Three things have to be true to call this settled, and only the last
-        one used to be checked.
-
-        A REAL size — `0×0` twice running is a board that has not begun
-        laying out, not a board that has finished. That is the heavy mount
-        this loop was written for, and it was the one case it mis-read.
-
-        The SAME element both times — `fitSelector` changes on the same
-        navigation that mounts the new node, so frame one legitimately
-        measures the content fallback and frame two measures the real target.
-        Two different elements agreeing within a pixel is a coincidence, not
-        a settled layout.
-
-        And the same size, within a pixel of integer `offsetWidth` rounding.
+        The named target has to exist and have a real size — `0×0` is a
+        board that has not begun laying out. Frame one of a navigation
+        may still miss `fitSelector` and measure the content fallback;
+        taking off then aims at the whole canvas. Two frames of the
+        SAME named element are enough. Position and viewport may still
+        be moving; the flight follows them.
       */
       const measurable =
         geometry !== null &&
@@ -1267,21 +1328,16 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         geometry.height > 0 &&
         geometry.viewportWidth > 0 &&
         geometry.viewportHeight > 0
-      const settled =
+      const readyToFly =
+        matchedTarget !== null &&
         measurable &&
-        lastGeometry !== null &&
-        target === lastTarget &&
-        Math.abs(geometry.left - lastGeometry.left) <= 1 &&
-        Math.abs(geometry.top - lastGeometry.top) <= 1 &&
-        Math.abs(geometry.width - lastGeometry.width) <= 1 &&
-        Math.abs(geometry.height - lastGeometry.height) <= 1 &&
-        Math.abs(geometry.viewportWidth - lastGeometry.viewportWidth) <= 1 &&
-        Math.abs(geometry.viewportHeight - lastGeometry.viewportHeight) <= 1
+        lastTarget === matchedTarget &&
+        lastGeometry !== null
 
-      if (settled && runFit()) return
+      if (readyToFly && runFit()) return
 
       lastGeometry = measurable ? geometry : null
-      lastTarget = target
+      lastTarget = matchedTarget
       // Bounded, like `refitWhenIdle` below. A target that never goes quiet
       // — an oscillating measurement, a selector that keeps missing — would
       // otherwise poll forever, and each poll is a `querySelector` plus two
@@ -1297,11 +1353,9 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     }
     frame = requestAnimationFrame(step)
 
-    // Backstop for content that will not go quiet in time — the ease is
-    // A fit that starts later than the nominal camera beat reads as a hang. Late
-    // growth after it is the resize observer's correction to make. It also
-    // ENDS the loop: leaving the rAF running past the backstop was a
-    // permanent per-frame forced layout for the life of the view.
+    // Backstop if the named target never appears. Takeoff is otherwise the
+    // two-frame named-target check above; holding the rAF past this timeout
+    // was a permanent per-frame layout read for the life of the view.
     const timeout = window.setTimeout(runFit, 250)
 
     return () => {

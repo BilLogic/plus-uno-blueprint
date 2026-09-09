@@ -146,8 +146,10 @@ describe('stable blueprint cell frame contract', () => {
   })
 
   it('semantic zoom paints actual faces, not variable group wrappers', () => {
-    expect(css).toContain(
-      "[data-semantic-tier='blocks'] [data-blueprint-cell-anchor]",
+    expect(css).toContain("[data-semantic-tier='blocks']")
+    expect(css).toContain('[data-camera-flight-reveal]')
+    expect(css).toMatch(
+      /\[data-semantic-tier='blocks'\]\s+\[data-blueprint-cell-anchor\]/,
     )
     expect(css).not.toContain(
       "[data-semantic-tier='blocks'] [data-blueprint-cell] > *",

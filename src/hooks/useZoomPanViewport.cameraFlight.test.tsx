@@ -96,6 +96,7 @@ function Harness({
       }}
     >
       <div
+        data-zoom-pan-content=""
         ref={(node) => {
           camera.contentRef.current = node
           if (node) {
@@ -306,7 +307,7 @@ describe('viewport camera flights', () => {
     expect(cameraState().moving).toBe(false)
   })
 
-  it('waits for target position as well as target size to settle', () => {
+  it('takes off once the named target is measurable, even if it is still moving', () => {
     const target = { left: 0, top: 0, width: 1000, height: 600 }
     const view = render(<Harness resetKey="initial" target={target} />)
     act(() => {
@@ -319,10 +320,86 @@ describe('viewport camera flights', () => {
     target.left = 300
     act(() => flushFrame(48))
 
-    expect(cameraState().moving).toBe(false)
-
-    act(() => flushFrame(64))
     expect(cameraState().moving).toBe(true)
+
+    act(() => {
+      flushFrame(64)
+      flushFrame(900)
+    })
+    expect(cameraState().moving).toBe(false)
+    expect(cameraState().pan.x).toBeCloseTo(-300)
+  })
+
+  it('keeps the blocks tier on a zoom-in and reveals only the named target', () => {
+    const overview = { left: 0, top: 0, width: 5000, height: 3000 }
+    const focused = { left: 0, top: 0, width: 1800, height: 1080 }
+    const view = render(<Harness resetKey="overview" target={overview} />)
+    act(() => {
+      flushFrame(0)
+      flushFrame(16)
+    })
+
+    const content = view.container.querySelector<HTMLElement>(
+      '[data-zoom-pan-content]',
+    )!
+    const named = view.container.querySelector<HTMLElement>('[data-target]')!
+    expect(cameraState().zoom).toBeLessThan(0.25)
+    expect(content.dataset.semanticTier).toBe('blocks')
+    expect(named.hasAttribute('data-camera-flight-reveal')).toBe(false)
+
+    view.rerender(<Harness resetKey="scenario" target={focused} />)
+    act(() => {
+      flushFrame(32)
+      flushFrame(48)
+      flushFrame(64)
+      flushFrame(80)
+    })
+
+    expect(cameraState().moving).toBe(true)
+    expect(cameraState().zoom).toBeGreaterThan(0.05)
+    expect(content.dataset.semanticTier).toBe('blocks')
+    expect(named.hasAttribute('data-camera-flight-reveal')).toBe(true)
+
+    act(() => flushFrame(900))
+    expect(cameraState().moving).toBe(false)
+    expect(cameraState().zoom).toBeGreaterThan(0.25)
+    expect(content.dataset.semanticTier).toBe('blocks')
+    expect(named.hasAttribute('data-camera-flight-reveal')).toBe(true)
+  })
+
+  it('stamps blocks on the first frame of a zoom-out that crosses the threshold', () => {
+    const focused = { left: 0, top: 0, width: 1000, height: 600 }
+    const overview = { left: 0, top: 0, width: 5000, height: 3000 }
+    const view = render(<Harness resetKey="scenario" target={focused} />)
+    act(() => {
+      flushFrame(0)
+      flushFrame(16)
+    })
+
+    const content = view.container.querySelector<HTMLElement>(
+      '[data-zoom-pan-content]',
+    )!
+    expect(cameraState().zoom).toBeGreaterThanOrEqual(0.25)
+    expect(content.dataset.semanticTier).not.toBe('blocks')
+
+    view.rerender(<Harness resetKey="overview" target={overview} />)
+    act(() => {
+      flushFrame(32)
+      flushFrame(48)
+      flushFrame(64)
+    })
+
+    expect(content.dataset.semanticTier).toBe('blocks')
+    expect(
+      view.container
+        .querySelector('[data-target]')
+        ?.hasAttribute('data-camera-flight-reveal'),
+    ).toBe(false)
+
+    act(() => flushFrame(900))
+    expect(cameraState().moving).toBe(false)
+    expect(cameraState().zoom).toBeLessThan(0.25)
+    expect(content.dataset.semanticTier).toBe('blocks')
   })
 
   it('retargets a live flight from its current transform without a snap', () => {

@@ -149,7 +149,9 @@ The full action-by-action table lives in the 2026-07-30 motion plan; the
 contract in short:
 
 - Navigation **fits**: phase/scenario clicks, prev/next, and re-clicking the
-  selected row (recenter) all fly on `--motion-camera` eases.
+  selected row (recenter) all fly as one distance-aware camera flight
+  (240–650 ms). `--motion-camera` (420 ms) remains the token for
+  camera-*adjacent* CSS, not the flight duration.
 - **Escape / Home / breadcrumb all animate to the overview identically** —
   same destination, same feel, no jump-cut variant.
 - First fit after any mount **jumps**; deep-link restores jump.
@@ -160,11 +162,15 @@ contract in short:
   snapping of any kind.
 - Exactly one camera animation per intent; reduced motion makes every fit a
   jump. What holds that up — one writer per navigation, geometric scale
-  interpolation, and a fit that waits for its target to settle — is
+  interpolation, and a fit that takes off once the named target exists and
+  retargets while live — is
   [motion](../foundations/motion.md#what-exactly-one-camera-flight-per-intent-rests-on).
   Automatic travel follows a bounded distance-aware camera flight: zoom is
   geometric, screen-space travel is monotonic, and compatible velocity carries
-  across superseding destinations. Focus emphasis reads the same flight's
+  across superseding destinations. A zoom-in from the blocks tier keeps that
+  encoding and reveals only the named destination, so overview → scenario
+  does not paint the whole board on takeoff. Focus emphasis reads the same
+  flight's
   progress. Manual wheel, pinch, drag, and keyboard input remains immediate
   and cancels the automatic flight.
 - Wheel and trackpad zoom preserve the world point beneath the cursor. A
