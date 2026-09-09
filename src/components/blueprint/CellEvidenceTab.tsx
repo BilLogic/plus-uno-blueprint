@@ -18,9 +18,12 @@ import { Button } from '@/components/ui/button'
 import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { OptionSelect } from '@/components/blueprint/OptionSelect'
+import { PANEL_TEXTAREA_CLASS } from '@/components/blueprint/panelShell'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { invalidateEvidence, useEvidence } from '@/hooks/useEvidence'
 import { addEvidence } from '@/lib/evidenceMutations'
+import { PANEL_TEXT } from '@/lib/panelText'
 import { resolveFirstServiceId } from '@/lib/service'
 import { safeExternalHref } from '@/lib/sliceCells'
 import { errorMessage } from '@/lib/utils'
@@ -49,6 +52,18 @@ const KIND_ICONS: Record<EvidenceKind, typeof FileText> = {
   observation: Eye,
   other: CircleDashed,
 }
+
+/**
+ * The kinds, as the panel writes words: one capital, and nothing else.
+ *
+ * Derived from `EVIDENCE_KINDS` rather than listed a second time — a hand-kept
+ * label table is a second place for the vocabulary to be true, and the only
+ * difference between the stored word and the shown one is its first letter.
+ */
+const KIND_OPTIONS = EVIDENCE_KINDS.map((kind) => ({
+  value: kind,
+  label: kind.charAt(0).toUpperCase() + kind.slice(1),
+}))
 
 function kindIcon(kind: string) {
   const Icon = KIND_ICONS[kind as EvidenceKind] ?? CircleDashed
@@ -82,6 +97,31 @@ function EvidenceRow({ row }: { row: Evidence }) {
         ) : null}
       </div>
     </li>
+  )
+}
+
+/**
+ * A field's name, in the panel's own eyebrow type, and — where the field can
+ * be left empty — the word that says so.
+ *
+ * Every field in this form carries one. A placeholder cannot do this job: it
+ * describes the field only until someone types into it, which is exactly when
+ * a half-filled form most needs to say what its boxes hold.
+ */
+function FieldLabel({
+  text,
+  optional = false,
+}: {
+  text: string
+  optional?: boolean
+}) {
+  return (
+    <span className={PANEL_TEXT.sectionLabel}>
+      {text}
+      {optional ? (
+        <span className="font-normal text-muted-foreground/70"> · optional</span>
+      ) : null}
+    </span>
   )
 }
 
@@ -153,46 +193,78 @@ function AddSourceForm({
 
   return (
     <form
-      className="flex flex-col gap-2 rounded-lg border border-border bg-muted/20 p-2.5"
+      className="flex flex-col gap-2.5 rounded-lg border border-border bg-muted/20 p-2.5"
       onSubmit={(event) => {
         void handleSubmit(event)
       }}
     >
-      <select
-        value={kind}
-        aria-label="Source kind"
-        className="h-7 w-full rounded-md border border-border bg-background px-2 font-mono text-xs text-foreground outline-none focus:ring-1 focus:ring-ring"
-        onChange={(event) => setKind(event.target.value as EvidenceKind)}
-      >
-        {EVIDENCE_KINDS.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-      <Input
-        required
-        placeholder="Title"
-        aria-label="Source title"
-        className="h-7 text-xs"
-        value={title}
-        onChange={(event) => setTitle(event.target.value)}
-      />
-      <Input
-        placeholder="Link or reference"
-        aria-label="Source reference"
-        className="h-7 text-xs"
-        value={ref}
-        onChange={(event) => setRef(event.target.value)}
-      />
-      <textarea
-        rows={2}
-        placeholder="Excerpt"
-        aria-label="Source excerpt"
-        className="w-full resize-none rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-ring"
-        value={excerpt}
-        onChange={(event) => setExcerpt(event.target.value)}
-      />
+      {/* A kind is a short enum and a title is a sentence, so they share a
+          row. Stacked, they were two of four full-width boxes in a panel 264px
+          wide, and the enum was as wide as the sentence. */}
+      <div className="flex items-start gap-2">
+        {/* 128px: the widest label, "Observation", is 76px, and the trigger
+            spends 42 on padding, gap and chevron. Measured, because at 112 it
+            came up two pixels short and clipped the one kind nobody would
+            notice was clipped. A title is free text and scrolls; a kind is
+            chosen by reading it, so the enum takes the fixed column. */}
+        <div className="flex w-32 shrink-0 flex-col gap-1">
+          <FieldLabel text="Kind" />
+          {/*
+            The panel's own select — the same control the Status and Role
+            fields wear, and the reason its trigger class exists. What stood
+            here was a native `<select>` carrying its own radius, its own
+            border token, no hover state and `font-mono`, which made a source
+            kind read as machine data and clipped the value it was showing:
+            28px of box, 8px of the forms plugin's padding at each end, and a
+            16px line in the 10px that were left.
+          */}
+          <OptionSelect
+            value={kind}
+            onChange={setKind}
+            options={KIND_OPTIONS}
+            aria-label="Kind"
+          />
+        </div>
+        <label className="flex min-w-0 flex-1 flex-col gap-1">
+          <FieldLabel text="Title" />
+          <Input
+            required
+            placeholder="e.g. Session observation, P3"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+          />
+        </label>
+      </div>
+      <label className="flex flex-col gap-1">
+        <FieldLabel text="Link or reference" optional />
+        <Input
+          placeholder="A URL, or where in the document it sits"
+          value={ref}
+          onChange={(event) => setRef(event.target.value)}
+        />
+      </label>
+      {/*
+        Under a rule, because what the source SAYS is a different question from
+        what the source IS, and the answer is written in someone else's words.
+
+        The ticket asks for two fields here — the quote, and the author's own
+        remark about it. This deployment has one: `evidence.note` was dropped
+        by 20260830190000, which asserted it held nothing first, and
+        `scripts/tests/one-spelling-each.test.mjs` owns that invariant. The
+        group is the shape; the second field is upstream's to keep.
+      */}
+      <div className="flex flex-col gap-2 border-t border-border pt-2.5">
+        <label className="flex flex-col gap-1">
+          <FieldLabel text="Quote from the source" optional />
+          <textarea
+            rows={2}
+            placeholder="Their words, not a summary of them"
+            className={PANEL_TEXTAREA_CLASS}
+            value={excerpt}
+            onChange={(event) => setExcerpt(event.target.value)}
+          />
+        </label>
+      </div>
       {error ? (
         /* The source was not saved — an error, not a caution. */
         <Alert variant="destructive">
