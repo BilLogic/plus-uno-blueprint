@@ -1144,10 +1144,19 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     // its geometry must not leave the previous flight visibly pursuing an
     // intent the reader has already replaced. Supersession carries the live
     // compatible velocity into the flight that starts after settling.
-    resolveSemanticOutcome({
-      kind: 'superseded',
-      transform: transformRef.current,
-    })
+    // Only a DIFFERENT destination supersedes the one being waited on.
+    // `resetKey` carries more than the semantic target — a focus nonce, the
+    // view, the phase and scenario counts — so re-selecting the row already
+    // open re-fires this effect with the same `cameraOutcomeKey`. Publishing
+    // `superseded` there resolved the caller's wait against the very key
+    // about to be re-armed, and a navigation that lands perfectly reported
+    // that its camera was never claimed.
+    if ((cameraOutcomeKey ?? null) !== pendingSemanticOutcomeKeyRef.current) {
+      resolveSemanticOutcome({
+        kind: 'superseded',
+        transform: transformRef.current,
+      })
+    }
     cancelFitAnimation('superseded')
     const navigationGeneration = ++navigationGenerationRef.current
     pendingSemanticOutcomeKeyRef.current = cameraOutcomeKey ?? null
