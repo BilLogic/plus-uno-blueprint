@@ -478,6 +478,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/contexts/canvasModeContext.ts',
     'src/components/blueprint/ResourcesList.tsx',
     'src/lib/rowReveal.ts',
+    'src/lib/linkedText.ts',
   ])
 })
 

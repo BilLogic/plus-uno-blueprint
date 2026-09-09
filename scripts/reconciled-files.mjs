@@ -1462,4 +1462,13 @@ export const RECONCILED_FILES = [
   // a class list copied into two folders. It arrived byte-identical.
   'src/components/blueprint/ResourcesList.tsx',
   'src/lib/rowReveal.ts',
+
+  // `linkedText.ts` was byte-identical to the template's copy on every line but
+  // one, and that line was a citation: each repository's comment named its OWN
+  // migration for the change that retired `evidence.ref`. Two copies that
+  // agreed on everything a reader cares about were kept apart by a number
+  // neither reader needs, and the citation rule would have refused the file
+  // even if they had matched. Both sides dropped the address; the sentence
+  // that explains what the column was for is untouched.
+  'src/lib/linkedText.ts',
 ]
