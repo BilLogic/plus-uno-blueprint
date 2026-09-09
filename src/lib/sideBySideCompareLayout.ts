@@ -302,7 +302,7 @@ export function buildSideBySideLabelRowSpecs(
       showDividerBelow: shouldShowLaneDividerAfter(lane, laneIndex, lanes),
     })
 
-    if (!collapsed && laneHasInteractionLine(lane)) {
+    if (!collapsed && laneHasInteractionLine(lane, lanes)) {
       specs.push({
         key: `${lane.id}-interaction`,
         kind: 'interaction',
@@ -826,8 +826,11 @@ export function getMergedComparePanelHeight(
   )
 }
 
-export function laneHasInteractionLine(lane: BlueprintLane): boolean {
-  return shouldShowInteractionLineAfter(lane)
+export function laneHasInteractionLine(
+  lane: BlueprintLane,
+  lanes?: BlueprintLane[],
+): boolean {
+  return shouldShowInteractionLineAfter(lane, lanes)
 }
 
 export function laneHasVisibilityLine(
