@@ -10,10 +10,11 @@ claims:
   - src/components/editor/AgentProviderFields.tsx
   - src/components/editor/AgentScopeField.tsx
   - src/components/editor/AgentSettingsFields.tsx
+  - src/components/editor/DevPortal.tsx
   - src/components/mobile/MobileAgentFab.tsx
   - src/components/mobile/MobileAgentSheet.tsx
   - src/components/mobile/mobileAgentBridge.ts
-last-reviewed: 2026-08-26
+last-reviewed: 2026-09-10
 ---
 
 # Agent session
@@ -178,6 +179,34 @@ On the deployed site the ⚙ is the front door: sign-in always, provider/model/k
 only when the session can write. RLS is still the authority; this UI only starts
 a session. Show/hide the chat stays on the rail's ✦ — settings hold settings, not
 surface toggles.
+
+## For developers
+
+The last thing in the settings column, on a development server and nowhere
+else: a **tier simulator**. Someone working on this deployment has to see both
+tiers — the admin surfaces and the regular ones the same screens collapse to —
+and that used to cost a second account and a sign-out round trip per look.
+
+Two controls, because there are exactly two decisions: a switch for whether the
+simulation runs at all, and a Regular/Admin pair for which tier it plays.
+"Use my real session" is not a third tier — it is the switch being off — so the
+truth never sits in a row beside the simulation as if it were a peer of it. The
+caveats live behind the ⓘ on the row each one qualifies, not as prose in the
+popover.
+
+**It moves what the client believes and nothing else.** `canWrite` and
+`canAgentWrite` are its whole reach; row-level security and the RPC grants never
+consult it, so simulating Admin on an account without rights shows the editing
+surfaces and every save then fails with the database's own error. While it is
+running, a `simulating <tier>` badge sits in the workspace badge row — its own
+colour, because amber there means "this is live, be careful" and this means
+"what you are seeing is not your account".
+
+**It is compiled out of a production build.** The gate is one function reading
+`import.meta.env.DEV`, applied at the single seam every consumer reads the
+simulation through, so a browser that carries the stored value from a dev
+session gets its real session back rather than a lifted flag: the value is left
+in storage and simply stops being consulted.
 
 ## The phone
 

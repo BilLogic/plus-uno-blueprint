@@ -770,7 +770,7 @@ function AgentChatView({
   onBack: () => void
 }) {
   const settings = useAgentSettings()
-  const { client, canWrite, canAgent } = useSupabase()
+  const { client, canAgentWrite, canAgent } = useSupabase()
   const mode = useCanvasModeValue()
   const { activePathKeys } = usePathSelectionContext()
   const changes = useSyncExternalStore(subscribeToSession, sessionSnapshot)
@@ -903,7 +903,7 @@ function AgentChatView({
       text,
       skill,
       attachment: attached,
-      allowWrites: canWrite,
+      allowWrites: canAgentWrite,
     })
   }
 

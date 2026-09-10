@@ -594,6 +594,11 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/contexts/canvasActiveContext.tsx',
     'src/components/cover/coverModel.ts',
     'src/lib/deletionSafety.ts',
+    'src/lib/devPortal.ts',
+    'src/components/editor/DevPortal.tsx',
+    'src/components/ui/switch.tsx',
+    'src/components/editor/AgentSettingsFields.tsx',
+    'src/components/editor/agentSettingsFields.test.tsx',
   ])
 })
 
