@@ -1,7 +1,7 @@
 ---
 audience: developers
 summary: Who can do what and where it is actually enforced, the schema tour, the single write path (wrappers + ledger), migrations workflow, and environments.
-sources: supabase/DATABASE.md (superseded), supabase/migrations/20260805150000_service_account_tier.sql, supabase/migrations/20260805170000_service_tier_rpc_enforcement.sql, supabase/migrations/20260729120000_derived_layer.sql, supabase/migrations/20260730090000_derived_layer_grants_hardening.sql, src/contexts/SupabaseProvider.tsx, src/lib/authoringRpc.ts, src/lib/authoringSession.ts, src/lib/authoringLog.ts, supabase/migrations/20260830200000_every_authoring_write_leaves_a_record.sql, src/lib/findingMutations.ts, src/lib/writeBoundaryContract.test.ts, supabase/migrations/20260805120000_findings_canvas_writes.sql, supabase/migrations/20260830290000_a_panel_writes_its_own_columns.sql, scripts/check-rls-posture.mjs
+sources: supabase/DATABASE.md (superseded), supabase/migrations/20260805150000_service_account_tier.sql, supabase/migrations/20260805170000_service_tier_rpc_enforcement.sql, supabase/migrations/20260729120000_derived_layer.sql, supabase/migrations/20260730090000_derived_layer_grants_hardening.sql, src/contexts/SupabaseProvider.tsx, src/lib/authoringRpc.ts, src/lib/authoringSession.ts, src/lib/authoringLog.ts, supabase/migrations/20260830200000_every_authoring_write_leaves_a_record.sql, src/lib/findingMutations.ts, src/lib/writeBoundaryContract.test.ts, supabase/migrations/20260805120000_findings_canvas_writes.sql, supabase/migrations/20260830290000_a_panel_writes_its_own_columns.sql, supabase/migrations/20260910030000_a_slide_shows_a_set_of_its_cells_frames.sql, scripts/check-rls-posture.mjs
 last-reviewed: 2026-08-31
 ---
 
@@ -77,6 +77,18 @@ are server-side:
    parent when it is created, so INSERT has to reach the foreign keys.
    Identity is chosen once and never changed, which is what makes UPDATE
    the privilege that reparents.
+
+   `slides` is the table that shows what the rule costs and what it
+   buys. It held no UPDATE surface at all until `20260910030000`,
+   because nothing edited a slide in place — `replaceSlides` deletes the
+   slice's rows and inserts the new ones. A slide's image set changed
+   that for ONE field: `shows_all_images` is flipped on the saved row,
+   whose id every `slide_images` member depends on, so delete-and-insert
+   would cascade the set away. The grant is that one column, the
+   template's whole-table line is deliberately absent, and the migration
+   asserts both — it fails if the table grant appears, and it fails if a
+   second column joins the list. `slide_images` itself takes no UPDATE:
+   the set is replaced whole, and a member's `slide_id` is where it sits.
 
    Three key columns stay UPDATE-able and each is asserted rather than
    allowed (`IDENTITY_GRANTS` in `scripts/check-rls-posture.mjs`):
@@ -189,7 +201,10 @@ filename is where the retired name "derived layer" survives) — `slices` +
 `slides` (stakeholder views), `evidence`, `audit_findings`. Each has an owner
 named by the write surface — the slice, the audit, and evidence which is
 nobody's; see CONTEXT.md, which records why two attempts at a collective noun
-were both wrong of half the set. `business_models` is not among
+were both wrong of half the set. `slide_images` hangs off `slides` and is the
+one member of that family with a HARD reference into the board
+(`cell_id`, cascading): a member names a cell the slide already cites softly,
+so the frame it shows is the cell's and nothing is copied. `business_models` is not among
 them — it is the service's spec row.
 Design invariants worth knowing before touching them: all four
 reference cells **softly** (uuid, no FK) so importer delete-and-reinsert

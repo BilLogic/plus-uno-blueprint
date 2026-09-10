@@ -115,6 +115,7 @@ export type WriteFn =
   | 'duplicate_slice'
   | 'update_slice_meta'
   | 'replace_slides'
+  | 'update_slide_images'
   | 'create_finding'
   | 'update_finding'
   | 'set_placement_touchpoint'
@@ -448,6 +449,21 @@ const DESCRIBERS: Record<WriteFn, (entry: ChangeEntry) => string> = {
     return count === null
       ? 'Rebuilt a slice’s slides'
       : `Rebuilt a slice’s slides (${count} now)`
+  },
+  // A slide's images are a set, so the row names the count rather than the
+  // members — a list of URLs in a change sheet is unreadable, and the one
+  // fact a person wants back is how many pictures the slide ended up with.
+  // The untouched state is named as itself rather than as a count, because
+  // "shows every cited frame" is a rule and not a number.
+  update_slide_images: (entry) => {
+    if (entry.args.shows_all_images === true) {
+      return 'A slide now shows every cited cell’s frames'
+    }
+    const count =
+      typeof entry.args.member_count === 'number' ? entry.args.member_count : null
+    if (count === 0) return 'A slide now shows no images'
+    if (count === null) return 'Edited a slide’s images'
+    return `A slide now shows ${count} image${count === 1 ? '' : 's'}`
   },
   // Named by the check, because that is the word a person recognises — the
   // finding's own id means nothing to anyone reading the sheet.

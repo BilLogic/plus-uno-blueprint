@@ -374,7 +374,6 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/editor/WriteFailureNotices.tsx',
     'src/lib/writeFailures.ts',
     'src/components/editor/CanvasCellContextMenu.tsx',
-    'src/lib/mergeSlidesWithFallback.ts',
     'src/lib/scenarioLayout.ts',
     'src/lib/overviewFlowArrowAnchor.test.ts',
     'src/types/slideViewType.test.ts',
@@ -599,6 +598,12 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/ui/switch.tsx',
     'src/components/editor/AgentSettingsFields.tsx',
     'src/components/editor/agentSettingsFields.test.tsx',
+    'src/lib/slideImages.ts',
+    'src/lib/slideImages.test.ts',
+    'src/lib/slideImagesField.test.ts',
+    'src/lib/illustrationUpload.ts',
+    'src/components/editor/SlideImagesField.tsx',
+    'src/lib/bundledSample.ts',
   ])
 })
 

@@ -400,16 +400,29 @@ export const PANEL_COLUMNS = Object.freeze({
   cell_touchpoints: ['summary', 'role', 'position', 'updated_at'],
   agent_sessions: ['id', 'title', 'created_at', 'updated_at'],
   agent_messages: ['session_id', 'seq', 'kind', 'payload'],
+  // The slide editor's images field (SlideImagesField.tsx), through
+  // `replaceSlideImageSet`. ONE column, granted by 20260910030000, and the
+  // first in-place write this table has ever taken: everything else about a
+  // slide is written by deleting the slice's rows and inserting again, which
+  // is why this entry is one word rather than the row. The member rows the
+  // flag discriminates live in `slide_images`, which takes no UPDATE at all.
+  //
+  // Upstream grants `slides` a whole-table UPDATE and this deployment does
+  // not. That difference is asserted in the migration itself, which fails if
+  // the template's line is ever pasted in beside the column grant.
+  slides: ['shows_all_images'],
   // Written only through SECURITY DEFINER RPCs, or only inserted and deleted.
   // Declared with an empty set rather than omitted, because omission would
   // read as "nobody has looked at this table yet" and these have been looked
   // at: `sync_cell_resources` is SECURITY DEFINER behind
   // `is_service_account()` since 20260902130000 (it updates rows in place and
-  // the table has no UPDATE surface), and `path_steps`, `cell_dependencies`,
-  // `slides` and `authoring_changes` are RPC-only.
+  // the table has no UPDATE surface), `path_steps`, `cell_dependencies` and
+  // `authoring_changes` are RPC-only, and `slide_images` is replaced as a set
+  // — deleted and re-inserted whole, because position is identity there and
+  // updating positions in place trips the unique constraint halfway through.
   path_steps: [],
   cell_dependencies: [],
-  slides: [],
+  slide_images: [],
   resources: [],
   authoring_changes: [],
 })

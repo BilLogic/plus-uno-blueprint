@@ -57,6 +57,15 @@ export function SliceEditSession({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // The saved rows, by id. A slide's image set lives on the row and is
+  // written as it is chosen, so the images field reads the slice rather than
+  // the draft — the draft carries what Save will write, and the set is
+  // already written.
+  const savedSlideFor = useCallback(
+    (itemId: string) => detail.items.find((item) => item.id === itemId) ?? null,
+    [detail.items],
+  )
+
   const problems = useMemo(
     () =>
       validateDraftSlice({
@@ -179,6 +188,8 @@ export function SliceEditSession({
             slides={slides}
             activeSlide={activeSlide}
             problems={problems}
+            sliceId={detail.slice.id}
+            savedSlideFor={savedSlideFor}
             onActivate={setActiveFrame}
             onChange={setSlides}
           />

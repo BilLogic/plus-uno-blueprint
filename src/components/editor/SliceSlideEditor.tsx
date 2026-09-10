@@ -3,9 +3,11 @@ import { ChevronDown, GripVertical, Plus, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { IconTooltip } from '@/components/editor/IconTooltip'
+import { SlideImagesField } from '@/components/editor/SlideImagesField'
 import { cn } from '@/lib/utils'
 import { describeCell } from '@/lib/canvasCellQuery'
 import type { DraftSlide, ValidationProblem } from '@/lib/sliceValidation'
+import type { Slide } from '@/types/database'
 
 /**
  * The slide editor, docked under the canvas while a slice is being edited.
@@ -25,12 +27,22 @@ export function SliceSlideEditor({
   slides,
   activeSlide,
   problems,
+  sliceId,
+  savedSlideFor,
   onActivate,
   onChange,
 }: {
   slides: DraftSlide[]
   activeSlide: number
   problems: ValidationProblem[]
+  sliceId: string
+  /**
+   * The SAVED row for a slide, read from the slice rather than carried in the
+   * draft. A slide's image set is written straight to the database — ticking
+   * a frame is a write, not an edit staged for Save — so a copy on the draft
+   * would be stale the moment one landed.
+   */
+  savedSlideFor: (itemId: string) => Slide | null
   onActivate: (index: number) => void
   onChange: (slides: DraftSlide[]) => void
 }) {
@@ -299,6 +311,11 @@ export function SliceSlideEditor({
               className="w-full shrink-0 resize-none rounded-md border border-input bg-transparent px-1.5 py-1 text-2xs outline-none focus-visible:border-ring"
             />
 
+            <SlideImagesField
+              sliceId={sliceId}
+              itemId={slide.id}
+              saved={slide.id ? savedSlideFor(slide.id) : null}
+            />
 
             {slideProblems.length > 0 ? (
               <p className="text-3xs text-destructive">
