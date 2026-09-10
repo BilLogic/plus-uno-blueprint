@@ -1,7 +1,7 @@
 ---
 audience: designers, developers
-summary: The slice focus tab and its dim, presentation's dark subtree, the two editing surfaces that split by what they are good at, and slide mode.
-sources: src/components/editor/SliceView.tsx, src/components/editor/SlicePresentation.tsx, src/components/editor/SliceSlideEditor.tsx, src/components/editor/SliceSlideComposer.tsx, src/styles/blueprint.css, src/styles/semantic.css
+summary: The slice focus tab and its dim, presentation's dark subtree, the two editing surfaces that split by what they are good at, the set of images a slide shows, and slide mode.
+sources: src/components/editor/SliceView.tsx, src/components/editor/SlicePresentation.tsx, src/components/editor/SliceSlideEditor.tsx, src/components/editor/SlideImagesField.tsx, src/components/editor/SliceSlideComposer.tsx, src/lib/slideImages.ts, src/styles/blueprint.css, src/styles/semantic.css
 claims:
   - src/components/blueprint/ScenarioSlideFilters.tsx
   - src/components/blueprint/ScenarioSlideHeader.tsx
@@ -12,6 +12,7 @@ claims:
   - src/components/editor/SlicePresentation.tsx
   - src/components/editor/SliceSlideComposer.tsx
   - src/components/editor/SliceView.tsx
+  - src/components/editor/SlideImagesField.tsx
   - src/components/editor/SlideArtboard.tsx
   - src/components/editor/SlideModeView.tsx
   - src/components/editor/SlideNav.tsx
@@ -176,15 +177,49 @@ also meant one image on one cell, two lanes away. #179 settled it: a **frame**
 is one image on one cell, a step's frames across the lanes are its **strip**,
 and a **slide** is one screen of a slice.
 
-## A slide's picture is its strip
+## A slide shows a set of images, and an untouched slide shows its cells' frames
 
-A slide shows the frames of the cells it references, in their order. There is no
-second source for it to disagree with: a slide had its own image column until
-2026-08-30, it REPLACED the strip rather than joining it, and no row ever used
-it — so the column and the upload field that wrote it are gone
-(`20260830270000`). If a slide should later carry a picture that is no cell's
-frame, it appends to the strip rather than suppressing it, which is a different
-change and starts from a column that never lied.
+A slide has never had a picture of its own, and still does not. It had a column
+that held one until 2026-08-30, and that column REPLACED the frames of the cells
+the slide cited rather than joining them — two answers to what the slide shows,
+with the reader never told which had won — so it was dropped rather than shipped
+(`20260830270000`). The note left there said that a slide carrying a picture no
+cell owns would have to APPEND to the strip rather than suppress it, and that it
+would be a different change. This is that change.
+
+What a slide shows is now an ordered SET, and the author's relationship to it
+has two states:
+
+- **Untouched** (`slides.shows_all_images`, the default): every cited cell's
+  frame, in the slide's cell order, tracking the board as it changes. Every
+  slide that existed before this feature is in this state and stays in it
+  without anybody doing anything — there is no backfill, because materialising
+  today's frames into rows would freeze each slide against the board it was cut
+  from.
+- **Authored**: exactly the members in `slide_images`, in their order,
+  **including none**. That last case is why the flag exists at all: an empty set
+  cannot tell "nobody has touched this" from "somebody emptied it", and the two
+  render as opposites.
+
+A member names one source — a cited cell, or an uploaded image. A cell member
+names the CELL, so replacing that cell's artwork changes what the slide shows
+without touching a row; an upload joins the same set as a peer and is the only
+tile that can be removed, because a cell's frame belongs to the cell and can
+only be unticked.
+
+`SlideImagesField` is where an author does all of this, on the slide card in the
+editor's strip. It is offered on SAVED slides only, because a member is keyed by
+`slides.id`; and every gesture in it is a write rather than an edit staged for
+Save, which is why the field reads the slice's rows and not the draft beside it.
+The presentation stage renders the same resolver (`imagesThisSlideShows`) and
+never truncates: a slide that says it shows five images shows five.
+
+Un-citing a cell drops that cell's member and nothing else — the other members
+keep their positions, the uploads stay, and an authored empty set stays
+authored. In the editor the carry-forward happens in TypeScript, because a Save
+deletes the slice's rows and inserts them again; in the database a trigger does
+the same for the service key, which is the only writer that can edit
+`slides.cell_ids` in place.
 
 ## Slide mode and the rest
 

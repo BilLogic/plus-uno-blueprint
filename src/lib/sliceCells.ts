@@ -171,6 +171,19 @@ export function resolveSlideStrip(
   return strip
 }
 
+/**
+ * The sources a slide image may have.
+ *
+ * These strings come out of the database, so a `javascript:` or `data:` src
+ * is a stored payload waiting for a renderer. Storage URLs are the only thing
+ * this deployment's uploads ever produce — the template's copy also admits the
+ * `/storyboards/` prefix its bundled sample ships under, and this deployment
+ * bundles no sample.
+ */
+export function isRenderableImageSrc(src: string): boolean {
+  return src.startsWith('https://')
+}
+
 /** Only http(s) URLs may render as anchors — DB-sourced refs are untrusted. */
 export function safeExternalHref(href: string | null | undefined): string | null {
   if (!href) return null

@@ -119,22 +119,51 @@ test('the schema check goes red on a schema that never did the rename', () => {
 })
 
 /**
- * The slide's own image column is gone, so a slide's picture IS its strip.
- * Asserted on the schema rather than on the component, because a component can
- * be rewritten and this is the property that makes the rewrite safe.
+ * No column of `slides` carries a picture.
+ *
+ * This assertion used to be "no image column at all", and what it was really
+ * protecting was never the absence: it was that a slide must not hold a SECOND
+ * ANSWER to what it shows. `slides.illustration` held one image and, when set,
+ * replaced the frames of the cells the slide cited — two sources for one
+ * question, with the reader never told which had won — and #179 removed it
+ * rather than ship that.
+ *
+ * The image set does not bring it back. `shows_all_images` is a boolean and
+ * carries no picture; the pictures live one table over, where each member
+ * names EITHER a cited cell (whose frame is the cell's, not the slide's) or an
+ * upload that joins the same ordered set. There is still exactly one answer to
+ * what a slide shows, and it is still assembled from the cells the slide
+ * cites.
+ *
+ * So the subject narrows from "no image column" to "no column that holds an
+ * image", which is the property that was always meant, asserted on the schema
+ * rather than on the component because a component can be rewritten.
  */
-test('a slide has no image column of its own to disagree with its strip', () => {
+test('no column of a slide carries a picture of its own', () => {
   const slides = SCHEMA.tables.get('slides')
   assert.ok(slides, 'public.slides is gone')
-  const images = [...slides.columns.keys()].filter((column) =>
-    /illustration|picture|image|screenshot/.test(column),
-  )
+  const images = [...slides.columns.keys()]
+    .filter((column) => /illustration|picture|image|screenshot/.test(column))
+    // The one column of `slides` those words are allowed to match, named
+    // rather than inferred: the replay model records column names and not
+    // types, so "it is only a boolean" is not a fact this test can read. What
+    // it can do is name the exception, which makes a SECOND match — a src, a
+    // URL, a jsonb document — the finding.
+    .filter((column) => column !== 'shows_all_images')
   assert.deepEqual(
     images,
     [],
     `slides carries ${images.join(', ')}. A slide shows the frames of the cells it ` +
-      'references; a second source for that image is a second answer to the same ' +
-      'question, which is what #179 removed.',
+      'references, plus whatever an author added to that set; a column holding an ' +
+      'image is a second answer to the same question, which is what #179 removed.',
+  )
+
+  // And the exception is present, which is the half that would go quiet if
+  // somebody deleted the flag: without it every slide reads as authored-empty
+  // and shows nothing at all.
+  assert.ok(
+    slides.columns.has('shows_all_images'),
+    'slides has no shows_all_images, so no slide shows its cited cells’ frames',
   )
 })
 

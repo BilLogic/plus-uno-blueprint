@@ -7,6 +7,7 @@ import {
   type KeyboardEvent,
 } from 'react'
 import { ChevronLeft, ChevronRight, CornerUpLeft } from 'lucide-react'
+import { ZoomableImage } from '@/components/blueprint/ZoomableImage'
 import { CanvasLoadProgress } from '@/components/editor/CanvasLoadProgress'
 import { SlicePresentationLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import { IconTooltip } from '@/components/editor/IconTooltip'
@@ -17,9 +18,7 @@ import { useViewState } from '@/contexts/viewStateStore'
 import { useSliceBlueprint } from '@/hooks/useSliceBlueprint'
 import { buildCellLookup, getCellAt } from '@/lib/normalizeBlueprint'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
-import {
-  resolveSlideStrip,
-} from '@/lib/sliceCells'
+import { imagesThisSlideShows } from '@/lib/slideImages'
 import { cn } from '@/lib/utils'
 import type { BlueprintCell, BlueprintData } from '@/types/blueprint'
 import type { Slide } from '@/types/database'
@@ -50,8 +49,8 @@ type SlicePresentationProps = {
 
 /**
  * Presentation tab: a dark full-bleed stage (the root carries the `.dark`
- * token class regardless of app theme) with the slide's strip as the star
- * when it has one, title as headline, cell badges as a subtle bottom row, a
+ * token class regardless of app theme) with the slide's images as the star
+ * when it shows any, title as headline, cell badges as a subtle bottom row, a
  * dim mini-map locator bottom-right, and a filmstrip of cells bracketed per
  * slide. Slides render synchronously from the cached useSlice data —
  * navigation never refetches. Keyboard is scoped to the container (tabIndex
@@ -225,12 +224,13 @@ export function SlicePresentation({
     )
   }
 
-  // What a slide shows IS its strip — the slides of the cells it references
-  // (member cells first, then the storyboard-lane cell of the same step).
-  // There is no second source to disagree with it: the slide's own image
-  // column overrode the strip rather than joining it, no row ever used it,
-  // and 20260830270000 dropped it. No slides → title-slide layout.
-  const stageMedia: string[] = resolveSlideStrip(blueprint, item).slice(0, 3)
+  // What a slide shows is what `imagesThisSlideShows` resolves: every cited
+  // cell's frame while the slide is untouched, and exactly the authored rows
+  // once somebody has picked. Never truncated — a slide that says it shows
+  // five images shows five. No images → title-slide layout.
+  const shownImages = imagesThisSlideShows(blueprint, item)
+  const stageMedia = shownImages.map((image) => image.src)
+  const stageSiblings = shownImages.map((image) => ({ src: image.src, alt: '' }))
   const slideCellIds = new Set(item.cell_ids.map(resolveBlueprintCellId))
   const title = item.title ?? detail.slice.title
 
@@ -267,48 +267,57 @@ export function SlicePresentation({
               </p>
               {stageMedia.length > 0 ? (
                 <>
-                  {/* The strip is the star — large centered area; several
-                      frames on one slide sit side by side. */}
+                  {/* The images are the star — large centered area; several
+                      of them on one slide sit side by side. */}
                   <div className="flex max-w-full items-center justify-center gap-4">
-                    {stageMedia.map((src) => (
-                      <img
-                        key={src}
+                    {stageMedia.map((src, index) => (
+                      <ZoomableImage
+                        key={`${src}-${index}`}
                         src={src}
-                        alt={title}
-                        className={cn(
-                          'max-h-[60vh] w-auto rounded-lg object-contain',
-                          stageMedia.length > 1
-                            ? 'min-w-0 bg-card/40 p-2'
-                            : 'max-w-full',
-                        )}
-                        style={
-                          stageMedia.length > 1
-                            ? {
-                                maxWidth: `${Math.floor(94 / stageMedia.length)}%`,
-                              }
-                            : undefined
-                        }
-                      />
+                        alt=""
+                        triggerLabel="Enlarge image"
+                        siblings={stageSiblings}
+                        siblingIndex={index}
+                        triggerClassName="min-w-0"
+                      >
+                        <img
+                          src={src}
+                          alt=""
+                          className={cn(
+                            'max-h-[60vh] w-auto rounded-lg object-contain',
+                            stageMedia.length > 1
+                              ? 'min-w-0 bg-card/40 p-2'
+                              : 'max-w-full',
+                          )}
+                          style={
+                            stageMedia.length > 1
+                              ? {
+                                  maxWidth: `${Math.floor(94 / stageMedia.length)}%`,
+                                }
+                              : undefined
+                          }
+                        />
+                      </ZoomableImage>
                     ))}
                   </div>
                   <h2 className="max-w-3xl text-2xl font-semibold text-balance">
                     {title}
                   </h2>
-                  {item.narrative && (
+                  {item.caption && (
                     <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-                      {item.narrative}
+                      {item.caption}
                     </p>
                   )}
                 </>
               ) : (
                 <>
-                  {/* No frames: title-slide layout, no card frame. */}
+                  {/* No images: title-slide layout, no card frame. */}
                   <h2 className="mt-6 max-w-3xl text-3xl font-semibold text-balance">
                     {title}
                   </h2>
-                  {item.narrative && (
+                  {item.caption && (
                     <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
-                      {item.narrative}
+                      {item.caption}
                     </p>
                   )}
                 </>

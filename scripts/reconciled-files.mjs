@@ -955,7 +955,15 @@ export const RECONCILED_FILES = [
   // #439 renamed a scenario's layout to `layout` and anchored the overview's
   // flow arrow on the phases actually loaded; the same two changes are in the
   // template, and these four came out identical on their own.
-  'src/lib/mergeSlidesWithFallback.ts',
+  //
+  // `src/lib/mergeSlidesWithFallback.ts` was the fourth and is gone from both
+  // repositories. It topped the navigation up from the bundled sample on every
+  // connected render, which is the same leak the blueprint resolver had: where
+  // a nav id collided with the sample's, the sample won. A connected database
+  // is the whole truth, so the module has no question left to answer and
+  // `EditorContext` reads the rows. An enrolment ends this way as well as by
+  // being dropped — the promise was that the two copies move together, and
+  // they did.
   'src/lib/scenarioLayout.ts',
   'src/lib/overviewFlowArrowAnchor.test.ts',
   'src/types/slideViewType.test.ts',
@@ -2002,4 +2010,44 @@ export const RECONCILED_FILES = [
   'src/components/ui/switch.tsx',
   'src/components/editor/AgentSettingsFields.tsx',
   'src/components/editor/agentSettingsFields.test.tsx',
+
+  // asb 1.36.0 adopt, second half. A slide shows a SET of images, and the
+  // deployment's answer to it is a schema — `slides.shows_all_images` and the
+  // `slide_images` table, written again in this repository's own series
+  // because the two share no migrations. What the pin brings is the code over
+  // that schema, and these are the files where both repositories are now
+  // saying exactly the same thing.
+  //
+  // `slideImages.ts` is the resolver the whole feature turns on: what an
+  // untouched slide shows, what an authored one shows, and what set survives
+  // a slide being replaced. It reads `cell_ids`, `shows_all_images` and the
+  // embedded members, all three of which this deployment's schema now spells
+  // the template's way, so there is nothing left for a fork to be about.
+  //
+  // `illustrationUpload.ts` is the object-key rule that comes with it — a
+  // folder per slide instead of one object per slide — and it is held here
+  // even though the STORAGE POLICY behind it is a migration this repository
+  // writes alone. That split is the same one the schema has: the key shape is
+  // shared, the grant that admits it is not.
+  //
+  // `bundledSample.ts` and the resolver come from the same decision as the
+  // nav merge above: a configured database is the whole truth, and the kit's
+  // sample answers only for a clone that has no database at all. The
+  // resolver's test mocks both the registry and the gate, so it holds here
+  // even though this deployment's registry is permanently empty.
+  //
+  // The two contract tests come with the sources rather than after them,
+  // which is the rule the panel block above states. `slideImagesField.test.ts`
+  // reads `sliceMutations.ts` and `revertChange.ts` — files that stay forked
+  // here — and holds them to the promises the shared resolver depends on: that
+  // a replacement carries the authored set forward, that a dropped slide's
+  // uploads are left in the bucket because the inverse still names them, and
+  // that the presentation never truncates. A test that pins a fork to a shared
+  // promise is exactly what an enrolment is for.
+  'src/lib/slideImages.ts',
+  'src/lib/slideImages.test.ts',
+  'src/lib/slideImagesField.test.ts',
+  'src/lib/illustrationUpload.ts',
+  'src/components/editor/SlideImagesField.tsx',
+  'src/lib/bundledSample.ts',
 ]

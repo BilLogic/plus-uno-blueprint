@@ -154,6 +154,7 @@ test('the real series is green, and every table it creates since the cutoff is n
     'authoring_changes',
     'cell_touchpoints',
     'resources',
+    'slide_images',
     'touchpoints',
     // A VIEW, and the reason this list grew a sixth entry. The rule used to
     // read `create table` and nothing else, so `trash` — the view

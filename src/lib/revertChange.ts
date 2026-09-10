@@ -48,6 +48,11 @@ import {
   type PlacementDetailColumns,
 } from '@/lib/touchpointMutations'
 import { updateFinding, type FindingUpdate } from '@/lib/findingMutations'
+import {
+  restoreSlideImageSet,
+  type SlideImageMemberInput,
+} from '@/lib/sliceMutations'
+import { removeSlideUploadObjects } from '@/lib/illustrationUpload'
 import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import type { Database } from '@/types/database'
 
@@ -344,11 +349,32 @@ export async function executeRevert(
       // put the captured rows back verbatim, original ids included, so a
       // slide's identity survives the round trip. Same shape check and same
       // reasoning as `restore_evidence_row` above.
+      //
+      // The image set comes back with the row. It was captured EMBEDDED in
+      // each slide (`slide_images(*)`) because the members are keyed by
+      // `slides.id` and the delete below cascades them away; and it is split
+      // off before the insert, because `slide_images` is a table and not a
+      // column of `slides`.
       const sliceId = stringArg(revert.args, 'slice_id')
       const rows = revert.args.rows
       if (!Array.isArray(rows)) {
         throw new Error('This change’s captured slides are malformed.')
       }
+      // Which slides this undo is NOT bringing back — the ones the forward
+      // write created. Read before the delete, while they are still there.
+      const keepIds = new Set(
+        rows.flatMap((raw) =>
+          raw && typeof raw === 'object' && typeof (raw as { id?: unknown }).id === 'string'
+            ? [(raw as { id: string }).id]
+            : [],
+        ),
+      )
+      const { data: current, error: currentError } = await client
+        .from('slides')
+        .select('id')
+        .eq('slice_id', sliceId)
+      if (currentError) throw toAuthoringError(currentError)
+      const dropped = (current ?? []).filter((slide) => !keepIds.has(slide.id))
       const cleared = await client
         .from('slides')
         .delete()
@@ -356,11 +382,70 @@ export async function executeRevert(
       if (cleared.error) throw toAuthoringError(cleared.error)
       // An empty capture is a real answer, not a failure: the slice genuinely
       // had no slides before the write, so putting none back IS the inverse.
-      if (rows.length === 0) return
-      const restored = await client
-        .from('slides')
-        .insert(rows as SlideRow[])
-      if (restored.error) throw toAuthoringError(restored.error)
+      if (rows.length > 0) {
+        const payloads: SlideRow[] = []
+        const memberSets: Array<{ slideId: string; members: SlideImageMemberInput[] }> = []
+        for (const raw of rows) {
+          if (!raw || typeof raw !== 'object') {
+            throw new Error('This change’s captured slides are malformed.')
+          }
+          const { slide_images, ...rest } = raw as SlideRow & {
+            slide_images?: SlideImageMemberInput[]
+          }
+          if (typeof rest.id !== 'string') {
+            throw new Error('This change’s captured slides are malformed.')
+          }
+          payloads.push(rest)
+          memberSets.push({
+            slideId: rest.id,
+            members: Array.isArray(slide_images)
+              ? slide_images.map((member) => ({
+                  position: member.position,
+                  cell_id: member.cell_id ?? null,
+                  image_url: member.image_url ?? null,
+                }))
+              : [],
+          })
+        }
+        const restored = await client.from('slides').insert(payloads)
+        if (restored.error) throw toAuthoringError(restored.error)
+        for (const set of memberSets) {
+          if (set.members.length === 0) continue
+          const inserted = await client.from('slide_images').insert(
+            set.members.map((member) => ({
+              slide_id: set.slideId,
+              position: member.position,
+              cell_id: member.cell_id,
+              image_url: member.image_url,
+            })),
+          )
+          if (inserted.error) throw toAuthoringError(inserted.error)
+        }
+      }
+      // The folders of the slides this undo did not put back. Their rows are
+      // gone and no inverse names them any more, so this is the second of the
+      // two paths that may remove objects. The captured slides keep theirs:
+      // `replaceSlides` deliberately left those files alone so the verbatim
+      // `image_url` above still points at something.
+      for (const slide of dropped) {
+        await removeSlideUploadObjects(client, sliceId, slide.id)
+      }
+      return
+    }
+    case 'restore_slide_images': {
+      // Undo of a write to a slide's image set: the flag and the members as
+      // they were, together, because the flag alone decides whether the
+      // members are read at all. No file is touched — an object a member
+      // named before the change is still in the bucket and still named by
+      // this capture.
+      const slideId = stringArg(revert.args, 'slide_id')
+      const members = Array.isArray(revert.args.members)
+        ? (revert.args.members as SlideImageMemberInput[])
+        : []
+      await restoreSlideImageSet(client, slideId, {
+        shows_all_images: revert.args.shows_all_images === true,
+        members,
+      })
       return
     }
     case 'delete_slice_row': {

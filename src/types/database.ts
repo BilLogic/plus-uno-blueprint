@@ -59,6 +59,22 @@ import type { EntityStatus } from '@/lib/entityStatus'
  *
  * `scripts/check-database-names.mjs` rests its argument on this file arriving
  * by machine. As of this change it does again.
+ *
+ * TWO EDITS SINCE, both named here rather than hidden in a diff, and both the
+ * same kind of thing: a migration in this repository's own series applies to
+ * production before the code that reads it is merged, so this file has to
+ * describe the schema on the far side of an apply that has not happened yet.
+ * A generator cannot be run against a database that has not been changed.
+ * Neither is a fourth layer and neither may be re-applied: the next
+ * regeneration through the connector emits both, and this paragraph goes with
+ * the run that proves it.
+ *
+ *  - `slides.narrative` is `slides.caption`, in the three shapes of `slides`
+ *    (20260910020000).
+ *  - `slides.shows_all_images` and the whole `slide_images` table
+ *    (20260910030000). The `Slide` alias at the foot of the file carries the
+ *    embedded members beside it, and that half IS layer 2 above — an embed is
+ *    not a column and no generator has ever emitted one.
  */
 
 export type Json =
@@ -943,39 +959,81 @@ export type Database = {
           },
         ]
       }
+      slide_images: {
+        Row: {
+          cell_id: string | null
+          id: string
+          image_url: string | null
+          position: number
+          slide_id: string
+        }
+        Insert: {
+          cell_id?: string | null
+          id?: string
+          image_url?: string | null
+          position: number
+          slide_id: string
+        }
+        Update: {
+          cell_id?: string | null
+          id?: string
+          image_url?: string | null
+          position?: number
+          slide_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slide_images_cell_id_fkey"
+            columns: ["cell_id"]
+            isOneToOne: false
+            referencedRelation: "cells"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "slide_images_slide_id_fkey"
+            columns: ["slide_id"]
+            isOneToOne: false
+            referencedRelation: "slides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       slides: {
         Row: {
+          caption: string | null
           cell_ids: string[]
           cell_keys: string[]
           created_at: string
           created_by: string | null
           id: string
-          narrative: string | null
           position: number
+          shows_all_images: boolean
           slice_id: string
           title: string | null
           updated_at: string
         }
         Insert: {
+          caption?: string | null
           cell_ids?: string[]
           cell_keys?: string[]
           created_at?: string
           created_by?: string | null
           id?: string
-          narrative?: string | null
           position: number
+          shows_all_images?: boolean
           slice_id: string
           title?: string | null
           updated_at?: string
         }
         Update: {
+          caption?: string | null
           cell_ids?: string[]
           cell_keys?: string[]
           created_at?: string
           created_by?: string | null
           id?: string
-          narrative?: string | null
           position?: number
+          shows_all_images?: boolean
           slice_id?: string
           title?: string | null
           updated_at?: string
@@ -1439,7 +1497,19 @@ export type Stakeholder = Database['public']['Tables']['stakeholders']['Row']
 export type Step = Database['public']['Tables']['steps']['Row']
 
 export type Slice = Database['public']['Tables']['slices']['Row']
-export type Slide = Database['public']['Tables']['slides']['Row']
+export type SlideImage = Database['public']['Tables']['slide_images']['Row']
+/**
+ * A slide, with the members of its image set optionally embedded.
+ *
+ * `slide_images` is not a column and PostgREST only returns it when a read
+ * asks for the embed, which is why it is optional and why it is written here
+ * rather than emitted: the generator describes the TABLE, and this is the
+ * shape `useSlice` and `replaceSlides` actually hold. Layer 2 of the four the
+ * header lists.
+ */
+export type Slide = Database['public']['Tables']['slides']['Row'] & {
+  slide_images?: SlideImage[]
+}
 export type Finding = Database['public']['Tables']['audit_findings']['Row']
 export type Evidence = Database['public']['Tables']['evidence']['Row']
 export type BusinessModel = Database['public']['Tables']['business_models']['Row']

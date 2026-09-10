@@ -28,7 +28,7 @@ function toDraftSlides(detail: SliceDetail): DraftSlide[] {
       id: item.id,
       cells: [...item.cell_ids],
       title: item.title ?? '',
-      narrative: item.narrative ?? '',
+      caption: item.caption ?? '',
     }))
 }
 
@@ -56,6 +56,15 @@ export function SliceEditSession({
   const [activeSlide, setActiveFrame] = useState(0)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // The saved rows, by id. A slide's image set lives on the row and is
+  // written as it is chosen, so the images field reads the slice rather than
+  // the draft — the draft carries what Save will write, and the set is
+  // already written.
+  const savedSlideFor = useCallback(
+    (itemId: string) => detail.items.find((item) => item.id === itemId) ?? null,
+    [detail.items],
+  )
 
   const problems = useMemo(
     () =>
@@ -86,7 +95,7 @@ export function SliceEditSession({
         }
         // No slides yet (every one was emptied) — the click starts one.
         if (current.length === 0) {
-          return [{ cells: [cellId], title: '', narrative: '' }]
+          return [{ cells: [cellId], title: '', caption: '' }]
         }
         const target = Math.min(activeSlide, current.length - 1)
         return current.map((slide, index) =>
@@ -179,6 +188,8 @@ export function SliceEditSession({
             slides={slides}
             activeSlide={activeSlide}
             problems={problems}
+            sliceId={detail.slice.id}
+            savedSlideFor={savedSlideFor}
             onActivate={setActiveFrame}
             onChange={setSlides}
           />

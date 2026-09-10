@@ -431,22 +431,36 @@ Saved 1D cuts through the blueprint grid. Reference cells only — never copy or
 | `title` | — |
 | `updated_at` | — |
 
-### `slides`
-One slide of a slice. It shows the FRAMES of the cells it references — that strip is what the slide shows, so the two cannot disagree — and carries the words written over them. Empty cell_ids = a title-only divider slide. The retired table name is not repeated here: a comment is a swept prose surface, and CONTEXT.md's rename map is where the old name is recorded.
+### `slide_images`
+The ordered set of images a slide shows once an author has picked. Empty with slides.shows_all_images false means show nothing; the untouched default stores no rows at all.
 
-4 of 10 columns described.
+3 of 5 columns described.
 
 | Column | Meaning |
 |---|---|
-| `cell_ids` | SOFT refs to cells (no FK — must survive scenario re-import). Same order as cell_keys. Their frames are this slide's strip. |
+| `cell_id` | Show this cited cell's frame, whatever that frame later becomes. Cascades away with the cell. |
+| `id` | — |
+| `image_url` | Show this uploaded image. It JOINS the slide's set; it never replaces the cited cells' frames. |
+| `position` | The order a reader meets the images in. An order, not an index: dropping a member leaves the others where they were. |
+| `slide_id` | — |
+
+### `slides`
+One slide of a slice. It shows an ordered set of images — every cited cell's frame while shows_all_images is true, and exactly the rows in slide_images once an author has picked — and carries the words written over them. Empty cell_ids = a title-only divider slide. The retired table name is not repeated here: a comment is a swept prose surface, and CONTEXT.md's rename map is where the old name is recorded.
+
+6 of 11 columns described.
+
+| Column | Meaning |
+|---|---|
+| `caption` | The sentence a reader meets under this slide's frames. Authored content, not a story the slide tells. |
+| `cell_ids` | SOFT refs to cells (no FK — must survive scenario re-import). Same order as cell_keys. Their frames are what an untouched slide shows, and the pool a picked one chooses from. |
 | `cell_keys` | IR key-paths paired with cell_ids for orphan recovery after key renames. |
 | `created_at` | — |
 | `created_by` | auth.uid() at insert; null for service-key writes. |
 | `id` | — |
-| `narrative` | — |
 | `position` | — |
+| `shows_all_images` | True until an author picks. True means show every cited cell's frame and keep doing so as the board changes; false means show exactly the rows in slide_images, including none. |
 | `slice_id` | — |
-| `title` | The words at the top of the slide, as somebody wrote them. A title rather than a name because a slide is authored content a reader reads, which is the rule #177 settled; it was `caption`. |
+| `title` | The words at the top of the slide, as somebody wrote them. A title rather than a name because a slide is authored content a reader reads. |
 | `updated_at` | — |
 
 ### `stakeholders`

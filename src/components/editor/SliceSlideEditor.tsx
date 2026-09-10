@@ -3,9 +3,11 @@ import { ChevronDown, GripVertical, Plus, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { IconTooltip } from '@/components/editor/IconTooltip'
+import { SlideImagesField } from '@/components/editor/SlideImagesField'
 import { cn } from '@/lib/utils'
 import { describeCell } from '@/lib/canvasCellQuery'
 import type { DraftSlide, ValidationProblem } from '@/lib/sliceValidation'
+import type { Slide } from '@/types/database'
 
 /**
  * The slide editor, docked under the canvas while a slice is being edited.
@@ -25,12 +27,22 @@ export function SliceSlideEditor({
   slides,
   activeSlide,
   problems,
+  sliceId,
+  savedSlideFor,
   onActivate,
   onChange,
 }: {
   slides: DraftSlide[]
   activeSlide: number
   problems: ValidationProblem[]
+  sliceId: string
+  /**
+   * The SAVED row for a slide, read from the slice rather than carried in the
+   * draft. A slide's image set is written straight to the database — ticking
+   * a frame is a write, not an edit staged for Save — so a copy on the draft
+   * would be stale the moment one landed.
+   */
+  savedSlideFor: (itemId: string) => Slide | null
   onActivate: (index: number) => void
   onChange: (slides: DraftSlide[]) => void
 }) {
@@ -155,7 +167,7 @@ export function SliceSlideEditor({
             key={index}
             className={cn(
               // min-h-0 + overflow-hidden: a card taller than the strip must
-              // clip inside itself, not paint its narrative over the next
+              // clip inside itself, not paint its caption over the next
               // row's captions.
               'group/slide flex min-h-0 w-56 shrink-0 flex-col gap-1.5 overflow-hidden rounded-lg border bg-card p-2 transition-colors',
               isActive ? 'border-primary' : 'border-border',
@@ -281,17 +293,17 @@ export function SliceSlideEditor({
             </ul>
 
             <textarea
-              value={slide.narrative}
+              value={slide.caption}
               rows={2}
               // shrink-0: the textarea holds its two rows and scrolls its
               // own overflow rather than being squeezed by the card.
-              placeholder="Narrative"
+              placeholder="Caption"
               onClick={(event) => event.stopPropagation()}
               onChange={(event) =>
                 onChange(
                   slides.map((item, itemIndex) =>
                     itemIndex === index
-                      ? { ...item, narrative: event.target.value }
+                      ? { ...item, caption: event.target.value }
                       : item,
                   ),
                 )
@@ -299,6 +311,11 @@ export function SliceSlideEditor({
               className="w-full shrink-0 resize-none rounded-md border border-input bg-transparent px-1.5 py-1 text-2xs outline-none focus-visible:border-ring"
             />
 
+            <SlideImagesField
+              sliceId={sliceId}
+              itemId={slide.id}
+              saved={slide.id ? savedSlideFor(slide.id) : null}
+            />
 
             {slideProblems.length > 0 ? (
               <p className="text-3xs text-destructive">
@@ -335,7 +352,7 @@ export function SliceSlideEditor({
         type="button"
         className="flex w-28 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-xs text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
         onClick={() => {
-          onChange([...slides, { cells: [], title: '', narrative: '' }])
+          onChange([...slides, { cells: [], title: '', caption: '' }])
           onActivate(slides.length)
         }}
       >

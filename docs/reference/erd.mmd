@@ -91,6 +91,8 @@ erDiagram
   services           ||--o{ slices : "has many"
   services           ||--|| business_models : "one per service"
   slices             ||--o{ slides : "has many"
+  slides             ||--o{ slide_images : "the set it shows, once picked"
+  cells              ||--o{ slide_images : "slide_images.cell_id, a cited cell's frame"
 
   %% Agent session ledger — unrelated to the blueprint tree.
   agent_sessions     ||--o{ agent_messages : "has many"
@@ -229,8 +231,16 @@ erDiagram
     uuid_array cell_ids "soft, no FK"
     text_array cell_keys "same cardinality as cell_ids, enforced"
     text title
-    text narrative
+    text caption
+    bool shows_all_images "true = every cited cell's frame, tracking the board"
     uuid created_by
+  }
+  slide_images {
+    uuid id PK
+    uuid slide_id FK "cascades"
+    int position "unique per slide"
+    uuid cell_id FK "cascades; exactly one of cell_id / image_url"
+    text image_url "an upload, joining the set"
   }
   stakeholders {
     uuid id PK

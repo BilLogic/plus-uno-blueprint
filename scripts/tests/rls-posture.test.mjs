@@ -544,7 +544,38 @@ const GRANT_MIGRATION = '20260830290000'
 const GRANT_MIGRATION_FILES = [
   `${GRANT_MIGRATION}_a_panel_writes_its_own_columns`,
   '20260902220000_the_service_panel_writes_its_examples_column',
+  '20260910030000_a_slide_shows_a_set_of_its_cells_frames',
 ]
+
+/**
+ * The (table, column) pairs one migration grants, in either spelling.
+ *
+ * The sweep and its first additive file both drive the grant from a VALUES
+ * list joined against `information_schema.columns`, so that a replay in which
+ * the column is absent skips it rather than raising. A migration that ADDS the
+ * column three statements earlier has no such case to handle and says
+ * `grant update (col) on public.table to authenticated` outright, which is the
+ * plainer statement and the one a reader checks fastest.
+ *
+ * Both are read here, because what this test is about is the SURFACE and not
+ * the spelling. `public.%I` inside a `format()` is not an identifier and does
+ * not match, which is what keeps the sweep's own loop from being read twice.
+ */
+function grantedColumns(sql) {
+  const pairs = []
+  for (const match of sql.matchAll(/^\s*\('([a-z_]+)', '([a-z_]+)'\),?$/gm)) {
+    pairs.push(`${match[1]}.${match[2]}`)
+  }
+  for (const match of sql.matchAll(
+    /\bgrant\s+update\s*\(([^)]*)\)\s+on\s+public\.([a-z_]+)\s+to\s+authenticated/gi,
+  )) {
+    for (const column of match[1].split(',')) {
+      const name = column.trim().replace(/^"|"$/g, '')
+      if (/^[a-z_]+$/.test(name)) pairs.push(`${match[2]}.${name}`)
+    }
+  }
+  return pairs
+}
 
 /**
  * Columns the grant migration named that a LATER migration dropped outright,
@@ -603,8 +634,8 @@ test('the migration and the map agree about every column', () => {
       resolve(import.meta.dirname, `../../supabase/migrations/${file}.sql`),
       'utf8',
     )
-    for (const match of sql.matchAll(/^\s*\('([a-z_]+)', '([a-z_]+)'\),?$/gm)) {
-      const entry = renamedSince(`${match[1]}.${match[2]}`)
+    for (const pair of grantedColumns(sql)) {
+      const entry = renamedSince(pair)
       if (entry !== null) inMigration.add(entry)
     }
   }

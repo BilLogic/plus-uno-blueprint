@@ -257,11 +257,28 @@ create table public.slides (
   cell_ids uuid[] not null default '{}',
   cell_keys text[] not null default '{}',
   title text,
-  narrative text,
-  illustration jsonb,
+  caption text,
+  -- `illustration jsonb` stood here until this line replaced it. It was
+  -- dropped by 20260830270000, four days after this snapshot was generated,
+  -- and left behind here — which mattered once `shows_all_images` arrived
+  -- beside it, because the two together read as a slide with a picture of its
+  -- own AND a set. It has one: the set.
+  shows_all_images boolean not null default true,
   created_by uuid,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
+);
+
+-- 20260910030000. The ordered set a slide shows once an author has picked;
+-- until then `shows_all_images` is true and this table holds nothing for it.
+create table public.slide_images (
+  id uuid primary key default gen_random_uuid(),
+  slide_id uuid not null references public.slides (id) on delete cascade,
+  position integer not null,
+  cell_id uuid references public.cells (id) on delete cascade,
+  image_url text,
+  constraint slide_images_one_source check (num_nonnulls(cell_id, image_url) = 1),
+  constraint slide_images_position_unique unique (slide_id, position)
 );
 
 -- The cast list. Four free-text fields named the same people and agreed with
