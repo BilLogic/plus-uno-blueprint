@@ -1556,4 +1556,45 @@ export const RECONCILED_FILES = [
   // `popLayout` was already holding the outgoing glyph's box.
   'src/components/ui/button.tsx',
   'src/components/editor/ThemeToggle.tsx',
+
+  // Twenty contracts this deployment wrote against shared code, now held in
+  // both repositories.
+  //
+  // They were about to be counted as a COST of #332 — tests that would be
+  // deleted when this deployment stops keeping its own copy of the
+  // application. They were never a cost; they were coverage the template had
+  // not received. All 43 deployment-only test files were classified by
+  // whether every module they import exists upstream (38 did), those 38 were
+  // run against the template's tree unmodified, and 22 passed. Two were
+  // dropped for a `links` field the template's `BlueprintCell` does not
+  // carry. The twenty that remain landed upstream in 1.24.0.
+  //
+  // The SIXTEEN that failed are the more useful half and are not here: a
+  // contract written against shared code that fails upstream measures real
+  // divergence, and each is now a named, executable question for #493.
+  //
+  // Six of the twenty named this deployment — a fixture, a slug, a comment
+  // naming the bot that builds a cell link — and one comment called a boot
+  // signal a lane. The template's copies neutralise all of it, which is what
+  // its standalone guard is for, and those copies are what is held here.
+  'src/components/blueprint/cellResourcesTab.test.tsx',
+  'src/components/blueprint/placementResourcesList.test.tsx',
+  'src/components/blueprint/stakeholderDefinitionReader.test.ts',
+  'src/components/editor/pathSelectorMenu.test.tsx',
+  'src/contexts/activeServiceStore.test.ts',
+  'src/contexts/canvasModeContext.test.ts',
+  'src/lib/activeService.test.ts',
+  'src/lib/agent/uiCommands.test.ts',
+  'src/lib/annotationChromeInk.test.ts',
+  'src/lib/annotationSwatchContrast.test.ts',
+  'src/lib/blueprintDisplayFlags.test.ts',
+  'src/lib/blueprintDomainTokens.test.ts',
+  'src/lib/blueprintLayout.test.ts',
+  'src/lib/canvasFocus.test.ts',
+  'src/lib/customerBandRail.test.ts',
+  'src/lib/placementGateContract.test.ts',
+  'src/lib/scenarioLayout.test.ts',
+  'src/lib/serviceRoute.test.ts',
+  'src/lib/tokenResolution.test.ts',
+  'src/lib/workspaceTabNavigationContract.test.ts',
 ]

@@ -19,10 +19,10 @@ vi.mock('@/lib/authoringSession', async (importOriginal) => ({
   recordChange: () => {},
 }))
 
-const PLACEMENT = { id: 'placement-1', cellId: 'cell-1', name: 'PLUS App' }
+const PLACEMENT = { id: 'placement-1', cellId: 'cell-1', name: 'Intake App' }
 
 const row = (over: Partial<CellResource> & { id: string; url: string }): CellResource => ({
-  name: 'PLUS App',
+  name: 'Intake App',
   kind: 'link',
   placementId: 'placement-1',
   featured: false,
@@ -65,7 +65,7 @@ describe('one list for what a placement points at', () => {
   it('“Unset” writes one flag and leaves the row in the list', async () => {
     const { container, getAllByLabelText } = mount()
     // Two featured rows share the touchpoint's name; the preview is first.
-    fireEvent.click(getAllByLabelText('Unset PLUS App')[0]!)
+    fireEvent.click(getAllByLabelText('Unset Intake App')[0]!)
     await waitFor(() => expect(rpc).toHaveBeenCalledTimes(1))
     expect(rpc).toHaveBeenCalledWith('set_featured_resource', {
       p_resource_id: 'r-shot',
@@ -113,7 +113,7 @@ describe('one list for what a placement points at', () => {
     expect((getByText('Save resources') as HTMLButtonElement).disabled).toBe(true)
   })
 
-  it('a chosen file goes to the bucket first and joins the list as an attachment (#274)', async () => {
+  it('a chosen file goes to the bucket first and joins the list as an attachment', async () => {
     uploadAttachment.mockResolvedValue({
       kind: 'attachment',
       name: 'Module opening',
@@ -163,7 +163,7 @@ describe('one list for what a placement points at', () => {
     expect(args.p_rows[0]).toEqual({
       id: 'r-shot',
       kind: 'attachment',
-      name: 'PLUS App',
+      name: 'Intake App',
       url: 'https://x.supabase.co/storage/v1/object/public/cell-attachments/cells/cell-1/b.png',
     })
   })

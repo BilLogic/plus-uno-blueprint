@@ -11,7 +11,7 @@ import {
  * The ink ladder for the annotation chrome, measured on the bar it sits on.
  *
  * The bar is the one surface in this design system that does not follow the
- * theme (`--background-annotation-chrome`, `semantic.css`), and until #462 it
+ * theme (`--background-annotation-chrome`, `semantic.css`), and it once
  * had no ink name at all: `CanvasAnnotationLayer` spelled absolute white
  * forty-four times, in eleven spellings at nine alphas, and the style guard
  * carried a written-down deferral saying so. Two things have to stay true of the ladder that replaced

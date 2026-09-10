@@ -15,25 +15,25 @@ describe('parseServiceSlug', () => {
   })
 
   it('reads the first path segment as the slug', () => {
-    expect(parseServiceSlug('/plus-tutoring')).toBe('plus-tutoring')
+    expect(parseServiceSlug('/field-service')).toBe('field-service')
   })
 
   it('lowercases so a hand-typed slug still resolves', () => {
-    expect(parseServiceSlug('/Plus-Tutoring')).toBe('plus-tutoring')
+    expect(parseServiceSlug('/Field-Service')).toBe('field-service')
   })
 
   it('ignores anything past the first segment', () => {
-    expect(parseServiceSlug('/plus-tutoring/anything/else')).toBe('plus-tutoring')
+    expect(parseServiceSlug('/field-service/anything/else')).toBe('field-service')
   })
 })
 
 describe('serviceRoutePath', () => {
   it('builds the path for a slug', () => {
-    expect(serviceRoutePath('plus-tutoring')).toBe('/plus-tutoring')
+    expect(serviceRoutePath('field-service')).toBe('/field-service')
   })
 
   it('preserves the search string', () => {
-    expect(serviceRoutePath('plus-tutoring', '?cell=abc')).toBe('/plus-tutoring?cell=abc')
+    expect(serviceRoutePath('field-service', '?cell=abc')).toBe('/field-service?cell=abc')
   })
 
   it('maps a null slug to the bare root', () => {
@@ -44,11 +44,11 @@ describe('serviceRoutePath', () => {
 
 describe('a shared cell link carries the service and the cell', () => {
   it('resolves the service from the path and the cell from the search', () => {
-    // The URL uno-bot builds when it cites a cell in a multi-service deployment.
-    const pathname = '/plus-tutoring'
+    // The URL a bot builds when it cites a cell in a multi-service deployment.
+    const pathname = '/field-service'
     const search = '?cell=cell-123'
 
-    expect(parseServiceSlug(pathname)).toBe('plus-tutoring')
+    expect(parseServiceSlug(pathname)).toBe('field-service')
     expect(parseUrlViewState(search)).toEqual({ kind: 'blueprint', cellId: 'cell-123' })
   })
 })
