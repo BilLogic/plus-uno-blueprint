@@ -1394,11 +1394,12 @@ export const RECONCILED_FILES = [
   // them — so they are bookkeeping, not code, and they are held here now so
   // the next edit to either copy has to answer for the drift.
   //
-  // A fourth, `src/components/cover/coverPage.test.tsx`, is identical again
-  // now that the `plan 2026-08-18-001` citation is gone from both copies —
-  // and still is NOT here, because the same file cites `docs/guide/02-x.md`
-  // twice, and the two docs trees do not agree on that path. One citation
-  // down, two to go.
+  // A fourth, `src/components/cover/coverPage.test.tsx`, took two rounds: the
+  // `plan 2026-08-18-001` citation went first, then the `docs/guide/02-x.md`
+  // it used as a fixture `docPath` — a file that exists in NEITHER repository,
+  // which is right for a fixture and misleading as text, since a `docs/` path
+  // reads as somewhere you could go and look. It is `guide/section.md` now,
+  // and enrolled below.
   'src/components/blueprint/StoryboardStepDetailStack.tsx',
   'src/components/cover/CoverSections.tsx',
   'src/components/editor/CanvasEmptyState.tsx',
@@ -1629,4 +1630,16 @@ export const RECONCILED_FILES = [
   // `FeaturedResources.tsx` differed by a citation and one JSX line the
   // template wraps differently. Adopted whole, and enrolled.
   'src/components/blueprint/FeaturedResources.tsx',
+
+  // The panel title stopped dropping the scenario's note, and the cover
+  // fixture stopped naming a docs path.
+  //
+  // `ScenarioBlueprintPanel.tsx` passed `panelTitleInfoTooltip: null` upstream
+  // under a comment saying the template had nowhere to store a per-scenario
+  // aside. It has had somewhere since `scenarios.note` shipped — `NavItem.note`
+  // declares it and `phasesToSlides` fills it — so the panel title was the one
+  // surface that dropped a note a reader had written. Fixed upstream in 1.25.0,
+  // which is also what makes the file holdable here.
+  'src/components/blueprint/ScenarioBlueprintPanel.tsx',
+  'src/components/cover/coverPage.test.tsx',
 ]
