@@ -1944,4 +1944,33 @@ export const RECONCILED_FILES = [
   'src/lib/canvasNavigationOutcome.ts',
   'src/components/blueprint/OwnerTagSelect.tsx',
   'src/components/blueprint/BlueprintLaneHandles.tsx',
+
+  // asb 1.34.0 adopt. The sample board left the navigation model, and two
+  // comments stopped naming addresses that mean something else here.
+  //
+  // `types/nav.ts` held `FALLBACK_NAV` — 186 lines of this deployment's own
+  // phases inside a module of types and pure helpers. That is content, not
+  // model, and it was the entire divergence: the two copies agreed on every
+  // line of code and disagreed by one array. It now lives in
+  // `src/data/sampleNav.ts` and reaches the app through
+  // `DeploymentConfig.sample.nav`, which is where a deployment's values were
+  // always meant to live.
+  //
+  // Ten helpers lost a `= FALLBACK_NAV` default parameter along the way. A
+  // default naming one particular board makes a forgotten argument invisible:
+  // the call site compiles and answers about a board nobody is looking at.
+  // Nothing here relied on one.
+  //
+  // The prose that is left is the template's, because every sentence this
+  // repository had instead cited an address — `#280`, `#326 S6`, `#396 Q38`,
+  // the migration `20260902120000`, and the word "uno" — and the template says
+  // the same things without them.
+  //
+  // `canvasActiveContext.tsx` cited "ADR 0010", which is *open views stay
+  // mounted* upstream and *the canvas and the shell run on separate clocks*
+  // here, and `coverModel.ts` gave an example `docs/` path that exists only
+  // upstream (BilLogic/agentic-service-blueprinting#476).
+  'src/types/nav.ts',
+  'src/contexts/canvasActiveContext.tsx',
+  'src/components/cover/coverModel.ts',
 ]
