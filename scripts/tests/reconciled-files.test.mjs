@@ -533,6 +533,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/queryClient.test.ts',
     'src/lib/writeTranslationContract.test.ts',
     'src/styles/theme.shape.test.ts',
+    'src/lib/blueprintTechPictures.test.ts',
   ])
 })
 
