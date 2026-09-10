@@ -183,25 +183,80 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
     hasDevAuthoringUi() && !isDevAuthoring && session === null
 
   /*
-   * Signed in with app_metadata.role === 'service' (set server-side; RLS's
-   * restrictive policies are the authority — this mirrors them for the UI).
-   * Non-service sessions view and use the agent read-only.
+   * The service-account tier, ASKED rather than inferred.
    *
+   * The seam is a database function — `is_service_account()` — that every
+   * write RPC asserts in its own body and every restrictive write policy
+   * ANDs with. Reading `app_metadata.role` instead was a guess at what that
+   * function would answer, and the two can disagree: a role stamped after
+   * this token was minted, or a deployment whose function reads something
+   * other than the claim, and the gate says one thing while the database
+   * does another.
+   *
+   * The ask is keyed on the ACCESS TOKEN, because the answer is computed
+   * server-side from the token this client presents. It is HELD against the
+   * user id, so the boot refresh — a new token for the same account, seconds
+   * in — updates the answer without blanking it. A refresh is not a tier
+   * change, and flickering the editing UI for one would be a lie told twice.
+   *
+   * A failed ask answers `false`. The alternative is a gate that opens on a
+   * network error, and the wall behind it (the restrictive policies and the
+   * RPC guards) would refuse the write anyway — so the honest failure is a
+   * board that does not offer to save.
+   *
+   * UX gate only. The policies are the wall.
+   */
+  const userId = session?.user.id ?? null
+  const accessToken = session?.access_token ?? null
+  const [tierAnswer, setTierAnswer] = useState<{
+    userId: string
+    isService: boolean
+  } | null>(null)
+
+  useEffect(() => {
+    if (!client || userId === null || accessToken === null) return
+    let cancelled = false
+    void client
+      .rpc('is_service_account')
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) {
+          console.error('[tier] is_service_account failed:', error.message)
+        }
+        setTierAnswer({ userId, isService: !error && data === true })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [client, userId, accessToken])
+
+  // An answer belongs to the account it was asked about, so signing out — or
+  // signing in as somebody else — retires it without waiting for a round trip.
+  const answeredIsService =
+    tierAnswer?.userId === userId ? tierAnswer.isService : null
+
+  /*
    * Local, not published on the context: `canWrite` below is the only
    * question a surface should be asking, and an exported second flag that
    * says almost-but-not-quite the same thing is an invitation to gate on
    * the wrong one.
    */
-  const isServiceAccount =
-    (session?.user.app_metadata as { role?: string } | undefined)?.role ===
-      'service' || isDevAuthoring
+  const isServiceAccount = answeredIsService === true || isDevAuthoring
+
+  /*
+   * Boot is not over until the tier is known. A signed-in session pays one
+   * round trip for it; a visitor with no session pays none, having nothing to
+   * ask about. The alternative is to render an answer and then correct it,
+   * which shows an editor a read-only board or a viewer a save button.
+   */
+  const tierPending = userId !== null && answeredIsService === null
 
   const value = useMemo(
     () => ({
       client,
       configured,
       session,
-      isLoading,
+      isLoading: isLoading || tierPending,
       canWrite:
         configured &&
         ((session !== null && isServiceAccount) ||
@@ -217,6 +272,7 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
       configured,
       session,
       isLoading,
+      tierPending,
       isDevAuthoring,
       isEditPreview,
       isServiceAccount,

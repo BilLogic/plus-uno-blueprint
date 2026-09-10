@@ -1667,6 +1667,10 @@ export const RECONCILED_FILES = [
   // The twelve that FAILED are not here and are the useful half: a contract
   // the template wrote against shared code, failing here, is a measurement of
   // divergence with this side's name on it.
+  //
+  // `blueprintTechPictures.test.ts` was the fifteenth. It passed unmodified
+  // and waited one round for the `#326` in the TEMPLATE's copy to go (1.25.2),
+  // because a citation has to leave both copies before either can promise it.
   'src/components/blueprint/resourcesList.test.tsx',
   'src/contexts/PathSelectionContext.test.tsx',
   'src/contexts/canvasActiveContext.test.tsx',
@@ -1681,4 +1685,5 @@ export const RECONCILED_FILES = [
   'src/lib/queryClient.test.ts',
   'src/lib/writeTranslationContract.test.ts',
   'src/styles/theme.shape.test.ts',
+  'src/lib/blueprintTechPictures.test.ts',
 ]
