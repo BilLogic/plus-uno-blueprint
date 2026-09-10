@@ -1924,4 +1924,12 @@ export const RECONCILED_FILES = [
   'src/lib/workflowQueries.ts',
   'src/components/blueprint/LanePanel.tsx',
   'src/components/blueprint/ServicePanel.tsx',
+
+  // The annotation toolbar's selected swatch. `isPaleAnnotationSwatch()`
+  // answered "is this pale?" with a membership test, for values that invert
+  // with the theme — so the checkmark measured 1.13-1.20:1 on the fill row in
+  // dark, and the one swatch the test excluded failed the other way at
+  // 1.17:1, white on white. The button derives its ink from its own fill
+  // upstream now, and the membership test is gone from both trees.
+  'src/lib/canvasAnnotations.ts',
 ]

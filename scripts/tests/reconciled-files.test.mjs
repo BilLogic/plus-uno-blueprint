@@ -585,6 +585,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/workflowQueries.ts',
     'src/components/blueprint/LanePanel.tsx',
     'src/components/blueprint/ServicePanel.tsx',
+    'src/lib/canvasAnnotations.ts',
   ])
 })
 
