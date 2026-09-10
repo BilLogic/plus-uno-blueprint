@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * #405 — the board draws a name-only placement dashed, and only on a board
+ * The board draws a name-only placement dashed, and only on a board
  * that has rows to be name-only in.
  *
  * `blueprintTouchpointCell.test.tsx` already says that the cell honours a

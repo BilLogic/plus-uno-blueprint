@@ -1805,4 +1805,15 @@ export const RECONCILED_FILES = [
   // is the half that belongs there. The COMPONENT converges, which is the part
   // that matters.
   'src/components/blueprint/CellContentSection.tsx',
+
+  // The name-only contract, once the compare grid labelled its faces again.
+  //
+  // Another of the sixteen. It failed upstream because `CompareCellBlock`
+  // rendered `TouchpointCellFace` directly rather than the wrapper that sets
+  // `data-blueprint-touchpoint` — so every touchpoint in that grid drew
+  // correctly, read correctly, and matched no selector, and
+  // `scrollBlueprintTouchpointCellIntoView` could not find one. Fixed in
+  // 1.29.1. This file reads the faces BY that attribute, which is why the bug
+  // showed up as an empty map rather than as a passing test.
+  'src/components/blueprint/compareCellBlockNameOnly.test.tsx',
 ]
