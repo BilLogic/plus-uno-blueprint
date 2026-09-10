@@ -2,8 +2,8 @@
 /**
  * Which SQL functions write their own row into the authoring change log.
  *
- * #176 folded `deleted_structure` into `public.authoring_changes`, which left
- * the log with two writers rather than one. The client appends through
+ * Folding `deleted_structure` into `public.authoring_changes` left the log
+ * with two writers rather than one. The client appends through
  * `record_authoring_change` for every ordinary write; the delete functions
  * append their own row, because the payload can only be captured inside the
  * same transaction as the cascade that destroys it.
@@ -22,12 +22,11 @@
  *
  * IT MATCHES BOTH RELATION NAMES ON PURPOSE. The migration series still says
  * `deleted_structure` inside all six bodies, because the redirect is a
- * `pg_get_functiondef` sweep that rewrites what is INSTALLED — per #148 these
- * files are not the apply path, and rewriting the bodies in place here would
- * have had to pick between the `layers` spelling the files carry and the
- * `lanes` spelling production carries. So the archivers are still spelled the
- * old way in the repository and the new way in the database, and this reads
- * either.
+ * `pg_get_functiondef` sweep that rewrites what is INSTALLED — the files are
+ * not the apply path, and rewriting the bodies in place would have had to
+ * pick one deployment's spelling of the renamed relations and break the rest.
+ * So the archivers are still spelled the old way in the repository and the
+ * new way in the database, and this reads either.
  *
  * IT KEYS ON `payload`, NOT ON THE RELATION. `record_authoring_change` also
  * inserts into `authoring_changes` and is not an archiver: it takes no payload
@@ -65,7 +64,7 @@ const LINE_COMMENT = /--[^\n]*/g
  * the first.
  *
  * COMMENTS AND `do` BLOCKS COME OUT FIRST, and that is not tidying — both
- * are shapes #176's own migration actually has. It quotes the before-and-after
+ * are shapes the folding migration actually has. It quotes the before-and-after
  * of the redirect in a `--` comment, and it carries the rewritten insert as a
  * STRING inside the `do` block that performs the sweep. Both sit after the
  * last `create function` in the file, so without this they are attributed to

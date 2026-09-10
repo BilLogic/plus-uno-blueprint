@@ -2,7 +2,7 @@
 /**
  * The one seam between the log's two writers, held from both sides.
  *
- * #176 gives `public.authoring_changes` two writers, and it has to. The client
+ * `public.authoring_changes` has two writers, and it has to. The client
  * appends every ordinary write through `record_authoring_change`; the delete
  * functions append their own row, because a deleted row's payload can only be
  * captured inside the transaction that destroys it.
@@ -14,7 +14,7 @@
  *     payload and once without, and the second row looks exactly like a
  *     record of the same event while being unable to restore anything
  *   - a delete function the client skips that does NOT archive records
- *     nothing at all, which is the defect #176 exists to end
+ *     nothing at all, which is the defect the one log exists to end
  *
  * `ARCHIVED_BY_THE_DATABASE` is one half. The set read out of the migrations
  * is the other. Neither derives from the other — same shape and same argument
@@ -102,7 +102,7 @@ test('the insert is attributed to the function it is inside, not the last one se
 })
 
 test('an archiving insert quoted in a comment names nobody', () => {
-  // #176's own migration quotes the before-and-after of its redirect in a
+  // The folding migration quotes the before-and-after of its redirect in a
   // `--` comment, after the last function it defines. Read literally, that
   // comment makes `record_authoring_change` look like an archiver.
   const found = archivingFunctions(`

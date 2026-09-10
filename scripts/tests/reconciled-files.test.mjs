@@ -566,6 +566,13 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/editor/PhaseMenubarHeader.tsx',
     'src/components/editor/menubarIconTooltips.test.tsx',
     'src/components/blueprint/BlueprintDependencyArrows.tsx',
+    'src/lib/authoringLog.ts',
+    'src/lib/authoringLog.test.ts',
+    'src/lib/revertBoundaryContract.test.ts',
+    'src/hooks/useArchiveAvailable.ts',
+    'src/components/editor/SessionChangesSheet.tsx',
+    'scripts/authoring-archivers.mjs',
+    'scripts/tests/authoring-log.test.mjs',
   ])
 })
 

@@ -1859,4 +1859,29 @@ export const RECONCILED_FILES = [
   //   is the `trash` view over the append-only change log that replaced it.
   //   Neither sentence is true of the other tree.
   'src/components/blueprint/BlueprintDependencyArrows.tsx',
+
+  // The authoring change log goes upstream. Deletes were remembered forever
+  // and everything else only until the tab closed; 1.32.0 gives the template
+  // the one append-only log, the client's append beside the six delete
+  // functions that write their own row, and `trash` as the view over the
+  // deletions in it. The brand that makes the log audit-only travels with it:
+  // `executeRevert` takes a `SessionEntry` that only `recordChange` mints, so
+  // a row read back out of the log cannot reach the inverse-applier.
+  //
+  // `authoringSession.ts` and `revertChange.ts` carry the same wall and are
+  // still apart on the write vocabulary and the reverts either side knows.
+  //
+  // DECLINED, and for a reason the log does not reach:
+  //
+  // `src/lib/authoringErrors.test.ts` — its lane case reads the constraint
+  //   name out of a collision, and the template's schema has no uniqueness on
+  //   a lane's position within its path to collide with. The translation
+  //   cannot exist upstream until the constraint does.
+  'src/lib/authoringLog.ts',
+  'src/lib/authoringLog.test.ts',
+  'src/lib/revertBoundaryContract.test.ts',
+  'src/hooks/useArchiveAvailable.ts',
+  'src/components/editor/SessionChangesSheet.tsx',
+  'scripts/authoring-archivers.mjs',
+  'scripts/tests/authoring-log.test.mjs',
 ]
