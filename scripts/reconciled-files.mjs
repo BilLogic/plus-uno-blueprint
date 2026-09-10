@@ -1539,4 +1539,21 @@ export const RECONCILED_FILES = [
   'src/components/editor/StructureRowMenu.tsx',
   'src/lib/blueprintStepTech.ts',
   'src/lib/serviceSpecMutations.test.ts',
+
+  // Two fixes this deployment made and the template did not have. Neither
+  // needed a line changed here to converge; both needed the template to catch
+  // up, which 1.23.0 did.
+  //
+  // `button.tsx` is the inset selection ring. A ring with spread rounds at the
+  // element's radius PLUS the spread, so a selected cell was 2px larger with a
+  // 12px outer corner where hover had 10px — the radius never moved, the
+  // outline around it did, and a reader sees the corner change. The ring is
+  // also 2 CSS px in BOARD space, so the camera scales it down to about a
+  // device pixel at a working zoom. Inset fixes both.
+  //
+  // `ThemeToggle.tsx` had two positioning mechanisms doing one job: an
+  // absolutely positioned resident glyph inside a `relative` box, while
+  // `popLayout` was already holding the outgoing glyph's box.
+  'src/components/ui/button.tsx',
+  'src/components/editor/ThemeToggle.tsx',
 ]
