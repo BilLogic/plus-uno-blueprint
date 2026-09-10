@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import { recordChange } from '@/lib/authoringSession'
 import { toAuthoringError } from '@/lib/authoringErrors'
+import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 
 type Client = SupabaseClient<Database>
 
@@ -29,11 +30,10 @@ export type EvidenceDraft = {
   /**
    * The one thing worth keeping about this source, in the author's own words.
    *
-   * `ref` and `excerpt` were both here, and both are gone (20260909060000):
-   * `excerpt` IS this column, renamed, and `ref` was dropped after 66 rows
-   * left it empty. A quotation is one thing an author might write here, an
-   * observation is another, and a URL is a third — the panel linkifies one
-   * written inside the note, which is the whole job `ref` was carrying.
+   * `ref` and `excerpt` were here too, and a later migration retired both. A
+   * quote is one thing an author might write here, an observation is another,
+   * and a URL is a third — the panel linkifies one written inside the note,
+   * which is the whole job `ref` was carrying.
    */
   note: string | null
 }
@@ -42,8 +42,8 @@ export type EvidenceDraft = {
  * Evidence writes, in the session ledger like every other write.
  *
  * Evidence was the one table edited around the funnel — an added source never
- * appeared in the session log and could not be taken back (decision
- * 2026-08-06, access-model plan F4: close the gap rather than document it).
+ * appeared in the session log and could not be taken back (the access-model
+ * decision was to close the gap rather than document it).
  * Same shape as `cellContentMutations`: direct table write under the row
  * policies, then `recordChange` with a captured inverse; `record: false` is
  * how a revert's own write stays out of the log.
@@ -82,41 +82,6 @@ export async function addEvidence(
   return data.id
 }
 
-/**
- * Remove one evidence row. `previous` is the full row as it stood — captured
- * by the caller before deleting — so the revert can put it back verbatim,
- * original id and timestamps included (re-inserting under a fresh id would
- * orphan anything that referenced the old one).
- */
-export async function deleteEvidence(
-  client: Client,
-  evidenceId: string,
-  previous?: EvidenceRow,
-  options: { record?: boolean } = {},
-): Promise<void> {
-  const { error } = await client.from('evidence').delete().eq('id', evidenceId)
-  if (error) throw toAuthoringError(error)
-
-  if (options.record !== false) {
-    recordChange(
-      'delete_evidence',
-      {
-        evidence_id: evidenceId,
-        title: previous?.title ?? '',
-        // The revert path invalidates this cell's evidence query — without
-        // it the delete side of the undo pair is uninvalidatable.
-        cell_id: previous?.cell_id ?? null,
-      },
-      previous
-        ? { fn: 'restore_evidence_row', args: { row: previous } }
-        : undefined,
-    )
-  }
-}
-
-/** The revert side of `delete_evidence`: reinsert the captured row as-was. */
-/** The editable half of an evidence row. Never `cell_id` — moving a source
- *  to a different cell is a delete plus an add, not an edit. */
 export type EvidenceUpdate = {
   kind?: EvidenceKind
   title?: string
@@ -151,11 +116,13 @@ export async function updateEvidence(
     note: update.note === undefined ? before.note : update.note?.trim() || null,
   }
 
-  const { error } = await client
+  const { data, error } = await client
     .from('evidence')
     .update(next)
     .eq('id', evidenceId)
+    .select('id')
   if (error) throw toAuthoringError(error)
+  requireRowsWritten(data, 'evidence')
 
   if (options.record !== false) {
     recordChange(
@@ -176,6 +143,39 @@ export async function updateEvidence(
   }
 }
 
+/**
+ * Remove one evidence row. `previous` is the full row as it stood — captured
+ * by the caller before deleting — so the revert can put it back verbatim,
+ * original id and timestamps included (re-inserting under a fresh id would
+ * orphan anything that referenced the old one).
+ */
+export async function deleteEvidence(
+  client: Client,
+  evidenceId: string,
+  previous?: EvidenceRow,
+  options: { record?: boolean } = {},
+): Promise<void> {
+  const { error } = await client.from('evidence').delete().eq('id', evidenceId)
+  if (error) throw toAuthoringError(error)
+
+  if (options.record !== false) {
+    recordChange(
+      'delete_evidence',
+      {
+        evidence_id: evidenceId,
+        title: previous?.title ?? '',
+        // The revert path invalidates this cell's evidence query — without
+        // it the delete side of the undo pair is uninvalidatable.
+        cell_id: previous?.cell_id ?? null,
+      },
+      previous
+        ? { fn: 'restore_evidence_row', args: { row: previous } }
+        : undefined,
+    )
+  }
+}
+
+/** The revert side of `delete_evidence`: reinsert the captured row as-was. */
 export async function restoreEvidenceRow(
   client: Client,
   row: EvidenceRow,

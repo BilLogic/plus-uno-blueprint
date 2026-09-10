@@ -1,7 +1,7 @@
 /**
  * The words this app made up, defined once.
  *
- * TWO, and that is the point of #244. There were eleven, and nine of them were
+ * TWO, and that is the point. There were once eleven, and nine of them were
  * ordinary English on a form label — `Status`, `Summary`, `Position`, `Paths`,
  * `Dependencies`, `Resources`. A definition on every label teaches a reader
  * that hovering is worth doing about eleven times before it teaches anything,
@@ -9,19 +9,18 @@
  * in it.
  *
  * What survives is what a reader could not guess from English: a STORYBOARD is
- * not a story, and a TOUCHPOINT is not a point. Both once rendered as outline
- * badges; #307 demotes them to plain field labels, so each reads beside
- * Summary, Status and Owner rather than as a mystery tag stacked among value
- * badges. The definition rides the label's own hint popover — the touch/press
- * affordance every other field label already uses.
+ * not a story, and a TOUCHPOINT is not a point. Both read as plain field labels
+ * — each beside Summary, Status and Owner rather than as a mystery tag stacked
+ * among value badges. The definition rides the label's own hint popover — the
+ * touch/press affordance every other field label already uses.
  *
- * That deliberately reopens #244 for exactly these two invented words: a
- * definition may hang off a label here because the label names a word this app
- * made up, not ordinary English on a form. The shape they take now is `Field`,
- * which the badge-rule check exempts as a field explaining its own input
- * (`scripts/tests/a-definition-hangs-off-a-badge.test.mjs`).
+ * A definition may hang off a label here because the label names a word this
+ * app made up, not ordinary English on a form. That is a deliberate exception
+ * to the rule that a definition hangs off a BADGE, and the shape these two
+ * take is `Field`, which the badge rule exempts as a field explaining its own
+ * input.
  *
- * `evidence` was listed to survive too (#244), on the belief that it was
+ * `evidence` was once listed to survive with them, on the belief that it was
  * already a badge. It was a TAB, beside Dependencies and Resources, and a tab
  * is a label — so all three lost theirs together rather than one of them being
  * singled out for a definition its neighbours could not have.
@@ -31,7 +30,7 @@
  */
 export const PANEL_TERMS = {
   touchpoint:
-    'The tool or surface this moment happens through — an app screen, an email, a Zoom room.',
+    'The tool or surface this moment happens through — an app screen, an email, a video call.',
   storyboard: 'The frames drawn for this moment, one per actor lane.',
 } as const
 
@@ -41,8 +40,8 @@ export const PANEL_TERMS = {
  * The entity kinds are the one vocabulary the app never defined. `PANEL_TERMS`
  * above explains the words INSIDE a panel — `Dependencies`, `Evidence` — on the
  * assumption that a reader who opened the panel knows what kind of thing they
- * opened it on. #140 is that assumption failing: a panel full of a lane's
- * contents answers "what is in this lane" and never "what is a lane".
+ * opened it on. A panel full of a lane's contents answers "what is in this
+ * lane" and never "what is a lane".
  *
  * These hang off the entity's own label ON THE BOARD, not off the panel badge.
  * A reader who does not know what a lane is has that question while looking at
@@ -95,7 +94,7 @@ export const ENTITY_KIND_ORDER = Object.keys(
 
 /**
  * One authored, free-text example per core kind, grounding each definition in
- * this deployment (#302). Keyed by the six `EntityKindTerm`s; a kind nobody has
+ * this deployment. Keyed by the six `EntityKindTerm`s; a kind nobody has
  * written an example for simply has no entry, so the reader sees no empty slot.
  *
  * The type lives here — beside the kinds it is keyed by — so the read hook, the
@@ -111,10 +110,10 @@ export const INSTANCE_DESCRIPTION_PLACEHOLDER =
 /**
  * What an example slot says to an EDITOR when nobody has written one yet.
  *
- * Reader-invisible by design (#302, story 6): a blank example renders nothing
- * for a reader, and this prompt only where the canvas is in design mode — the
- * same "the app admits a field is empty" nudge `INSTANCE_DESCRIPTION_PLACEHOLDER`
- * is, aimed at the deployer who can act on it.
+ * Reader-invisible by design: a blank example renders nothing for a reader, and
+ * this prompt only where the canvas is in design mode — the same "the app
+ * admits a field is empty" nudge `INSTANCE_DESCRIPTION_PLACEHOLDER` is, aimed at
+ * the deployer who can act on it.
  */
 export const ENTITY_EXAMPLE_PLACEHOLDER =
   'Example needs to be added to database.'

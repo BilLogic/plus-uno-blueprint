@@ -1901,4 +1901,27 @@ export const RECONCILED_FILES = [
   'src/lib/boardAddress.test.ts',
   'src/components/editor/BoardAddressSync.tsx',
   'src/components/editor/boardAddressSync.test.tsx',
+
+  // The long tail, one cause at a time. Three of these are upstream fixes
+  // this deployment already had and the template did not: the integrated
+  // overlay measures BEFORE paint (a compare toggle spent one frame anchored
+  // to the old column set), a help cursor that three files already called
+  // retired is finally gone from the one badge still wearing it, and the two
+  // paragraphs saying why a definition may hang off these two labels are back.
+  //
+  // The rest took the template's answer. `LanePanel` says Actor rather than
+  // Stakeholder — the word this vocabulary already uses for a party standing
+  // in a room, and the one this repo's own CONTEXT.md uses; the label map's
+  // row moved with it. `evidenceMutations` gains `requireRowsWritten`, so a
+  // zero-row update is a failure here as it is everywhere else. `panelTerms`,
+  // `mobileNavSheet.test` and `ServicePanel` took the neutral wording and the
+  // extra invalidation; `workflowQueries` took the select's field order.
+  'src/lib/panelTerms.ts',
+  'src/components/blueprint/IntegratedDependencyArrows.tsx',
+  'src/lib/evidenceMutations.ts',
+  'src/components/mobile/mobileNavSheet.test.tsx',
+  'src/components/editor/CanvasDesignTools.tsx',
+  'src/lib/workflowQueries.ts',
+  'src/components/blueprint/LanePanel.tsx',
+  'src/components/blueprint/ServicePanel.tsx',
 ]

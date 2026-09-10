@@ -5,12 +5,12 @@ import { MobileNavSheet } from '@/components/mobile/MobileNavSheet'
 import type { NavItem } from '@/types/nav'
 import type { Slice } from '@/types/database'
 
-// Render tests for the mobile drawer: rail + panel.
-// The pinned contract from Phase 2 survives — the sheet only reports what
-// was tapped (slice, phase, scenario, surface, expansion); the shell owns
-// what a tap means for the visible surface. New in Phase 3: the accordion
-// renders scenarios only for expanded phases, driven by EditorContext's
-// expandedPhaseIds rather than always-expanded.
+// Render tests for the redesigned mobile drawer: rail + panel. The pinned
+// contract from the drawer it replaced survives — the sheet only reports
+// what was tapped (slice, phase, scenario, surface, expansion); the shell
+// owns what a tap means for the visible surface. New in the redesign: the
+// accordion renders scenarios only for expanded phases, driven by
+// EditorContext's expandedPhaseIds rather than always-expanded.
 
 const nav = (over: Partial<NavItem> & { id: string; label: string }): NavItem =>
   ({
@@ -36,7 +36,7 @@ const scenariosByPhase = new Map<string, NavItem[]>([
 const slices = [
   {
     id: 'sl-1',
-    title: 'Regular Tutor lane: warm-up',
+    title: 'Field Crew lane: intake',
     kind: 'lane',
   } as Slice,
 ]
@@ -80,7 +80,7 @@ afterEach(cleanup)
 describe('MobileNavSheet routing', () => {
   it('a slice row (Slices surface) reports the slice and only the slice', () => {
     const h = renderSheet({ surface: 'slices' })
-    screen.getByText('Regular Tutor lane: warm-up').click()
+    screen.getByText('Field Crew lane: intake').click()
     expect(h.onSelectSlice).toHaveBeenCalledWith('sl-1')
     expect(h.onSelectScenario).not.toHaveBeenCalled()
   })
@@ -150,13 +150,13 @@ describe('MobileNavSheet accordion and rail', () => {
 
   it('the blueprints surface does not render slice rows', () => {
     renderSheet({ surface: 'blueprints' })
-    expect(screen.queryByText('Regular Tutor lane: warm-up')).toBeNull()
+    expect(screen.queryByText('Field Crew lane: intake')).toBeNull()
   })
 
   it('slices surface groups rows under the kind section', () => {
     renderSheet({ surface: 'slices' })
     expect(screen.getByText('lane')).toBeDefined()
-    expect(screen.getByText('Regular Tutor lane: warm-up')).toBeDefined()
+    expect(screen.getByText('Field Crew lane: intake')).toBeDefined()
   })
 
   it('a loading slice list shows skeleton rows, not the empty message', () => {

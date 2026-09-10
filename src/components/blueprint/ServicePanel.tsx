@@ -200,6 +200,11 @@ function ServicePanelBody({
         )
       }
       invalidateQueries(`service-spec:first`)
+      // The examples live under their own key, which is a different prefix —
+      // `service-spec:` does not match `service-entity-examples:`. The board's
+      // entity popovers read that one, so without this they keep offering the
+      // old examples until a reload.
+      invalidateQueries('service-entity-examples')
       onDone()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'That did not save.')
@@ -236,7 +241,7 @@ function ServicePanelBody({
 
         `business_models` is the one restricted table the panel touches: revoked
         from `anon`, its select policy naming `authenticated`. A signed-out
-        reader never fetches it and `businessModelVisible` is false, and five
+        reader's fetch is refused and `businessModelVisible` is false, and five
         empty textareas would then be a lie in both directions — they read as an
         unauthored service, and offer to write a row the save would be refused.
         Absent is the honest rendering of "not yours to see".
@@ -287,7 +292,7 @@ function ServicePanelBody({
       ) : null}
 
       {/*
-        The six examples, authored here and nowhere else (#302). Path has no
+        The six examples, authored here and nowhere else. Path has no
         detail panel of its own, so a per-kind edit home would leave its
         example homeless; one section on the service is where all six live. The
         input labels are the KIND names — they name a kind, not a column, so

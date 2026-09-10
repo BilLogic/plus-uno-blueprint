@@ -577,6 +577,14 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/boardAddress.test.ts',
     'src/components/editor/BoardAddressSync.tsx',
     'src/components/editor/boardAddressSync.test.tsx',
+    'src/lib/panelTerms.ts',
+    'src/components/blueprint/IntegratedDependencyArrows.tsx',
+    'src/lib/evidenceMutations.ts',
+    'src/components/mobile/mobileNavSheet.test.tsx',
+    'src/components/editor/CanvasDesignTools.tsx',
+    'src/lib/workflowQueries.ts',
+    'src/components/blueprint/LanePanel.tsx',
+    'src/components/blueprint/ServicePanel.tsx',
   ])
 })
 
