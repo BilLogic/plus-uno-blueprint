@@ -10,6 +10,13 @@ export function waitForCanvasNavigationOutcome(key: string): {
   cancel: () => void
 } {
   let waiter: Waiter | null = null
+  const detach = () => {
+    if (!waiter) return
+    const listeners = waiters.get(key)
+    listeners?.delete(waiter)
+    if (listeners?.size === 0) waiters.delete(key)
+    waiter = null
+  }
   const promise = new Promise<CameraTransitionResult>((resolve) => {
     waiter = resolve
     const listeners = waiters.get(key) ?? new Set<Waiter>()
@@ -18,12 +25,20 @@ export function waitForCanvasNavigationOutcome(key: string): {
   })
   return {
     promise,
+    /**
+     * Detach AND settle. Abandoning the wait without resolving left a promise
+     * pending for the life of the session; that is invisible today only
+     * because every caller races it against a deadline, and the first direct
+     * `await` would hang. The transform is the caller's own last known one —
+     * nothing moved on account of giving up listening.
+     */
     cancel: () => {
-      if (!waiter) return
-      const listeners = waiters.get(key)
-      listeners?.delete(waiter)
-      if (listeners?.size === 0) waiters.delete(key)
-      waiter = null
+      const settle = waiter
+      detach()
+      settle?.({
+        kind: 'cancelled',
+        transform: { pan: { x: 0, y: 0 }, zoom: 1 },
+      })
     },
   }
 }

@@ -1,17 +1,19 @@
 /**
- * The colour maths, as a leaf module both the model and the app can import.
+ * The colour maths, as a leaf module both the token model and the app can
+ * import.
  *
- * It lived inside `tokenModel.ts` until #411, which is test-time only — it
- * reads the stylesheet tree off disk — so nothing that runs in a browser could
- * reach it. The brand-accent reader has to: turning a deployment's accent into
- * the hue dial the token steps derive from is an sRGB→OKLCH conversion, and
- * the one thing worse than no reader is a second implementation of this
- * arithmetic drifting from the one every colour guard measures against.
+ * It lived inside `tokenModel.ts`, which is test-time only — it reads the
+ * stylesheet tree off disk — so nothing that runs in a browser could reach it.
+ * The brand-accent reader has to: turning a deployment's accent into the hue
+ * dial the token steps derive from is an sRGB→OKLCH conversion, and the one
+ * thing worse than no reader is a second implementation of this arithmetic
+ * drifting from the one every colour guard measures against.
  *
- * So the conversions move here and `tokenModel.ts` re-exports them unchanged.
- * Nothing about ADR 0001 changes: the model is still the single seam a rule
- * asks its questions of; this is the arithmetic underneath it, with no opinion
- * about stylesheets, themes or the cascade.
+ * So the conversions live here and `tokenModel.ts` re-exports them unchanged.
+ * Nothing about the decision that one token model is the single style seam
+ * changes: the model is still the single seam a rule asks its questions of;
+ * this is the arithmetic underneath it, with no opinion about stylesheets,
+ * themes or the cascade.
  */
 
 export type Rgb = [number, number, number]
@@ -37,7 +39,7 @@ export function hslToRgb(h: number, s: number, l: number): Rgb {
   return [r + m, g + m, b + m]
 }
 
-/** OKLCH → linear sRGB (Björn Ottosson's matrices). */
+/** OKLCH -> linear sRGB (Bjorn Ottosson's matrices). */
 export function oklchToLinearSrgb(l: number, c: number, hDeg: number): Rgb {
   const h = (hDeg * Math.PI) / 180
   const a = c * Math.cos(h)
@@ -65,7 +67,7 @@ export function oklch(l: number, c: number, hDeg: number): Rgb {
   }) as Rgb
 }
 
-/** Gamma-encoded sRGB → OKLCH triple. */
+/** Gamma-encoded sRGB -> OKLCH triple. */
 export function oklchFromSrgb([r, g, b]: Rgb): [number, number, number] {
   const lin = (v: number) =>
     v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4
@@ -76,7 +78,11 @@ export function oklchFromSrgb([r, g, b]: Rgb): [number, number, number] {
   const L = 0.2104542553 * l_ + 0.793617785 * m_ - 0.0040720468 * s_
   const A = 1.9779984951 * l_ - 2.428592205 * m_ + 0.4505937099 * s_
   const B2 = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.808675766 * s_
-  return [L, Math.hypot(A, B2), ((Math.atan2(B2, A) * 180) / Math.PI + 360) % 360]
+  return [
+    L,
+    Math.hypot(A, B2),
+    ((Math.atan2(B2, A) * 180) / Math.PI + 360) % 360,
+  ]
 }
 
 /** OKLCH hue in degrees for a gamma-encoded sRGB colour. */
@@ -113,10 +119,10 @@ export function contrast(a: Rgb, b: Rgb): number {
  * The ink `[data-blueprint-fill]` derives for a fill, mirrored in JS.
  *
  * The CSS is `oklch(from <fill> clamp(0.12, calc((0.62 - l) * 100), 0.99)
- * calc(c * 0.08) h)` — Supabase's `*-foreground` formula. The clamp is a step
- * function in practice: any fill below L 0.62 gets L 0.99 ink, anything above
- * gets 0.12, because the multiplier is 100. Chroma drops to 8% so the ink is
- * tinted rather than stark, and the hue rides along.
+ * calc(c * 0.08) h)`. The clamp is a step function in practice: any fill below
+ * L 0.62 gets L 0.99 ink, anything above gets 0.12, because the multiplier is
+ * 100. Chroma drops to 8% so the ink is tinted rather than stark, and the hue
+ * rides along.
  *
  * Mirrored rather than asserted against one hard-coded ink, because a
  * hard-coded ink is exactly what this pairing replaced.
@@ -147,4 +153,22 @@ export function hexToRgb(hex: string): Rgb {
   return [0, 2, 4].map((at) =>
     parseInt(digits.slice(at, at + 2), 16) / 255,
   ) as Rgb
+}
+
+/**
+ * `over` at `alpha` painted on `under`, the way a browser paints it.
+ *
+ * Simple alpha compositing in the gamma-encoded space, which is what a
+ * translucent CSS colour does over an opaque one — not the linear-light blend
+ * a physical mix would be. The distinction matters here because several tokens
+ * in the system ARE translucent (`--muted`, `--wash-*`), and the only honest
+ * way to measure ink against one of them is to paint it first.
+ */
+export function composite(over: Rgb, alpha: number, under: Rgb): Rgb {
+  return over.map((v, at) => v * alpha + under[at] * (1 - alpha)) as Rgb
+}
+
+/** OKLCH -> gamma-encoded sRGB, chroma-reduced to the sRGB gamut first. */
+export function oklchInGamut(l: number, c: number, hDeg: number): Rgb {
+  return oklch(l, Math.min(c, chromaCeiling(l, hDeg)), hDeg)
 }

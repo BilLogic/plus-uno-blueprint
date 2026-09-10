@@ -586,6 +586,9 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/blueprint/LanePanel.tsx',
     'src/components/blueprint/ServicePanel.tsx',
     'src/lib/canvasAnnotations.ts',
+    'src/lib/oklch.ts',
+    'src/lib/canvasNavigationOutcome.ts',
+    'src/components/blueprint/OwnerTagSelect.tsx',
   ])
 })
 

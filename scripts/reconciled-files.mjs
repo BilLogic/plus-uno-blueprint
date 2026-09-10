@@ -1932,4 +1932,15 @@ export const RECONCILED_FILES = [
   // 1.17:1, white on white. The button derives its ink from its own fill
   // upstream now, and the membership test is gone from both trees.
   'src/lib/canvasAnnotations.ts',
+
+  // Three more of the tail, one cause each. `oklch.ts` is arithmetic and the
+  // difference was two exports and a citation. `canvasNavigationOutcome.ts`
+  // gains the template's detach: a cancelled wait left its listener in the
+  // map, and a listener that outlives its waiter fires into nothing. The owner
+  // select's trigger is the panel's shared one on both sides now — the copy
+  // upstream had fallen behind it, with no hover border, no inset focus ring
+  // and no disabled treatment.
+  'src/lib/oklch.ts',
+  'src/lib/canvasNavigationOutcome.ts',
+  'src/components/blueprint/OwnerTagSelect.tsx',
 ]
