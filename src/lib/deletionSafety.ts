@@ -23,18 +23,19 @@ import type { Database } from '@/types/database'
  * `lane` and `step` used to be excluded here, because `deletion_impact`
  * answered for them with numbers that were not true of the delete that
  * followed — and the note said the SQL fix "cannot be verified without a
- * migration apply", so the type was narrowed instead.
+ * migration apply", so the type was narrowed instead of the predicates
+ * corrected.
  *
- * The migration is applied (20260820030000). Measured on production before
- * and after:
+ * The predicates are corrected now. What was measured against a live
+ * blueprint, before and after:
  *
- *   * lane — `deletion_impact('lane', <a Goal Setting "Front Stage Tech"
- *     lane>)` reported **11**; `remove_lane(scenario_id, lane_name)` deletes
- *     every same-named lane across every path of the scenario, which is
- *     **93**. An 8.5x undercount. Now 93.
+ *   * lane — `deletion_impact('lane', <one lane row>)` reported **11**;
+ *     `remove_lane(scenario_id, lane_name)` deletes every same-named lane
+ *     across every path of the scenario, which is **93**. An 8.5x undercount.
+ *     Now 93.
  *   * step — counted the step across EVERY path (**12**); `remove_step(
  *     path_id, step_id)` deletes only the cells on the path it is given
- *     (**5**). Now 5, and the function REFUSES without a `scope_id` rather
+ *     (**5**). Now 5, and the function REFUSES without a `scopeId` rather
  *     than guess a path.
  *
  * Both were identity bugs, not arithmetic: a lane delete is addressed by
@@ -64,8 +65,7 @@ export type DeletionReadiness =
  * Whether deleting is available at all.
  *
  * `archiveAvailable` comes from the app checking that `public.trash` — the
- * deletions in the append-only change log (#176) — is present. Absent, the
- * affordance is hidden rather than disabled: a disabled
+ * deletions in the append-only change log — is present. Absent, the affordance is hidden rather than disabled: a disabled
  * delete button invites someone to go looking for how to enable it, and there
  * is no safe way to.
  */
