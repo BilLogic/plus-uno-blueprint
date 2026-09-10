@@ -20,6 +20,12 @@ const mockSupabase = {
   client: {} as unknown,
   session: null as Session | null,
   canAgent: false,
+  // Template-only: the kit runs with no database at all, and that build
+  // opens the key field without a session. `configured` is the gate.
+  configured: true,
+  // Template-only: the composer also carries the developer portal, which
+  // reads the simulated tier off the same context.
+  devSimulation: { on: false, tier: 'regular' },
 }
 vi.mock('@/contexts/SupabaseProvider', () => ({
   useSupabase: () => mockSupabase,
@@ -30,6 +36,7 @@ const signedIn = { user: { email: 'admin@example.com' } } as Session
 beforeEach(() => {
   mockSupabase.session = null
   mockSupabase.canAgent = false
+  mockSupabase.configured = true
   window.localStorage.clear()
 })
 afterEach(cleanup)
@@ -56,5 +63,15 @@ describe('AgentSettingsFields', () => {
     render(<AgentSettingsFields />)
     expect(screen.getByText('Sign out')).toBeDefined()
     expect(screen.queryByLabelText('API key')).toBeNull()
+  })
+
+  // Template-only: the sample trial. With no database there is no sign-in
+  // form to show and no session to gain, so the key field is the only door
+  // — and it has to open without one.
+  it('an unconfigured build gets the keys and no sign-in form', () => {
+    mockSupabase.configured = false
+    render(<AgentSettingsFields />)
+    expect(screen.queryByLabelText('Admin email')).toBeNull()
+    expect(screen.getByLabelText('API key')).toBeDefined()
   })
 })

@@ -1974,4 +1974,32 @@ export const RECONCILED_FILES = [
   'src/contexts/canvasActiveContext.tsx',
   'src/components/cover/coverModel.ts',
   'src/lib/deletionSafety.ts',
+  // The developer portal. The tier simulator arrives here as the template
+  // wrote it: the store and its build-time gate, the section that sets it,
+  // the switch it is built from, and the two tests. Nothing about it is
+  // deployment-shaped — the owner settled that the settings panel is not
+  // configurable and that this deployment follows the template exactly — so
+  // all five belong here rather than in a copy that can drift.
+  //
+  // `AgentSettingsFields.tsx` is the settings column the section hangs off,
+  // and it converges whole. Two of its branches are template-only and dead
+  // here, because this deployment always has a database: the sentence that
+  // stands in for the sign-in form, and the key field opening without a
+  // session. They are labelled as template-only in the file, and holding a
+  // dead branch costs less than leaving the column free to drift.
+  //
+  // NOT enrolled: `src/lib/devPortal.test.tsx`. The template's copy also
+  // pins its no-database trial — `isSampleTrial`, and the banner that
+  // announces it — and this deployment has neither: the trial reads a
+  // bundled sample board, which is the content that moved into the database.
+  // Every assertion about the portal itself is the template's, verbatim.
+  //
+  // NOT enrolled: `EditorChrome.tsx`, which mounts the badge. Its remaining
+  // difference is a comment on the wordmark that names this repository's own
+  // issues, which is exactly what an enrolled file may not say.
+  'src/lib/devPortal.ts',
+  'src/components/editor/DevPortal.tsx',
+  'src/components/ui/switch.tsx',
+  'src/components/editor/AgentSettingsFields.tsx',
+  'src/components/editor/agentSettingsFields.test.tsx',
 ]

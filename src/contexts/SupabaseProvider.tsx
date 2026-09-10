@@ -20,6 +20,11 @@ import {
 } from '../lib/authoringLog'
 import { sessionRefresher, setSessionReconciler } from '../lib/sessionReconcile'
 import type { Database } from '../types/database'
+import {
+  applyDevSimulation,
+  useDevSimulation,
+  type DevSimulation,
+} from '../lib/devPortal'
 
 type SupabaseContextValue = {
   client: SupabaseClient<Database> | null
@@ -61,6 +66,18 @@ type SupabaseContextValue = {
    * dev server holding the authoring key, which is wider still.
    */
   canReadPrivate: boolean
+  /**
+   * Does the agent get WRITE tools this send? The agent's own question, asked
+   * where the agent asks it, rather than the board's answer borrowed. The two
+   * agree here because this deployment always has a database; upstream they
+   * part company over the no-database trial, where the write specs are never
+   * registered at all.
+   */
+  canAgentWrite: boolean
+  /** Developer-portal tier simulation — client-side UI gating only. */
+  devSimulation: DevSimulation
+  /** The write flag BEFORE the simulation, for the honest readout. */
+  realCanWrite: boolean
 }
 
 const SupabaseContext = createContext<SupabaseContextValue | null>(null)
@@ -251,21 +268,32 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
    */
   const tierPending = userId !== null && answeredIsService === null
 
+  const realCanWrite =
+    configured &&
+    ((session !== null && isServiceAccount) || isDevAuthoring || isEditPreview)
+
+  /*
+   * Developer portal. Client-side ONLY: it moves what the UI believes about
+   * this session's tier and touches no policy. RLS and the RPC grants are
+   * unchanged and remain the authority — see lib/devPortal.ts.
+   */
+  const devSimulation = useDevSimulation()
+  const canWrite = applyDevSimulation(devSimulation, realCanWrite)
+
   const value = useMemo(
     () => ({
       client,
       configured,
       session,
       isLoading: isLoading || tierPending,
-      canWrite:
-        configured &&
-        ((session !== null && isServiceAccount) ||
-          isDevAuthoring ||
-          isEditPreview),
+      canWrite,
+      realCanWrite,
+      canAgentWrite: canWrite,
       isDevAuthoring,
       isEditPreview,
       canAgent: configured && (session !== null || isDevAuthoring),
       canReadPrivate: configured && (session !== null || isDevAuthoring),
+      devSimulation,
     }),
     [
       client,
@@ -273,9 +301,11 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
       session,
       isLoading,
       tierPending,
+      canWrite,
+      realCanWrite,
       isDevAuthoring,
       isEditPreview,
-      isServiceAccount,
+      devSimulation,
     ],
   )
 
