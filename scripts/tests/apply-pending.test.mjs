@@ -12,7 +12,10 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { ledgerInsert, pending, withheld } from '../apply-pending.mjs'
+import { readFileSync, readdirSync } from 'node:fs'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { ledgerInsert, pending, transactionControl, withheld } from '../apply-pending.mjs'
 
 /** The shape #148 describes: old files recorded under an apply-time version. */
 const FILES = [
@@ -96,4 +99,122 @@ test('a file whose name does not parse is not applied', () => {
   // script cannot name is applying something it cannot record.
   const queue = pending(FILES, LEDGER, '20250101000000')
   assert.ok(!queue.some((e) => e.file === 'not-a-migration.txt'))
+})
+
+// ── The transaction guard ───────────────────────────────────────────────────
+//
+// The second thing this script refuses. A file carrying its own `begin;` ends
+// the transaction the script opened, so the ledger insert appended after it
+// commits separately — and a file that then fails leaves partial work behind
+// AND a row saying it ran. psql reports that as a warning and nothing else.
+
+const MIGRATIONS = fileURLToPath(new URL('../../supabase/migrations', import.meta.url))
+
+/**
+ * What a text search would have said, and the reason this reads a parse tree.
+ *
+ * Not a strawman: `begin;` is the shape a grep for this defect would look for.
+ * It is wrong in both directions, and the fixtures below show each.
+ */
+function naiveHits(sql) {
+  return sql
+    .split('\n')
+    .flatMap((line, index) => (/\b(begin|commit)\s*;/i.test(line) ? [index + 1] : []))
+}
+
+test('a file that opens its own transaction is caught, with the line and the spelling', async () => {
+  const sql = ['-- a repair', 'begin;', "update public.cells set body = '';", 'commit;', ''].join('\n')
+  assert.deepEqual(await transactionControl(sql), [
+    { statement: 'begin', line: 2 },
+    { statement: 'commit', line: 4 },
+  ])
+})
+
+test('a plpgsql begin is not transaction control, and neither is one in a comment', async () => {
+  // Three `begin`s and two `commit`s in the text; none of them is a statement.
+  // The function body's `begin … end;` is plpgsql, the dollar-quoted notice is
+  // a string constant, and the last one is a comment.
+  const sql = `create function public.f() returns void language plpgsql as $fn$
+begin
+  raise notice '%', $doc$
+begin;
+commit;
+$doc$;
+end;
+$fn$;
+
+-- the shape this file used to have:
+-- begin;
+`
+  assert.deepEqual(await transactionControl(sql), [])
+  // And the same text read as text, which is what the parser is here to beat.
+  assert.deepEqual(naiveHits(sql), [4, 5, 11])
+})
+
+test('the two of them in one file are told apart', async () => {
+  // The file that took this to production. Transaction control on 34 and 357,
+  // a `do $$ begin` on 237, all in one file — which is why it is the fixture.
+  const file = join(MIGRATIONS, '20260910010000_the_board_in_typescript_moves_into_the_database.sql')
+  const sql = readFileSync(file, 'utf8')
+  assert.deepEqual(await transactionControl(sql), [
+    { statement: 'begin', line: 34 },
+    { statement: 'commit', line: 357 },
+  ])
+  assert.match(sql.split('\n')[236], /^begin$/)
+})
+
+test('commit spelled `end`, and the rest of the spellings', async () => {
+  // `end` is a commit, and a file that only rolls back still ends the
+  // transaction the ledger row was going to be written in.
+  assert.deepEqual(await transactionControl('start transaction;\nselect 1;\nend;\n'), [
+    { statement: 'start transaction', line: 1 },
+    { statement: 'end', line: 3 },
+  ])
+  assert.deepEqual(await transactionControl('rollback;\n'), [{ statement: 'rollback', line: 1 }])
+})
+
+test('a savepoint is not an escape from the transaction, and is allowed', async () => {
+  // `savepoint`, `release` and `rollback to` nest inside the transaction this
+  // script opened rather than ending it, so they cost the ledger nothing.
+  const sql = 'savepoint s;\nupdate public.cells set body = null;\nrollback to savepoint s;\nrelease s;\n'
+  assert.deepEqual(await transactionControl(sql), [])
+})
+
+test('the line is counted in bytes, because that is what the parser reports', async () => {
+  // `stmt_location` is a byte offset and this series writes em dashes in its
+  // comments. Slicing the JavaScript string by it drifts by one line for every
+  // two multi-byte characters above the statement, which is a wrong line
+  // number in exactly the files most likely to carry prose.
+  const sql = '-- ————— five em dashes, fifteen bytes, five characters\nselect 1;\nbegin;\n'
+  assert.deepEqual(await transactionControl(sql), [{ statement: 'begin', line: 3 }])
+})
+
+test('the exposure the guard arrived too late for is these sixteen files', async () => {
+  // Inventoried rather than guessed, and frozen here rather than counted: a
+  // seventeenth entry is a new file carrying the defect, and this test is the
+  // first place it shows. All sixteen are applied and none may be edited —
+  // #606 changes the rule going forward, not the record of what went in.
+  const carried = []
+  for (const name of readdirSync(MIGRATIONS).filter((n) => n.endsWith('.sql')).sort()) {
+    const found = await transactionControl(readFileSync(join(MIGRATIONS, name), 'utf8'))
+    if (found.length > 0) carried.push(name)
+  }
+  assert.deepEqual(carried, [
+    '20260820190000_touchpoint_cells_are_names.sql',
+    '20260820200000_teacher_lane_drops_its_role_prefix.sql',
+    '20260820210000_every_step_says_what_happens.sql',
+    '20260820220000_a_route_says_when_it_applies.sql',
+    '20260821100000_shipped_is_not_planned.sql',
+    '20260821110000_a_lane_that_says_something.sql',
+    '20260821120000_one_word_for_unbuilt.sql',
+    '20260821130000_maturity_is_not_a_name.sql',
+    '20260821140000_the_post_session_two_features.sql',
+    '20260821150000_session_reflection_is_a_scenario.sql',
+    '20260821160000_no_more_pencil.sql',
+    '20260821170000_one_ladder_for_how_built.sql',
+    '20260821180000_phases_say_what_they_cost.sql',
+    '20260821190000_every_cell_says_what_it_means.sql',
+    '20260821390000_three_things_the_sweeps_missed.sql',
+    '20260910010000_the_board_in_typescript_moves_into_the_database.sql',
+  ])
 })

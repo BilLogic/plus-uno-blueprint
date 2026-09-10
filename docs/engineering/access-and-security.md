@@ -380,6 +380,21 @@ spelling a relation that had been renamed. Refresh
 pinned `search_path`, `EXECUTE` revoked from `public`/`anon`, and the
 `is_service_account()` guard first in the body.
 
+**A migration must not open a transaction of its own (#606).** `apply:pending`
+runs each file with `--single-transaction` and appends the ledger insert inside
+it, which is what stops a migration whose assertion fires from being recorded as
+applied. A `begin;` in the file ends that transaction at its `commit;` and the
+ledger row lands in a separate one, so a file that then failed would commit
+partial work AND be recorded — psql reports it only as `there is already a
+transaction in progress`, which is how `20260910010000` went in unnoticed. The
+script reads every queued file with the real Postgres parser and refuses the run
+naming the file and the line, in the dry run as well as under `--apply`; a
+plpgsql `begin` or a `do $$` block is not transaction control and is not
+refused, and neither is a savepoint, which nests rather than ends. Sixteen files
+written before that guard carry a `begin;`/`commit;` pair — all sixteen are
+applied, they are named in `scripts/tests/apply-pending.test.mjs`, and they stay
+as they are.
+
 The seed under `supabase/seeds/` is held to the same schema by
 `npm run check:seed-load`, which replays the series into a scratch database and
 loads the seed onto it. A rename that lands in a migration and not in the seed

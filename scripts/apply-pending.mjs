@@ -48,12 +48,38 @@
  * ran — the failure mode that would otherwise convert a red migration into a
  * permanent silent gap. `scripts/replay-migrations.mjs` makes the same choice
  * and says why at greater length.
+ *
+ * ── A migration may not open a transaction of its own ────────────────────
+ *
+ * `begin;` in the file defeats every word of that. Its `commit;` ends the
+ * OUTER transaction, so everything after it — the ledger insert included —
+ * runs in a transaction of its own. psql says so, in two warnings nobody has
+ * to read:
+ *
+ *     WARNING:  there is already a transaction in progress
+ *     WARNING:  there is no transaction in progress
+ *
+ * That is what `20260910010000` printed on its way into production on
+ * 2026-09-10. It succeeded and its counts were verified, so nothing is wrong
+ * in the database — but had it failed after its inner `commit;` it would have
+ * left partial work behind AND a ledger row claiming it ran, which is the one
+ * outcome this script exists to prevent, arriving as a warning.
+ *
+ * So `transactionControl` reads every queued file before any of them is
+ * applied, in the dry run as well as under `--apply`, and the run stops naming
+ * the file and the line. It reads the parse tree rather than the text because
+ * `begin` is two different words here: 141 of the 877 files contain it and 16
+ * mean the transaction. `20260910010000` holds one of each — transaction
+ * control on line 34, a plpgsql `do $$ begin` on line 237 — and the grammar
+ * sees the first as a statement and the second as the string constant it is.
  */
 
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import { parse } from 'libpg-query'
 
 import { readLedger } from './check-migration-ledger.mjs'
 import { ledgerDrift, parseMigrationFiles } from './migration-ledger.mjs'
@@ -98,6 +124,51 @@ export function withheld(files, ledger, from) {
 export function ledgerInsert(version, name) {
   const quoted = (value) => `'${String(value).replaceAll("'", "''")}'`
   return `insert into supabase_migrations.schema_migrations (version, name) values (${quoted(version)}, ${quoted(name)}) on conflict (version) do nothing;`
+}
+
+/**
+ * Transaction control that nests rather than ends: a savepoint is not a
+ * transaction, and `release` and `rollback to` unwind to one. All three sit
+ * INSIDE the transaction this script opened and take nothing away from the
+ * ledger guarantee, so all three are allowed.
+ *
+ * Named as what passes rather than what fails, so a statement kind nobody here
+ * anticipated is refused rather than admitted.
+ */
+const NESTED = new Set(['TRANS_STMT_SAVEPOINT', 'TRANS_STMT_RELEASE', 'TRANS_STMT_ROLLBACK_TO'])
+
+/**
+ * The transaction control a migration file carries itself, in file order.
+ *
+ * Read off the statement grammar, never off the text. `begin` opens a plpgsql
+ * block as often as it opens a transaction in this series, and inside
+ * `$$ … $$` it is not a statement at all — it is characters in a string
+ * constant. A parse is the only reading that tells the two apart, and it gets
+ * `-- begin;` in a comment and `raise notice 'commit;'` right for free.
+ *
+ * @returns {Promise<Array<{statement: string, line: number}>>}
+ */
+export async function transactionControl(sql) {
+  // `stmt_location` and `stmt_len` are BYTE offsets — the parser works on
+  // UTF-8, and these files carry em dashes in their comments. Counting
+  // newlines by slicing the JavaScript string would drift by one for every
+  // multi-byte character above the statement.
+  const bytes = Buffer.from(sql, 'utf8')
+  const { stmts = [] } = await parse(sql)
+  const found = []
+  for (const stmt of stmts) {
+    const kind = stmt.stmt?.TransactionStmt?.kind
+    if (!kind || NESTED.has(kind)) continue
+    const at = stmt.stmt_location ?? 0
+    found.push({
+      statement: bytes
+        .subarray(at, at + (stmt.stmt_len ?? 0))
+        .toString('utf8')
+        .trim(),
+      line: bytes.subarray(0, at).toString('utf8').split('\n').length,
+    })
+  }
+  return found
 }
 
 function applyOne(url, entry) {
@@ -151,6 +222,34 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       ':\n',
   )
   for (const entry of queue) console.log(`  ${entry.file}`)
+
+  // Before the dry run reports success, and long before anything is written.
+  const carried = []
+  for (const entry of queue) {
+    const sql = fs.readFileSync(path.join(MIGRATIONS, entry.file), 'utf8')
+    try {
+      for (const found of await transactionControl(sql)) carried.push({ file: entry.file, ...found })
+    } catch (error) {
+      console.error(
+        `\n${entry.file} does not parse, so this script cannot tell whether it opens a ` +
+          `transaction of its own: ${error.message}\n\nRun npm run check:migration-syntax.`,
+      )
+      process.exit(1)
+    }
+  }
+  if (carried.length > 0) {
+    console.error('\nrefusing to apply — these files open or close a transaction of their own:\n')
+    for (const found of carried) console.error(`  ${found.file}:${found.line}  ${found.statement}`)
+    console.error(
+      '\nEach file is applied with --single-transaction and its ledger row is written inside ' +
+        'that transaction, which is what stops a migration that fails from being recorded as ' +
+        'applied. An inner commit ends that transaction early and the ledger row lands in a ' +
+        'separate one, so a file that then fails commits partial work AND is recorded as ' +
+        'applied. psql reports it only as "there is already a transaction in progress".\n\n' +
+        'The fix is to delete the begin/commit: the file already runs in one transaction.',
+    )
+    process.exit(1)
+  }
 
   if (!apply) {
     console.log(
