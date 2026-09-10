@@ -1063,6 +1063,12 @@ function ServiceOverviewViewImpl({
                   cameraStateKey ?? (mobileShell ? undefined : 'desktop:blueprint')
                 }
                 cameraDestinationKey={cameraDestinationKey}
+                // A framing carried across a tab remount can only be measured
+                // against content that is on screen, and the destination key
+                // flips one beat before the skeleton gives way to the board.
+                // `overviewSettled` is that swap, so the camera is told the
+                // destination has resolved when there is something to measure.
+                cameraDestinationResolved={overviewSettled}
                 cameraOutcomeKey={cameraTargetId ?? undefined}
                 onFitReady={handleInitialFitReady}
               >
