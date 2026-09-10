@@ -1789,4 +1789,20 @@ export const RECONCILED_FILES = [
   // recorded revert to the row as it was, field by field, which is why a
   // column travelling one way and not the other showed up at all.
   'src/lib/findingMutations.test.ts',
+
+  // The panel section that gained a status.
+  //
+  // `panelConsistencyDebrand.test.tsx` was another of the sixteen, and it
+  // failed upstream because the template rendered a cell's status only inside
+  // the EDITOR — a reader had to enter edit mode to learn the one field that
+  // decides how the rest should be read. 1.29.0 renders it first in
+  // `CellContentSection`, labelled with a hint, as a badge.
+  //
+  // Only half the contract travelled. This file's other half asserts that THIS
+  // deployment's brand appears in no panel file, and the template's own
+  // `standalone.test.mjs` refuses a file that spells a brand at all — so the
+  // test stays local and the template keeps `cellStatusField.test.tsx`, which
+  // is the half that belongs there. The COMPONENT converges, which is the part
+  // that matters.
+  'src/components/blueprint/CellContentSection.tsx',
 ]
