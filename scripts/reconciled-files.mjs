@@ -1756,4 +1756,14 @@ export const RECONCILED_FILES = [
   'src/lib/resolveBlueprint.test.ts',
   'src/components/blueprint/compareTouchpointDifferences.test.tsx',
   'src/contexts/supabaseProviderWriteGate.test.tsx',
+
+  // The reader-tier contract, once the template stopped sending the read.
+  //
+  // This one was among the sixteen that FAILED upstream, and it failed for a
+  // real reason: `business_models` is refused for every signed-out visitor,
+  // and the template sent the request anyway and swallowed the 42501 as
+  // ordinary — which made a genuinely broken table indistinguishable from a
+  // signed-out reader. 1.28.0 publishes `canReadPrivate` and gates the read on
+  // it, so the contract passes there and the file is one file.
+  'src/hooks/serviceSpecReaderTier.test.tsx',
 ]
