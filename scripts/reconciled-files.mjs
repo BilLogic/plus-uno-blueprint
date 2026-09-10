@@ -1520,4 +1520,23 @@ export const RECONCILED_FILES = [
   // `text-3xs` the template had and this deployment had already removed.
   'scripts/tests/one-badge-one-size.test.mjs',
   'src/components/editor/SlideArtboard.tsx',
+
+  // Four more, each its own small reason, none of them a design question.
+  //
+  // `StoryboardWalkthroughModal.tsx` and `StructureRowMenu.tsx` were fixed
+  // here first and the template had the older text: a dialog whose accessible
+  // name said "Presentation" — the ONLY name a screen reader had for it, and
+  // a word the app uses nowhere a reader can see — and one failure unwrapped
+  // by an inline `instanceof Error` ternary next to an import of the helper
+  // that IS that expression. Both went upstream, so both files are one file.
+  //
+  // `blueprintStepTech.ts` differed by the ORDER of two imports and nothing
+  // else. `serviceSpecMutations.test.ts` differed by a fixture noun, which is
+  // the case the fixture-versus-identity rule settles: a client's name in an
+  // example string is not this deployment's identity, and the template's
+  // neutral wording is true in both.
+  'src/components/blueprint/StoryboardWalkthroughModal.tsx',
+  'src/components/editor/StructureRowMenu.tsx',
+  'src/lib/blueprintStepTech.ts',
+  'src/lib/serviceSpecMutations.test.ts',
 ]
