@@ -1597,4 +1597,19 @@ export const RECONCILED_FILES = [
   'src/lib/serviceRoute.test.ts',
   'src/lib/tokenResolution.test.ts',
   'src/lib/workspaceTabNavigationContract.test.ts',
+
+  // The first of the sixteen contracts that failed against the template, worked
+  // through and found portable. It failed there for the simplest possible
+  // reason: `CELL_DETAIL_PANEL_BOTTOM_GAP_PX` did not exist upstream, only the
+  // `!bottom-[61px]` literal it is supposed to agree with. Naming the gap is
+  // what makes the contract checkable, so the name went upstream and the
+  // contract followed.
+  //
+  // Three of its neighbours were investigated at the same time and are NOT
+  // portable: `authoringErrors` asserts a message keyed on a constraint no
+  // migration upstream creates, `canvasNestedHoverContract` asserts a CSS rule
+  // where the template does the same dim as inline Tailwind on the camera's
+  // own duration, and `findingMutations` expects a field the template's write
+  // does not carry.
+  'src/lib/panelLayoutContract.test.ts',
 ]
