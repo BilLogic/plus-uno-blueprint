@@ -1481,4 +1481,28 @@ export const RECONCILED_FILES = [
   // the standing tie-break and the code never moved.
   'src/lib/sessionReconcile.ts',
   'src/lib/sessionReconcile.test.ts',
+
+  // Five files whose ENTIRE difference from the template was comment. Not
+  // one line of code separated any of them, which is what makes them a group
+  // rather than five coincidences: the same cause, a comment edited on one
+  // side and never on the other, and no design question underneath.
+  //
+  // Three of the five had drifted into saying something untrue here.
+  // `useServicePhases.ts` named `findFirstServiceId` as the lookup it shares
+  // a cache with, while the code calls `findActiveServiceId` — the template's
+  // line is simply the correct one. `phasesToSlides.ts` described a
+  // `description` prop that no longer exists under that name and pointed at a
+  // module that has since been deleted. `ScenarioTitleDefinition.tsx` carried
+  // the history of the component it replaced, told through three issue
+  // numbers; the template says what the component IS.
+  //
+  // `SlideStickyHeader.tsx` went the other way first. The one thing this
+  // deployment's copy said that the template's did not — why the navbar is
+  // flush left — was true of both, so it was ported upstream in 1.20.1 and
+  // adopted back with the pin.
+  'src/components/blueprint/ScenarioSlideHeader.tsx',
+  'src/components/blueprint/ScenarioTitleDefinition.tsx',
+  'src/components/editor/SlideStickyHeader.tsx',
+  'src/hooks/useServicePhases.ts',
+  'src/lib/phasesToSlides.ts',
 ]

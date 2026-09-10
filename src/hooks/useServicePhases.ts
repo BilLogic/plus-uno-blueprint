@@ -46,7 +46,7 @@ const NO_PHASES: PhaseRow[] = []
  * the resolved service client-side — no extra rows in the single-service
  * databases this targets. The result goes through the shared query cache, so
  * the lookup survives remounts and is shared with every other consumer of
- * `findFirstServiceId`.
+ * `findActiveServiceId`.
  */
 export function useServicePhases(serviceId?: string) {
   const { configured } = useSupabase()

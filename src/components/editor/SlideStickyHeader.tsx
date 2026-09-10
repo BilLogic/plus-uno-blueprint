@@ -114,8 +114,8 @@ export function SlideStickyHeader({
   ...contentProps
 }: SlideStickyHeaderProps) {
   // Collapsed: the floating navbar carries this header's identity instead —
-  // one chrome lane at any width. The path selector rides along on a SCENARIO
-  // (#305), handed over as `paths`; a phase passes an empty list and the
+  // one chrome layer at any width. The path selector rides along on a
+  // SCENARIO, handed over as `paths`; a phase passes an empty list and the
   // selector self-hides there. The zoom readout is still not folded in.
   const { collapsed } = useSidebarCollapsedState()
   useCollapsedNavSummary(
@@ -131,8 +131,8 @@ export function SlideStickyHeader({
   return (
     <div
       data-editor-navbar
-      // Flush left at every width: the sidebar is in flow now and never draws
-      // over this column, so there is no overlay to surrender a margin to (#305).
+      // Flush left at every width: the sidebar is in flow and never draws over
+      // this column, so there is no overlay to surrender a margin to.
       className={cn(
         'relative flex items-center gap-3',
         BLUEPRINT_NAVBAR_BAR_CLASS,

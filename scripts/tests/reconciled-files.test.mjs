@@ -481,6 +481,11 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/linkedText.ts',
     'src/lib/sessionReconcile.ts',
     'src/lib/sessionReconcile.test.ts',
+    'src/components/blueprint/ScenarioSlideHeader.tsx',
+    'src/components/blueprint/ScenarioTitleDefinition.tsx',
+    'src/components/editor/SlideStickyHeader.tsx',
+    'src/hooks/useServicePhases.ts',
+    'src/lib/phasesToSlides.ts',
   ])
 })
 

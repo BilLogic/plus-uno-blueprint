@@ -7,6 +7,7 @@ import type { NavItem } from '@/types/nav'
 
 type ScenarioSlideHeaderProps = {
   title: string
+  /** The row the title names, for the aside its definition card carries. */
   slide?: Pick<NavItem, 'note'>
   summary?: string | null
   phaseLabel?: string

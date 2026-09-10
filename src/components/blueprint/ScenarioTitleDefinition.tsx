@@ -12,22 +12,24 @@ type ScenarioTitleDefinitionProps = {
 
 /**
  * A slide header's title, carrying what a scenario IS and — where the row has
- * one — `scenarios.note`, the aside beside it. In this deployment that note
- * says which scenarios run alongside this one; it used to be three sentences
- * in TypeScript keyed on three hardcoded scenario ids (#326 S6, #396 Q38).
+ * one — `scenarios.note`, the aside beside it.
  *
- * It was `ScenarioParallelInfoTooltip`: an ⓘ parked before the title, whose
- * hover said "this scenario can run in parallel with…". That made ⓘ mean two
- * things in one app — four other components use it for *opens the panel* — and
- * #140 Q11 settled that it means only that. So the aside moves onto the word
- * it was about, where every other explanation in this app now lives, and the
- * glyph goes.
+ * `ScenarioTitleBadge` already does this for a name printed ON a container's
+ * edge. A slide header's name is an `<h1>`, not a badge, and the two must not
+ * be the same component: one is a heading and the other is a label. What they
+ * share is the card, so both reach for `EntityDefinitionPopover` and neither
+ * composes sections of its own.
  *
- * It also stops being a tooltip, for the reason everything else did: a tooltip
- * never opens on touch, so on a phone the note was never readable at all.
+ * The note rides on the WORD rather than on an ⓘ parked beside it. Four other
+ * surfaces use that glyph to mean *opens the panel*, and one glyph cannot mean
+ * both that and *there is an aside here*. So the aside goes onto the thing it
+ * is about, where every other explanation on this canvas now lives.
  *
- * The description is deliberately not passed. Both slide headers print it as
- * prose directly under the title, and a popover repeating it would be two
+ * A popover rather than a tooltip, for the reason the badge gives: a tooltip
+ * never opens on touch, so on a phone the note would not be readable at all.
+ *
+ * The summary is deliberately not passed. Both slide headers already print it
+ * as prose directly under the title, and a popover repeating it would be two
  * mechanisms for one fact.
  */
 export function ScenarioTitleDefinition({
