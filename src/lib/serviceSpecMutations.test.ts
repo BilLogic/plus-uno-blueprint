@@ -73,13 +73,13 @@ describe('normalizeEntityExamples', () => {
   it('trims each value and drops the blanks', () => {
     expect(
       normalizeEntityExamples({
-        service: '  Ecoeled home retrofit  ',
+        service: '  The whole home retrofit  ',
         phase: '',
         scenario: '   ',
         path: 'The happy path',
       }),
     ).toEqual({
-      service: 'Ecoeled home retrofit',
+      service: 'The whole home retrofit',
       path: 'The happy path',
     })
   })

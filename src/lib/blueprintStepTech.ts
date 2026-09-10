@@ -2,12 +2,12 @@ import {
   buildTouchpointSelection,
   getTouchpointNames,
 } from '@/lib/blueprintCellSelection'
-import { cellResources } from '@/lib/cellResources'
-import { cellTouchpoints } from '@/lib/cellTouchpoints'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import { shouldUseTouchpointCellContent } from '@/lib/blueprintLayout'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 import type { BlueprintData } from '@/types/blueprint'
+import { cellResources } from '@/lib/cellResources'
+import { cellTouchpoints } from '@/lib/cellTouchpoints'
 
 export type BlueprintStepTechEntry = {
   id: string
