@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * The top-strip workspace name IS the service switcher (#336, #303).
+ * The top-strip workspace name IS the service switcher.
  *
  * Two services make it a dropdown — a chevron over a menu of the roster,
  * picking one makes it active (`switchService`) and lands on its base view
@@ -20,6 +20,13 @@ const state = vi.hoisted(() => ({
   switchService: vi.fn<(slug: string) => void>(),
 }))
 
+// The name is the deployment's, resolved through the config seam. What the
+// switcher does with it is the same whatever it says, so it is pinned here
+// rather than resolved — this file is about the two states, not the seam.
+vi.mock('@/contexts/DeploymentConfigContext', () => ({
+  useWorkspaceTitle: () => 'Sample Workspace',
+}))
+
 vi.mock('@/contexts/ActiveServiceContext', () => ({
   useActiveService: () => ({
     service:
@@ -34,12 +41,12 @@ vi.mock('@/contexts/ActiveServiceContext', () => ({
 }))
 
 const TWO: ActiveService[] = [
-  { id: 'svc-a', name: 'PLUS Tutoring', slug: 'plus-tutoring' },
+  { id: 'svc-a', name: 'Reporting a fault', slug: 'reporting-a-fault' },
   { id: 'svc-b', name: 'Support Desk', slug: 'support-desk' },
 ]
 
 const chevron = () => document.querySelector('[data-workspace-switcher]')
-const trigger = () => screen.getByRole('tab', { name: 'Uno Blueprint' })
+const trigger = () => screen.getByRole('tab', { name: 'Sample Workspace' })
 
 beforeEach(() => {
   state.services = []
@@ -52,7 +59,7 @@ afterEach(cleanup)
 describe('with one service, the switcher is off', () => {
   beforeEach(() => {
     state.services = [TWO[0]]
-    state.activeSlug = 'plus-tutoring'
+    state.activeSlug = 'reporting-a-fault'
   })
 
   it('renders the plain workspace tab — no chevron trigger', () => {
@@ -89,7 +96,7 @@ describe('with no service, it is still the plain tab', () => {
 describe('with two services, the name is a switcher', () => {
   beforeEach(() => {
     state.services = TWO
-    state.activeSlug = 'plus-tutoring'
+    state.activeSlug = 'reporting-a-fault'
   })
 
   it('becomes a dropdown trigger — a chevron the reader can open', () => {
@@ -105,7 +112,7 @@ describe('with two services, the name is a switcher', () => {
     )
     fireEvent.click(trigger())
     expect(screen.getByText('Services')).toBeDefined()
-    expect(screen.getByRole('button', { name: /PLUS Tutoring/ })).toBeDefined()
+    expect(screen.getByRole('button', { name: /Reporting a fault/ })).toBeDefined()
     expect(screen.getByRole('button', { name: /Support Desk/ })).toBeDefined()
   })
 

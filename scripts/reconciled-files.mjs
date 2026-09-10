@@ -1727,4 +1727,18 @@ export const RECONCILED_FILES = [
   // way outright. It has followed now (1.26.0), so the file is one file
   // again.
   'src/hooks/useBlueprintCell.ts',
+
+  // The service switcher, and the strip it sits in.
+  //
+  // The top-strip workspace name became a dropdown over the service roster
+  // here, and stayed a plain tab wherever a deployment has one service. The
+  // template held the plain tab inline in `TabStrip`, so that file's whole
+  // divergence from this one was the switcher — and it converges the moment
+  // the template mounts it too (1.27.0). The component reads its name from
+  // `useWorkspaceTitle` rather than from this deployment's own module, which
+  // is what let it travel; the test came with it, its nouns replaced by
+  // fixtures and the config seam pinned.
+  'src/components/editor/WorkspaceServiceSwitcher.tsx',
+  'src/components/editor/workspaceServiceSwitcher.test.tsx',
+  'src/components/editor/TabStrip.tsx',
 ]

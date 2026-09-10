@@ -550,6 +550,9 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/mobile/MobileScenarioTransition.tsx',
     'src/components/mobile/MobileScenarioTransition.test.tsx',
     'src/hooks/useBlueprintCell.ts',
+    'src/components/editor/WorkspaceServiceSwitcher.tsx',
+    'src/components/editor/workspaceServiceSwitcher.test.tsx',
+    'src/components/editor/TabStrip.tsx',
   ])
 })
 
