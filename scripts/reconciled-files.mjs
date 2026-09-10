@@ -1642,4 +1642,16 @@ export const RECONCILED_FILES = [
   // which is also what makes the file holdable here.
   'src/components/blueprint/ScenarioBlueprintPanel.tsx',
   'src/components/cover/coverPage.test.tsx',
+
+  // The touchpoint cell hears the registry.
+  //
+  // Upstream this file called `getTouchpointTone` directly — a module store,
+  // invisible to React, which is the exact failure `useTouchpointToneResolver`
+  // was written to prevent and says so in its own comment: a cell that called
+  // it directly would draw whatever the store held at its first render and
+  // never hear that the rows had landed. Every other surface that draws a
+  // touchpoint already took the hook; that call site never switched. Fixed
+  // here first, ported in 1.25.1, and the `#277` the local copy carried went
+  // with it.
+  'src/components/blueprint/BlueprintTouchpointCell.tsx',
 ]
