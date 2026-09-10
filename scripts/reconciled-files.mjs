@@ -1717,4 +1717,14 @@ export const RECONCILED_FILES = [
   'src/lib/linkedText.test.ts',
   'src/components/mobile/MobileScenarioTransition.tsx',
   'src/components/mobile/MobileScenarioTransition.test.tsx',
+
+  // The hook that went the other way.
+  //
+  // `useBlueprintCell` was written here, to replace `useCellSpec` and
+  // `useCellContent` — two per-cell queries on panel open for columns the
+  // board can carry. The template kept both and said so in a comment on its
+  // own status helper, which named this deployment as having gone the other
+  // way outright. It has followed now (1.26.0), so the file is one file
+  // again.
+  'src/hooks/useBlueprintCell.ts',
 ]

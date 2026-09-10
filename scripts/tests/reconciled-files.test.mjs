@@ -549,6 +549,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/linkedText.test.ts',
     'src/components/mobile/MobileScenarioTransition.tsx',
     'src/components/mobile/MobileScenarioTransition.test.tsx',
+    'src/hooks/useBlueprintCell.ts',
   ])
 })
 
