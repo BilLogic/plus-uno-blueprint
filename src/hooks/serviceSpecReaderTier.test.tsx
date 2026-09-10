@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * What the service read asks for depends on who is asking (#442).
+ * What the service read asks for depends on who is asking.
  *
  * `business_models` is deliberately outside the contract's `publicReadTables`
  * — funding, pricing and delivery cost are not world-readable — and `anon`

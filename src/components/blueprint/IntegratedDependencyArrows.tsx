@@ -134,7 +134,7 @@ function resolveSegmentStyle(
 }
 
 /**
- * Arrow overlay for a path band: forward and wrap lanes, plus the hand-tuned
+ * Arrow overlay for a path band: forward and wrap layers, plus the hand-tuned
  * rail routes for the scenarios whose geometry the generic router cannot
  * express. (The integrated grid's fork trunks retired with that grid.)
  */
@@ -330,7 +330,7 @@ export function IntegratedDependencyArrows({
   // commit that schedules this, so measuring after paint means one frame of
   // arrows drawn against the previous layout. Compare toggles are where that
   // shows: the grid swaps to a different column set and the overlay spends a
-  // frame anchored to the old one (#66, #129 item 4).
+  // frame anchored to the old one.
   //
   // The cost is real — `updateArrows` sweeps the whole band — and a layout
   // effect spends it before the browser paints. Two things make it the right

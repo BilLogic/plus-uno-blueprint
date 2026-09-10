@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Check, ChevronDown, Pencil, X } from 'lucide-react'
-import { IconTooltip } from '@/components/editor/IconTooltip'
 import { PANEL_SELECT_TRIGGER_CLASS } from '@/components/blueprint/OptionSelect'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -18,8 +18,8 @@ import { cn, errorMessage } from '@/lib/utils'
 /**
  * Owner as a tag, not free text.
  *
- * Free text is how a blueprint ends up with `Tutor Ops`, `TutorOps` and
- * `tutor ops` as three different teams. The dropdown offers the existing
+ * Free text is how a blueprint ends up with `Field Ops`, `FieldOps` and
+ * `field ops` as three different teams. The dropdown offers the existing
  * vocabulary first; typing something new creates it explicitly (one visible
  * "Create" row, not a silent save); the pencil renames a tag *everywhere it
  * is used* — owner and perceived owner both — because a tag is one fact
@@ -117,11 +117,13 @@ export function OwnerTagSelect({
           <button
             type="button"
             aria-label={ariaLabel}
-            // The same trigger as every other select in the panel (#256).
+            // The same trigger as every other select in the panel. The copy
+            // that used to be inlined here had fallen behind it: no hover
+            // border, no inset focus ring, and no disabled treatment.
             className={cn(PANEL_SELECT_TRIGGER_CLASS, !value && 'text-muted-foreground')}
           >
             <span className="min-w-0 truncate">{value || placeholder}</span>
-            <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+            <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
           </button>
         }
       />

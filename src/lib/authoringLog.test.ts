@@ -15,7 +15,7 @@ import {
 } from '@/lib/authoringSession'
 
 /**
- * The durable half of the record (#176).
+ * The durable half of the record.
  *
  * What is asserted here is the crossing, not the array — `authoring-session`
  * already covers the list. Every test below is a way the log could go on

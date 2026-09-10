@@ -9,7 +9,7 @@ import type { Database, Json } from '@/types/database'
  * changes sheet, emptied by a page refresh. That is the right shape for undo
  * and the wrong shape for a record — close the tab and thirty edits leave no
  * trace, while a single deleted cell is remembered forever, because deletions
- * were durable and nothing else was (#176).
+ * were durable and nothing else was.
  *
  * This module is the other end of `recordChange`: the same entry, appended to
  * `public.authoring_changes`. The two are not alternatives. The array stays
@@ -19,7 +19,7 @@ import type { Database, Json } from '@/types/database'
  *
  * AUDIT-ONLY. Nothing here replays an inverse. `revert` travels so a row can
  * SAY what would undo it; replaying it against a database that has moved on is
- * a different problem and #172 puts it out of scope.
+ * a different problem and is out of scope on purpose.
  *
  * That is now enforced rather than described, and the reason is the table's
  * own write surface. `record_authoring_change` validates the operation name
@@ -47,8 +47,8 @@ export type AuthoringLogRow = {
  * The operations whose log row is written by the DATABASE, not by this client.
  *
  * Each of these is a `security definer` function that archives every row it is
- * about to destroy — into the log now, into `deleted_structure` before
- * 20260830200000 folded that table in. It has to: the payload can only be
+ * about to destroy — into the log now, into `deleted_structure` before the
+ * migration that folded that table in. It has to: the payload can only be
  * captured inside the same transaction as the cascade, and a client-side
  * append runs afterwards, when the rows it was meant to preserve are gone.
  *

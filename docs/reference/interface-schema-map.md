@@ -46,7 +46,7 @@ column a reason.
 | **Kind** | `evidence.kind` | — |
 | **Title** | `evidence.title` | — |
 | **Note** | `evidence.note` | — |
-| **Stakeholder** | `lanes.stakeholder_id` | — |
+| **Actor** | `lanes.stakeholder_id` | The registry the key points into is `stakeholders`, and the word this vocabulary uses for a party standing in the room is actor: a lane names its actor, and a `team` is a stakeholder that can never be one. The label says the narrower word, which is the only one the board is about. |
 | **Owner team** | `lanes.owner_team` | — |
 | **KPIs** | `lanes.kpis` | — |
 | **Tools** | `lanes.tools` | — |

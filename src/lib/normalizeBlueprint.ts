@@ -12,17 +12,11 @@ import type {
   BlueprintStep,
 } from '@/types/blueprint'
 import type { PathKind, Json } from '@/types/database'
-import { normalizeCellLinks } from '@/lib/cellMetadata'
 import {
-  cellTouchpointsFromLinks,
   cellTouchpointsFromRows,
   type RawCellTouchpoint,
 } from '@/lib/cellTouchpoints'
-import {
-  cellResourcesFromLinks,
-  cellResourcesFromRows,
-  type RawCellResource,
-} from '@/lib/cellResources'
+import { cellResourcesFromRows, type RawCellResource } from '@/lib/cellResources'
 
 type RawOutgoingDependency = {
   id: string
@@ -47,7 +41,6 @@ export type RawCell = {
   frame?: string | null
   summary?: string | null
   status?: string | null
-  links?: Json | null
   function?: string | null
   form?: string | null
   value_props?: Json | null
@@ -56,7 +49,7 @@ export type RawCell = {
   outgoing?: RawOutgoingDependency[] | null
   /** Placements, when the board came from the database. Fallback data has none. */
   cell_touchpoints?: RawCellTouchpoint[] | null
-  /** Resources, likewise. A fallback cell keeps them in `links`. */
+  /** `resources` rows embedded by the board query. */
   resources?: RawCellResource[] | null
 }
 
@@ -269,19 +262,11 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
     status: (ENTITY_STATUS as readonly string[]).includes(cell.status ?? '')
       ? (cell.status as EntityStatus)
       : null,
-    links: normalizeCellLinks(cell.links),
-    // One shape from two sources. A database cell has placements; a fallback
-    // cell has a delimited string and label-keyed links, and resolving that
-    // here is what keeps the label lookup out of every component downstream.
-    // `cellTouchpoints.test.ts` holds the two outputs to each other.
-    touchpoints: cell.cell_touchpoints
-      ? cellTouchpointsFromRows(cell.cell_touchpoints)
-      : cellTouchpointsFromLinks(cell.content, normalizeCellLinks(cell.links)),
-    // The same two sources, the same seam. A database cell has `resources`
-    // rows; a fallback cell has the `url` entries of the retired array.
-    resources: cell.resources
-      ? cellResourcesFromRows(cell.resources)
-      : cellResourcesFromLinks(normalizeCellLinks(cell.links)),
+    // One source now. The board came from rows, so placements and resources
+    // are rows: the `links` array and the label lookup that read it were the
+    // fallback blueprints' shape, and there are no fallback blueprints.
+    touchpoints: cellTouchpointsFromRows(cell.cell_touchpoints ?? []),
+    resources: cellResourcesFromRows(cell.resources ?? []),
     // The spec block and the owner pair, carried with the board rather than
     // fetched on panel open. `cellSpecContract.test.ts` fails if a column is
     // selected above and dropped here.

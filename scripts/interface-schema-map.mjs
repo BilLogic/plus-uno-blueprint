@@ -100,7 +100,12 @@ export const LABEL_COLUMNS = Object.freeze(
     // source has no such sibling — `evidence.note` is the only prose an
     // evidence row carries — so there is nothing here to explain away.
     { label: 'Note', names: ['evidence.note'], because: '' },
-    { label: 'Stakeholder', names: ['lanes.stakeholder_id'], because: '' },
+    {
+      label: 'Actor',
+      names: ['lanes.stakeholder_id'],
+      because:
+        'The registry the key points into is `stakeholders`, and the word this vocabulary uses for a party standing in the room is actor: a lane names its actor, and a `team` is a stakeholder that can never be one. The label says the narrower word, which is the only one the board is about.',
+    },
     { label: 'Owner team', names: ['lanes.owner_team'], because: '' },
     { label: 'KPIs', names: ['lanes.kpis'], because: '' },
     { label: 'Tools', names: ['lanes.tools'], because: '' },

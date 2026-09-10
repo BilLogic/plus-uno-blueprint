@@ -308,7 +308,9 @@ async function revertAgentSession(
           reverted.push(label)
         }
       } catch (error) {
-        leftBehind.push(`${label} — ${errorMessage(error)}`)
+        leftBehind.push(
+          `${label} — ${errorMessage(error)}`,
+        )
       }
     }
   } finally {

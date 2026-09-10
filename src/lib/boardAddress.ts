@@ -43,13 +43,14 @@ import { isSubslide, type NavItem, type SlideViewType } from '@/types/nav'
  *
  * ── WHERE THE PARAM NAMES LIVE ─────────────────────────────────────────────
  *
- * Here, and not in `blueprintContract.ts` with `cell`/`slice`/`mode`/`slide`.
- * That contract is the set of names TWO repositories must spell identically
- * because both produce them — uno-bot builds `?cell=` links and vendors the
- * module to do it. Nothing outside this app writes a board address, so putting
- * these there would ship constants to a Worker that cannot use them and make
- * re-vendoring the price of an app-only change. If the bot ever cites a board
- * rather than a cell, they move.
+ * Here, beside the only code that reads and writes them, and not with the
+ * view params `urlViewState.ts` owns. That difference is about who else
+ * produces a name: a deployment that lets an outside tool link INTO a board —
+ * a bot citing a cell, an export writing share links — has to publish the
+ * names that tool spells, and publishing a name is a promise not to rename it.
+ * Nothing outside the app writes a board address, so these stay app-only, and
+ * a deployment whose bot starts citing boards rather than cells moves them
+ * into whatever module it publishes from.
  */
 
 /** The board's query-param names. */

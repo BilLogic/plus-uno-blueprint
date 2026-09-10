@@ -5,7 +5,8 @@ import {
 import { shouldUseStoryboardContent } from '@/lib/blueprintLayout'
 import { isBlueprintStepStoryboardPlaceholder } from '@/lib/blueprintStoryboardPlaceholder'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
-import { FALLBACK_NAV, getBlueprintScenarioId } from '@/types/nav'
+import { SAMPLE_NAV } from '@/data/sampleNav'
+import { getBlueprintScenarioId } from '@/types/nav'
 import type { BlueprintData } from '@/types/blueprint'
 import type { Slide } from '@/types/database'
 
@@ -16,7 +17,7 @@ export function findFallbackScenarioForCells(
   if (cellIds.length === 0) return null
   const wanted = new Set(cellIds.map(resolveBlueprintCellId))
 
-  for (const slide of FALLBACK_NAV) {
+  for (const slide of SAMPLE_NAV) {
     const scenarioId = getBlueprintScenarioId(slide)
     if (!scenarioId) continue
     for (const path of getFallbackPathsForScenario(scenarioId)) {

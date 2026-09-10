@@ -9,7 +9,6 @@ import { Info, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { HomeNavButton, WorkspaceBadges } from '@/components/editor/EditorChrome'
 import { IconTooltip } from '@/components/editor/IconTooltip'
-import { WorkspaceServiceSwitcher } from '@/components/editor/WorkspaceServiceSwitcher'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -30,6 +29,7 @@ import { useSlices } from '@/hooks/useSlices'
 import { suppressCanvasResizeRefit } from '@/lib/canvasChromeResize'
 import { cn } from '@/lib/utils'
 import type { Slice } from '@/types/database'
+import { WorkspaceServiceSwitcher } from '@/components/editor/WorkspaceServiceSwitcher'
 
 function availableSlices(result: ReturnType<typeof useSlices>): Slice[] {
   switch (result.status) {
@@ -78,7 +78,7 @@ export function DeleteSliceDialog({
 }
 
 /**
- * Seeds the base blueprint view from a `?slice=` deep link (nav plan D5).
+ * Seeds the base blueprint view from a `?slice=` deep link.
  * The slice's scenario is only known after the slice, its cells, and their
  * owning scenario resolve, so this waits for `useSliceBlueprint` rather than
  * seeding from the URL. Nothing here touches the open tab's camera: the tab
@@ -340,8 +340,8 @@ export function TabStrip({
               different screens is the bug this whole strip exists to avoid.
               Clicking it from the cover enters the workspace.
 
-              The name is ALSO the service switcher (#336): with more than one
-              service it becomes a dropdown; with one it is exactly this tab.
+              The name is ALSO the service switcher: with more than one service
+              it becomes a dropdown; with one it is exactly this tab.
               `WorkspaceServiceSwitcher` owns both states. Tabbable on
               `activeKey`, not on `workspaceActive` — a roving tablist needs
               exactly one stop, and on the cover page NO tab is active, so

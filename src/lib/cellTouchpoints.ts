@@ -1,47 +1,37 @@
 /**
- * A cell's touchpoints, resolved from whichever source the board came from.
+ * A cell's touchpoint placements, resolved from whichever source the board
+ * came from.
  *
- * The database stores placements: one `cell_touchpoints` row per touchpoint
- * used at a cell, carrying its own summary and role, joined to a
- * catalog entry that owns the name. Nothing has to match a string.
+ * A placement is one touchpoint used at one cell: the tool, document, channel
+ * or artifact named in the cell's text, plus the summary and role that belong
+ * to THIS moment rather than to the tool. What it points at — a design link,
+ * screenshots — are resources carrying the placement's id, read from the
+ * cell's list. The database stores one `cell_touchpoints` row per
+ * placement.
  *
- * The hand-written fallback blueprints in `src/data` predate all of that.
- * They carry a delimited list in `content` and a parallel array of
- * `tech_description` links keyed by label — the arrangement this ticket
- * retires, and the reason 57 of the 117 authored details in production
- * resolve to nothing. That data is not migrating, so the label join has to
- * survive somewhere, and it lives here rather than in the components: the
- * normalizer is already the seam between how a source stored something and
- * what the app renders, and every reader downstream then sees placements.
+ * Before that, the same prose lived in the `cells.links` array as an entry
+ * typed `tech_description`, and it found its touchpoint by comparing its label
+ * to a line of the cell's own content. There was no join but the string, so a
+ * rename in the grid orphaned the paragraph behind it and nothing said so.
+ * A row survives a rename; a string match does not.
  *
- * A link that names nothing in its cell's content is DROPPED. Attaching it to
- * whatever the cell does show would be the guess that produced the orphans in
- * the first place; #180 is where a person places them deliberately.
+ * The generated fallback blueprints in `src/data` carry the same list, so a
+ * no-database build serves what a database build serves. `cellResources.ts` is
+ * the sibling for the other half of the array that used to hold both.
  */
-import { parseCellContentItems } from '@/lib/parseCellContent'
-import { TECH_DESCRIPTION_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
+import type { BlueprintCell, CellResource, CellTouchpoint } from '@/types/blueprint'
 import { orderedNamedRows } from '@/lib/orderedNamedRows'
-import {
-  normalizeRole,
-  type TouchpointRoleValue,
-} from '@/lib/touchpointRole'
-import type {
-  BlueprintCell,
-  CellLink,
-  CellResource,
-  CellTouchpoint,
-} from '@/types/blueprint'
+import { normalizeRole, type TouchpointRoleValue } from '@/lib/touchpointRole'
 
 /** A `cell_touchpoints` row as the board query selects it. */
 export type RawCellTouchpoint = {
-  /** The row's own id — the handle the placement editor writes through. */
   id?: string | null
   position: number
-  summary?: string | null
-  role?: string | null
-  /** The registry entry, or null with `name` set — a name-only placement (#277). */
+  /** The registry entry, or null with `name` set — a name-only placement. */
   touchpoint_id?: string | null
   name?: string | null
+  summary?: string | null
+  role?: string | null
   /** The joined registry row. PostgREST names the embed after the table. */
   touchpoints?: { name: string; kind?: string | null; icon_url?: string | null } | null
 }
@@ -68,51 +58,9 @@ export function cellTouchpointsFromRows(
 }
 
 /**
- * Placements from fallback content and links.
- *
- * The content string decides what exists and in what order — it is what the
- * board draws — and a link contributes detail only when its label is one of
- * those items.
- */
-export function cellTouchpointsFromLinks(
-  content: string | undefined,
-  links: readonly CellLink[] | null | undefined,
-): CellTouchpoint[] {
-  const items = parseCellContentItems(content ?? '')
-  if (items.length === 0) return []
-
-  const detail = new Map<string, CellLink>()
-  for (const link of links ?? []) {
-    if (link.type !== TECH_DESCRIPTION_LINK_TYPE) continue
-    if (!detail.has(link.label)) detail.set(link.label, link)
-  }
-
-  return items.map((name) => {
-    const link = detail.get(name)
-    return {
-      // No row, so no id, so no editor. A hand-written fixture board has
-      // nowhere to save a placement's words into, and offering the form
-      // there would be offering a Save that writes nothing.
-      id: null,
-      touchpointId: null,
-      name,
-      // The fallback shape has nowhere to record a kind, an icon or a role,
-      // and inventing any of them would make this source disagree with the
-      // database for the same board.
-      kind: null,
-      iconUrl: null,
-      summary: link?.description ?? null,
-      role: null,
-    }
-  })
-}
-
-/**
  * A placement the registry lacks: a real row that names its touchpoint by
- * name alone (#277). A fallback placement has no row and no registry, and is
- * not one of these — `cellTouchpointsFromLinks` mints it with both halves
- * null, so reading the registry link alone would call every touchpoint on a
- * hand-written board name-only and draw the whole lane dashed.
+ * name alone. A fallback placement has no row and no registry, and is not
+ * one of these.
  */
 export function isNameOnlyPlacement(placement: CellTouchpoint): boolean {
   return placement.id !== null && placement.touchpointId === null
@@ -134,22 +82,12 @@ export function placementResources(
 /**
  * The touchpoints placed at a cell.
  *
- * THE ONE ACCESSOR, and the only place in the app that still has to know a
- * board can arrive from two sources. A cell the normalizer built already
- * carries placements, whichever source it came from. A cell taken straight
- * out of `src/data` never went through the normalizer — `getBlueprintFallback`
- * hands its fixtures over as they are written — so it carries the delimited
- * `content` string and the label-keyed `links` array instead, and the same
- * adapter the normalizer would have used resolves it here.
- *
- * Every reader downstream of this then sees placements and nothing else,
- * which is what lets `blueprintCellSelection.ts` carry `cellTouchpoints`
- * rather than `cellLinks` and be the template's file exactly.
+ * The one accessor, for the reason `cellResources` is one.
  */
 export function cellTouchpoints(
-  cell: Partial<Pick<BlueprintCell, 'content' | 'links' | 'touchpoints'>>,
+  cell: Partial<Pick<BlueprintCell, 'touchpoints'>>,
 ): CellTouchpoint[] {
-  return cell.touchpoints ?? cellTouchpointsFromLinks(cell.content, cell.links)
+  return cell.touchpoints ?? []
 }
 
 /** The placement a touchpoint's label names, or null when nothing is placed there. */
@@ -163,10 +101,10 @@ export function touchpointNamed(
 /** What the detail panel shows for one touchpoint at one cell. */
 export type TouchpointDetail = {
   /**
-   * The placement row behind this, when there is one. Null on a fallback
-   * board — and the panel keys the placement editor's availability on it, so
-   * "there is nothing to save into" is answered by the same value that says
-   * "there is no row".
+   * The placement row behind this, when there is one. Null on a board with
+   * no database — and the panel keys the placement editor's availability on
+   * it, so "there is nothing to save into" is answered by the same value
+   * that says "there is no row".
    */
   id: string | null
   name: string
@@ -179,18 +117,19 @@ export type TouchpointDetail = {
 /**
  * WHICH placement a selection means, before anything is derived from it.
  *
- * Split out of `resolveTouchpointDetail` because the editor and the reader
- * need different things from the same choice. The reader wants the resolved
- * detail, where an empty summary falls back to the cell's; the editor wants
- * the placement's OWN summary, empty and all, because seeding a form with the
- * cell's sentence would save that sentence onto the placement the first time
- * anybody pressed Save. One selection rule, two readings of the row it picks.
+ * Split from `resolveTouchpointDetail` below because the editor and the
+ * reader need different things from the same choice. The reader wants the
+ * resolved detail, where an empty summary falls back to the cell's; the
+ * editor wants the placement's OWN summary, empty and all, because seeding a
+ * form with the cell's sentence would save that sentence onto the placement
+ * the first time anybody pressed Save. One selection rule, two readings of
+ * the row it picks.
  *
  * With no name given, a cell holding exactly one touchpoint resolves it —
  * that is the single-tool cell the panel opens directly. A cell holding
- * several resolves nothing rather than guessing at the first, because showing
- * one touchpoint's screenshot under another's heading is the confusion this
- * whole change is unwinding.
+ * several resolves nothing rather than guessing at the first, because
+ * showing one touchpoint's screenshot under another's heading is the
+ * confusion a placement row exists to end.
  */
 export function findCellPlacement(
   cell: { touchpoints: readonly CellTouchpoint[] },
@@ -206,11 +145,11 @@ export function findCellPlacement(
 /**
  * The detail for one touchpoint at one cell, or null when there isn't one.
  *
- * Replaces a set of resolvers that read `cells.links` by label and had grown
- * two hardcoded tool names as fallbacks, because the lookup kept coming back
- * empty and the two most visible cases got patched. A placement carries its
- * own summary, so the rule is now the same for every touchpoint: its words,
- * else the cell's, else its name.
+ * Replaces the resolvers that read a cell's link array by label
+ * (`blueprintTechDescriptions.ts`), which had no join but the string: a
+ * rename in the grid orphaned the paragraph behind it and nothing said so.
+ * A placement carries its own summary, so the rule is the same for every
+ * touchpoint: its words, else the cell's, else its name.
  *
  * Which placement it is about is `findCellPlacement`'s answer, not a second
  * copy of the same rule.

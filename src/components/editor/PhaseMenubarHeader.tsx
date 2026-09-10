@@ -1,6 +1,7 @@
 import { Columns2, Diff, GitCompareArrows } from 'lucide-react'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { EntityHeader } from '@/components/blueprint/EntityHeader'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { BLUEPRINT_MENUBAR_HEADER_CLASS } from '@/components/editor/menubarHeaderLayout'
 import {
   SegmentedControl,
@@ -8,7 +9,6 @@ import {
 } from '@/components/editor/SegmentedControl'
 import { Menubar } from '@/components/ui/menubar'
 import { Button } from '@/components/ui/button'
-import { IconTooltip } from '@/components/editor/IconTooltip'
 import {
   Tooltip,
   TooltipContent,
@@ -67,8 +67,8 @@ function CompareViewToggle({ slide }: { slide: NavItem }) {
 
   // `label` is the name a screen reader hears; `hint` is what the control
   // DOES, for the sighted reader hovering a glyph and the keyboard reader
-  // focusing one (#262). Below xl the label is hidden and the glyph is the
-  // whole face, so the hint is the only sentence either of them gets.
+  // focusing one. Below xl the label is hidden and the glyph is the whole
+  // face, so the hint is the only sentence either of them gets.
   const segments: Array<{
     value: SlideViewType
     label: string

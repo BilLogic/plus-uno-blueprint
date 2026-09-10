@@ -5,15 +5,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { ORG_NAME } from '@/config'
-import { coverContent } from '@/content/coverContent'
 import { useActiveService } from '@/contexts/ActiveServiceContext'
+import { useWorkspaceTitle } from '@/contexts/DeploymentConfigContext'
 import { cn } from '@/lib/utils'
-
-// The workspace's name — the deployment identity, from the one module a
-// deployment defines itself in (#305), matching the floating navbar. It is the
-// switcher's face: the same name whichever service is active.
-const WORKSPACE_NAME = coverContent.title ?? ORG_NAME
 
 type WorkspaceServiceSwitcherProps = {
   /** The base blueprint view is the current view — the tab's selected state. */
@@ -25,7 +19,7 @@ type WorkspaceServiceSwitcherProps = {
 }
 
 /**
- * The top-strip workspace name, which IS the service switcher (#336, #303).
+ * The top-strip workspace name, which IS the service switcher.
  *
  * With more than one service the name becomes a dropdown trigger — a chevron,
  * a menu of the deployment's services, and picking one makes it active and
@@ -41,6 +35,10 @@ export function WorkspaceServiceSwitcher({
 }: WorkspaceServiceSwitcherProps) {
   const { services, service, switchService } = useActiveService()
   const [open, setOpen] = useState(false)
+  // The switcher's face: the deployment's own name, the same one the floating
+  // navbar carries, and the same whichever service is active. It comes from
+  // the resolved deployment config, which standalone resolves to `ORG_NAME`.
+  const workspaceName = useWorkspaceTitle()
 
   const containerClass = cn(
     'flex shrink-0 items-center rounded-md border text-xs',
@@ -64,7 +62,7 @@ export function WorkspaceServiceSwitcher({
           onClick={onActivate}
           className={cn('max-w-56 truncate px-2.5 py-1 font-medium', textClass)}
         >
-          {WORKSPACE_NAME}
+          {workspaceName}
         </button>
       </div>
     )
@@ -88,7 +86,7 @@ export function WorkspaceServiceSwitcher({
                 textClass,
               )}
             >
-              <span className="min-w-0 truncate">{WORKSPACE_NAME}</span>
+              <span className="min-w-0 truncate">{workspaceName}</span>
               <ChevronDown className="size-3 shrink-0" aria-hidden />
             </button>
           }

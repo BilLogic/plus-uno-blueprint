@@ -1686,4 +1686,291 @@ export const RECONCILED_FILES = [
   'src/lib/writeTranslationContract.test.ts',
   'src/styles/theme.shape.test.ts',
   'src/lib/blueprintTechPictures.test.ts',
+  // Fifteen files the emptied fallback registry set free.
+  //
+  // Fifty TypeScript files here carried this deployment's board, and every
+  // seam that read them had to keep a second shape alive beside the rows: a
+  // `links` array, a label lookup that matched a touchpoint by its spelling,
+  // a resource list minted from the `url` entries of the same array, an
+  // offline touchpoint colour table, an offline slice. The template retired
+  // all of it when its content became rows. This tree could not follow while
+  // it still had fixtures to serve, so its copies of those files diverged by
+  // exactly the fallback half — which is why they converge the moment the
+  // fixtures go, without anyone editing them to agree.
+  //
+  // `canvasActiveContext.tsx` and `coverModel.ts` are byte-identical too and
+  // are NOT here: one cites ADR 0010 and the other a `docs/` path, and an
+  // address in one repository has to leave both copies before either can
+  // promise to keep it.
+  'src/contexts/TouchpointRegistryProvider.tsx',
+  'src/hooks/useSlice.ts',
+  'src/hooks/useSlices.ts',
+  'src/hooks/useTouchpointRegistryTones.ts',
+  'src/lib/cellTouchpoints.ts',
+  'src/lib/cellTouchpoints.test.ts',
+  'src/lib/cellResources.ts',
+  'src/lib/touchpointColors.test.ts',
+  'src/lib/blueprintCellSelection.nameOnly.test.ts',
+  'src/lib/canvasNavigationOutcome.test.ts',
+  'src/lib/canvasViewState.ts',
+  'src/lib/canvasViewState.test.ts',
+  'src/lib/linkedText.test.ts',
+  'src/components/mobile/MobileScenarioTransition.tsx',
+  'src/components/mobile/MobileScenarioTransition.test.tsx',
+
+  // The hook that went the other way.
+  //
+  // `useBlueprintCell` was written here, to replace `useCellSpec` and
+  // `useCellContent` — two per-cell queries on panel open for columns the
+  // board can carry. The template kept both and said so in a comment on its
+  // own status helper, which named this deployment as having gone the other
+  // way outright. It has followed now (1.26.0), so the file is one file
+  // again.
+  'src/hooks/useBlueprintCell.ts',
+
+  // The service switcher, and the strip it sits in.
+  //
+  // The top-strip workspace name became a dropdown over the service roster
+  // here, and stayed a plain tab wherever a deployment has one service. The
+  // template held the plain tab inline in `TabStrip`, so that file's whole
+  // divergence from this one was the switcher — and it converges the moment
+  // the template mounts it too (1.27.0). The component reads its name from
+  // `useWorkspaceTitle` rather than from this deployment's own module, which
+  // is what let it travel; the test came with it, its nouns replaced by
+  // fixtures and the config seam pinned.
+  'src/components/editor/WorkspaceServiceSwitcher.tsx',
+  'src/components/editor/workspaceServiceSwitcher.test.tsx',
+  'src/components/editor/TabStrip.tsx',
+
+  // Three contracts this deployment wrote, now shared.
+  //
+  // This tree holds 22 test files the template does not. 19 import only
+  // modules the template has, so all 19 were run there: three passed
+  // unmodified and are here; sixteen failed, and each of those failures is a
+  // measurement of divergence rather than a file to force green.
+  //
+  // `supabaseProviderWriteGate.test.tsx` is not a duplicate of the template's
+  // `supabaseProviderTier.test.tsx`. That one asserts `isServiceAccount`, a
+  // flag this deployment deliberately does not publish; this one asserts the
+  // gate those flags feed. The template now carries both.
+  'src/lib/resolveBlueprint.test.ts',
+  'src/components/blueprint/compareTouchpointDifferences.test.tsx',
+  'src/contexts/supabaseProviderWriteGate.test.tsx',
+
+  // The reader-tier contract, once the template stopped sending the read.
+  //
+  // This one was among the sixteen that FAILED upstream, and it failed for a
+  // real reason: `business_models` is refused for every signed-out visitor,
+  // and the template sent the request anyway and swallowed the 42501 as
+  // ordinary — which made a genuinely broken table indistinguishable from a
+  // signed-out reader. 1.28.0 publishes `canReadPrivate` and gates the read on
+  // it, so the contract passes there and the file is one file.
+  'src/hooks/serviceSpecReaderTier.test.tsx',
+
+  // The stacking contract, once the template's two renderers agreed again.
+  //
+  // Also one of the sixteen that failed upstream, and it failed twice for two
+  // real defects: the template's `BlueprintDependencyArrows` drew its forward
+  // layer at `z-2`, over the `z-1` cells, so a run crossing a cell struck
+  // through its face — while `IntegratedDependencyArrows`, drawing the same
+  // relationship, used `z-0` and said in its own comment that it must; and its
+  // phase flow arrow sat at `z-50`, over the `z-30` badges, where the loop
+  // arrow beside it used `z-20`. Both fixed in 1.28.1, which is what this file
+  // is for: it compares the renderers to each other rather than to a constant.
+  'src/lib/canvasStackingContract.test.ts',
+
+  // The ledger invariant, once the template's inverse carried both columns.
+  //
+  // `findingMutations.test.ts` was another of the sixteen. It failed upstream
+  // because `cellIds` wrote `cell_ids` AND `cell_keys` there while the
+  // captured inverse named only `cellIds` — so an undo restored the ids and
+  // rewrote the key paths from them, discarding what an imported finding
+  // carries. 1.28.2 names the two separately. The contract compares the
+  // recorded revert to the row as it was, field by field, which is why a
+  // column travelling one way and not the other showed up at all.
+  'src/lib/findingMutations.test.ts',
+
+  // The panel section that gained a status.
+  //
+  // `panelConsistencyDebrand.test.tsx` was another of the sixteen, and it
+  // failed upstream because the template rendered a cell's status only inside
+  // the EDITOR — a reader had to enter edit mode to learn the one field that
+  // decides how the rest should be read. 1.29.0 renders it first in
+  // `CellContentSection`, labelled with a hint, as a badge.
+  //
+  // Only half the contract travelled. This file's other half asserts that THIS
+  // deployment's brand appears in no panel file, and the template's own
+  // `standalone.test.mjs` refuses a file that spells a brand at all — so the
+  // test stays local and the template keeps `cellStatusField.test.tsx`, which
+  // is the half that belongs there. The COMPONENT converges, which is the part
+  // that matters.
+  'src/components/blueprint/CellContentSection.tsx',
+
+  // The name-only contract, once the compare grid labelled its faces again.
+  //
+  // Another of the sixteen. It failed upstream because `CompareCellBlock`
+  // rendered `TouchpointCellFace` directly rather than the wrapper that sets
+  // `data-blueprint-touchpoint` — so every touchpoint in that grid drew
+  // correctly, read correctly, and matched no selector, and
+  // `scrollBlueprintTouchpointCellIntoView` could not find one. Fixed in
+  // 1.29.1. This file reads the faces BY that attribute, which is why the bug
+  // showed up as an empty map rather than as a passing test.
+  'src/components/blueprint/compareCellBlockNameOnly.test.tsx',
+
+  // The rename guard, and the dialog it guards.
+  //
+  // Another of the sixteen. The template guarded a slice rename on the
+  // `updated_at` the row was loaded with — one of the two stamp-based guards
+  // this deployment shipped and withdrew in turn, because a stamp can only be
+  // wrong in one direction or the other: refuse a rename nobody raced, or wave
+  // through an overwrite of someone else's. 1.30.0 compares the FIELDS the
+  // form was seeded from instead, reading the row back at submit.
+  //
+  // `sliceMutations.ts` itself stays apart — the template's writes a
+  // `slides.illustration` column this schema does not have.
+  'src/components/editor/SlicesSidebarSection.tsx',
+  'src/components/editor/sliceRenameGuard.test.tsx',
+
+  // Three icon-only controls in the phase menubar carried an accessible name
+  // and nothing else: a screen reader had the name, and the sighted reader
+  // hovering the glyph and the keyboard reader focusing it had nothing.
+  // 1.31.0 gives each an `IconTooltip` saying what it does, and the compare
+  // toggle falls back to Stacked so it always points at a segment.
+  //
+  // `PathSelectorMenu.tsx` took the same tooltip but stays apart — its option
+  // rows show a status badge this deployment's path options carry and the
+  // template's do not.
+  'src/components/editor/PhaseMenubarHeader.tsx',
+  'src/components/editor/menubarIconTooltips.test.tsx',
+
+  // The last shared file that differed by prose alone. Two of its sentences
+  // named things that are not there — the panel-only link kind called `needs`
+  // when the kinds are `leads_to` and `enables`, and a prop doc naming `kind`
+  // for the prop `pathKind` — and 1.31.1 corrected both upstream. What was
+  // left after that was the tie-break kind of difference, and the template's
+  // wording wins it.
+  //
+  // DECLINED, and this one states a different fact rather than a different
+  // sentence:
+  //
+  // `src/lib/deletionSafety.ts` — the paragraph on `archiveAvailable` names
+  //   the relation the app checks for, and the two repositories check
+  //   different ones. Upstream it is the `deleted_structure` table; here it
+  //   is the `trash` view over the append-only change log that replaced it.
+  //   Neither sentence is true of the other tree.
+  'src/components/blueprint/BlueprintDependencyArrows.tsx',
+
+  // The authoring change log goes upstream. Deletes were remembered forever
+  // and everything else only until the tab closed; 1.32.0 gives the template
+  // the one append-only log, the client's append beside the six delete
+  // functions that write their own row, and `trash` as the view over the
+  // deletions in it. The brand that makes the log audit-only travels with it:
+  // `executeRevert` takes a `SessionEntry` that only `recordChange` mints, so
+  // a row read back out of the log cannot reach the inverse-applier.
+  //
+  // `authoringSession.ts` and `revertChange.ts` carry the same wall and are
+  // still apart on the write vocabulary and the reverts either side knows.
+  //
+  // DECLINED, and for a reason the log does not reach:
+  //
+  // `src/lib/authoringErrors.test.ts` — its lane case reads the constraint
+  //   name out of a collision, and the template's schema has no uniqueness on
+  //   a lane's position within its path to collide with. The translation
+  //   cannot exist upstream until the constraint does.
+  'src/lib/authoringLog.ts',
+  'src/lib/authoringLog.test.ts',
+  'src/lib/revertBoundaryContract.test.ts',
+  'src/hooks/useArchiveAvailable.ts',
+  'src/components/editor/SessionChangesSheet.tsx',
+  'scripts/authoring-archivers.mjs',
+  'scripts/tests/authoring-log.test.mjs',
+
+  // A board reaches the address bar upstream too. The phase, the scenario, the
+  // path selection and the view mode go in the search, and `BoardAddressSync`
+  // is the one bridge between editor navigation, the path selection store and
+  // the tab state. The reason the board's param names are NOT in this
+  // deployment's cross-repo contract moved to `blueprintContract.ts`, which is
+  // where the bot's half of that promise already lives — the shared file says
+  // the general rule and the local one says who else spells the names.
+  //
+  // The integration test now reads its phase and two scenarios out of
+  // `FALLBACK_NAV` by structure rather than by index: a sample that lists all
+  // its phases first puts a phase at index 1, and every assertion would then
+  // be about a navigation the app refuses.
+  'src/lib/boardAddress.ts',
+  'src/lib/boardAddress.test.ts',
+  'src/components/editor/BoardAddressSync.tsx',
+  'src/components/editor/boardAddressSync.test.tsx',
+
+  // The long tail, one cause at a time. Three of these are upstream fixes
+  // this deployment already had and the template did not: the integrated
+  // overlay measures BEFORE paint (a compare toggle spent one frame anchored
+  // to the old column set), a help cursor that three files already called
+  // retired is finally gone from the one badge still wearing it, and the two
+  // paragraphs saying why a definition may hang off these two labels are back.
+  //
+  // The rest took the template's answer. `LanePanel` says Actor rather than
+  // Stakeholder — the word this vocabulary already uses for a party standing
+  // in a room, and the one this repo's own CONTEXT.md uses; the label map's
+  // row moved with it. `evidenceMutations` gains `requireRowsWritten`, so a
+  // zero-row update is a failure here as it is everywhere else. `panelTerms`,
+  // `mobileNavSheet.test` and `ServicePanel` took the neutral wording and the
+  // extra invalidation; `workflowQueries` took the select's field order.
+  'src/lib/panelTerms.ts',
+  'src/components/blueprint/IntegratedDependencyArrows.tsx',
+  'src/lib/evidenceMutations.ts',
+  'src/components/mobile/mobileNavSheet.test.tsx',
+  'src/components/editor/CanvasDesignTools.tsx',
+  'src/lib/workflowQueries.ts',
+  'src/components/blueprint/LanePanel.tsx',
+  'src/components/blueprint/ServicePanel.tsx',
+
+  // The annotation toolbar's selected swatch. `isPaleAnnotationSwatch()`
+  // answered "is this pale?" with a membership test, for values that invert
+  // with the theme — so the checkmark measured 1.13-1.20:1 on the fill row in
+  // dark, and the one swatch the test excluded failed the other way at
+  // 1.17:1, white on white. The button derives its ink from its own fill
+  // upstream now, and the membership test is gone from both trees.
+  'src/lib/canvasAnnotations.ts',
+
+  // Three more of the tail, one cause each. `oklch.ts` is arithmetic and the
+  // difference was two exports and a citation. `canvasNavigationOutcome.ts`
+  // gains the template's detach: a cancelled wait left its listener in the
+  // map, and a listener that outlives its waiter fires into nothing. The owner
+  // select's trigger is the panel's shared one on both sides now — the copy
+  // upstream had fallen behind it, with no hover border, no inset focus ring
+  // and no disabled treatment.
+  'src/lib/oklch.ts',
+  'src/lib/canvasNavigationOutcome.ts',
+  'src/components/blueprint/OwnerTagSelect.tsx',
+  'src/components/blueprint/BlueprintLaneHandles.tsx',
+
+  // asb 1.34.0 adopt. The sample board left the navigation model, and two
+  // comments stopped naming addresses that mean something else here.
+  //
+  // `types/nav.ts` held `FALLBACK_NAV` — 186 lines of this deployment's own
+  // phases inside a module of types and pure helpers. That is content, not
+  // model, and it was the entire divergence: the two copies agreed on every
+  // line of code and disagreed by one array. It now lives in
+  // `src/data/sampleNav.ts` and reaches the app through
+  // `DeploymentConfig.sample.nav`, which is where a deployment's values were
+  // always meant to live.
+  //
+  // Ten helpers lost a `= FALLBACK_NAV` default parameter along the way. A
+  // default naming one particular board makes a forgotten argument invisible:
+  // the call site compiles and answers about a board nobody is looking at.
+  // Nothing here relied on one.
+  //
+  // The prose that is left is the template's, because every sentence this
+  // repository had instead cited an address — `#280`, `#326 S6`, `#396 Q38`,
+  // the migration `20260902120000`, and the word "uno" — and the template says
+  // the same things without them.
+  //
+  // `canvasActiveContext.tsx` cited "ADR 0010", which is *open views stay
+  // mounted* upstream and *the canvas and the shell run on separate clocks*
+  // here, and `coverModel.ts` gave an example `docs/` path that exists only
+  // upstream (BilLogic/agentic-service-blueprinting#476).
+  'src/types/nav.ts',
+  'src/contexts/canvasActiveContext.tsx',
+  'src/components/cover/coverModel.ts',
 ]

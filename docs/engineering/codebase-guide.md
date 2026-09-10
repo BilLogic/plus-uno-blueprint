@@ -31,7 +31,7 @@ reasoning lives in [`docs/adr/`](../adr/) and is linked from here.
 | `src/lib/` | Plain logic, no React: layout math, mutations, the authoring session ledger, `agent/` (the in-app agent). |
 | `src/hooks/` | Data hooks (thin wrappers over `useSupabaseQuery`) and viewport/interaction hooks. |
 | `src/contexts/` | Providers and module stores. Files ending in lowercase (`canvasModeContext.ts`) are stores non-React code can read; `*Provider.tsx` files are React-only. |
-| `src/data/` | Bundled fallback fixtures for no-DB sessions. |
+| `src/data/` | The offline registries, registered with nothing. The board is rows; these two files keep the shape the readers import. |
 | `src/styles/` | Token tiers and board CSS — see [standards](standards.md#token-discipline). |
 
 What each of those component folders looks like *as a designed surface* is
@@ -225,7 +225,8 @@ its own, because nothing else edits the data. Consequences:
 - `useCanvasBlueprints` (`src/hooks/useCanvasBlueprints.ts`) fetches all
   paths for a scenario set in one query, keyed on the sorted id set, so
   every surface showing the same scenarios shares one fetch; errors fall
-  back to the bundled fixtures in `src/data/blueprintFallbacks.ts`.
+  back to `src/data/blueprintFallbacks.ts`, which registers nothing here,
+  so a failed read shows an empty board rather than a stale one.
 
 Writes never touch tables from components — the write path is owned by
 [access-and-security](access-and-security.md#authoring-writes).

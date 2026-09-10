@@ -1,29 +1,27 @@
 import {
-  DEV_FALLBACK_SLICES,
-  DEV_FALLBACK_SLIDES,
-} from '@/data/devSlices'
+  FALLBACK_SLICES,
+  FALLBACK_SLICE_ITEMS,
+} from '@/data/sliceFallbacks'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
 import { awaitOrAbort, findActiveServiceId } from '@/lib/service'
 import type { Slice, Slide } from '@/types/database'
 
 /** Slim frame projection carried on the list — powers client-side
  * membership checks (panel "In slices" footer) without per-cell queries. */
-export type SlideListItem = Pick<Slide, 'id' | 'position' | 'cell_ids'>
+export type SliceListItem = Pick<Slide, 'id' | 'position' | 'cell_ids'>
 
-export type SliceListEntry = Slice & { slides: SlideListItem[] }
+export type SliceListEntry = Slice & { slides: SliceListItem[] }
 
-// TODO(dev-only): remove after DB slices exist — no-DB dev mode only.
-const slicesFallback = (): SliceListEntry[] | null =>
-  import.meta.env.DEV
-    ? DEV_FALLBACK_SLICES.map((slice) => ({
-        ...slice,
-        slides: (DEV_FALLBACK_SLIDES[slice.id] ?? []).map((item) => ({
-          id: item.id,
-          position: item.position,
-          cell_ids: item.cell_ids,
-        })),
-      }))
-    : null
+/** The bundled demo slices, in the list projection. */
+const slicesFallback = (): SliceListEntry[] =>
+  FALLBACK_SLICES.map((slice) => ({
+    ...slice,
+    slides: (FALLBACK_SLICE_ITEMS[slice.id] ?? []).map((item) => ({
+      id: item.id,
+      position: item.position,
+      cell_ids: item.cell_ids,
+    })),
+  }))
 
 /**
  * All slices for one service, ordered by position, each carrying
@@ -36,7 +34,8 @@ export function useSlices(serviceId?: string): QueryResult<SliceListEntry[]> {
     async (client, signal) => {
       let resolvedServiceId = serviceId
       if (!resolvedServiceId) {
-        resolvedServiceId = (await awaitOrAbort(findActiveServiceId(client), signal)) ?? undefined
+        resolvedServiceId =
+          (await awaitOrAbort(findActiveServiceId(client), signal)) ?? undefined
         if (!resolvedServiceId) return []
       }
 

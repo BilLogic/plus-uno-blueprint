@@ -11,12 +11,12 @@ import { useSupabaseQuery } from '@/hooks/useSupabaseQuery'
  * archive at all, and a delete there would destroy imported blueprint content
  * with nothing behind it.
  *
- * The subject is `public.trash` since 20260830200000 (#176). It is a VIEW now,
- * over the deletions in `public.authoring_changes`, rather than the
- * `deleted_structure` table it replaced — one log for every authoring write,
- * with the recovery list as a filter on it. The probe is unchanged in
- * everything except the relation it names, because a view answers the only
- * question this hook asks in exactly the same way a table did.
+ * The subject is `public.trash`. It is a VIEW, over the deletions in
+ * `public.authoring_changes`, rather than the `deleted_structure` table it
+ * replaced — one log for every authoring write, with the recovery list as a
+ * filter on it. The probe is unchanged in everything except the relation it
+ * names, because a view answers the only question this hook asks in exactly
+ * the same way a table did.
  *
  * The probe is a read, not a catalog lookup: PostgREST answers for the schema
  * it is actually serving, which is the thing that matters. An empty result
