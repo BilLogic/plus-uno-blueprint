@@ -1766,4 +1766,16 @@ export const RECONCILED_FILES = [
   // signed-out reader. 1.28.0 publishes `canReadPrivate` and gates the read on
   // it, so the contract passes there and the file is one file.
   'src/hooks/serviceSpecReaderTier.test.tsx',
+
+  // The stacking contract, once the template's two renderers agreed again.
+  //
+  // Also one of the sixteen that failed upstream, and it failed twice for two
+  // real defects: the template's `BlueprintDependencyArrows` drew its forward
+  // layer at `z-2`, over the `z-1` cells, so a run crossing a cell struck
+  // through its face — while `IntegratedDependencyArrows`, drawing the same
+  // relationship, used `z-0` and said in its own comment that it must; and its
+  // phase flow arrow sat at `z-50`, over the `z-30` badges, where the loop
+  // arrow beside it used `z-20`. Both fixed in 1.28.1, which is what this file
+  // is for: it compares the renderers to each other rather than to a constant.
+  'src/lib/canvasStackingContract.test.ts',
 ]

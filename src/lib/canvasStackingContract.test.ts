@@ -18,11 +18,11 @@ import { describe, expect, it } from 'vitest'
  * character, so a reformat cannot break it and a reordered declaration cannot
  * hide behind it.
  *
- * These are still structural, not behavioural, and #57 left them that way on
+ * These are still structural, not behavioural, and one round of work left them that way on
  * purpose. Painting order is not a fact any assertion in this process can
  * reach: jsdom does not build stacking contexts, and the z bands are Tailwind
  * classes that no stylesheet compiles here, so `getComputedStyle` answers
- * nothing about either. What #57 replaced instead were the guards where
+ * nothing about either. What that round replaced instead were the guards where
  * behaviour WAS reachable — the touch claim and the write-failure paths, both
  * of which now dispatch real events. Regressions in this file are caught by
  * looking at the board.
