@@ -486,6 +486,8 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/editor/SlideStickyHeader.tsx',
     'src/hooks/useServicePhases.ts',
     'src/lib/phasesToSlides.ts',
+    'scripts/tests/one-badge-one-size.test.mjs',
+    'src/components/editor/SlideArtboard.tsx',
   ])
 })
 

@@ -2,19 +2,18 @@
 /**
  * A badge's size is decided in `ui/badge.tsx`, or at every call site at once.
  *
- * Every deviation found on 2026-09-01 was a call-site override, and four of
- * them carried an `!` prefix. That prefix is the tell: it exists only to beat
- * the base variant's specificity, so each was written in isolation against a
- * shape someone else had already chosen. The result was three badge sizes on
- * one panel with no rule a reader could infer.
+ * Every deviation this check was written against was a call-site override, and
+ * several carried an `!` prefix. That prefix is the tell: it exists only to
+ * beat the base variant's specificity, so each was written in isolation
+ * against a shape someone else had already chosen. The result was three badge
+ * sizes on one panel with no rule a reader could infer.
  *
- * `ui/badge.tsx` now offers a `size` variant with four closed values — the
- * template added it (asb #149) and this deployment adopted it. That does not
+ * `ui/badge.tsx` offers a `size` variant with four closed values. That does not
  * soften this check, it sharpens it: the sizes have a NAME to ask for, so a
  * class string written at a call site is no longer even the short way to a
- * shape. What #236 forbade — a size CHOSEN where a badge is used rather than
- * where badges are defined — is exactly what is still forbidden, and a fifth
- * shape is a decision made in `ui/badge.tsx` beside the other four.
+ * shape. What is forbidden is a size CHOSEN where a badge is used rather than
+ * where badges are defined, and a fifth shape is a decision made in
+ * `ui/badge.tsx` beside the other four.
  *
  * THE SUBJECT IS WHAT A CALL SITE PASSES TO A BADGE, NOT A SWEEP FOR SIZE
  * UTILITIES. `text-2xs` is legal on any of the hundred spans that are not
@@ -207,7 +206,7 @@ test('no call site passes a badge its size', () => {
     [],
     `A badge's size belongs to ${BADGE_COMPONENT} and nowhere else. Remove ` +
       `these, or ask for the shape by name — \`size=\"default\"\`, ` +
-      `\`\"fitted\"\`, \`\"roomy\"\`, \`\"comfortable\"\` (#236, asb #149):\n` +
+      `\`\"fitted\"\`, \`\"roomy\"\`, \`\"comfortable\"\`:\n` +
       found.join('\n'),
   )
 })
@@ -230,7 +229,7 @@ test('each rejected utility is named', () => {
 })
 
 test('a breakpoint or a bang does not hide a size', () => {
-  // Both spellings existed in this repo: `!text-3xs` to beat the variant, and
+  // Both spellings have existed here: `!text-3xs` to beat the variant, and
   // responsive prefixes elsewhere in the app. Neither changes what it sets.
   const source = '<Badge className="md:px-3 !text-3xs h-auto" />'
   assert.deepEqual(sizeOverrides(source, ['Badge']), [

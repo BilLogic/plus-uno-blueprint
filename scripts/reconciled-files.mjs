@@ -1505,4 +1505,19 @@ export const RECONCILED_FILES = [
   'src/components/editor/SlideStickyHeader.tsx',
   'src/hooks/useServicePhases.ts',
   'src/lib/phasesToSlides.ts',
+
+  // The badge-size guard and the last file it was holding apart.
+  //
+  // This deployment wrote `one-badge-one-size.test.mjs` and the template did
+  // not have it, so seven call sites there were still choosing a badge's
+  // geometry themselves — three shapes, two of them below every size
+  // `ui/badge.tsx` offers. The guard went upstream citation-free and the seven
+  // overrides went with it, which is why the file can be held here at all: the
+  // version this deployment wrote named two issue numbers, and a rule about
+  // call sites does not need an address to be true.
+  //
+  // `SlideArtboard.tsx` fell out of that sweep. Its whole difference was one
+  // `text-3xs` the template had and this deployment had already removed.
+  'scripts/tests/one-badge-one-size.test.mjs',
+  'src/components/editor/SlideArtboard.tsx',
 ]
