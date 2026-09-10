@@ -16,7 +16,7 @@ const GLYPH: Record<LinkGlyph, typeof ExternalLink> = {
 
 /**
  * What a placement leads with: its featured attachment as the preview, and
- * one button per featured link, named by host (#272).
+ * one button per featured link, named by host.
  *
  * Nothing here decides what is featured or what a host is called — both are
  * read off the resources in `resourcePresentation.ts`, which is the seam the
@@ -88,7 +88,10 @@ export function FeaturedPreviewFrame({
     button carries the name now, and announcing it twice is noise.
   */
   return (
-    <div className={cn('relative', frameClassName)} data-featured-preview="image">
+    <div
+      className={cn('relative', frameClassName)}
+      data-featured-preview="image"
+    >
       <ZoomableImage
         src={preview.url}
         alt={preview.name}

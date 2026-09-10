@@ -17,7 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useShellBooting } from '@/contexts/shellBootStore'
 
 /**
- * The top-bar path control (plan 2026-08-17-002 U2): desktop reads and
+ * The top-bar path control: desktop reads and
  * COMPARES paths, so this is a multi-select over the same
  * PathSelectionContext the sidebar checklist used — only the mount moved.
  * The trigger is deliberately compact (decided 2026-08-17): overlapping

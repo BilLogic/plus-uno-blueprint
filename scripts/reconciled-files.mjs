@@ -1394,11 +1394,11 @@ export const RECONCILED_FILES = [
   // them — so they are bookkeeping, not code, and they are held here now so
   // the next edit to either copy has to answer for the drift.
   //
-  // A fourth, `src/components/cover/coverPage.test.tsx`, is identical too and
-  // is NOT here: it cites `plan 2026-08-18-001`, an address in this
-  // repository's docs tree, and that sentence has to change in both copies
-  // before either can promise it. It enrols with the upstream pass that
-  // rewrites it.
+  // A fourth, `src/components/cover/coverPage.test.tsx`, is identical again
+  // now that the `plan 2026-08-18-001` citation is gone from both copies —
+  // and still is NOT here, because the same file cites `docs/guide/02-x.md`
+  // twice, and the two docs trees do not agree on that path. One citation
+  // down, two to go.
   'src/components/blueprint/StoryboardStepDetailStack.tsx',
   'src/components/cover/CoverSections.tsx',
   'src/components/editor/CanvasEmptyState.tsx',
@@ -1612,4 +1612,21 @@ export const RECONCILED_FILES = [
   // own duration, and `findingMutations` expects a field the template's write
   // does not carry.
   'src/lib/panelLayoutContract.test.ts',
+
+  // The last of the plan citations, and one file that was only ever a citation
+  // away.
+  //
+  // Retiring the plan tier deleted the documents; six comments in `src/` went
+  // on citing them, which is a worse state than before — a reader following
+  // `plan 2026-08-16-002` now finds nothing at all rather than a stale file.
+  // Each of the six says what it pins; only the address went.
+  //
+  // `coverPage.test.tsx` carried one of them, and so did the template's copy —
+  // an address in THIS repository's docs tree that never resolved upstream
+  // even while the tier existed. Rewritten in both; it still cannot enrol,
+  // because the same file cites `docs/guide/02-x.md` twice.
+  //
+  // `FeaturedResources.tsx` differed by a citation and one JSX line the
+  // template wraps differently. Adopted whole, and enrolled.
+  'src/components/blueprint/FeaturedResources.tsx',
 ]
