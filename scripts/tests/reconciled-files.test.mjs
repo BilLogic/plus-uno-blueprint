@@ -593,6 +593,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/types/nav.ts',
     'src/contexts/canvasActiveContext.tsx',
     'src/components/cover/coverModel.ts',
+    'src/lib/deletionSafety.ts',
   ])
 })
 

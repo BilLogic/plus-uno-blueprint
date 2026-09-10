@@ -1973,4 +1973,5 @@ export const RECONCILED_FILES = [
   'src/types/nav.ts',
   'src/contexts/canvasActiveContext.tsx',
   'src/components/cover/coverModel.ts',
+  'src/lib/deletionSafety.ts',
 ]
