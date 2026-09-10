@@ -12,15 +12,15 @@ import { STORYBOARD_ROLE } from './laneRoles'
 import type { BlueprintData } from '@/types/blueprint'
 
 /**
- * A flag is one boolean the whole app reads (#326 S1).
+ * A flag is one boolean the whole app reads.
  *
- * uno used to keep two module-private `Set`s of hardcoded scenario UUIDs
+ * A deployment used to keep two module-private `Set`s of hardcoded scenario UUIDs
  * behind these predicates — an allowlist from before the flags shipped
  * globally. Both were read only AFTER an `if (FLAG) return true` on a flag
- * that is `true`, so no caller could observe them, and the template had
+ * that is `true`, so no caller could observe them, and this repository had
  * already deleted them. This pins the property that replaced them: the
  * scenario id is inert, so nothing can quietly grow a per-scenario branch
- * back. The template ships no test of its own for this module.
+ * back.
  */
 
 /** Two ids the retired allowlist named, one it never did, and no id at all. */

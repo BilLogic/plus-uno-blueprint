@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 /**
- * The path control waits for the shell it sits in (#265).
+ * The path control waits for the shell it sits in.
  *
  * The bug: `PathSelectorMenu` painted the moment its options landed, while
  * the sidebar and the identity bar beside it were still skeletons. The control
  * has no loading of its own — its options arrive with the board — so the
- * only beat it can keep is the shell's, read from the boot lane
- * `EntityHeader` already holds behind (#253).
+ * only beat it can keep is the shell's, read from the boot signal
+ * `EntityHeader` already holds behind.
  *
  * Asserted through what a reader can see: the button is absent while the
  * shell boots and present once it lifts. Which placeholder stood in for it
@@ -61,7 +61,7 @@ afterEach(() => {
   setShellBooting(false)
 })
 
-describe('the path control, against the shell boot lane', () => {
+describe('the path control, against the shell boot signal', () => {
   it('holds while the shell boots, and arrives when it lifts', () => {
     setShellBooting(true)
     mount([HAPPY])
@@ -92,7 +92,7 @@ describe('the path control, against the shell boot lane', () => {
 })
 
 describe('the path control teaches what a path is where you pick one', () => {
-  it('heads the picker with the path definition, disclosed on hover (#307)', async () => {
+  it('heads the picker with the path definition, disclosed on hover', async () => {
     mount([HAPPY])
     // Open the selector — the definition lives where the reader picks a path.
     fireEvent.click(control()!)

@@ -72,7 +72,7 @@ export function readerFindings(sources: Sources): string[] {
   }
 
   // 1b. And the CATEGORY half — the kind, and what that kind means. Added with
-  //     #243, which is what gave the card a section above the instance: a
+  //     the rule that gave the card a section above the instance: a
   //     reader who learns that `Regular Tutor` is staff and never learns what
   //     staff commits a party to has half the card.
   if (!/STAKEHOLDER_KIND_MEANING\[kind\]/.test(sources.badge)) {

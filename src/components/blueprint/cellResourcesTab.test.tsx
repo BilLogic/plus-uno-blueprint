@@ -63,7 +63,7 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
-describe('the cell’s own list wears the shape the placement’s already has (#549)', () => {
+describe('the cell’s own list wears the shape the placement’s already has', () => {
   it('the row menu names the verb by kind — a preview for a file, a button for a link', async () => {
     const { getByLabelText } = mount([
       row({ id: 'r-shot', url: SHOT, kind: 'attachment', name: 'Runbook' }),
@@ -219,18 +219,18 @@ describe('the cell’s own list wears the shape the placement’s already has (#
   it('a placement’s row is listed without a menu — the touchpoint owns it', () => {
     const { container, getByLabelText, queryByLabelText } = mount([
       ...RESOURCES,
-      row({ id: 'r-tp', url: 'https://plus.app/intake', name: 'PLUS App', placementId: 'p-1' }),
+      row({ id: 'r-tp', url: 'https://example.com/intake', name: 'Intake App', placementId: 'p-1' }),
     ])
     expect(getByLabelText('From this cell’s touchpoints'.replace('’', "'")).textContent).toContain(
-      'PLUS App',
+      'Intake App',
     )
-    expect(queryByLabelText('More for PLUS App')).toBeNull()
-    expect(queryByLabelText('Move PLUS App up')).toBeNull()
+    expect(queryByLabelText('More for Intake App')).toBeNull()
+    expect(queryByLabelText('Move Intake App up')).toBeNull()
     expect(container.querySelectorAll('[data-resource-row]')).toHaveLength(1)
   })
 })
 
-describe('the Resources tab takes a file with no placement (#274)', () => {
+describe('the Resources tab takes a file with no placement', () => {
   it('uploads to the cell, lists the attachment, and saves it as the cell’s own row', async () => {
     const url = 'https://x.supabase.co/storage/v1/object/public/cell-attachments/cells/cell-1/o.pdf'
     uploadAttachment.mockResolvedValue({

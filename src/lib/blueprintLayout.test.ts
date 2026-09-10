@@ -47,7 +47,7 @@ function lane(
   return { id: `lane-${role ?? 'none'}-${position}`, name, role, position }
 }
 
-/** The PLUS lane order, roles only, as production has it. */
+/** The lane order, roles only, as a deployment has it in production. */
 function board(supportName = 'Support Actions'): BlueprintLane[] {
   return [
     lane(CUSTOMER_ACTIONS_ROLE, 'The person the service is for', 0),
