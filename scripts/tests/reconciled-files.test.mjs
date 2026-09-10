@@ -519,6 +519,20 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/blueprint/ScenarioBlueprintPanel.tsx',
     'src/components/cover/coverPage.test.tsx',
     'src/components/blueprint/BlueprintTouchpointCell.tsx',
+    'src/components/blueprint/resourcesList.test.tsx',
+    'src/contexts/PathSelectionContext.test.tsx',
+    'src/contexts/canvasActiveContext.test.tsx',
+    'src/contexts/viewStateStore.test.ts',
+    'src/hooks/useStepSpec.test.ts',
+    'src/lib/agent/skills.test.ts',
+    'src/lib/agent/tools/surfacePartition.test.ts',
+    'src/lib/canvasCellQuery.test.ts',
+    'src/lib/canvasFocusCells.test.ts',
+    'src/lib/customerBand.test.ts',
+    'src/lib/findingFingerprint.test.ts',
+    'src/lib/queryClient.test.ts',
+    'src/lib/writeTranslationContract.test.ts',
+    'src/styles/theme.shape.test.ts',
   ])
 })
 

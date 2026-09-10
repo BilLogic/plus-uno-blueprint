@@ -1654,4 +1654,31 @@ export const RECONCILED_FILES = [
   // here first, ported in 1.25.1, and the `#277` the local copy carried went
   // with it.
   'src/components/blueprint/BlueprintTouchpointCell.tsx',
+
+  // Fourteen contracts the TEMPLATE wrote and this deployment never had.
+  //
+  // The mirror of the twenty that went the other way. The template holds 34
+  // test files this tree does not; 29 import only modules this tree has;
+  // those 29 ran here unmodified and 17 passed. Two of the seventeen turned
+  // out to import relative modules this tree lacks, and one carries an issue
+  // citation that has to leave BOTH copies before it can be held — it is
+  // `src/lib/blueprintTechPictures.test.ts`, and it waits for that.
+  //
+  // The twelve that FAILED are not here and are the useful half: a contract
+  // the template wrote against shared code, failing here, is a measurement of
+  // divergence with this side's name on it.
+  'src/components/blueprint/resourcesList.test.tsx',
+  'src/contexts/PathSelectionContext.test.tsx',
+  'src/contexts/canvasActiveContext.test.tsx',
+  'src/contexts/viewStateStore.test.ts',
+  'src/hooks/useStepSpec.test.ts',
+  'src/lib/agent/skills.test.ts',
+  'src/lib/agent/tools/surfacePartition.test.ts',
+  'src/lib/canvasCellQuery.test.ts',
+  'src/lib/canvasFocusCells.test.ts',
+  'src/lib/customerBand.test.ts',
+  'src/lib/findingFingerprint.test.ts',
+  'src/lib/queryClient.test.ts',
+  'src/lib/writeTranslationContract.test.ts',
+  'src/styles/theme.shape.test.ts',
 ]
