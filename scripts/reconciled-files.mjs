@@ -1471,4 +1471,14 @@ export const RECONCILED_FILES = [
   // even if they had matched. Both sides dropped the address; the sentence
   // that explains what the column was for is untouched.
   'src/lib/linkedText.ts',
+
+  // `sessionReconcile.ts` and its test travelled UPSTREAM first: the template
+  // took the refused-write signal, and its copy re-asks the database on the
+  // refreshed token where this deployment only re-reads a claim. What kept the
+  // two copies apart afterwards was entirely comment — an issue number, and
+  // sentences naming `app_metadata.role` and `auth.jwt()` that are true here
+  // and not upstream. The template's wording is true in both, so it wins by
+  // the standing tie-break and the code never moved.
+  'src/lib/sessionReconcile.ts',
+  'src/lib/sessionReconcile.test.ts',
 ]

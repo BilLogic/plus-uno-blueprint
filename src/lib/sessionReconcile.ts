@@ -1,16 +1,17 @@
 /**
  * Bringing the UI's idea of what it may write back in line with the database's.
  *
- * The tier a surface gates on comes from the local session's
- * `app_metadata.role`. That is re-derived whenever the access token refreshes
- * — `autoRefreshToken` is on and `SupabaseProvider` subscribes to
- * `onAuthStateChange` — so a server-side demotion reaches the UI within one
- * token lifetime on its own. The gap is the window before that refresh, where
- * the reader is still offered editing affordances the database will refuse.
+ * The tier a surface gates on is derived from the current session, and it is
+ * re-derived whenever the access token refreshes — `autoRefreshToken` is on and
+ * `SupabaseProvider` subscribes to `onAuthStateChange` — so a server-side
+ * demotion reaches the UI within one token lifetime on its own. The gap is the
+ * window before that refresh, where the reader is still offered editing
+ * affordances the database will refuse.
  *
- * This is a UI defect and not an authorization hole: RLS re-evaluates
- * `auth.jwt()` on every statement, so the write fails at the database rather
- * than succeeding. The symptom is a button that lies (#136).
+ * This is a UI defect and not an authorization hole: the restrictive write
+ * policies and the RPC guards re-evaluate the session on every statement, so
+ * the write fails at the database rather than succeeding. The symptom is a
+ * button that lies.
  *
  * So: reconcile at the exact moment the lie is exposed. A write that comes back
  * denied is the one reliable signal that the local tier is stale, and it costs
@@ -30,9 +31,9 @@
  * `AuthError` and hands it back in `{ data, error }` instead of rejecting
  * (`GoTrueClient.refreshSession`, which returns through `_returnResult`). A
  * reconciler written as `await client.auth.refreshSession()` therefore always
- * succeeds, `reconcileSessionAfterDenial`'s `.catch` is unreachable, and the
- * only test that appeared to cover it was passing a hand-written rejecting
- * function — exercising the guard, never the thing registered.
+ * succeeds, `reconcileSessionAfterDenial`'s `.catch` is unreachable, and a test
+ * that passes a hand-written rejecting function exercises the guard rather than
+ * the thing registered.
  *
  * Typed against the shape it uses rather than `SupabaseClient` so a test can
  * supply one without a client.

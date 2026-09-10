@@ -9,11 +9,11 @@ import {
 } from '@/lib/sessionReconcile'
 
 /**
- * #136 asked for a revocation path. What it actually needs, after the measuring
- * in that issue's thread, is smaller: RLS is the authority and re-evaluates
- * `auth.jwt()` per statement, so a demoted session's writes already fail at the
- * database. The defect is that the UI keeps OFFERING them for up to one token
- * lifetime — a button that lies.
+ * A revocation path is the obvious ask here, and it is bigger than what the
+ * defect needs. The database is the authority and re-evaluates the session on
+ * every statement, so a demoted session's writes already fail there. What is
+ * wrong is that the UI keeps OFFERING them for up to one token lifetime — a
+ * button that lies.
  *
  * These pin the trigger and, more importantly, the two ways a naive version
  * makes things worse: a refresh per failed row, and a refresh that throws on an
@@ -96,7 +96,7 @@ describe('a refused write re-derives the tier', () => {
     // The in-flight guard is separate from the cooldown and outranks it: a
     // second call while the first refresh is still running is dropped whatever
     // the clock says. Let it settle before testing the cooldown, or this
-    // asserts the wrong guard — which is how it failed the first time.
+    // asserts the wrong guard.
     await vi.waitFor(() => expect(reconcile).toHaveBeenCalledTimes(1))
     await Promise.resolve()
     reconcileSessionAfterDenial(t + 10_001)
@@ -119,9 +119,8 @@ describe('a refused write re-derives the tier', () => {
     // The trap this whole seam exists for. auth-js catches `AuthError` and
     // returns it in `{ data, error }` — `refreshSession()` does not reject —
     // so a reconciler that ignores the field reports success on every failed
-    // refresh, and the logging below it is dead code. The first version of
-    // this feature shipped exactly that, and the test that "covered" it was
-    // handing `reconcileSessionAfterDenial` its own rejecting function.
+    // refresh, and the logging below it is dead code. A test that hands
+    // `reconcileSessionAfterDenial` its own rejecting function never sees it.
     const failing = sessionRefresher({
       auth: { refreshSession: async () => ({ error: new Error('refresh_token_not_found') }) },
     })

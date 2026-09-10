@@ -479,6 +479,8 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/blueprint/ResourcesList.tsx',
     'src/lib/rowReveal.ts',
     'src/lib/linkedText.ts',
+    'src/lib/sessionReconcile.ts',
+    'src/lib/sessionReconcile.test.ts',
   ])
 })
 
