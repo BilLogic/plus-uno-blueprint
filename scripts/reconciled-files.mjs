@@ -1830,4 +1830,16 @@ export const RECONCILED_FILES = [
   // `slides.illustration` column this schema does not have.
   'src/components/editor/SlicesSidebarSection.tsx',
   'src/components/editor/sliceRenameGuard.test.tsx',
+
+  // Three icon-only controls in the phase menubar carried an accessible name
+  // and nothing else: a screen reader had the name, and the sighted reader
+  // hovering the glyph and the keyboard reader focusing it had nothing.
+  // 1.31.0 gives each an `IconTooltip` saying what it does, and the compare
+  // toggle falls back to Stacked so it always points at a segment.
+  //
+  // `PathSelectorMenu.tsx` took the same tooltip but stays apart — its option
+  // rows show a status badge this deployment's path options carry and the
+  // template's do not.
+  'src/components/editor/PhaseMenubarHeader.tsx',
+  'src/components/editor/menubarIconTooltips.test.tsx',
 ]

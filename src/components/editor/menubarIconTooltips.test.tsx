@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 /**
- * Every icon-only control in the phase menubar says what it does (#262).
+ * Every icon-only control in the phase menubar says what it does.
  *
  * `aria-label` is the tell: a button carries one exactly when its face does
- * not carry its name. `docs/reference/panel-affordances.md` § Hover is never
- * the only way in says the label alone is not enough — a sighted reader
- * hovering a glyph learns nothing, and a keyboard reader focusing it learns
- * nothing either. So every such button in the bar is asked twice, by pointer
+ * not carry its name. A name on its own is not enough, because hover is
+ * never the only way in — a sighted reader hovering a glyph learns nothing,
+ * and a keyboard reader focusing it learns nothing either. So every such
+ * button in the bar is asked twice, by pointer
  * and by focus, and must answer with a tooltip that says what the control
  * DOES — action copy, never the label read back (`IconTooltip`, rule 2).
  *
