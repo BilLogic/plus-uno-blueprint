@@ -12,9 +12,12 @@
  * SUBJECT: every file a commit would carry — tracked, plus untracked files git
  * would not ignore. Not `src` alone and not the swept docs alone: the residue
  * lands wherever the rename's `sed` reached, which is a comment in a
- * stylesheet, a heading in a guideline, a test's own name. This is the widest
- * subject in `scripts/tests/`, and it can afford to be, because the patterns
- * below match strings that are not English words rather than words that are.
+ * stylesheet, a heading in a guideline, a test's own name. That listing is
+ * `scripts/scanned-files.mjs`, which moved out of this file when
+ * `a-lane-is-not-a-layer.test.mjs` became the second sweep to need it. This is
+ * the widest subject in `scripts/tests/`, and it can afford to be, because the
+ * patterns below match strings that are not English words rather than words
+ * that are.
  *
  * WHY IT IS NOT IN `retired-copy.test.mjs`, where the template put it: that
  * file fixes its subject in its header to JSX text nodes, reader-facing props
@@ -59,41 +62,11 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { BINARY, scannedFiles } from '../scanned-files.mjs'
 
 const REPO_ROOT = resolve(new URL('../..', import.meta.url).pathname)
-
-/** Binary payloads git happens to track. Nothing to read a line out of. */
-const BINARY = /\.(?:png|jpe?g|gif|webp|svg|ico|woff2?|ttf|otf|pdf|zip|mp4|avif)$/i
-
-/**
- * Every file a commit would carry: tracked, plus untracked files git would not
- * ignore.
- *
- * Tracked alone is a trap — a document written and checked locally before
- * `git add` is invisible to the sweep, then fails in CI the moment it is
- * committed. The two subjects are one function, and that function sees what a
- * commit would.
- *
- * Written here rather than imported: no check in this repository listed the
- * whole tree before this one, and the template's `scannedFiles` carries that
- * repository's exclusions, which are not ours.
- */
-export function scannedFiles(root = REPO_ROOT) {
-  const listed = execFileSync(
-    'git',
-    ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
-    { cwd: root, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 },
-  )
-  const seen = new Set()
-  return listed.split('\0').filter((path) => {
-    if (path === '' || seen.has(path) || BINARY.test(path)) return false
-    seen.add(path)
-    return true
-  })
-}
 
 /**
  * One entry per shape a mechanical rename produced, with the word it meant.
