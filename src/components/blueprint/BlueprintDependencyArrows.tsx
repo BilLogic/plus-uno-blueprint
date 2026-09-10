@@ -37,9 +37,7 @@ type ArrowLayer = 'forward' | 'wrap'
 
 export type ColoredBlueprintDependency = BlueprintCellDependency & {
   /** The PATH's kind. `kind` is taken: a cell dependency carries its own
-   *  (`leads_to` / `enables`), and intersecting the two collapses to `never`.
-   *  This is the third word `workflowQueries.ts` deferred, and the one the
-   *  template chose for the same collision. */
+   *  (`leads_to` / `enables`), and intersecting the two collapses to `never`. */
   pathKind: PathKind
   opacity?: number
 }
@@ -128,7 +126,7 @@ export function BlueprintDependencyArrows({
 
     // Allocate anchor slots over the endpoints `buildArrowPath` will draw, so
     // a contested cell side fans its arrows instead of stacking them. Both
-    // overlay lanes plan the same full set, so the slots agree across them.
+    // overlay layers plan the same full set, so the slots agree across them.
     planAnchorSlots(content, unpaired)
 
     // Confluence + fan-out: ≥2 same-side arrivals (or departures) merge into
@@ -334,9 +332,10 @@ export function BlueprintDependencyArrows({
       data-blueprint-arrows=""
       className={cn(
         'pointer-events-none absolute overflow-visible',
-        // Keep the connector hierarchy identical to IntegratedDependencyArrows:
-        // ordinary runs tuck below the z-1 cells, while wrap runs stay
-        // elevated because they travel through the empty outer corridors.
+        // The same hierarchy `IntegratedDependencyArrows` states: z-0, UNDER
+        // the z-1 cells, so an ordinary run that crosses a cell tucks behind
+        // it rather than striking through its face. The wrap layer stays above
+        // because it rides the empty corridors outside the rows.
         layer === 'forward' ? 'z-0' : 'z-30',
       )}
       style={svgStyle}

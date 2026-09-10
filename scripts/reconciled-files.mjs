@@ -1842,4 +1842,21 @@ export const RECONCILED_FILES = [
   // template's do not.
   'src/components/editor/PhaseMenubarHeader.tsx',
   'src/components/editor/menubarIconTooltips.test.tsx',
+
+  // The last shared file that differed by prose alone. Two of its sentences
+  // named things that are not there — the panel-only link kind called `needs`
+  // when the kinds are `leads_to` and `enables`, and a prop doc naming `kind`
+  // for the prop `pathKind` — and 1.31.1 corrected both upstream. What was
+  // left after that was the tie-break kind of difference, and the template's
+  // wording wins it.
+  //
+  // DECLINED, and this one states a different fact rather than a different
+  // sentence:
+  //
+  // `src/lib/deletionSafety.ts` — the paragraph on `archiveAvailable` names
+  //   the relation the app checks for, and the two repositories check
+  //   different ones. Upstream it is the `deleted_structure` table; here it
+  //   is the `trash` view over the append-only change log that replaced it.
+  //   Neither sentence is true of the other tree.
+  'src/components/blueprint/BlueprintDependencyArrows.tsx',
 ]

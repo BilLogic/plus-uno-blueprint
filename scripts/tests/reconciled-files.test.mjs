@@ -565,6 +565,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/editor/sliceRenameGuard.test.tsx',
     'src/components/editor/PhaseMenubarHeader.tsx',
     'src/components/editor/menubarIconTooltips.test.tsx',
+    'src/components/blueprint/BlueprintDependencyArrows.tsx',
   ])
 })
 
