@@ -182,7 +182,7 @@ function clientToLocal(
   }
 }
 
-/** Live CSS scale of the annotation lane (more reliable than React zoom state). */
+/** Live CSS scale of the annotation layer (more reliable than React zoom state). */
 function getLayerScale(el: HTMLElement): number {
   const rect = el.getBoundingClientRect()
   return Math.max(rect.width / Math.max(el.offsetWidth, 1), 0.05)
@@ -1625,7 +1625,7 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
     }
 
     window.addEventListener('keydown', onKeyDown)
-    // Capture so we observe the click even when the lane has pointer-events: none.
+    // Capture so we observe the click even when the layer has pointer-events: none.
     document.addEventListener('pointerdown', onPointerDown, true)
     return () => {
       window.removeEventListener('keydown', onKeyDown)
@@ -1787,12 +1787,12 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
 
     const onMove = (event: PointerEvent) => {
       if (event.pointerId !== activePointerIdRef.current) return
-      const lane = layerRef.current
+      const layer = layerRef.current
       const current = draftRef.current
-      if (!lane || !current) return
+      if (!layer || !current) return
       event.preventDefault()
 
-      const scale = getLayerScale(lane)
+      const scale = getLayerScale(layer)
 
       if (current.type === 'pen') {
         const minDist = Math.max(0.35 / scale, 0.25)
@@ -1803,7 +1803,7 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
         const samples = coalesced.length > 0 ? coalesced : [event]
         for (const sample of samples) {
           appendPenPoint(
-            clientToLocal(lane, sample.clientX, sample.clientY),
+            clientToLocal(layer, sample.clientX, sample.clientY),
             minDist,
           )
         }
@@ -1813,14 +1813,14 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
       if (current.type === 'eraser') {
         const radius = ANNOTATION_ERASER_SCREEN_RADIUS / scale
         eraseToPoint(
-          clientToLocal(lane, event.clientX, event.clientY),
+          clientToLocal(layer, event.clientX, event.clientY),
           radius,
         )
         return
       }
 
       if (current.type === 'rect' || current.type === 'ellipse') {
-        const point = clientToLocal(lane, event.clientX, event.clientY)
+        const point = clientToLocal(layer, event.clientX, event.clientY)
         draftRef.current = {
           ...current,
           x1: point.x,
@@ -1832,24 +1832,24 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
 
     const onUp = (event: PointerEvent) => {
       if (event.pointerId !== activePointerIdRef.current) return
-      const lane = layerRef.current
+      const layer = layerRef.current
       const current = draftRef.current
 
-      if (lane && current?.type === 'pen') {
-        const scale = getLayerScale(lane)
+      if (layer && current?.type === 'pen') {
+        const scale = getLayerScale(layer)
         appendPenPoint(
-          clientToLocal(lane, event.clientX, event.clientY),
+          clientToLocal(layer, event.clientX, event.clientY),
           Math.max(0.35 / scale, 0.25),
         )
       }
-      if (lane && current?.type === 'eraser') {
+      if (layer && current?.type === 'eraser') {
         eraseToPoint(
-          clientToLocal(lane, event.clientX, event.clientY),
-          ANNOTATION_ERASER_SCREEN_RADIUS / getLayerScale(lane),
+          clientToLocal(layer, event.clientX, event.clientY),
+          ANNOTATION_ERASER_SCREEN_RADIUS / getLayerScale(layer),
         )
       }
 
-      releaseCapture(lane, pointerId)
+      releaseCapture(layer, pointerId)
 
       if (current?.type === 'pen') {
         finishPenStroke()

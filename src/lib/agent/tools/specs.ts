@@ -599,7 +599,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'annotate_cells',
     description:
-      'Draw ephemeral annotation boxes around cells on the open canvas (optional short text note above them) — use to point at things visually, like a human with a marker. Marks are scratch-lane only: never saved, cleared on reload.',
+      'Draw ephemeral annotation boxes around cells on the open canvas (optional short text note above them) — use to point at things visually, like a human with a marker. Marks are scratch-layer only: never saved, cleared on reload.',
     parameters: {
       type: 'object',
       properties: {

@@ -354,7 +354,7 @@ const UI_COMMANDS_SNAPSHOT = [
   "cell_panel_close — Close the open cell detail panel.",
   'cell_panel_expand — Widen or shrink the open cell panel. arg: true (wide) | false (normal)',
   "cell_panel_tab — Switch the open cell panel's tab. arg: dependencies | evidence | resources",
-  'clear_annotations — Erase every annotation mark from the canvas scratch lane.',
+  'clear_annotations — Erase every annotation mark from the canvas scratch layer.',
   'clear_cell_selection — Clear the Design-mode cell selection.',
   "close_slice_tab — Close a slice's open tab(s). arg: slice id.",
   'exit_presentation — Leave the running presentation back onto its slice tab.',

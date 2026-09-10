@@ -6,7 +6,7 @@
  * `supabase/seed.sql`, which deletes and recreates every row. Anything typed
  * into the app that lives on those tables — Function, Form, Value, the owner
  * pair, lane metadata, phase metadata — is destroyed by that, silently. The
- * derived lane (slices, findings, evidence) survives because it was designed
+ * derived layer (slices, findings, evidence) survives because it was designed
  * to; these columns were not.
  *
  * So: `export` before any destructive database work, `restore` after.
