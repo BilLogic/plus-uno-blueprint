@@ -1816,4 +1816,18 @@ export const RECONCILED_FILES = [
   // 1.29.1. This file reads the faces BY that attribute, which is why the bug
   // showed up as an empty map rather than as a passing test.
   'src/components/blueprint/compareCellBlockNameOnly.test.tsx',
+
+  // The rename guard, and the dialog it guards.
+  //
+  // Another of the sixteen. The template guarded a slice rename on the
+  // `updated_at` the row was loaded with — one of the two stamp-based guards
+  // this deployment shipped and withdrew in turn, because a stamp can only be
+  // wrong in one direction or the other: refuse a rename nobody raced, or wave
+  // through an overwrite of someone else's. 1.30.0 compares the FIELDS the
+  // form was seeded from instead, reading the row back at submit.
+  //
+  // `sliceMutations.ts` itself stays apart — the template's writes a
+  // `slides.illustration` column this schema does not have.
+  'src/components/editor/SlicesSidebarSection.tsx',
+  'src/components/editor/sliceRenameGuard.test.tsx',
 ]

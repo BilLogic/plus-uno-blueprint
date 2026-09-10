@@ -5,9 +5,9 @@
  *
  * The guard has now been wrong in both directions. It first sent the stamp
  * captured when the context menu opened, so a refetch in between failed a
- * rename nobody had raced (#114). The fix sent the freshest stamp the client
+ * rename nobody had raced. The fix sent the freshest stamp the client
  * held instead — which passes the guard precisely when somebody else's rename
- * has already been refetched into the list, and overwrites them (#128). Both
+ * has already been refetched into the list, and overwrites them. Both
  * failures are invisible in the source: the call reads the same either way,
  * and only the *value* of the token differs.
  *
@@ -219,7 +219,7 @@ it('lands the rename when the stamp moved but nothing the form was seeded from d
   // The slide editor's Save re-sends the slice's own values purely to exercise
   // this guard, and the trigger bumps `updated_at` anyway. Nothing the rename
   // form is looking at has changed, so the rename must still land — this is
-  // the false positive #114 removed and that #128 must not bring back.
+  // the false positive the first fix removed and the second must not restore.
   server.updated_at = '2026-08-26T09:30:00.654321+00:00'
   rerender(
     <RenameSliceDialog slice={listEntry({ ...server })} open onOpenChange={() => {}} />,

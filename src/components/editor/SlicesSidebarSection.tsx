@@ -27,13 +27,13 @@ import {
 import { Input } from '@/components/ui/input'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { duplicateSlice, updateSliceMetaFromSeed } from '@/lib/sliceMutations'
-import { reportWriteFailure } from '@/lib/writeFailures'
 import { isSliceKind } from '@/lib/sliceValidation'
+import { errorMessage } from '@/lib/utils'
+import { reportWriteFailure } from '@/lib/writeFailures'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useViewState } from '@/contexts/viewStateStore'
 import { useSlices, type SliceListEntry } from '@/hooks/useSlices'
-import { errorMessage } from '@/lib/utils'
 
 /** Sidebar group order — unknown types fall into CUSTOM. */
 const SLICE_TYPE_GROUPS = ['journey', 'step', 'lane', 'cell', 'custom'] as const
@@ -249,8 +249,8 @@ export function SlicesSidebarSection() {
  * Rename a slice — title and subtitle, the two fields creating one asks for.
  *
  * Exported for `sliceRenameGuard.test.tsx`, which drives the save rather than
- * reading it: the guard below has now been wrong in both directions, and
- * neither wrong version looked any different from this one.
+ * reading it: the guard below has been wrong in both directions, and neither
+ * wrong version looked any different from this one.
  *
  * The whole form — not just the two fields on screen — is frozen at the moment
  * it opens, and `updateSliceMetaFromSeed` guards on that seed: it reads the
@@ -300,7 +300,7 @@ export function RenameSliceDialog({
     try {
       outcome = await updateSliceMetaFromSeed(client, seed.id, seed, {
         title,
-        summary: summary,
+        summary,
         sliceKind: isSliceKind(seed.kind) ? seed.kind : 'custom',
         actor: seed.actor ?? '',
         authorship: seed.authorship ?? 'human',
