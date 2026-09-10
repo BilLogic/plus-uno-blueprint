@@ -50,7 +50,7 @@ under a spacer so keys are reachable from any surface.
 `SidebarNav` is the sidebar's single twisty vocabulary, used by the PHASES
 section header, the phase rows inside it, and the slice type groups —
 so every disclosure in the sidebar looks and behaves the same. Three rules,
-taken from Figma's lane tree:
+taken from Figma's layer tree:
 
 1. **The chevron sits to the left of the label**, in a fixed-width slot. A leaf
    row renders that slot empty and keeps its width, so labels at one depth share

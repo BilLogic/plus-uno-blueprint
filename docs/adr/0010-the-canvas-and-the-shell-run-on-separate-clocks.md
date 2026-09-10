@@ -1,7 +1,7 @@
 ---
 status: accepted
 audience: developers
-summary: The shell's entrance stagger and the canvas's reveal ladder are two clocks on purpose, joined by reads that run one way only; a surface that owns its own query takes its own hold session, and still waits for the lane it arrives beside.
+summary: The shell's entrance stagger and the canvas's reveal ladder are two clocks on purpose, joined by reads that run one way only; a surface that owns its own query takes its own hold session, and still waits for the layer it arrives beside.
 ---
 
 # The canvas and the shell run on separate clocks
@@ -9,8 +9,8 @@ summary: The shell's entrance stagger and the canvas's reveal ladder are two clo
 The shell stages its own arrival: the aside commits its width, then the parts
 of the sidebar fade in behind one another. The canvas runs a separate ladder of
 reveal rungs and publishes which rung it is on. They meet only by **reading**:
-the shell reads that rung to decide when to lift the sidebar's boot lane, and
-the identity bar above the canvas reads the lane to decide when its own
+the shell reads that rung to decide when to lift the sidebar's boot layer, and
+the identity bar above the canvas reads the layer to decide when its own
 skeleton may end. Every link points the same way and nothing reads back.
 
 The five words for the phases of arrival are defined in
@@ -58,7 +58,7 @@ the bill for answering them as one: the service query is the fastest thing on
 the screen, so the bar painted its name, its kind and its whole summary over a
 sidebar still showing boot skeletons and a canvas still saying "Loading
 blueprints…". Three surfaces, three beats. The bar keeps its own session and
-reads the shell's lane to know when that session may end.
+reads the shell's layer to know when that session may end.
 
 ## Consequences
 
@@ -77,8 +77,8 @@ watching.
 **Owning a session is not the same as choosing a beat.** A surface decides
 for itself what to draw while it waits; when it may stop waiting is a question
 about the screen it is part of. The identity bar answers the first with its own
-hold session and the second by reading the shell's boot lane, and it needs both
-— a bar released by the lane alone would show a name it does not have yet.
+hold session and the second by reading the shell's boot layer, and it needs both
+— a bar released by the layer alone would show a name it does not have yet.
 
 **The reads chain, and every link points the same way.** The bar reads the
 shell; the shell reads the canvas's rung; nothing reads back. A new surface may

@@ -85,7 +85,7 @@ drop you back to the session list.
 
 ## Sessions and persistence
 
-localStorage is the always-there lane. When the session is authenticated, every
+localStorage is the always-there layer. When the session is authenticated, every
 mutation also writes through to `agent_sessions`, and boot merges the database
 list in — DB wins on shared ids, local-only rows stay and are pushed up so the
 merge converges instead of forking per browser.
