@@ -558,6 +558,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/contexts/supabaseProviderWriteGate.test.tsx',
     'src/hooks/serviceSpecReaderTier.test.tsx',
     'src/lib/canvasStackingContract.test.ts',
+    'src/lib/findingMutations.test.ts',
   ])
 })
 

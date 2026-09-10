@@ -1778,4 +1778,15 @@ export const RECONCILED_FILES = [
   // arrow beside it used `z-20`. Both fixed in 1.28.1, which is what this file
   // is for: it compares the renderers to each other rather than to a constant.
   'src/lib/canvasStackingContract.test.ts',
+
+  // The ledger invariant, once the template's inverse carried both columns.
+  //
+  // `findingMutations.test.ts` was another of the sixteen. It failed upstream
+  // because `cellIds` wrote `cell_ids` AND `cell_keys` there while the
+  // captured inverse named only `cellIds` — so an undo restored the ids and
+  // rewrote the key paths from them, discarding what an imported finding
+  // carries. 1.28.2 names the two separately. The contract compares the
+  // recorded revert to the row as it was, field by field, which is why a
+  // column travelling one way and not the other showed up at all.
+  'src/lib/findingMutations.test.ts',
 ]
