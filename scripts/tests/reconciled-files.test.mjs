@@ -515,6 +515,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/tokenResolution.test.ts',
     'src/lib/workspaceTabNavigationContract.test.ts',
     'src/lib/panelLayoutContract.test.ts',
+    'src/components/blueprint/FeaturedResources.tsx',
   ])
 })
 

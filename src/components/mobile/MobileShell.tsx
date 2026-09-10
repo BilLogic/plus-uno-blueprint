@@ -206,7 +206,7 @@ export function MobileShell() {
 
   // Agent-driven navigation closes the sheet first and leaves any slice tab
   // for the base canvas — a jump should be VISIBLE, not land behind an
-  // opaque surface (plan 2026-08-16-002 Phase 4).
+  // opaque surface.
   useEffect(
     () =>
       registerAgentUiBridge(
