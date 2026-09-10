@@ -1943,4 +1943,5 @@ export const RECONCILED_FILES = [
   'src/lib/oklch.ts',
   'src/lib/canvasNavigationOutcome.ts',
   'src/components/blueprint/OwnerTagSelect.tsx',
+  'src/components/blueprint/BlueprintLaneHandles.tsx',
 ]

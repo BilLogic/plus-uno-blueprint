@@ -18,8 +18,6 @@ import { errorMessage } from '@/lib/utils'
 
 type Boundary = { at: number; y: number }
 
-/** Hit band half-height around a boundary, wider than the drawn line. */
-
 /**
  * Insert handles between lanes — the missing "add row".
  *
@@ -42,13 +40,14 @@ export function BlueprintLaneHandles({
   const mode = useCanvasModeValue()
   const pick = useCellPick()
   const { client, canWrite } = useSupabase()
+
   if (mode !== 'design' || pick === null || !canWrite || client === null)
     return null
   return <BlueprintLaneHandlesActive bodyRef={bodyRef} />
 }
 
 /** Mounted only while authoring, so read-mode boards do not subscribe every
- * lane overlay to the combined navigation context. */
+ *  lane overlay to the combined navigation context. */
 function BlueprintLaneHandlesActive({
   bodyRef,
 }: {
@@ -95,9 +94,9 @@ function BlueprintLaneHandlesActive({
 
     const bodyBox = body.getBoundingClientRect()
     // Client rects are camera-SCALED, but this overlay renders inside the
-    // scaled lane in layout px — divide the deltas back down or every
+    // scaled layer in layout px — divide the deltas back down or every
     // boundary drifts by (scale − 1) · y, worst at the bottom lanes (the
-    // same un-projection the annotation lane needed).
+    // same un-projection the annotation layer needed).
     const scale = body.offsetWidth > 0 ? bodyBox.width / body.offsetWidth : 1
     const next: Boundary[] = rows.map((row, index) => ({
       at: index,
