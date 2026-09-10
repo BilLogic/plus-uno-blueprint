@@ -13,14 +13,7 @@ export type PhaseRow = Pick<
   scenarios?: ScenarioRow[]
 }
 
-/**
- * Map phases and nested scenarios to editor slides (scenarios = subsides under
- * their phase).
- *
- * This is the seam where the COLUMN `summary` becomes the slide's
- * `description` prop. The prop is a display API shared by every slide kind and
- * keeps its name; only the field read off the row was renamed.
- */
+/** Map phases and nested scenarios to editor slides (scenarios = subsides under their phase). */
 export function phasesToSlides(phases: PhaseRow[]): NavItem[] {
   const slides: NavItem[] = []
   const sortedPhases = [...phases].sort(
@@ -46,9 +39,9 @@ export function phasesToSlides(phases: PhaseRow[]): NavItem[] {
         index: scenarioIndex + 1,
         label: scenario.name,
         summary: scenario.summary,
-        // The scenario's aside, straight off the row. It used to be a
-        // `Record<uuid, string>` in `src/lib/scenarioParallelInfo.ts` keyed on
-        // three hardcoded PLUS scenario ids (#326 S6, #396 Q38).
+        // The scenario's aside, straight off the row. A phase has no
+        // equivalent: the note answers "what else is happening while this
+        // runs", and a phase is the thing the others run inside.
         note: scenario.note,
         parentId: phase.id,
         // One vocabulary: the column holds the client's own tokens, so there
