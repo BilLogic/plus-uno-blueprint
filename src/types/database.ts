@@ -59,6 +59,15 @@ import type { EntityStatus } from '@/lib/entityStatus'
  *
  * `scripts/check-database-names.mjs` rests its argument on this file arriving
  * by machine. As of this change it does again.
+ *
+ * ONE EDIT SINCE, and it is named here rather than hidden in a diff:
+ * `slides.narrative` is `slides.caption` in the three shapes of the `slides`
+ * table. The rename is a migration in this repository's own series, applied to
+ * production before the code that reads the column is merged, and this file
+ * had to describe the schema on the far side of that apply — a generator
+ * cannot be run against a database that has not been changed yet. It is not a
+ * fourth layer and must not be re-applied: the next regeneration through the
+ * connector emits it, and this paragraph goes with the run that proves it.
  */
 
 export type Json =
@@ -945,36 +954,36 @@ export type Database = {
       }
       slides: {
         Row: {
+          caption: string | null
           cell_ids: string[]
           cell_keys: string[]
           created_at: string
           created_by: string | null
           id: string
-          narrative: string | null
           position: number
           slice_id: string
           title: string | null
           updated_at: string
         }
         Insert: {
+          caption?: string | null
           cell_ids?: string[]
           cell_keys?: string[]
           created_at?: string
           created_by?: string | null
           id?: string
-          narrative?: string | null
           position: number
           slice_id: string
           title?: string | null
           updated_at?: string
         }
         Update: {
+          caption?: string | null
           cell_ids?: string[]
           cell_keys?: string[]
           created_at?: string
           created_by?: string | null
           id?: string
-          narrative?: string | null
           position?: number
           slice_id?: string
           title?: string | null

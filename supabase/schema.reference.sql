@@ -257,7 +257,7 @@ create table public.slides (
   cell_ids uuid[] not null default '{}',
   cell_keys text[] not null default '{}',
   title text,
-  narrative text,
+  caption text,
   illustration jsonb,
   created_by uuid,
   created_at timestamptz not null default now(),

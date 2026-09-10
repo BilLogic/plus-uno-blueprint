@@ -155,7 +155,7 @@ export function SliceSlideEditor({
             key={index}
             className={cn(
               // min-h-0 + overflow-hidden: a card taller than the strip must
-              // clip inside itself, not paint its narrative over the next
+              // clip inside itself, not paint its caption over the next
               // row's captions.
               'group/slide flex min-h-0 w-56 shrink-0 flex-col gap-1.5 overflow-hidden rounded-lg border bg-card p-2 transition-colors',
               isActive ? 'border-primary' : 'border-border',
@@ -281,17 +281,17 @@ export function SliceSlideEditor({
             </ul>
 
             <textarea
-              value={slide.narrative}
+              value={slide.caption}
               rows={2}
               // shrink-0: the textarea holds its two rows and scrolls its
               // own overflow rather than being squeezed by the card.
-              placeholder="Narrative"
+              placeholder="Caption"
               onClick={(event) => event.stopPropagation()}
               onChange={(event) =>
                 onChange(
                   slides.map((item, itemIndex) =>
                     itemIndex === index
-                      ? { ...item, narrative: event.target.value }
+                      ? { ...item, caption: event.target.value }
                       : item,
                   ),
                 )
@@ -335,7 +335,7 @@ export function SliceSlideEditor({
         type="button"
         className="flex w-28 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-xs text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
         onClick={() => {
-          onChange([...slides, { cells: [], title: '', narrative: '' }])
+          onChange([...slides, { cells: [], title: '', caption: '' }])
           onActivate(slides.length)
         }}
       >

@@ -536,7 +536,7 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       case 'list_slices': record.result = await realListSlices(); return record.result
       case 'get_slice': {
         const rows = await rest(
-          `slices?select=id,title,summary,kind,actor,authorship,slides(id,position,title,narrative,cell_ids)&id=eq.${encodeURIComponent(String(args.slice_id))}`,
+          `slices?select=id,title,summary,kind,actor,authorship,slides(id,position,title,caption,cell_ids)&id=eq.${encodeURIComponent(String(args.slice_id))}`,
         )
         if (!rows?.[0]) throw new Error('No slice with that id.')
         const slice = rows[0]

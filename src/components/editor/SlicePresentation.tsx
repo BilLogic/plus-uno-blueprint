@@ -294,9 +294,9 @@ export function SlicePresentation({
                   <h2 className="max-w-3xl text-2xl font-semibold text-balance">
                     {title}
                   </h2>
-                  {item.narrative && (
+                  {item.caption && (
                     <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-                      {item.narrative}
+                      {item.caption}
                     </p>
                   )}
                 </>
@@ -306,9 +306,9 @@ export function SlicePresentation({
                   <h2 className="mt-6 max-w-3xl text-3xl font-semibold text-balance">
                     {title}
                   </h2>
-                  {item.narrative && (
+                  {item.caption && (
                     <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
-                      {item.narrative}
+                      {item.caption}
                     </p>
                   )}
                 </>

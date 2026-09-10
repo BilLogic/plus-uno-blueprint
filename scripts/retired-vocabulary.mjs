@@ -720,6 +720,40 @@ export const RENAME_MAP = Object.freeze(
       retired: [],
       copy: ['pill', 'pills', 'chip', 'chips'],
     },
+    /*
+      A slide's prose is a caption (`20260910020000`).
+
+      `narrative` named the sentence under a slide's frames as if it were a
+      story the slide told. It is the words under the frames, so it is a
+      caption, and the editor's own field had been labelled "Narrative" while
+      every other surface said caption.
+
+      `copy` is EMPTY on purpose and this is the row where that matters most.
+      `narrative` is ordinary English all over this repository — a narrative
+      cell on the canvas, the four-line narrative preview, "the migration
+      series is a narrative" (ADR 0009) and every document that cites it — and
+      retiring the word would fail the build on all of them. What retired is
+      the column, so the entry is written as the qualified name.
+
+      `retired` therefore matches nothing the identifier sweep looks at: that
+      sweep reads a bare column name and never a qualified one, exactly as the
+      `stakeholders.note` paragraph in this header explains. The entry earns
+      its place as the written record of the rename, and what actually enforces
+      it is `20260910020000` itself, whose `$the_shape$` block raises when
+      `slides.narrative` is still a column or a function body still names it.
+
+      The word `caption` is not being un-retired. `20260830270000` renamed the
+      OTHER column — `slice_items.caption` — to `title`, under the rule that a
+      title is authored content. That column is still `title`. This row hands
+      the freed word to the column whose content was never a heading.
+    */
+    {
+      was: ['slides.narrative'],
+      is: ['slides.caption'],
+      migrations: ['20260910020000'],
+      retired: ['slides.narrative'],
+      copy: [],
+    },
   ].map((row) => Object.freeze({ ...row, ...Object.fromEntries(
     ['was', 'is', 'migrations', 'retired', 'copy'].map((k) => [k, Object.freeze(row[k])]),
   ) })),
