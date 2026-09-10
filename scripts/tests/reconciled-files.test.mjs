@@ -492,6 +492,8 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/editor/StructureRowMenu.tsx',
     'src/lib/blueprintStepTech.ts',
     'src/lib/serviceSpecMutations.test.ts',
+    'src/components/ui/button.tsx',
+    'src/components/editor/ThemeToggle.tsx',
   ])
 })
 
