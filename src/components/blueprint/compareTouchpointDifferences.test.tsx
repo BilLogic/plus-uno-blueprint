@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
- * #382 — a compare of two paths that place different touchpoints on the same
- * cell shows the difference.
+ * A compare of two paths that place different touchpoints on the same cell
+ * shows the difference.
  *
  * The compare data layer used to weigh three fields: `content`, `summary` and
  * `resources`. A touchpoint lane's cell can carry placements the grid label

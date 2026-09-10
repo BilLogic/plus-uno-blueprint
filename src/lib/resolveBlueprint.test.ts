@@ -3,11 +3,11 @@
  *
  * `resolveBlueprintForScenario` is the one place that decides between the two
  * sources a board can arrive from — the database, and the fallback blueprint
- * a build with no database serves — and then reconciles them. Until #326 S4
- * it also carried two read-time repairs for this deployment's own rows, both
- * gated on hardcoded PLUS scenario and path UUIDs. Those are gone: the faults
+ * a build with no database serves — and then reconciles them. It once also
+ * carried read-time repairs for one deployment's own rows, gated on that
+ * deployment's hardcoded scenario and path UUIDs. Those are gone: the faults
  * they patched were corrected at source, and what is left is the general
- * rule, which is the same rule in the template.
+ * rule.
  *
  * That rule is DB-WINS, and it is worth stating plainly because "merge" is
  * ambiguous and this one is not. A value the database holds is never
@@ -429,10 +429,10 @@ test('touchpoints merge by name: summary and role fill, and an empty fallback ro
 })
 
 test("the path's own summary and note fill from the fallback only when the database left them empty", () => {
-  // #396 Q36. The key written here is `summary`, which is what the column is
-  // called and what `BlueprintPath` carries. It was `description` on this side
-  // until #326 S4, and a key by that name landed beside the real one and was
-  // read by nobody — so the fallback's words for a route never appeared.
+  // The key written here is `summary`, which is what the column is called and
+  // what `BlueprintPath` carries. It was `description` on one side once, and a
+  // key by that name landed beside the real one and was read by nobody — so
+  // the fallback's words for a route never appeared.
   registry.rawFallback = fallbackBlueprint({
     path: {
       id: PATH,

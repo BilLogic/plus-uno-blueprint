@@ -553,6 +553,9 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/editor/WorkspaceServiceSwitcher.tsx',
     'src/components/editor/workspaceServiceSwitcher.test.tsx',
     'src/components/editor/TabStrip.tsx',
+    'src/lib/resolveBlueprint.test.ts',
+    'src/components/blueprint/compareTouchpointDifferences.test.tsx',
+    'src/contexts/supabaseProviderWriteGate.test.tsx',
   ])
 })
 

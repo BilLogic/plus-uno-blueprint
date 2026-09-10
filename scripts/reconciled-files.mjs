@@ -1741,4 +1741,19 @@ export const RECONCILED_FILES = [
   'src/components/editor/WorkspaceServiceSwitcher.tsx',
   'src/components/editor/workspaceServiceSwitcher.test.tsx',
   'src/components/editor/TabStrip.tsx',
+
+  // Three contracts this deployment wrote, now shared.
+  //
+  // This tree holds 22 test files the template does not. 19 import only
+  // modules the template has, so all 19 were run there: three passed
+  // unmodified and are here; sixteen failed, and each of those failures is a
+  // measurement of divergence rather than a file to force green.
+  //
+  // `supabaseProviderWriteGate.test.tsx` is not a duplicate of the template's
+  // `supabaseProviderTier.test.tsx`. That one asserts `isServiceAccount`, a
+  // flag this deployment deliberately does not publish; this one asserts the
+  // gate those flags feed. The template now carries both.
+  'src/lib/resolveBlueprint.test.ts',
+  'src/components/blueprint/compareTouchpointDifferences.test.tsx',
+  'src/contexts/supabaseProviderWriteGate.test.tsx',
 ]
