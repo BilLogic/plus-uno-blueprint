@@ -1884,4 +1884,21 @@ export const RECONCILED_FILES = [
   'src/components/editor/SessionChangesSheet.tsx',
   'scripts/authoring-archivers.mjs',
   'scripts/tests/authoring-log.test.mjs',
+
+  // A board reaches the address bar upstream too. The phase, the scenario, the
+  // path selection and the view mode go in the search, and `BoardAddressSync`
+  // is the one bridge between editor navigation, the path selection store and
+  // the tab state. The reason the board's param names are NOT in this
+  // deployment's cross-repo contract moved to `blueprintContract.ts`, which is
+  // where the bot's half of that promise already lives — the shared file says
+  // the general rule and the local one says who else spells the names.
+  //
+  // The integration test now reads its phase and two scenarios out of
+  // `FALLBACK_NAV` by structure rather than by index: a sample that lists all
+  // its phases first puts a phase at index 1, and every assertion would then
+  // be about a navigation the app refuses.
+  'src/lib/boardAddress.ts',
+  'src/lib/boardAddress.test.ts',
+  'src/components/editor/BoardAddressSync.tsx',
+  'src/components/editor/boardAddressSync.test.tsx',
 ]

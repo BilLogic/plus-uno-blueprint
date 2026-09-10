@@ -16,7 +16,17 @@
  */
 
 export const BLUEPRINT_CONTRACT = {
-  /** Query-param names the app's URL layer accepts (src/lib/urlViewState.ts). */
+  /**
+   * Query-param names the app's URL layer accepts (src/lib/urlViewState.ts).
+   *
+   * These four and no more. A board's address — `phase`, `scenario`, `paths`,
+   * `view` — lives in `boardAddress.ts` instead, because this list is the set
+   * of names TWO repositories must spell identically: uno-bot builds `?cell=`
+   * links and vendors this module to do it. Nothing outside the app writes a
+   * board address, so putting those here would ship constants to a Worker that
+   * cannot use them and make re-vendoring the price of an app-only change. If
+   * the bot ever cites a board rather than a cell, they move.
+   */
   urlParams: {
     cell: 'cell',
     slice: 'slice',

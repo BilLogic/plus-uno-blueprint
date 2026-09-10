@@ -573,6 +573,10 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/components/editor/SessionChangesSheet.tsx',
     'scripts/authoring-archivers.mjs',
     'scripts/tests/authoring-log.test.mjs',
+    'src/lib/boardAddress.ts',
+    'src/lib/boardAddress.test.ts',
+    'src/components/editor/BoardAddressSync.tsx',
+    'src/components/editor/boardAddressSync.test.tsx',
   ])
 })
 

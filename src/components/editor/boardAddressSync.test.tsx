@@ -33,9 +33,29 @@ vi.mock('@/contexts/SupabaseProvider', () => ({
   useSupabase: () => ({ client: null, configured: false, canWrite: false }),
 }))
 
-const PHASE = FALLBACK_NAV[0].id
-const DISCOVERY = FALLBACK_NAV[1].id
-const INTERVIEW = FALLBACK_NAV[2].id
+/**
+ * A phase with two scenarios under it, read out of the fallback rather than
+ * indexed into it.
+ *
+ * The claims below need one phase and two of its scenarios — moving between
+ * them is what the back button test steps through. Which entries those are is
+ * a fact about whatever sample the deployment ships, and `FALLBACK_NAV` is not
+ * ordered phase-then-its-scenarios in every one of them: a sample that lists
+ * all its phases first puts a phase, not a scenario, at index 1, and every
+ * assertion here would then be about a navigation the app refuses.
+ */
+const PARENT = FALLBACK_NAV.find(
+  (item) =>
+    !item.parentId &&
+    FALLBACK_NAV.filter((child) => child.parentId === item.id).length >= 2,
+)!
+const [FIRST, SECOND] = FALLBACK_NAV.filter(
+  (item) => item.parentId === PARENT.id,
+)
+
+const PHASE = PARENT.id
+const DISCOVERY = FIRST.id
+const INTERVIEW = SECOND.id
 
 function path(name: string, kind: PathListItem['kind']): PathListItem {
   return { id: `id-${name}`, name, summary: null, note: null, kind }
