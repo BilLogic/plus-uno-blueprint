@@ -22,7 +22,7 @@
     },
     {
       "path": "src/data/**",
-      "reason": "This instance's blueprint data and fallbacks. 47 files here exist nowhere upstream."
+      "reason": "This instance's offline registries. Both are registered with nothing — the board is rows — and the two files still differ from the package's, which register its sample."
     },
     {
       "path": "src/config.ts",

@@ -132,11 +132,10 @@
  * screen calls a slide a frame.
  *
  * **`cells.links` is the last row, and it is not in the word lists either.**
- * `links` is an ordinary English word the sweep would hit across the tree; the
- * hand-written fallback blueprints in `src/data` still carry a `links` array and
- * must, because `cellResources.ts` and `cellTouchpoints.ts` both read it; and
+ * `links` is an ordinary English word the sweep would hit across the tree, and
  * `search_blueprint` still emits an output column of that name, because uno-bot
- * reads it by key. What retired is the ARRANGEMENT — one column holding
+ * reads it by key. The fallback blueprints that carried a `links` array are
+ * gone, and so are the readers that had to keep understanding it. What retired is the ARRANGEMENT — one column holding
  * resources, touchpoint detail and provenance citations under a name describing
  * one of them — and that is held by
  * [`scripts/tests/cell-resources.test.mjs`](scripts/tests/cell-resources.test.mjs),
@@ -369,10 +368,9 @@ export const RENAME_MAP = Object.freeze(
       migrations: ['20260830140000'],
       // Both lists are empty, and that IS the entry rather than an omission.
       //
-      // `tech_description` still appears in the tree and must: the fallback
-      // blueprints in src/data are not migrating, and `cellTouchpoints.ts`
-      // reads that link type to resolve them. So there is nothing for the
-      // identifier sweep to forbid. And nothing ever put the phrase on
+      // `tech_description` was a link type the fallback blueprints used and
+      // `cellTouchpoints.ts` read to resolve them. Both are gone, so there is
+      // nothing for the identifier sweep to forbid. And nothing ever put the phrase on
       // screen — it was a jsonb `type` value, never a label — so there is no
       // prose spelling to retire either, and a `copy` entry with no matching
       // `retired` one is exactly what the guard below refuses.
@@ -501,10 +499,9 @@ export const RENAME_MAP = Object.freeze(
 
       The retired word would be `links`, and it is the wrong instrument three
       ways. It is an ordinary English word the identifier sweep would hit
-      across the tree ("deep links", "Figma links", `mergeUrlLinks`). The
-      hand-written fallback blueprints in src/data are not migrating and still
-      express a cell's resources as a `links` array, which `cellResources.ts`
-      reads and `cellTouchpoints.ts` reads beside it. And `search_blueprint`
+      across the tree ("deep links", "Figma links"). The fallback blueprints
+      that expressed a cell's resources as a `links` array are gone, and
+      `cellResources.ts` and `cellTouchpoints.ts` read rows. And `search_blueprint`
       still RETURNS a column called `links`, built from the new table, because
       uno-bot reads it by key and the contract has no alias mechanism for an
       output column.

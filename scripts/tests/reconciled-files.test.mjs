@@ -534,6 +534,21 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/writeTranslationContract.test.ts',
     'src/styles/theme.shape.test.ts',
     'src/lib/blueprintTechPictures.test.ts',
+    'src/contexts/TouchpointRegistryProvider.tsx',
+    'src/hooks/useSlice.ts',
+    'src/hooks/useSlices.ts',
+    'src/hooks/useTouchpointRegistryTones.ts',
+    'src/lib/cellTouchpoints.ts',
+    'src/lib/cellTouchpoints.test.ts',
+    'src/lib/cellResources.ts',
+    'src/lib/touchpointColors.test.ts',
+    'src/lib/blueprintCellSelection.nameOnly.test.ts',
+    'src/lib/canvasNavigationOutcome.test.ts',
+    'src/lib/canvasViewState.ts',
+    'src/lib/canvasViewState.test.ts',
+    'src/lib/linkedText.test.ts',
+    'src/components/mobile/MobileScenarioTransition.tsx',
+    'src/components/mobile/MobileScenarioTransition.test.tsx',
   ])
 })
 

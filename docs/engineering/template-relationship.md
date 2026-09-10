@@ -213,7 +213,7 @@ untracked file cannot be compared by path.
 **Instance-specific classification — corrected, and no longer a judgement.**
 #74 estimated "~60 instance-specific" of 116 differing files, by eye. The line
 is drawn mechanically now, by `scripts/template-quarantine.json`: within this
-scope it claims **4 of the 225 differing shared paths** — `src/config.ts`,
+scope it claimed **4 of the 225 differing shared paths** — `src/config.ts`,
 `src/types/database.ts`, `src/data/blueprintFallbacks.ts` and
 `src/lib/agent/role.md` — plus 49 instance-only files. The ~60 was high because
 it conflated file-level with block-level ownership: `semantic.css`,

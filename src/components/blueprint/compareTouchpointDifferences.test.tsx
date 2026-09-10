@@ -77,7 +77,6 @@ function makeBlueprint(
     content: 'Handshake',
     frame: null,
     summary: 'The student opens the employer profile.',
-    links: [],
     touchpoints,
     resources: [],
   }

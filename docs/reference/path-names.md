@@ -117,7 +117,7 @@ names, or allow a blank name with a UI rule for it. **`Standard` won and
 shipped**: consistent, and the repetition is itself information — these are the
 scenarios with nothing to choose.
 
-One straggler: `src/data/callOffRequestHappyPathFallback.ts:309` still carries
-the pre-rename string `'Call-off 12h+ (auto-approved)'` where the database now
-holds `'12+ hours ahead'`. It is the only one of the 38 old names still live in
-`src/`.
+The straggler is gone. `src/data/callOffRequestHappyPathFallback.ts` carried
+the pre-rename string `'Call-off 12h+ (auto-approved)'` where the database
+holds `'12+ hours ahead'` — the last of the 38 old names live in `src/` — and
+it went with the fallback fixtures. No old name is in `src/` now.

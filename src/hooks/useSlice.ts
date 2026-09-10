@@ -1,8 +1,8 @@
 import { useCallback } from 'react'
 import {
-  DEV_FALLBACK_SLICES,
-  DEV_FALLBACK_SLIDES,
-} from '@/data/devSlices'
+  FALLBACK_SLICES,
+  FALLBACK_SLICE_ITEMS,
+} from '@/data/sliceFallbacks'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
 import type { Slice, Slide } from '@/types/database'
 
@@ -11,12 +11,11 @@ export type SliceDetail = {
   items: Slide[]
 }
 
-// TODO(dev-only): remove after DB slices exist — no-DB dev mode only.
-function devSliceFallback(sliceId: string): SliceDetail | null {
-  if (!import.meta.env.DEV) return null
-  const slice = DEV_FALLBACK_SLICES.find((entry) => entry.id === sliceId)
+/** Bundled demo-slice detail; null when the id is not a fixture slice. */
+function sliceFallback(sliceId: string): SliceDetail | null {
+  const slice = FALLBACK_SLICES.find((entry) => entry.id === sliceId)
   if (!slice) return null
-  return { slice, items: DEV_FALLBACK_SLIDES[slice.id] ?? [] }
+  return { slice, items: FALLBACK_SLICE_ITEMS[slice.id] ?? [] }
 }
 
 /**
@@ -24,7 +23,7 @@ function devSliceFallback(sliceId: string): SliceDetail | null {
  * Cached across mounts; `invalidateQueries('slice:')` drops it.
  */
 export function useSlice(sliceId: string): QueryResult<SliceDetail> {
-  const fallback = useCallback(() => devSliceFallback(sliceId), [sliceId])
+  const fallback = useCallback(() => sliceFallback(sliceId), [sliceId])
 
   return useSupabaseQuery<SliceDetail>(
     `slice:${sliceId}`,

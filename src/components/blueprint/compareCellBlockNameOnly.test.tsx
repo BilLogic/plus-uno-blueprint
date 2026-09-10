@@ -9,26 +9,19 @@
  * actually composes and read the DOM, because a rename that typechecks is not
  * evidence that anything is drawn differently.
  *
- * The two cases are the two sources a board can come from, and the second is
- * the one #401's bug would have got wrong:
+ * A board has one source: `cell_touchpoints` rows. A row with a `name` and no
+ * `touchpoint_id` is a name-only placement and draws dashed; its neighbour,
+ * joined to a registry entry, draws plainly.
  *
- *  - a DATABASE board, whose placements are `cell_touchpoints` rows. A row
- *    with a `name` and no `touchpoint_id` is a name-only placement and draws
- *    dashed; its neighbour, joined to a registry entry, draws plainly.
- *  - a FALLBACK board, whose placements `cellTouchpointsFromLinks` mints from
- *    the delimited `content` string. Those carry neither a row id nor a
- *    registry link, and none of them is name-only — a whole lane drawn dashed
- *    is what the wrong predicate would produce here.
+ * There was a second case here, for a board minted from a fallback fixture's
+ * delimited `content` string. Those fixtures are gone — their content is rows
+ * now — and so is the adapter that read them.
  */
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { CompareCellBlock } from '@/components/blueprint/CompareCellBlock'
-import { TECH_DESCRIPTION_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
 import { getBlueprintLaneStyle } from '@/lib/blueprintTheme'
-import {
-  cellTouchpointsFromLinks,
-  cellTouchpointsFromRows,
-} from '@/lib/cellTouchpoints'
+import { cellTouchpointsFromRows } from '@/lib/cellTouchpoints'
 import type { BlueprintCell } from '@/types/blueprint'
 
 afterEach(cleanup)
@@ -47,7 +40,6 @@ function cell(over: Partial<BlueprintCell>): BlueprintCell {
     content: '',
     frame: null,
     summary: null,
-    links: [],
     ...over,
   }
 }
@@ -100,48 +92,12 @@ describe('CompareCellBlock draws a name-only placement dashed', () => {
     })
   })
 
-  it('dashes nothing on a fallback board, detail or no detail', () => {
-    // A hand-written fixture board reaches the block exactly as `src/data`
-    // writes it: a delimited content string, `tech_description` links keyed by
-    // label, and no `touchpoints` array at all. The block resolves it through
-    // the same adapter the normalizer uses, and every placement it mints has
-    // both halves null — which is not the same thing as name-only.
-    const { container } = render(
-      <CompareCellBlock
-        cellId="cell-1"
-        stepIndex={0}
-        laneStyle={laneStyle}
-        variant="touchpoints"
-        slotCells={[
-          cell({
-            content: 'Handshake, Zoom, Email',
-            links: [
-              {
-                type: TECH_DESCRIPTION_LINK_TYPE,
-                label: 'Zoom',
-                description: 'The advisor opens the scheduled call.',
-              },
-            ],
-          }),
-        ]}
-      />,
-    )
-
-    expect(facesByName(container)).toEqual({
-      Handshake: false,
-      Zoom: false,
-      Email: false,
-    })
-  })
 
   it('reads the block’s own placements when a slot cell has none', () => {
     // The stacked bands hand the block one cell and no `slotCells`, so the
     // names come from the content string and the placements from the
     // selection context the band built. A name-only placement is still dashed
     // there, which is the path the compare grid does not exercise.
-    const touchpoints = cellTouchpointsFromLinks('Handshake', [])
-    expect(touchpoints.map((entry) => entry.id)).toEqual([null])
-
     const { container } = render(
       <CompareCellBlock
         cellId="cell-1"

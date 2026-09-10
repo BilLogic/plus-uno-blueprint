@@ -1686,4 +1686,35 @@ export const RECONCILED_FILES = [
   'src/lib/writeTranslationContract.test.ts',
   'src/styles/theme.shape.test.ts',
   'src/lib/blueprintTechPictures.test.ts',
+  // Fifteen files the emptied fallback registry set free.
+  //
+  // Fifty TypeScript files here carried this deployment's board, and every
+  // seam that read them had to keep a second shape alive beside the rows: a
+  // `links` array, a label lookup that matched a touchpoint by its spelling,
+  // a resource list minted from the `url` entries of the same array, an
+  // offline touchpoint colour table, an offline slice. The template retired
+  // all of it when its content became rows. This tree could not follow while
+  // it still had fixtures to serve, so its copies of those files diverged by
+  // exactly the fallback half — which is why they converge the moment the
+  // fixtures go, without anyone editing them to agree.
+  //
+  // `canvasActiveContext.tsx` and `coverModel.ts` are byte-identical too and
+  // are NOT here: one cites ADR 0010 and the other a `docs/` path, and an
+  // address in one repository has to leave both copies before either can
+  // promise to keep it.
+  'src/contexts/TouchpointRegistryProvider.tsx',
+  'src/hooks/useSlice.ts',
+  'src/hooks/useSlices.ts',
+  'src/hooks/useTouchpointRegistryTones.ts',
+  'src/lib/cellTouchpoints.ts',
+  'src/lib/cellTouchpoints.test.ts',
+  'src/lib/cellResources.ts',
+  'src/lib/touchpointColors.test.ts',
+  'src/lib/blueprintCellSelection.nameOnly.test.ts',
+  'src/lib/canvasNavigationOutcome.test.ts',
+  'src/lib/canvasViewState.ts',
+  'src/lib/canvasViewState.test.ts',
+  'src/lib/linkedText.test.ts',
+  'src/components/mobile/MobileScenarioTransition.tsx',
+  'src/components/mobile/MobileScenarioTransition.test.tsx',
 ]

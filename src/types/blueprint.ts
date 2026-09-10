@@ -39,19 +39,6 @@ export type BlueprintStep = {
   summary?: string | null
 }
 
-/** Structured link on a cell (stored as JSONB; type is usually "url"). */
-export type CellLink = {
-  type: string
-  label: string
-  url?: string
-  /** Long-form copy for `tech_description` links keyed by touchpoint label. */
-  description?: string
-  /** Screenshot or illustration for `tech_description` links keyed by touchpoint label. */
-  picture?: string
-  /** Multiple images for a touchpoint (e.g. logo + screenshot). Takes precedence over `picture`. */
-  pictures?: string[]
-}
-
 /**
  * One touchpoint, used at one cell.
  *
@@ -108,9 +95,11 @@ export type CellTouchpoint = {
  * is called; this vocabulary reserves `title` for authored content a reader
  * reads and gives a name to a thing a reader navigates to.
  *
- * Built by `cellResources.ts` from either source: `resources` rows in the
- * database, or the `url`-typed entries of a fallback blueprint's `links`.
+ * Built by `cellResources.ts` from the `resources` rows the board query
+ * embeds.
  */
+export type ResourceKind = 'link' | 'attachment'
+
 export type CellResource = {
   /**
    * The row's id, so a later write can name the row it means (#270). Null on
@@ -119,7 +108,7 @@ export type CellResource = {
   id: string | null
   name: string
   /** `link` or `attachment` — what the row is, decided when it is made. */
-  kind: string
+  kind: ResourceKind
   /** The table refuses a row without one; null only on a fallback board. */
   url: string | null
   /**
@@ -143,7 +132,6 @@ export type BlueprintCell = {
    *  column — CellPanelEditor already labelled it "Summary" and getCell already
    *  relabelled it on the way out, so this closes a documented workaround. */
   summary: string | null
-  links: CellLink[]
   /**
    * Resolved touchpoint placements, from `cell_touchpoints` or from fallback
    * links. Optional for the same reason the spec block below is: the twenty
