@@ -152,15 +152,15 @@ $fn$;
 })
 
 test('the two of them in one file are told apart', async () => {
-  // The file that took this to production. Transaction control on 34 and 357,
-  // a `do $$ begin` on 237, all in one file — which is why it is the fixture.
+  // The file that took this to production. Transaction control on 34 and 373,
+  // a `do $$ begin` on 244, all in one file — which is why it is the fixture.
   const file = join(MIGRATIONS, '20260910010000_the_board_in_typescript_moves_into_the_database.sql')
   const sql = readFileSync(file, 'utf8')
   assert.deepEqual(await transactionControl(sql), [
     { statement: 'begin', line: 34 },
-    { statement: 'commit', line: 357 },
+    { statement: 'commit', line: 373 },
   ])
-  assert.match(sql.split('\n')[236], /^begin$/)
+  assert.match(sql.split('\n')[243], /^begin$/)
 })
 
 test('commit spelled `end`, and the rest of the spellings', async () => {
