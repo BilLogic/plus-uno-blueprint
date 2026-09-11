@@ -9,7 +9,8 @@
  * script has no reason to own.
  *
  *   1. THE WIRING — and this is the assertion that matters most.
- *      `src/lib/agent/loop.ts` splices the adapter's FULL text into every
+ *      `src/lib/agent/loop.ts` splices the adapter's FULL text — read from
+ *      the loader's record, not imported again — into every
  *      system prompt on every turn, and
  *      `src/deployment.ts` — the module `main.tsx` imports before the app,
  *      which registers this deployment's reference documents with the
@@ -118,14 +119,20 @@ export function adapterImport(source, { specifier }) {
 export function wiringFaults({ loop, docs, harness }) {
   const faults = []
 
-  const loopBinding = adapterImport(loop, { specifier: OVERRIDE_SPECIFIER })
-  if (!loopBinding) {
+  // The prompt reads the LOADER's record rather than importing a copy of its
+  // own. That is stricter than the import this used to require: the loader
+  // serves whatever `deployment.ts` registered, so `get_reference` and the
+  // prompt cannot disagree about what the adapter says. A second `?raw`
+  // import here is how they came apart before — the tool served the
+  // replacement while the prompt carried the template's.
+  if (!/buildSystem[\s\S]*?REFERENCE_DOCS\['canvas-adapter'\]/.test(loop)) {
     faults.push({
-      problem: `${LOOP} does not import '${OVERRIDE_SPECIFIER}?raw'`,
+      problem: `${LOOP}'s buildSystem does not splice REFERENCE_DOCS['canvas-adapter'] — the prompt must carry the document the loader serves, not a second copy`,
     })
-  } else if (!new RegExp(`buildSystem[\\s\\S]*?\\b${loopBinding}\\b`).test(loop)) {
+  }
+  if (adapterImport(loop, { specifier: OVERRIDE_SPECIFIER })) {
     faults.push({
-      problem: `${LOOP} imports the override as ${loopBinding} but buildSystem does not splice it`,
+      problem: `${LOOP} imports the override directly. It is registered in ${REGISTRATION} and read through the loader; a second copy can drift from the one get_reference serves`,
     })
   }
   if (adapterImport(loop, { specifier: PACKAGE_ADAPTER })) {

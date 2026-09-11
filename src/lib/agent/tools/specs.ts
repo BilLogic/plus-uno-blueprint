@@ -91,7 +91,7 @@ const str = (description: string) => ({ type: 'string', description })
  * value names the same one service.
  */
 const SERVICE_SCOPE_PARAM = str(
-  'Optional. Which service to search: a service name, or "all" for every service in the deployment. Omit to use the active service (the one on screen). Ignored when the deployment has only one service.',
+  'Optional. Which service to search: a service name, or "all" for every service in the deployment. Omitting it searches EVERY service — the default is the whole deployment, not the one on screen. Name a service to confine the read to it. Ignored when the deployment has only one service.',
 )
 
 /**
@@ -253,10 +253,23 @@ export const WRITE_TOOL_NAMES = new Set([
   'update_stakeholder',
 ])
 
+/**
+ * The first-read pointer at this deployment's own account of its blueprint.
+ *
+ * Written only when a `blueprint` reference is actually served. A deployment
+ * registers one through `registerReferenceDocs`; standalone, this sentence
+ * would aim the model's first call at a reference that does not exist, and a
+ * tool description that names a missing reference is worse than one that says
+ * nothing — the model spends a call finding out.
+ */
+const READ_FIRST = REFERENCE_NAMES.includes('blueprint')
+  ? 'Read blueprint first for what this blueprint is, what a status licenses you to say and what absence means; lane-roles'
+  : 'Read lane-roles'
+
 export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'get_reference',
-    description: `Read a rulebook reference before acting on its topic. Available: ${REFERENCE_NAMES.filter((n) => n !== 'canvas-adapter').join(', ')}. Read blueprint first for what this blueprint is, what a status licenses you to say and what absence means; lane-roles and lane-vocabulary before any lane/role work; cocreate-playbook and elicitation-protocol before co-creating a scenario from conversation or notes.`,
+    description: `Read a rulebook reference before acting on its topic. Available: ${REFERENCE_NAMES.filter((n) => n !== 'canvas-adapter').join(', ')}. ${READ_FIRST} and lane-vocabulary before any lane/role work; cocreate-playbook and elicitation-protocol before co-creating a scenario from conversation or notes.`,
     parameters: {
       type: 'object',
       properties: { name: str('Reference name, e.g. "lane-roles"') },
@@ -380,7 +393,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'list_stakeholders',
     description:
-      "The cast: who the blueprint is for, who staffs it, who partners on it, and the provider itself — with the other spellings each name has been written as. ALWAYS read before writing a value_props audience or linking a lane: `tutor` and `Regular Tutor` are one person, and the aliases are where that is recorded. The cast is a shared deployment-level catalog; by default this shows the actors the active service's lanes actually pick, service:\"all\" the whole roster.",
+      "The cast: who the blueprint is for, who staffs it, who partners on it, and the provider itself — with the other spellings each name has been written as. ALWAYS read before writing a value_props audience or linking a lane: `tutor` and `Regular Tutor` are one person, and the aliases are where that is recorded. The cast is a shared deployment-level catalog, and by default this shows the whole roster; pass service to see only the actors that one service's lanes actually pick.",
     parameters: {
       type: 'object',
       properties: { service: SERVICE_SCOPE_PARAM },

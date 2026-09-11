@@ -118,10 +118,13 @@ test('declaredTools reads a roster out of specs.ts without a build step', () => 
 // ---------------------------------------------------------------------------
 
 const WIRED = {
+  // The prompt reads the LOADER's record. The override reaches that record by
+  // registration (`deployment.ts`), so `get_reference` and the prompt serve
+  // one document rather than two copies that can drift.
   loop: [
-    "import canvasAdapterDoc from '@/lib/agent/canvas-adapter.md?raw'",
+    "import { REFERENCE_DOCS } from '@/lib/agent/tools/referenceDocs'",
     'export function buildSystem(note) {',
-    '  return [ROLE, canvasAdapterDoc, note].join("")',
+    "  return [ROLE, REFERENCE_DOCS['canvas-adapter'], note].join(\"\")",
     '}',
   ].join('\n'),
   docs: [
@@ -142,33 +145,36 @@ test('a pin bump that reinstates the package adapter in loop.ts fails', () => {
   // still passes when this happens: the override is still correct, still
   // audited, and no longer read by anything.
   const loop = WIRED.loop.replace(
-    "'@/lib/agent/canvas-adapter.md?raw'",
-    "'agentic-service-blueprinting/references/canvas-adapter.md?raw'",
+    "REFERENCE_DOCS['canvas-adapter']",
+    'packageAdapter',
+  ).replace(
+    "import { REFERENCE_DOCS } from '@/lib/agent/tools/referenceDocs'",
+    "import packageAdapter from 'agentic-service-blueprinting/references/canvas-adapter.md?raw'",
   )
   const faults = wiringFaults({ ...WIRED, loop }).map((fault) => fault.problem)
   assert.equal(faults.length, 2)
-  assert.match(faults[0], /loop\.ts does not import/)
+  assert.match(faults[0], /does not splice REFERENCE_DOCS/)
   assert.match(faults[1], /still imports 'agentic-service-blueprinting/)
 })
 
-test('loop.ts keeping BOTH imports fails', () => {
-  // The half-migration: the override is imported, the package one is left
-  // behind, and which text wins is now a question about which binding
-  // buildSystem happens to name.
-  const loop = `import stale from 'agentic-service-blueprinting/references/canvas-adapter.md?raw'\n${WIRED.loop}`
+test('loop.ts importing the override again fails, even while splicing the record', () => {
+  // A second copy of the same document. It reads as harmless — the two are
+  // identical today — and it is how the prompt and `get_reference` came apart
+  // before: one of them keeps the stale bytes after the other is re-registered.
+  const loop = `import canvasAdapterDoc from '@/lib/agent/canvas-adapter.md?raw'\n${WIRED.loop}`
   const faults = wiringFaults({ ...WIRED, loop })
   assert.equal(faults.length, 1)
-  assert.match(faults[0].problem, /still imports/)
+  assert.match(faults[0].problem, /imports the override directly/)
 })
 
-test('importing the override without splicing it fails', () => {
-  // The bug an import-only check misses: the import survives a refactor that
+test('reading the record without splicing it fails', () => {
+  // The bug an import-only check misses: the read survives a refactor that
   // drops the value from the prompt, and the prompt loses its rulebook
   // entirely without a single unresolved reference.
-  const loop = WIRED.loop.replace('canvasAdapterDoc, note', 'note')
+  const loop = WIRED.loop.replace("REFERENCE_DOCS['canvas-adapter'], note", 'note')
   const faults = wiringFaults({ ...WIRED, loop })
   assert.equal(faults.length, 1)
-  assert.match(faults[0].problem, /buildSystem does not splice it/)
+  assert.match(faults[0].problem, /does not splice REFERENCE_DOCS/)
 })
 
 test('get_reference serving something other than the imported override fails', () => {
@@ -341,34 +347,38 @@ test('the override is the file the app serves, and the package copy still differ
   // asks for that decision instead of leaving a redundant file behind.
   //
   // The anchor was `add_step` — a phantom write tool the package adapter named
-  // and this app lacked (#115). asb v1.0.0 retired it, converged the package
+  // and this app lacked. asb v1.0.0 retired it, converged the package
   // adapter's structure onto this one, and moved its served references to
   // `leads_to` / `enables` (which emptied the supersession list), then the
-  // stakeholder and evidence tools (asb 1.6.0 took all thirteen — #325 S3).
-  // What still diverges, and why the override stays, is two read rows:
-  // `search_blueprint`, which needs pgvector the portable core cannot carry
-  // (asb #163 part B), and `list_blueprint`, whose name is the open Q24
-  // against the template's `list_scenarios`. So the anchor is the one row
-  // that has a schema reason to stay apart — it trips when the package read
-  // surface grows to include it, the signal that the override's last reason
-  // is gone and #325 S4 (delete the override, import the package's) is due.
+  // stakeholder and evidence tools. The anchor after that was
+  // `search_blueprint`, on the reasoning that ranked search needs pgvector a
+  // portable core cannot carry.
   //
-  // S4 CAME DUE AGAINST asb v1.9.0 AND WAS REFUSED. This assertion still
-  // holds, which is the whole answer: the package's read row names one
-  // journey read this app does not register and omits both rows above, so
-  // importing it would ship a "FULL read surface" sentence wrong in both
-  // directions — a phantom name the agent would call, and two real tools it
-  // would believe it could not. The write rows already match exactly; the
-  // read row is the last of it. Q24 settles before S4 is retried.
+  // THAT REASON IS GONE. The template ships `search_blueprint` now — switched
+  // off by default, listed in its adapter, built by the deployment that has
+  // the index — and the two rosters have converged to one name apart. What
+  // still keeps this override is that one name: the package adapter lists
+  // `list_scenarios`, the old name for `list_blueprint`, which it serves for
+  // one more release and this app does not have at all. Importing their copy
+  // would ship a "FULL read surface" sentence naming a tool the agent cannot
+  // call — the exact defect this check exists to catch, in the exact shape it
+  // was first caught in.
+  //
+  // So the anchor moves to that alias. When the template retires it, this
+  // trips, and deleting the override in favour of the package's copy becomes
+  // the right thing to do rather than the convenient one.
   const ours = read(ADAPTER)
   const theirs = read(join(PACKAGE, 'references/canvas-adapter.md'))
   assert.notEqual(ours, theirs)
   assert.match(ours, /OVERRIDES a pinned package document/)
-  assert.doesNotMatch(
+  assert.match(
     theirs,
-    /`search_blueprint`/,
-    'the package adapter now lists search_blueprint — the last schema reason for the override is gone; do #325 S4 and delete it',
+    /`list_scenarios`/,
+    'the package adapter no longer names list_scenarios — the last reason this override exists is gone. Delete it and serve the package copy.',
   )
+  // And the reason is real: this app does not declare that tool, so the
+  // package sentence would be naming something the agent cannot call.
+  assert.doesNotMatch(read('src/lib/agent/tools/specs.ts'), /name: 'list_scenarios'/)
 })
 
 test('every declared tool is on exactly one surface', () => {

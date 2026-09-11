@@ -20,12 +20,8 @@ import { collectAgentUiContext } from '@/lib/agent/uiBridge'
 import { agentUiCommandMutates } from '@/lib/agent/uiCommands'
 import type { AgentAttachment } from '@/lib/agent/attachments'
 import type { AgentSkillCommand } from '@/lib/agent/skills'
-// The INSTANCE override, not the package's `references/canvas-adapter.md`.
-// The pinned one names a registry this app does not have and an edge
-// vocabulary this database refuses (#115); it reaches no prompt.
-// `scripts/check-write-surface.mjs` fails if this import ever points back.
-import canvasAdapterDoc from '@/lib/agent/canvas-adapter.md?raw'
 import roleDoc from '@/lib/agent/role.md?raw'
+import { REFERENCE_DOCS } from '@/lib/agent/tools/referenceDocs'
 import {
   hasKey,
   modelFor,
@@ -61,10 +57,16 @@ const ADAPTERS: Record<string, AgentProviderAdapter> = {
  * composer (`skills.ts`), read out of the same installed package as the
  * references — one copy, so the adapter's translation stays a drop-in.
  *
- * The adapter is the ONE reference this app overrides (`#115`): its two
- * "FULL surface" rows are a list of THIS registry's names, so they cannot
- * come from a package that ships a different one. Everything else still
- * installs. `src/lib/agent/canvas-adapter.md` carries the whole story.
+ * The adapter is the ONE reference this app overrides: its two "FULL
+ * surface" rows are a list of THIS registry's names, so they cannot come
+ * from a package that ships a different one. Everything else still installs.
+ * `src/lib/agent/canvas-adapter.md` carries the whole story.
+ *
+ * The override no longer arrives by import. `deployment.ts` registers it
+ * under `canvas-adapter` before the app is imported, and the prompt reads the
+ * LOADER's record — so `get_reference` and the prompt serve one document by
+ * construction. Splicing a second copy in here is how the two came apart: a
+ * replacement the tool served while the prompt still carried the template's.
  */
 const ROLE = roleDoc.trimEnd()
 
@@ -76,7 +78,7 @@ export function buildSystem(
   return [
     ROLE,
     '\n\n--- canvas-adapter reference (FULL text — get_reference serves the other, deeper references) ---\n',
-    canvasAdapterDoc,
+    REFERENCE_DOCS['canvas-adapter'],
     skill?.content
       ? `\n\n--- active skill: ${skill.label} (invoked by the user; the same SKILL.md IDE agents follow) ---\n${skill.content}\n\nYou are the canvas agent, not an IDE agent: skip the skill's file/script/CLI mechanics and act through your tools, translated by the canvas-adapter above. The skill's judgment — what makes a good blueprint/slice, the order of questions, the quality bars — applies in full.`
       : '',

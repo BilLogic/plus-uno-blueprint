@@ -1,10 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { existsSync, readFileSync } from 'node:fs'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { TOOL_SPECS } from '@/lib/agent/tools/specs'
+import { readReference } from '@/lib/agent/tools/read'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import {
   resolveServiceScope,
   serviceStakeholderIds,
-  servicePhaseNames,
 } from '@/lib/agent/tools/serviceScope'
 import { setActiveServiceSlug } from '@/contexts/activeServiceStore'
 import { __resetActiveServiceIdCache } from '@/lib/service'
@@ -144,16 +146,103 @@ describe('resolveServiceScope', () => {
   })
 })
 
-describe('servicePhaseNames', () => {
-  it("returns the service's phase names, lowercased", async () => {
-    const client = fakeClient((rec) =>
-      rec.table === 'phases'
-        ? { data: [{ name: 'Onboarding' }, { name: 'In-session' }], error: null }
-        : { data: [], error: null },
-    )
-    const names = await servicePhaseNames(client, 'svc-sales')
-    expect([...names].sort()).toEqual(['in-session', 'onboarding'])
+/*
+ * What the agent is TOLD about an omitted service, held to what an omitted
+ * service DOES. The two drifted once already: the resolver read every service
+ * while the rulebook said an unnamed read stayed on the service on screen, so
+ * a model that trusted the words believed a whole-deployment answer covered
+ * only the board in front of the human.
+ */
+describe('the words about an omitted service match the behaviour', () => {
+  const EVERY_SERVICE = /omitting it searches every service/i
+  const ACTIVE_SERVICE = /(active service|service on screen|one on screen\))/i
+
+  const takesService = (spec: (typeof TOOL_SPECS)[number]) =>
+    Object.keys(spec.parameters.properties ?? {}).includes('service')
+
+  const scoped = TOOL_SPECS.filter(takesService)
+
+  /**
+   * The adapter's service row, and every way it disagrees with the tools that
+   * take `service`. Empty is agreement.
+   */
+  function serviceRowProblems(adapter: string, toolNames: readonly string[]): string[] {
+    const row = adapter
+      .split('\n')
+      .find((line) => line.startsWith('| Work across several services'))
+    if (!row) return ['the adapter has no "| Work across several services" row']
+    return [
+      ...(/every service/i.test(row) ? [] : ['the row does not say every service']),
+      ...(ACTIVE_SERVICE.test(row) ? ['the row says an omitted service is the one on screen'] : []),
+      ...toolNames
+        .filter((name) => !row.includes(`\`${name}\``))
+        .map((name) => `the row does not name \`${name}\``),
+    ]
+  }
+
+  /** The template's source rulebook. A deployment has no such folder. */
+  const SOURCE_REFERENCES = new URL('../../../../references/', import.meta.url)
+  const SOURCE_ADAPTER = new URL('canvas-adapter.md', SOURCE_REFERENCES)
+  const GENERATED_ADAPTER = new URL('../skill/references/canvas-adapter.md', import.meta.url)
+
+  it('omitting `service` resolves to every service on a multi-service deployment', async () => {
+    setActiveServiceSlug('sales-pipeline')
+    await expect(resolveServiceScope(servicesClient(TWO), {})).resolves.toEqual({
+      kind: 'all',
+    })
   })
+
+  it('every read that takes `service` says omitting it covers every service', () => {
+    expect(scoped.length).toBeGreaterThan(0)
+    for (const spec of scoped) {
+      const param = (spec.parameters.properties as Record<string, { description?: string }>)
+        .service
+      expect(param?.description, spec.name).toMatch(EVERY_SERVICE)
+      expect(spec.description, spec.name).not.toMatch(/default[^.]*\b(active|on screen)\b/i)
+    }
+  })
+
+  /*
+   * Read from the record the agent is actually served — the one `get_reference`
+   * answers from and the system prompt quotes in full — never from a file at a
+   * fixed path. A deployment receives the adapter through the package's
+   * generated copy or registers a replacement of its own, and either way the
+   * served text is what a model reads and what has to name every tool.
+   */
+  it('the adapter the agent is served says the same, and names every such tool', () => {
+    const names = scoped.map((spec) => spec.name)
+    expect(names.length).toBeGreaterThan(0)
+    expect(serviceRowProblems(readReference('canvas-adapter'), names)).toEqual([])
+  })
+
+  it('a registered replacement adapter is the one held to the tools', async () => {
+    vi.resetModules()
+    const { registerReferenceDocs } = await import('@/lib/agent/tools/referenceRegistry')
+    registerReferenceDocs({
+      'canvas-adapter': '| Work across several services | Omitting it searches every service. |\n',
+    })
+    const { readReference: served } = await import('@/lib/agent/tools/read')
+    const { TOOL_SPECS: specs } = await import('@/lib/agent/tools/specs')
+    const names = specs.filter(takesService).map((spec) => spec.name)
+
+    expect(names.length).toBeGreaterThan(0)
+    expect(serviceRowProblems(served('canvas-adapter'), names)).toEqual(
+      names.map((name) => `the row does not name \`${name}\``),
+    )
+  })
+
+  /*
+   * The template is the adapter's home: `references/` holds the source, and
+   * the skills sync vendors it for the app to import. A deployment has no
+   * `references/` folder, so there is nothing to compare and the case skips
+   * rather than failing on a path it was never given.
+   */
+  it.skipIf(!existsSync(SOURCE_REFERENCES))(
+    'the source adapter and its generated copy agree',
+    () => {
+      expect(readFileSync(GENERATED_ADAPTER, 'utf8')).toBe(readFileSync(SOURCE_ADAPTER, 'utf8'))
+    },
+  )
 })
 
 describe('serviceStakeholderIds — the implicit-membership JOIN', () => {

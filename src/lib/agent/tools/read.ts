@@ -24,7 +24,6 @@ import { REFERENCE_NAMES } from '@/lib/agent/tools/referenceNames'
 import {
   SCOPE_ALL,
   serviceStakeholderIds,
-  servicePhaseNames,
   type ServiceScope,
 } from '@/lib/agent/tools/serviceScope'
 
@@ -159,10 +158,25 @@ async function scopeJourneyRows(
   scope: ServiceScope,
 ): Promise<PortalRow[]> {
   if (scope.kind === 'all') return rows
-  const phaseNames = await servicePhaseNames(client, scope.serviceId)
-  const kept = rows.filter(
-    (row) => row.phase != null && phaseNames.has(row.phase.toLowerCase()),
-  )
+  // Placed by OWNERSHIP, not by name. Two services may each own a phase called
+  // "Intake", and a row is only this service's if the name it carries belongs
+  // to this service and to no other — a name-only filter hands one service the
+  // other's rows, which is the one thing a scoped read must never do. A row
+  // whose phase is shared, or missing, is dropped rather than placed: nowhere
+  // is the honest answer, and "somewhere else" would be a claim.
+  const { data, error } = await client.from('phases').select('name, service_id')
+  if (error) throw new Error(error.message)
+  const owners = new Map<string, Set<string>>()
+  for (const phase of data ?? []) {
+    const key = phase.name.toLowerCase()
+    const set = owners.get(key) ?? new Set<string>()
+    set.add(phase.service_id)
+    owners.set(key, set)
+  }
+  const kept = rows.filter((row) => {
+    const services = row.phase ? owners.get(row.phase.toLowerCase()) : undefined
+    return services?.size === 1 && services.has(scope.serviceId)
+  })
   return kept.map((row) => ({ ...row, total_matched: kept.length }))
 }
 

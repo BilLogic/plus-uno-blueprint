@@ -87,10 +87,19 @@ describe('searchBlueprint scope', () => {
   it('scoped to the active service returns only that service’s rows', async () => {
     const client = fakeClient({
       rpc: () => ({ data: PORTAL_ROWS, error: null }),
-      // Sales owns only the "Prospecting" phase.
+      // The ownership map, which is what places a row: Sales owns
+      // "Prospecting", Support owns "In-session". A phase carries its owner
+      // here because the scope is decided by WHO owns the name, not by the
+      // name alone.
       from: (rec) =>
         rec.table === 'phases'
-          ? { data: [{ name: 'Prospecting' }], error: null }
+          ? {
+              data: [
+                { name: 'Prospecting', service_id: 'svc-sales' },
+                { name: 'In-session', service_id: 'svc-support' },
+              ],
+              error: null,
+            }
           : { data: [], error: null },
     })
     const out = await searchBlueprint(client, { query: 'demo', scope: SALES })
@@ -98,6 +107,49 @@ describe('searchBlueprint scope', () => {
     expect(out).not.toContain('late call-off')
     // Header is honest within the scope: one row, of one.
     expect(out).toContain('of 1')
+  })
+
+  it('refuses to hand one service another service’s row', async () => {
+    // Two services own a phase with the SAME NAME, which is legal — a name is
+    // free text and "Prospecting" is an obvious thing for two journeys to
+    // call a phase. Placing by name would give Sales a row that may belong to
+    // Support, and the caller has no way to tell. Nowhere is the honest
+    // answer, so the row is dropped rather than claimed.
+    const client = fakeClient({
+      rpc: () => ({ data: PORTAL_ROWS, error: null }),
+      from: (rec) =>
+        rec.table === 'phases'
+          ? {
+              data: [
+                { name: 'Prospecting', service_id: 'svc-sales' },
+                { name: 'Prospecting', service_id: 'svc-support' },
+                { name: 'In-session', service_id: 'svc-support' },
+              ],
+              error: null,
+            }
+          : { data: [], error: null },
+    })
+    const out = await searchBlueprint(client, { query: 'demo', scope: SALES })
+    expect(out).not.toContain('sales demo booked')
+    expect(out).not.toContain('late call-off')
+  })
+
+  it('drops a row that carries no phase, rather than placing it', async () => {
+    // A row with no breadcrumb cannot be placed in any service. It is a fault
+    // in the deployment's own function, not a fact about the data — and
+    // keeping it inside a scope would report it as this service's.
+    const client = fakeClient({
+      rpc: () => ({
+        data: [{ ...PORTAL_ROWS[0], phase: null }],
+        error: null,
+      }),
+      from: (rec) =>
+        rec.table === 'phases'
+          ? { data: [{ name: 'Prospecting', service_id: 'svc-sales' }], error: null }
+          : { data: [], error: null },
+    })
+    const out = await searchBlueprint(client, { query: 'demo', scope: SALES })
+    expect(out).not.toContain('sales demo booked')
   })
 
   it('widened to all returns every service’s rows, unfiltered', async () => {

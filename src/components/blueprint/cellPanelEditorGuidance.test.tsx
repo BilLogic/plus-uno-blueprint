@@ -62,6 +62,7 @@ function openDraftIn(lane: { name: string; role?: string | null }) {
         laneId: 'lane-1',
         stepId: 'step-1',
         laneName: lane.name,
+        laneRole: lane.role ?? null,
         stepName: 'Hears about the service',
         stepIndex: 0,
       }}
