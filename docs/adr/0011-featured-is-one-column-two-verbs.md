@@ -1,52 +1,11 @@
 ---
-status: accepted
+status: moved
 audience: developers
-summary: A resource's `featured` flag is one boolean whose meaning depends on the resource's kind — a featured attachment is the owner's preview, a featured link is one of its buttons — rather than two columns or a role enum, because the two verbs are what a reader sees and the one column is what an author decides.
+summary: Recorded in the template as ADR 0018. A resource's `featured` flag is one boolean whose meaning depends on the resource's kind — a featured attachment is the owner's preview, a featured link is one of its buttons — rather than two columns or a role enum, because the two verbs are what a reader sees and the one column is what an author decides.
 ---
 
 # Featured is one column, two verbs
 
-A placement, or a cell, can point at any number of resources (#271). What it
-LEADS with — the picture the panel opens on, the buttons under it — is
-decided by one boolean on the resource row, `featured`, and read through the
-resource's `kind`:
+This decision is recorded in the template, as [BilLogic/agentic-service-blueprinting ADR 0018](https://github.com/BilLogic/agentic-service-blueprinting/blob/main/docs/adr/0018-featured-is-one-column-two-verbs.md). It is about code this deployment runs from the template, so the template is where it lives. Read it there for the decision, its reasons and its consequences.
 
-- a featured **attachment** is the owner's **preview**: at most one per
-  owner, held by a partial unique index;
-- a featured **link** is one of the owner's **buttons**, named by its host:
-  any number.
-
-The panel says "Set as preview" over an attachment and "Set as button" over a
-link (#273); the column underneath says `featured = true` for both.
-
-## Why one column and not two, or an enum
-
-The obvious alternatives were `preview_id` on the owner and `is_button` on
-the link, or a `role in ('preview', 'button', 'none')` on the resource. Both
-encode on the row a fact that is already there: an attachment cannot be a
-button and a link cannot be a preview, so the second word is always
-determined by `kind`. A role enum would admit the two contradictory rows
-(`kind = 'link', role = 'preview'`) that the split forbids by construction,
-and a pointer on the owner would need a second write to stay in step with the
-row it points at — the shape that made the placement's old `screenshot` and
-`url` columns drift from the resources copied out of them (#276).
-
-The author's decision is one bit: *lead with this*. The reader sees two
-verbs because the two kinds are shown two ways. Keeping the bit on the row
-means "unset" is the same write whichever verb it undoes, the inverse is
-`restore_featured_resources` over `{id, featured}` pairs whatever the kind,
-and a resource carries everything about itself.
-
-## Consequences
-
-- The "one preview per owner" rule is a partial unique index over
-  `(cell_touchpoint_id) where featured and kind = 'attachment'` and its
-  cell-owned twin, not a foreign key. Featuring a second attachment first
-  clears the first in the same transaction (`set_featured_resource`); a
-  restore writes `false` rows before `true` rows for the same reason.
-- A reader who wants "the preview" reads `featured and kind = 'attachment'`,
-  never `featured` alone. `featuredPresentation` is where the app does this
-  once.
-- The plausible "fix" — adding `role` so the verb is stored — would store a
-  second copy of `kind`. If a third kind ever needs a third verb, it gets
-  one in the presentation layer, and the column stays a bit.
+This file keeps its number so that a citation of ADR 0011 in this repository still lands. The two repositories number their records independently: here, 0011 is this pointer; in the template, 0018 is the record.
