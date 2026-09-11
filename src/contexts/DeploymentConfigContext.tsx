@@ -12,6 +12,8 @@ import {
 } from '@/deploymentConfig'
 import { ORG_NAME } from '@/config'
 import { applyBrandAccent } from '@/lib/brandAccent'
+import { configureCellBudget } from '@/lib/cellContentLimits'
+import { configurePathColorPins } from '@/lib/pathColorTheme'
 
 /**
  * The deployment seam, made reachable to every surface in the app.
@@ -60,6 +62,28 @@ export function DeploymentConfigProvider({
   useLayoutEffect(() => {
     applyBrandAccent(document.documentElement, { accent })
   }, [accent])
+
+  /**
+   * The pin table onto the colour theme, as a LAYOUT effect for the same
+   * reason as the accent: the map is in force before the first paint, so a
+   * named path cannot flash the hash colour and then jump. Empty (the template
+   * default) writes an empty table, which is today's assignment.
+   */
+  const pathColorPins = resolved.pathColorPins
+  useLayoutEffect(() => {
+    configurePathColorPins(pathColorPins)
+  }, [pathColorPins])
+
+  /**
+   * The cell budget onto the length-guidance module, as a LAYOUT effect for
+   * the same reason as the pins: the numbers are in force before the first
+   * paint, so the person under the field and the agent in the tool result
+   * cannot briefly see the template cap and then jump.
+   */
+  const cellBudget = resolved.cellBudget
+  useLayoutEffect(() => {
+    configureCellBudget(cellBudget)
+  }, [cellBudget])
 
   return (
     <DeploymentConfigContext.Provider value={resolved}>

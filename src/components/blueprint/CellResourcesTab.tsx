@@ -184,7 +184,7 @@ function CellResourcesEditor({
               >
                 <ExternalLink className="size-3 shrink-0 opacity-70" aria-hidden />
                 <span className="min-w-0 truncate">{resource.name}</span>
-                <span className="shrink-0 text-2xs opacity-70">
+                <span className="shrink-0 text-xs opacity-70">
                   from a touchpoint
                 </span>
               </li>

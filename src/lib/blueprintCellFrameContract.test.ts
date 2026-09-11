@@ -2,10 +2,11 @@ import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
-  CELL_CONTENT_TARGET,
-  CELL_CONTENT_WARNING,
+  configureCellBudget,
   getCellContentLengthGuidance,
 } from '@/lib/cellContentLimits'
+import { unoDeploymentConfig } from '@/deployment'
+import { resolveDeploymentConfig } from '@/deploymentConfig'
 import {
   STORYBOARD_ROW_MIN_HEIGHT,
   STORYBOARD_ROW_MIN_HEIGHT_COMPACT,
@@ -157,12 +158,18 @@ describe('stable blueprint cell frame contract', () => {
   })
 
   it('warns on long copy without refusing or truncating it', () => {
-    expect(CELL_CONTENT_TARGET).toBe(80)
-    expect(CELL_CONTENT_WARNING).toBe(100)
-    expect(getCellContentLengthGuidance('x'.repeat(100)).message).toBeNull()
-    expect(getCellContentLengthGuidance('x'.repeat(101)).message).toContain(
-      'preserved in full',
-    )
+    // This deployment's numbers come from its config, the way the provider
+    // installs them before the first paint.
+    configureCellBudget(resolveDeploymentConfig(unoDeploymentConfig).cellBudget)
+    const fits = getCellContentLengthGuidance('x'.repeat(80))
+    expect(fits.target).toBe(80)
+    expect(fits.warning).toBe(100)
+    expect(fits.message).toBeNull()
+    const long = getCellContentLengthGuidance('x'.repeat(101))
+    expect(long.overWarning).toBe(true)
+    expect(long.message).toContain('the target is 80 and the warning is 100')
+    const label = getCellContentLengthGuidance('x'.repeat(33), 'touchpointLabels')
+    expect([label.target, label.warning, label.overTarget]).toEqual([32, 48, true])
     expect(agentRegistry).toContain('getCellContentLengthGuidance')
     expect(agentRegistry).not.toContain('throw new Error(lengthProblem)')
     expect(agentSpecs).toContain('non-blocking review warning')

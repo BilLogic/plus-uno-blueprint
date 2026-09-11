@@ -38,20 +38,21 @@ function SequenceNavPreview({
   const label = (
     <span
       className={cn(
+        // geometry: two lines packed into a size-sm button, so they share one height.
         'flex min-w-0 flex-col leading-tight',
         isPrev ? 'items-start text-left' : 'items-end text-right',
       )}
     >
       <span
         className={cn(
-          'w-full truncate text-3xs font-normal text-muted-foreground',
+          'w-full truncate text-xs font-normal text-muted-foreground',
           !phaseLabel && 'invisible',
         )}
         aria-hidden={!phaseLabel}
       >
         {phaseLabel ?? '\u00A0'}
       </span>
-      <span className="w-full truncate text-xs font-medium">{title}</span>
+      <span className="w-full truncate text-sm font-medium">{title}</span>
     </span>
   )
 
@@ -94,10 +95,18 @@ function SequenceNavPreview({
   )
 }
 
-/** Previous/next slide controls; renders nothing when the active slide is alone in its sequence. */
+/**
+ * Previous/next slide controls; renders nothing when the active slide is
+ * alone in its sequence — or when there is no active slide at all, which is a
+ * connected workspace whose phases have not arrived or which has none. A
+ * sequence of nothing has no neighbours to offer.
+ */
 export function EditorSequenceNav() {
   const { slides, activeSlideId, openDetail } = useEditor()
-  const { prev, next } = getSlideSequenceNav(activeSlideId, slides)
+  const { prev, next } =
+    activeSlideId === null
+      ? { prev: null, next: null }
+      : getSlideSequenceNav(activeSlideId, slides)
 
   if (!prev && !next) return null
 

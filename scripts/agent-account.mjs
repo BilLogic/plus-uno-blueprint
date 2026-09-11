@@ -1,15 +1,15 @@
 /**
- * The blueprint's agent-facing account of itself — the pure half.
+ * A deployment's agent-facing account of the schema — the pure half.
  *
  * `docs/agents/blueprint.md` has two kinds of section. The hand-written core
- * says what the catalog cannot: how to retrieve, what absence means, what a
- * status licenses an agent to say, how paths relate to a scenario's main
+ * says what the catalog cannot: how to read a cell, what absence means, what
+ * a status licenses an agent to say, how paths relate to a scenario's main
  * route. The generated sections say what the code and the catalog already
  * say, and are RENDERED from them rather than written a third time:
  *
  *   vocabulary   from `ENTITY_KIND_DEFINITIONS` in src/lib/panelTerms.ts —
  *                the six kinds the board defines for a reader, read off the
- *                source text the way `blueprintContract.mjs` reads the contract
+ *                source text
  *   schema       from `public.schema_comments()` (pg_description, live) laid
  *                over the column inventory in src/types/database.ts, so an
  *                undescribed column shows as a gap rather than vanishing
@@ -21,11 +21,18 @@
  * guessing what to do instead.
  *
  * Pure: reads text, returns text. `generate-agent-account.mjs` does the I/O.
+ * With no database connected that script generates nothing, so this module
+ * is the whole of what CI can hold.
  */
 
 /* ------------------------------------------------------------- sources */
 
-/** The entity kinds and their definitions, read off panelTerms.ts. */
+/**
+ * The entity kinds and their definitions, read off panelTerms.ts.
+ *
+ * @param {string} source
+ * @returns {{ kind: string, label: string, definition: string }[]}
+ */
 export function entityKinds(source) {
   const start = source.indexOf('export const ENTITY_KIND_DEFINITIONS = {')
   const end = source.indexOf('} as const', start)
@@ -40,12 +47,16 @@ export function entityKinds(source) {
   return kinds
 }
 
+/** @param {string} text */
 const unescape = (text) => text.replace(/\\(.)/g, '$1')
 
 /**
  * Every relation's columns, read off the generated Supabase types: each
  * `name: { Row: { … } }` under Tables and Views. Functions carry no Row and
  * are not relations.
+ *
+ * @param {string} databaseTs
+ * @returns {Map<string, string[]>}
  */
 export function tableColumns(databaseTs) {
   const relations = new Map()
@@ -60,9 +71,14 @@ export function tableColumns(databaseTs) {
 
 /* ------------------------------------------------------------ rendering */
 
+/** @param {unknown} text */
 const cell = (text) => String(text ?? '').replace(/\s+/g, ' ').replaceAll('|', '\\|').trim()
 
-/** The vocabulary section: one line per kind, the label bold, the definition as written. */
+/**
+ * The vocabulary section: one line per kind, the label bold, the definition as written.
+ *
+ * @param {{ kind: string, label: string, definition: string }[]} kinds
+ */
 export function renderVocabulary(kinds) {
   return kinds.map(({ label, definition }) => `**${label}** — ${definition}`).join('\n\n')
 }
@@ -76,6 +92,8 @@ export function renderVocabulary(kinds) {
  * `comments` is what `schema_comments()` returns; `columns` is
  * `tableColumns()`; `readable` is the set of relations a bare select
  * succeeded on.
+ *
+ * @param {{ columns: Map<string, string[]>, comments: { relation: string, column_name: string | null, comment: string }[], readable: Set<string> }} sources
  */
 export function renderSchema({ columns, comments, readable }) {
   const tableComment = new Map()
@@ -113,7 +131,12 @@ export function renderSchema({ columns, comments, readable }) {
   return parts.join('\n\n')
 }
 
-/** Column-comment coverage over the relations an agent can read. */
+/**
+ * Column-comment coverage over the relations an agent can read.
+ *
+ * @param {{ columns: Map<string, string[]>, comments: { relation: string, column_name: string | null }[], readable: Set<string> }} sources
+ * @returns {{ described: number, of: number }}
+ */
 export function coverage({ columns, comments, readable }) {
   const described = new Set(comments.filter((r) => r.column_name).map((r) => `${r.relation}.${r.column_name}`))
   let of = 0
@@ -128,12 +151,19 @@ export function coverage({ columns, comments, readable }) {
 
 /* --------------------------------------------------------------- splice */
 
+/** @param {string} name */
 const marker = (name) => ({
   open: new RegExp(`<!-- generated:${name}[^>]*-->`),
   close: `<!-- /generated:${name} -->`,
 })
 
-/** The document with the named generated section replaced by `body`. */
+/**
+ * The document with the named generated section replaced by `body`.
+ *
+ * @param {string} doc
+ * @param {string} name
+ * @param {string} body
+ */
 export function splice(doc, name, body) {
   const { open, close } = marker(name)
   const start = open.exec(doc)
@@ -145,7 +175,11 @@ export function splice(doc, name, body) {
   return `${head}\n\n${body.trim()}\n\n${doc.slice(end)}`
 }
 
-/** The hand-written text: everything outside the generated sections and the frontmatter. */
+/**
+ * The hand-written text: everything outside the generated sections and the frontmatter.
+ *
+ * @param {string} doc
+ */
 export function handWritten(doc) {
   return doc
     .replace(/^---\n[\s\S]*?\n---\n/, '')
@@ -156,7 +190,11 @@ export function handWritten(doc) {
 // sentence or a bullet, not "the staff they do not see" inside one.
 const PROHIBITION = /(?:^|[.;:!?]\s+|—\s+|\n\s*-\s+)(?:never|do not|don't|must not)\b/gim
 
-/** How many times the hand-written core tells the reader what not to do. */
+/**
+ * How many times the hand-written core tells the reader what not to do.
+ *
+ * @param {string} text
+ */
 export function prohibitionCount(text) {
   return (text.match(PROHIBITION) ?? []).length
 }
@@ -167,7 +205,11 @@ export function prohibitionCount(text) {
  * Failures against the recorded baseline, empty when it holds. Coverage may
  * only rise and prohibitions may only fall; an improvement that is not
  * recorded is a failure too, because a baseline that never moves is a
- * backlog wearing a ratchet's clothes (migration-ledger.mjs).
+ * backlog wearing a ratchet's clothes.
+ *
+ * @param {{ columnComments: { described: number, of: number }, prohibitions: number }} current
+ * @param {{ columnComments: { described: number, of: number }, prohibitions: number }} baseline
+ * @returns {string[]}
  */
 export function ratchetFailures(current, baseline) {
   const failures = []
@@ -194,4 +236,44 @@ export function ratchetFailures(current, baseline) {
     )
   }
   return failures
+}
+
+/**
+ * Render the generated sections and collect check failures, without I/O.
+ *
+ * `check: true` fails when the document is not what the sources render.
+ * Missing `baseline` is itself a failure: a ratchet that was never recorded
+ * cannot hold. `record: true` skips both baseline failures, because the run
+ * is writing the baseline they ask for; judging it against the one it
+ * replaces failed the very command those failures prescribe.
+ *
+ * @param {{
+ *   doc: string,
+ *   kinds: { kind: string, label: string, definition: string }[],
+ *   sources: { columns: Map<string, string[]>, comments: { relation: string, column_name: string | null, comment: string }[], readable: Set<string> },
+ *   baseline: { columnComments: { described: number, of: number }, prohibitions: number } | null,
+ *   check: boolean,
+ *   record?: boolean,
+ * }} input
+ * @returns {{ next: string, current: { columnComments: { described: number, of: number }, prohibitions: number }, failures: string[] }}
+ */
+export function evaluate({ doc, kinds, sources, baseline, check, record = false }) {
+  const next = splice(splice(doc, 'vocabulary', renderVocabulary(kinds)), 'schema', renderSchema(sources))
+  const current = { columnComments: coverage(sources), prohibitions: prohibitionCount(handWritten(next)) }
+  const failures = []
+  if (check && next !== doc) {
+    failures.push(
+      'docs/agents/blueprint.md is not what its sources render — panelTerms.ts, pg_description or ' +
+        'database.ts changed and the account did not. Run: npm run agent-account',
+    )
+  }
+  if (record) return { next, current, failures }
+  if (baseline) {
+    failures.push(...ratchetFailures(current, baseline))
+  } else {
+    failures.push(
+      'docs/reference/agent-account-baseline.json does not exist — record it: npm run agent-account -- --record',
+    )
+  }
+  return { next, current, failures }
 }

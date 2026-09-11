@@ -25,7 +25,6 @@ import { IconTooltip } from '@/components/editor/IconTooltip'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { uploadAttachment } from '@/lib/attachmentUpload'
 import { hostOf } from '@/lib/cellResources'
-import { PANEL_TEXT } from '@/lib/panelText'
 import { linkPresentation } from '@/lib/resourcePresentation'
 import { validateResourceUrl } from '@/lib/resourceUrl'
 import { ROW_REVEAL_CLASS } from '@/lib/rowReveal'
@@ -429,8 +428,8 @@ export function ResourcesList({
     <div className="flex flex-col gap-2" data-resources-list="">
       {hint ? (
         <div className="flex flex-col gap-0.5">
-          <span className={PANEL_TEXT.sectionLabel}>Resources</span>
-          <p className="text-3xs text-muted-foreground">{hint}</p>
+          <span className="text-xs font-medium text-muted-foreground">Resources</span>
+          <p className="text-xs text-muted-foreground">{hint}</p>
         </div>
       ) : null}
 
@@ -465,7 +464,7 @@ export function ResourcesList({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-6 px-1.5 text-2xs"
+                  className="h-6 px-1.5 text-xs"
                   disabled={busy || uploading}
                   onClick={() => chooseFile(row.key)}
                 >
@@ -531,14 +530,14 @@ export function ResourcesList({
             <span className="min-w-0 flex-1 truncate">{nameOfFile(pending.file)}</span>
             {pending.failed ? (
               <>
-                <span className="shrink-0 text-2xs text-destructive">
+                <span className="shrink-0 text-xs text-destructive">
                   The file did not upload.
                 </span>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-6 px-1.5 text-2xs"
+                  className="h-6 px-1.5 text-xs"
                   onClick={() => void upload(pending.file, pending.replaceKey)}
                 >
                   Retry
@@ -579,7 +578,6 @@ export function ResourcesList({
           type="button"
           variant="outline"
           size="sm"
-          className="h-7"
           disabled={!pasted.trim()}
           onClick={add}
         >
@@ -609,7 +607,7 @@ export function ResourcesList({
             type="button"
             variant="ghost"
             size="sm"
-            className="h-7 self-start px-2 text-xs text-muted-foreground hover:text-foreground"
+            className="self-start px-2 text-muted-foreground hover:text-foreground"
             disabled={uploading || !client}
             onClick={() => chooseFile(null)}
           >
@@ -623,7 +621,6 @@ export function ResourcesList({
         <Button
           type="button"
           size="sm"
-          className="h-7"
           disabled={!dirty || busy || !client}
           onClick={() => void save()}
         >

@@ -12,7 +12,6 @@ import {
   useStakeholders,
   type StakeholderKind,
 } from '@/hooks/useStakeholders'
-import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 
 /**
@@ -64,11 +63,11 @@ export function StakeholderSelect({
       about the service that it does not know.
     */
     if (result.status === 'loading') {
-      return <p className={PANEL_TEXT.meta}>Loading the cast…</p>
+      return <p className="text-xs font-normal text-muted-foreground">Loading the cast…</p>
     }
     if (result.status === 'error') {
       return (
-        <p className={PANEL_TEXT.meta}>
+        <p className="text-xs font-normal text-muted-foreground">
           The cast could not be loaded: {result.message}
         </p>
       )
@@ -79,7 +78,7 @@ export function StakeholderSelect({
       // reads the same way, which is the one case this cannot distinguish and
       // the one where "nobody owns this" is also the honest answer.)
       return (
-        <p className={PANEL_TEXT.value}>
+        <p className="text-sm font-normal text-foreground/80">
           <span className="text-muted-foreground">Nobody — a structural row.</span>
         </p>
       )
@@ -91,7 +90,7 @@ export function StakeholderSelect({
           kind={selected.kind as StakeholderKind}
           summary={selected.summary}
         />
-        <span className={PANEL_TEXT.meta}>
+        <span className="text-xs font-normal text-muted-foreground">
           {STAKEHOLDER_KIND_LABELS[selected.kind as StakeholderKind]}
         </span>
       </div>
@@ -112,7 +111,7 @@ export function StakeholderSelect({
               type="button"
               variant="outline"
               size="sm"
-              className="h-7 w-full justify-between px-2 text-xs font-normal"
+              className="w-full justify-between px-2 font-normal"
             >
               <span className={cn('truncate', !selected && 'text-muted-foreground')}>
                 {selected ? selected.name : 'Nobody'}
@@ -161,7 +160,7 @@ export function StakeholderSelect({
         second mechanism for one fact.
       */}
       {selected?.summary ? (
-        <p className="text-2xs leading-snug text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           {selected.summary}
         </p>
       ) : null}
@@ -195,7 +194,7 @@ function StakeholderRow({
         aria-hidden
       />
       <span className="min-w-0 flex-1 truncate">{label}</span>
-      <span className="max-w-24 shrink-0 truncate text-2xs text-muted-foreground">
+      <span className="max-w-24 shrink-0 truncate text-xs text-muted-foreground">
         {hint}
       </span>
     </button>

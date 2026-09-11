@@ -72,8 +72,6 @@ export function ScenarioTitleBadge({
         size="fitted"
         className={cn(
           'max-w-full gap-1 overflow-visible border-transparent',
-          pathKind && 'font-semibold',
-          (panelTone || phaseTone) && 'font-semibold',
           className,
         )}
         style={{
@@ -88,6 +86,7 @@ export function ScenarioTitleBadge({
       >
         <span
           className={cn(
+            // geometry: packs the name into the badge's fixed height.
             'min-w-0 truncate leading-none',
             // The phase tone is the time-marker register — mono, uppercase,
             // LETTERSPACED. The span's own tracking would silently beat the

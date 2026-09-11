@@ -1,6 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles/tailwind.config.css'
+// Before App: it registers this deployment's reference document, which must
+// happen before anything evaluates the agent's reference vocabulary.
+import { unoDeploymentConfig } from './deployment.ts'
 import App from './App.tsx'
 import { applyBrandAccent } from './lib/brandAccent.ts'
 
@@ -42,7 +45,7 @@ if (
 } else {
   root.render(
     <StrictMode>
-      <App />
+      <App config={unoDeploymentConfig} />
     </StrictMode>,
   )
 }

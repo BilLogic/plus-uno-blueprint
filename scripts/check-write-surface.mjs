@@ -11,9 +11,10 @@
  *   1. THE WIRING — and this is the assertion that matters most.
  *      `src/lib/agent/loop.ts` splices the adapter's FULL text into every
  *      system prompt on every turn, and
- *      `src/lib/agent/tools/referenceDocs.ts` — the Q19 fork seam, which
- *      owns every reference specifier this app resolves — serves it under
- *      the bare name `canvas-adapter`. Both must resolve
+ *      `src/deployment.ts` — the module `main.tsx` imports before the app,
+ *      which registers this deployment's reference documents with the
+ *      template's loader — serves it under the bare name `canvas-adapter`,
+ *      replacing the template's copy. Both must resolve
  *      `src/lib/agent/canvas-adapter.md` and NOT
  *      `agentic-service-blueprinting/references/canvas-adapter.md`.
  *      Without this check the other three still pass while the app serves
@@ -69,6 +70,10 @@ const ADAPTER = 'src/lib/agent/canvas-adapter.md'
 const SPECS = 'src/lib/agent/tools/specs.ts'
 const LOOP = 'src/lib/agent/loop.ts'
 const DOCS = 'src/lib/agent/tools/referenceDocs.ts'
+/** Where this deployment registers its reference documents, adapter included. */
+const REGISTRATION = 'src/deployment.ts'
+/** The template's vendored skill references, which its loader imports. */
+const VENDORED = 'src/lib/agent/skill'
 const HARNESS = 'scripts/agent-harness/run.mjs'
 const SCHEMA = 'supabase/schema.reference.sql'
 const MIGRATIONS = 'supabase/migrations'
@@ -129,14 +134,14 @@ export function wiringFaults({ loop, docs, harness }) {
 
   const docsBinding = adapterImport(docs, { specifier: OVERRIDE_SPECIFIER })
   if (!docsBinding) {
-    faults.push({ problem: `${DOCS} does not import '${OVERRIDE_SPECIFIER}?raw'` })
+    faults.push({ problem: `${REGISTRATION} does not import '${OVERRIDE_SPECIFIER}?raw'` })
   } else if (!new RegExp(`'canvas-adapter':\\s*${docsBinding}\\b`).test(docs)) {
     faults.push({
-      problem: `${DOCS}'s REFERENCE_DOCS maps 'canvas-adapter' to something other than ${docsBinding}`,
+      problem: `${REGISTRATION} registers 'canvas-adapter' as something other than ${docsBinding}`,
     })
   }
   if (adapterImport(docs, { specifier: PACKAGE_ADAPTER })) {
-    faults.push({ problem: `${DOCS} still imports '${PACKAGE_ADAPTER}?raw'` })
+    faults.push({ problem: `${REGISTRATION} still imports '${PACKAGE_ADAPTER}?raw'` })
   }
 
   // The eval harness assembles the same prompt under Node. A harness reading
@@ -363,7 +368,7 @@ export function compare({ read, referenceDocs, migrations }) {
   const documented = documentedKinds(adapter)
 
   return {
-    wiring: wiringFaults({ loop: read(LOOP), docs: read(DOCS), harness: read(HARNESS) }),
+    wiring: wiringFaults({ loop: read(LOOP), docs: read(REGISTRATION), harness: read(HARNESS) }),
     write: differences(
       documentedTools(adapter, 'That is the FULL write surface'),
       declaredTools(specs, 'WRITE_TOOL_NAMES'),
@@ -394,15 +399,17 @@ export function compare({ read, referenceDocs, migrations }) {
 /**
  * The installed references this app SERVES, by package-relative path.
  *
- * Derived from `referenceDocs.ts`'s own `?raw` imports rather than by walking
- * the package: the package ships IDE-only references this app never serves,
- * and a check that demanded the override name those would be demanding a
- * warning about a document the agent cannot open.
+ * Derived from the template loader's own `?raw` imports rather than by
+ * walking the package: the package ships IDE-only references this app never
+ * serves, and a check that demanded the override name those would be
+ * demanding a warning about a document the agent cannot open. The loader
+ * imports the template's vendored copies under `src/lib/agent/skill/`, which
+ * this repository holds byte-identical to the pinned template.
  */
 function servedReferenceDocs(root) {
   const source = readFileSync(join(root, DOCS), 'utf8')
-  return [...source.matchAll(/from 'agentic-service-blueprinting\/([^']+\.md)\?raw'/g)].map(
-    ([, name]) => ({ name, text: readFileSync(join(root, PACKAGE, name), 'utf8') }),
+  return [...source.matchAll(/from '@\/lib\/agent\/skill\/([^']+\.md)\?raw'/g)].map(
+    ([, name]) => ({ name, text: readFileSync(join(root, VENDORED, name), 'utf8') }),
   )
 }
 

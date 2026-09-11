@@ -110,7 +110,6 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/laneSpecMutations.ts',
     'src/lib/stepSpecMutations.ts',
     'src/lib/entityStatus.ts',
-    'src/lib/panelText.ts',
     'src/lib/panelEditorBusy.ts',
     'src/components/blueprint/panelShell.tsx',
     'src/components/blueprint/panelLoading.tsx',
@@ -306,8 +305,6 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/contexts/BlueprintCellDetailContext.tsx',
     'src/components/blueprint/TouchpointCellFace.tsx',
     'src/components/blueprint/BlueprintCellButton.tsx',
-    'src/components/editor/AgentScopeField.tsx',
-    'src/components/editor/agentScopeField.test.tsx',
     'public/step-visual-placeholder.svg',
     'tsconfig.json',
     'tsconfig.app.json',
@@ -337,7 +334,6 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/compatLayer.test.ts',
     'src/lib/agent/placement.ts',
     'src/lib/agent/settings.ts',
-    'src/lib/agent/settings.scope.test.ts',
     'src/lib/agent/tools/referenceNames.ts',
     'src/lib/mobilePathMemory.ts',
     'src/lib/sideBySideCompareLayout.ts',
@@ -604,6 +600,10 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/illustrationUpload.ts',
     'src/components/editor/SlideImagesField.tsx',
     'src/lib/bundledSample.ts',
+    'src/lib/cellContentLimits.ts',
+    'src/lib/agent/tools/referenceDocs.ts',
+    'src/lib/agent/tools/referenceNamesExtra.ts',
+    'src/lib/agent/tools/referenceRegistry.test.ts',
   ])
 })
 

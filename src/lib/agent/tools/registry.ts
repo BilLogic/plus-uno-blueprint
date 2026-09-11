@@ -39,7 +39,11 @@ import {
   type CellContentUpdate,
 } from '@/lib/cellContentMutations'
 import { updateCellSpec } from '@/lib/cellSpecMutations'
-import { getCellContentLengthGuidance } from '@/lib/cellContentLimits'
+import {
+  cellBudgetKindForLane,
+  getCellContentLengthGuidance,
+  type CellBudgetKind,
+} from '@/lib/cellContentLimits'
 import { findingFingerprint } from '@/lib/findingFingerprint'
 import { recordFinding, updateFinding } from '@/lib/findingMutations'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
@@ -62,7 +66,6 @@ import {
   resolveActiveServiceId,
   resolveServiceScope,
 } from '@/lib/agent/tools/serviceScope'
-import { getAgentServiceScopeMode } from '@/lib/agent/settings'
 
 /** Mirrors the DB CHECK constraint so a bad kind fails before the insert. */
 const EVIDENCE_KINDS = new Set<string>([
@@ -117,6 +120,25 @@ function need(args: Record<string, unknown>, key: string): string {
 }
 
 /**
+ * Which cell-text budget a write is measured against, from the lane the
+ * cell sits on. Falls through to prose when the lane cannot be read — the
+ * same fallback the panel uses when it cannot see a role.
+ */
+async function laneBudgetKind(
+  client: Client,
+  laneId: string | null | undefined,
+): Promise<CellBudgetKind> {
+  if (!laneId) return cellBudgetKindForLane(null)
+  const { data, error } = await client
+    .from('lanes')
+    .select('name, lane_role')
+    .eq('id', laneId)
+    .maybeSingle()
+  if (error || !data) return cellBudgetKindForLane(null)
+  return cellBudgetKindForLane({ name: data.name, role: data.lane_role })
+}
+
+/**
  * Execute one tool call. Returns the text the model sees. Writes are
  * attributed to the agent session for the ledger's ✦ badge, and the query
  * cache is invalidated so the canvas repaints live.
@@ -150,7 +172,6 @@ export async function dispatchTool(
         limit: typeof args.limit === 'number' ? args.limit : undefined,
         scope: await resolveServiceScope(client, {
           serviceArg: s(args, 'service'),
-          defaultMode: getAgentServiceScopeMode(),
         }),
       })
     }
@@ -170,7 +191,6 @@ export async function dispatchTool(
         limit: typeof args.limit === 'number' ? args.limit : undefined,
         scope: await resolveServiceScope(client, {
           serviceArg: s(args, 'service'),
-          defaultMode: getAgentServiceScopeMode(),
         }),
       })
     }
@@ -217,7 +237,6 @@ export async function dispatchTool(
         client,
         await resolveServiceScope(client, {
           serviceArg: s(args, 'service'),
-          defaultMode: getAgentServiceScopeMode(),
         }),
       )
     case 'list_lanes':
@@ -405,7 +424,10 @@ export async function dispatchTool(
             `A cell already exists at that slot (${occupied[0].id}) — upsert_cell only creates. Use update_cell to edit the existing cell.`,
           )
         const newContent = need(args, 'content')
-        const lengthGuidance = getCellContentLengthGuidance(newContent)
+        const lengthGuidance = getCellContentLengthGuidance(
+          newContent,
+          await laneBudgetKind(client, laneId),
+        )
         const written = await upsertCell(client, {
           pathId: need(args, 'path_id'),
           laneId,
@@ -439,7 +461,7 @@ export async function dispatchTool(
         const { data, error } = await client
           .from('cells')
           .select(
-            'content, summary, status, owner, perceived_owner, function, form, value_props',
+            'content, summary, status, owner, perceived_owner, function, form, value_props, lane_id',
           )
           .eq('id', cellId)
           .maybeSingle()
@@ -468,7 +490,10 @@ export async function dispatchTool(
           const lengthGuidance =
             nextContent === undefined
               ? null
-              : getCellContentLengthGuidance(nextContent)
+              : getCellContentLengthGuidance(
+                  nextContent,
+                  await laneBudgetKind(client, data.lane_id),
+                )
           const previous: CellContentUpdate = {
             content: data.content ?? '',
             summary: data.summary ?? '',

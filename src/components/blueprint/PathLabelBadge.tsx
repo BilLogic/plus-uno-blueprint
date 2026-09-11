@@ -56,7 +56,7 @@ export function PathLabelBadge({
       // mark gone there is nothing to withhold. The popover trigger still
       // supplies `tabIndex`, so the explained case is reachable by keyboard.
       className={cn(
-        'max-w-full cursor-default gap-1 border-transparent font-semibold',
+        'max-w-full cursor-default gap-1 border-transparent font-medium',
         className,
       )}
       style={{
@@ -64,6 +64,7 @@ export function PathLabelBadge({
         ...style,
       }}
     >
+      {/* geometry: packs the name into the badge's fixed height. */}
       <span className="truncate leading-none tracking-tight">{name}</span>
     </Badge>
   )

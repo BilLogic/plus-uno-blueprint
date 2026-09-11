@@ -33,7 +33,6 @@ import {
   rememberedSheetSnap,
   rememberSheetSnap,
 } from '@/lib/panelSheetSnap'
-import { PANEL_TEXT } from '@/lib/panelText'
 import {
   blueprintLaneAttrs,
   blueprintToneAttrs,
@@ -280,7 +279,7 @@ export function Field({
     <span
       className={cn(
         'w-fit',
-        PANEL_TEXT.sectionLabel,
+        'text-xs font-medium text-muted-foreground',
         // Only where there is something behind it — and now the focus ring
         // alone. The help cursor and the dotted rule went with every other
         // announcement that a word is defined.
@@ -350,7 +349,7 @@ export function PanelHeader({
         <DrawerTitle className="sr-only">{title}</DrawerTitle>
         <DrawerDescription className="sr-only">{description}</DrawerDescription>
         <Breadcrumb className="min-w-0">
-          <BreadcrumbList className={cn('flex-nowrap gap-0.5', PANEL_TEXT.meta)}>
+          <BreadcrumbList className="flex-nowrap gap-0.5 text-xs font-normal text-muted-foreground">
             {shown.map((crumb, index) => (
               <Fragment key={`${crumb}-${index}`}>
                 <BreadcrumbItem className="min-w-0">
@@ -395,8 +394,8 @@ export function PanelHeader({
  * The identity block every entity panel opens with: what this is, then where
  * it sits and how big it is.
  *
- * Typography is the cell panel's, exactly — `text-sm font-bold leading-snug
- * tracking-tight` for the name and the 11px `text-2xs` step for the meta line.
+ * Typography is the cell panel's, exactly — `text-sm font-semibold`
+ * for the name and `text-xs` muted for the meta line.
  * Three panels each inventing their own heading is how a shell stops reading
  * as one surface.
  */
@@ -422,8 +421,8 @@ export function PanelIdentity({
   return (
     <div className="flex min-w-0 flex-col items-start gap-1.5">
       {badge}
-      {title ? <p className={PANEL_TEXT.title}>{title}</p> : null}
-      {meta ? <p className={PANEL_TEXT.meta}>{meta}</p> : null}
+      {title ? <p className="min-w-0 text-sm font-semibold text-foreground">{title}</p> : null}
+      {meta ? <p className="text-xs font-normal text-muted-foreground">{meta}</p> : null}
       {children}
     </div>
   )
@@ -551,7 +550,7 @@ export function PanelKindBadge({
         it — measured, the badge came out brand teal on every lane. The values
         are the tokens `[data-blueprint-lane]` publishes, so nothing here is a
         colour; this is the same idiom BlueprintStepStoryboard uses for the
-        presentation frame.
+        cell face.
       */
       style={{
         backgroundColor: 'var(--background-blueprint-cell)',

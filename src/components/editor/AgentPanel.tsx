@@ -263,7 +263,7 @@ function ChangeCount({
   return (
     <span
       className={cn(
-        'flex shrink-0 items-center gap-0.5 text-2xs tabular-nums',
+        'flex shrink-0 items-center gap-0.5 text-xs tabular-nums',
         className,
       )}
       title={`${count} change${count === 1 ? '' : 's'} from this session`}
@@ -393,7 +393,7 @@ function AgentSessionsView({
             aria-label="Filter sessions"
           />
         ) : (
-          <p className="min-w-0 flex-1 truncate pl-1 text-2xs font-medium tracking-wider text-sidebar-foreground/60 uppercase">
+          <p className="min-w-0 flex-1 truncate pl-1 text-xs font-medium tracking-wider text-sidebar-foreground/60 uppercase">
             Sessions
           </p>
         )}
@@ -430,7 +430,7 @@ function AgentSessionsView({
       </div>
 
       {pendingAttachment ? (
-        <p className="mx-2 mb-1 flex items-start gap-1.5 rounded-md bg-muted px-2 py-1.5 text-2xs text-muted-foreground">
+        <p className="mx-2 mb-1 flex items-start gap-1.5 rounded-md bg-muted px-2 py-1.5 text-xs text-muted-foreground">
           <Pencil className="mt-px size-3 shrink-0" aria-hidden />
           <span>
             {pendingAttachment.label} ready — open or start a session to send
@@ -534,7 +534,7 @@ type ToolEvent = Extract<TranscriptEvent, { kind: 'tool' }>
 function ToolDetail({ label, body }: { label: string; body: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-2xs font-medium tracking-wider text-muted-foreground uppercase">
+      <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
         {label}
       </p>
       <pre className="mt-0.5 max-h-40 overflow-auto rounded-md bg-muted px-2 py-1.5 font-mono text-xs leading-snug whitespace-pre-wrap text-foreground/80">
@@ -1072,7 +1072,7 @@ function AgentChatView({
                   <AttachmentTitle className="text-xs">
                     {attachment.label}
                   </AttachmentTitle>
-                  <AttachmentDescription className="text-2xs">
+                  <AttachmentDescription className="text-xs">
                     {attachment.lines.join(' · ')}
                   </AttachmentDescription>
                 </AttachmentContent>

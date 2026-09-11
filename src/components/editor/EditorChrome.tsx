@@ -171,7 +171,7 @@ export function FloatingSidebarNavbar({ onExpand }: { onExpand: () => void }) {
             <Button
               type="button"
               size="sm"
-              className="ml-0.5 h-6 shrink-0 px-2 text-2xs"
+              className="ml-0.5 h-6 shrink-0 px-2 text-xs"
               onClick={summary.action.onClick}
             >
               <Play className="size-3" aria-hidden />

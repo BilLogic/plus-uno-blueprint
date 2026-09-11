@@ -99,7 +99,6 @@ import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import { resolveStoryboardStripEntries } from '@/lib/storyboardWalkthrough'
 import { useTouchpointToneResolver } from '@/hooks/useTouchpointToneResolver'
 import { PANEL_TERMS } from '@/lib/panelTerms'
-import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 import type { ExistingDependency } from '@/components/blueprint/CellDependencyEditor'
 import type { DraftCellTarget } from '@/components/blueprint/CellPanelEditor'
@@ -898,7 +897,7 @@ function BlueprintCellDetailPanelBody() {
             <DrawerTitle className="text-sm font-semibold">
               New cell
             </DrawerTitle>
-            <DrawerDescription className="text-2xs text-muted-foreground">
+            <DrawerDescription className="text-xs text-muted-foreground">
               {[
                 draft.phaseName,
                 draft.scenarioName,
@@ -1121,7 +1120,7 @@ function BlueprintCellDetailPanelBody() {
 
   const cellBreadcrumb = (
     <Breadcrumb className="min-w-0">
-      <BreadcrumbList className="flex-nowrap gap-0.5 text-2xs leading-tight text-muted-foreground">
+      <BreadcrumbList className="flex-nowrap gap-0.5 text-xs leading-tight text-muted-foreground">
         {phaseName ? (
           <>
             <BreadcrumbItem className="min-w-0">
@@ -1390,7 +1389,7 @@ function BlueprintCellDetailPanelBody() {
         detailSummaryText.trim() &&
         !descriptionRepeatsTitle ? (
           <Field label="Summary" hint="What the detail fields add up to.">
-            <p className={cn('whitespace-pre-wrap', PANEL_TEXT.value)}>
+            <p className="whitespace-pre-wrap text-sm font-normal text-foreground/80">
               {detailSummaryText.trim()}
             </p>
           </Field>
@@ -1436,7 +1435,7 @@ function BlueprintCellDetailPanelBody() {
           <div className="shrink-0 px-4 pt-2">
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-md text-2xs text-muted-foreground transition-colors duration-(--motion-micro) hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              className="inline-flex items-center gap-1 rounded-md text-xs text-muted-foreground transition-colors duration-(--motion-micro) hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
               onClick={() => {
                 setReturnToDifferences(false)
                 setPanelSurface('differences')
@@ -1511,7 +1510,7 @@ function BlueprintCellDetailPanelBody() {
                     <TabsTrigger
                       key={value}
                       value={value}
-                      className="h-auto flex-none gap-1.5 rounded-none px-0 pb-2 pt-0 text-2xs font-normal text-muted-foreground/60 hover:text-muted-foreground data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
+                      className="h-auto flex-none gap-1.5 rounded-none px-0 pb-2 pt-0 text-xs font-normal text-muted-foreground/60 hover:text-muted-foreground data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
                     >
                       <TabIcon className="size-3" aria-hidden />
                       {label}
