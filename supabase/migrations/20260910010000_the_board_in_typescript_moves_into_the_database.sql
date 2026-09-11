@@ -36,7 +36,7 @@ begin;
 -- Four of the cells below sit on a step that reaches this path through no
 -- `path_steps` row. It joins the end of that path's existing sequence.
 insert into public.path_steps (path_id, step_id, position)
-values (
+select
   'a0000000-0000-4000-8000-000000000808',
   'a0000000-0000-4000-8000-000000000942',
   (
@@ -44,7 +44,8 @@ values (
     from public.path_steps
     where path_id = 'a0000000-0000-4000-8000-000000000808'
   )
-)
+where exists (select 1 from public.paths where id = 'a0000000-0000-4000-8000-000000000808')
+  and exists (select 1 from public.steps where id = 'a0000000-0000-4000-8000-000000000942')
 on conflict (path_id, step_id) do nothing;
 
 insert into public.cells (id, path_id, lane_id, step_id, content, frame, summary, origin)
@@ -190,6 +191,9 @@ Design Team', null, 'Dev Team builds the app and the Design Team creates the scr
 Design Team', null, 'Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.'),
   ('a0000000-0000-4000-8000-000000d01209', 'a0000000-0000-4000-8000-000000000817', 'a0000000-0000-4000-8000-0000000008f8', 'a0000000-0000-4000-8000-000000009e0c', 'Dev Team
 Design Team', null, 'Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.')) as v(id, path_id, lane_id, step_id, content, frame, summary)
+where exists (select 1 from public.paths p where p.id = v.path_id::uuid)
+  and exists (select 1 from public.lanes l where l.id = v.lane_id::uuid)
+  and exists (select 1 from public.steps st where st.id = v.step_id::uuid)
 on conflict (id) do nothing;
 
 -- Two of those cells carried more than text in the registry.
@@ -211,7 +215,8 @@ where not exists (
   from public.resources r
   where r.cell_id = 'a0000000-0000-4000-8000-000000170303'
     and r.url = v.url
-);
+)
+  and exists (select 1 from public.cells c where c.id = 'a0000000-0000-4000-8000-000000170303');
 
 -- The registry spelled the other one as a `tech_description` link, which is a
 -- touchpoint placement rather than a resource. `Email` is already in the
@@ -228,13 +233,24 @@ where not exists (
   from public.cell_touchpoints ct
   where ct.cell_id = 'a0000000-0000-4000-8000-000000170306'
     and ct.touchpoint_id = '36c2abe1-b2a0-4807-836c-4b09dccff7cb'
-);
+)
+  and exists (select 1 from public.cells c where c.id = 'a0000000-0000-4000-8000-000000170306')
+  and exists (select 1 from public.touchpoints t where t.id = '36c2abe1-b2a0-4807-836c-4b09dccff7cb');
 
 -- What this migration makes true, asserted rather than counted: every cell it
 -- names is a row, the step it attached reaches its path, and the two cells
 -- that carried more than text carry it here too.
 do $$
 begin
+  -- The rows this file was given to work with. An empty replay has none of
+  -- them, and the proof below is about them, so it holds vacuously there.
+  if not exists (
+    select 1 from public.paths
+    where id in ('a0000000-0000-4000-8000-000000000300', 'a0000000-0000-4000-8000-000000000350', 'a0000000-0000-4000-8000-000000000808', 'a0000000-0000-4000-8000-000000000809', 'a0000000-0000-4000-8000-00000000080c', 'a0000000-0000-4000-8000-000000000811', 'a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-000000000816', 'a0000000-0000-4000-8000-000000000817')
+  ) then
+    return;
+  end if;
+
   if exists (
     select 1
     from (values

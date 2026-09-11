@@ -377,8 +377,11 @@ if this doc is never read.
 
 ## Migrations workflow
 
-Append-only timestamped SQL in `supabase/migrations/` — never edit an
-applied migration, applied with
+Append-only timestamped SQL in `supabase/migrations/` — never change what
+an applied migration did. The one edit an applied file takes is a replay
+guard: scope its inserts and assertions to the rows it was given, so an
+empty database replays it vacuously and production, which already ran it,
+is untouched. Migrations are applied with
 `npm run apply:pending -- --from=<version> --apply`, which writes the ledger
 row inside the same transaction. Neither `supabase db reset` nor `db push`
 works here — see
