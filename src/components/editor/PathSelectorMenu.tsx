@@ -127,8 +127,12 @@ export function PathSelectorMenu({ options }: { options: PathOption[] }) {
                       />
                       <span className="min-w-0 flex-1 truncate">{option.name}</span>
                       {/* Dot, name, status — the same three the scenario panel and
-                          the path picker show, in the same order. */}
-                      <StatusBadge status={option.status} />
+                          the path picker show, in the same order. `definition`
+                          is off: the row IS the control, and a badge that can
+                          take focus inside it would steal a click meant for
+                          the row and sit where a screen reader cannot reach it
+                          cleanly. */}
+                      <StatusBadge status={option.status} definition={false} />
                       <Check
                         className={cn('size-3.5 shrink-0', !checked && 'invisible')}
                         aria-hidden

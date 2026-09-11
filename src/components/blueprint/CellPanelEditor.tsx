@@ -50,6 +50,16 @@ export type DraftCellTarget = {
   laneId: string
   stepId: string
   laneName: string
+  /**
+   * The lane's role, as the board read it.
+   *
+   * Carried because the board carries it: the empty-cell slot reads the role
+   * off the lane it is drawn in, and a draft that dropped it would make the
+   * new cell answer a question — which budget it is measured against — with
+   * the lane NAME alone. `lanes.name` is free-form, so the name answers it
+   * only for the lanes that happen to still be called what they were.
+   */
+  laneRole: string | null
   stepName: string
   stepIndex: number
   scenarioName?: string

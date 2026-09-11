@@ -1,34 +1,68 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { dirname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { hslToRgb, type Rgb } from '@/lib/oklch'
+import {
+  composite,
+  hexToRgb,
+  hslToRgb,
+  oklchFromSrgb,
+  oklchInGamut,
+  type Rgb,
+} from '@/lib/oklch'
 
 /**
  * One queryable model of the visual vocabulary. Test-time only.
  *
- * Style rules used to be enforced by five independent files — `tokenDiscipline`,
- * `palette`, `motion`, `canvasStackingContract`, `railRhythmContract` — each
- * reading its own hand-picked subset of the tree with its own regex. Each
- * therefore sampled the region where its property already held: the palette
- * guard asserted that path colours stay off the lane families while sampling
- * only the one path type that cannot collide, the raw-value guard skipped
- * `src/lib/`, where the values it forbids already lived, and the motion guard
- * read two of the three stylesheets that declare an animation.
+ * The style rules in this repository were enforced by three independent files
+ * — `styles/tokens.test.ts`, `lib/palette.test.ts`, `lib/tokenDiscipline.test.ts`
+ * — and each one carried its own reader. `tokens.test.ts` concatenated every
+ * stylesheet into a single string and swept it for `--name:`, which can answer
+ * "is this name written down somewhere" and nothing else. `palette.test.ts`
+ * opened `colors.css`, `semantic.css` and both theme files itself, and read a
+ * dial by taking the first `--name:` match in one file. Three readers, three
+ * samples, and no shared answer to the question every colour rule actually
+ * rests on: what does this name resolve to, at the root, under this theme.
  *
- * A sixth ad-hoc guard would have reproduced the blind spot a sixth time. So
- * this module is the single seam (ADR 0001): it answers what is declared,
- * where, at what value under each theme, and who consumes it — and every rule
- * becomes an assertion against those answers rather than a new file reader.
+ * A fourth ad-hoc guard would have made a fourth reader. So this module is the
+ * single seam — the decision that one token model is the single style seam:
+ * it answers what is declared, where, under which selector, at what value once
+ * the cascade has run in a given subtree, and who consumes it — and every rule
+ * becomes an assertion against those answers rather than a new file walker.
  * Widen the sampling here and every rule inherits the fix.
  *
- * NOT in the model yet: the compiled artifact. ADR 0001 makes it an input
- * because liveness — "does this name still have a consumer" — cannot be read
- * off source alone (`--colors-white` has zero occurrences in compiled CSS and
- * one in the bundle, via an inline style). Nothing asserted today needs it;
- * the deletion phase does, and it is the phase that must build it. Its stated
- * prerequisite — excluding `docs/` from Tailwind's content scan, so that a
- * token named in a planning document does not generate the class cited as
- * evidence that it is live — is already in `styles/tailwind.config.css`.
+ * Three things in this tree defeat the simpler readers it replaces, and each
+ * one is why a piece of the parser below looks the way it does:
+ *
+ *  - `print.css` declares `--surface`, `--contrast` and most of the dial set
+ *    inside `@media print`, and `colors.css` wraps its entire dark palette in
+ *    `@media screen`. A reader with no at-rule context reports `print.css` as
+ *    the winner for every dial in both themes, and cannot see that the light
+ *    ramps are what reach paper. Both are asked about deliberately, so the
+ *    printed page is a cascade with an answer rather than a blind spot.
+ *  - Forty-two declarations in this tree are wrapped across lines, thirty-six
+ *    of them in `semantic.css` — `--primary` itself among them, along with
+ *    `--primary-foreground`, `--border` and `--input`. A per-line regex cannot
+ *    see any of them.
+ *  - `unset-tw-colors.css` is seventeen `--color-amber-*: initial` namespace
+ *    resets and nothing else. A property pattern that stops at the hyphen
+ *    makes the whole file invisible.
+ *
+ * NOT in the model: the compiled artifact. Liveness — "does this name still
+ * have a consumer" — cannot be read off the stylesheets alone, and this repo
+ * has its own proof: `--colors-white` is declared in `global.css` and read
+ * exactly once, from a JSX attribute in `components/editor/CanvasPenCursor.tsx`.
+ * Nothing asserted today needs the compiled output; a deletion pass would, and
+ * that pass had a prerequisite to land first. Tailwind v4 scans non-gitignored
+ * markdown, so a class name written in a document under `docs/` generates that
+ * class in the compiled CSS and would stand as the evidence that the token it
+ * names is live. `styles/tailwind.config.css` now holds `docs/`, `scripts/`
+ * and the tests out of the scan, so that step is behind us and what the phase
+ * still owes is the rule over the artifact itself.
+ *
+ * The scan is also what decides which `@theme` keys become custom properties
+ * at all, which is a fact about the artifact and so likewise outside this
+ * model. `styles/tokens.test.ts` records why the rules here can be right about
+ * a registration without knowing it.
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -40,12 +74,25 @@ const ENTRY = resolve(STYLES, 'tailwind.config.css')
 export type Theme = 'light' | 'dark'
 
 /**
+ * Which output medium the cascade is being read for.
+ *
+ * `screen` sets `@media print` blocks aside; `print` sets `@media screen`
+ * blocks aside and lets the print block win. Both halves matter, and neither
+ * is decoration: `print.css` restates dials inside `@media print`, and
+ * `colors.css` wraps its ENTIRE dark palette in `@media screen` precisely so
+ * that the light ramps above it are what reaches paper. A reader with one
+ * medium can describe neither arrangement.
+ */
+export type Medium = 'screen' | 'print'
+
+/**
  * Which layer a name is declared in. A name may appear in exactly one.
  *
  * `dial` is the small set of per-theme inputs; `primitive` the ramps in
- * `colors.css` and the Figma export in `global.css`; `semantic` the derived
- * answers to questions a component asks; `domain` the board's own vocabulary
- * in `blueprint.css`; `registry` the `@theme` keys that mint utilities.
+ * `colors.css` and the exported palette in `global.css`; `semantic` the
+ * derived answers to questions a component asks; `domain` the board's own
+ * vocabulary in `blueprint.css`; `registry` the `@theme` keys that mint
+ * utilities and the resets that clear Tailwind's own.
  */
 export type TokenLayer =
   | 'dial'
@@ -57,7 +104,7 @@ export type TokenLayer =
 export type Declaration = {
   /** `--surface-hue` */
   name: string
-  /** Right-hand side, trimmed, `var()`s intact. */
+  /** Right-hand side, trimmed and whitespace-collapsed, `var()`s intact. */
   value: string
   /** The selector list the declaration sits under, e.g. `:root, .light`. */
   selector: string
@@ -65,7 +112,7 @@ export type Declaration = {
    * The at-rules and outer selectors wrapping it, outermost first — e.g.
    * `['@media print']` for the print override block. A declaration inside a
    * print-only block is not part of the screen cascade, and a model that
-   * could not see that reported `print.css` as the winner for every dial.
+   * could not see that would report `print.css` as the winner for every dial.
    */
   context: string[]
   /** Path relative to `src/styles`, e.g. `themes/light.css`. */
@@ -82,20 +129,20 @@ export type Consumer = {
   line: number
   kind: 'stylesheet' | 'source'
   /**
-   * How the name was reached. `var` is the ordinary function; anything else is
-   * Tailwind v4's bare-value shorthand, where the utility itself stands in for
-   * it — `duration-(--motion-micro)`, `text-(--foreground-annotation-chrome)`.
-   * The shorthand resolves the property exactly as `var()` does, so a rule
-   * that only knew about `var(` would let a whole class of reference dangle.
+   * How the name was read. `var` is the ordinary function; anything else is
+   * Tailwind v4's bare-value shorthand, where the utility itself is the
+   * function — `duration-(--motion-micro)`, `w-(--sidebar-width)`. The
+   * shorthand resolves the property exactly as `var()` does, so a rule that
+   * only knew about `var(` would let a whole class of reference dangle.
    */
   via: string
   /**
-   * Was a fallback supplied — `var(--x, 12px)`? A name read WITH one still
-   * renders when nothing declares it, so a rule about dangling references has
-   * to be able to tell the two apart. The blueprint cell tokens depend on
-   * this: every consumer reads them as `var(--…-blueprint-cell, <default>)`
-   * and the fallback arm IS the resting state, so those names are undeclared
-   * at the root on purpose.
+   * Was a fallback supplied — `var(--x, 12px)`? A name read WITH a fallback
+   * still renders when nothing declares it, so a rule about dangling
+   * references has to be able to tell the two apart. The blueprint cell
+   * tokens depend on this: every consumer reads them as
+   * `var(--…-blueprint-cell, <default>)` and the fallback arm IS the resting
+   * state, so those names are undeclared at the root on purpose.
    */
   hasFallback: boolean
 }
@@ -105,13 +152,11 @@ export type Consumer = {
  *
  * Four shapes, and all four are this app declaring a token: an inline style
  * key (`{ '--x': value }`), Tailwind's arbitrary-property syntax inside a
- * class string (square brackets around a `--x:value` pair — not written out
- * here, because Tailwind's content scan reads its own syntax out of a comment
- * and emits the utility), an imperative `setProperty('--x', …)`, and the
- * named constant such a call goes through (`const FOO_VAR = '--x'`). The last
- * one matters more than it looks: most of this codebase's imperative writes go
- * through a named constant, and a reader that only saw literal `setProperty`
- * calls would miss every one of them.
+ * class string (`[--x:value]`), an imperative `setProperty('--x', …)`, and
+ * the named constant such a call goes through (`const FOO_VAR = '--x'`). The
+ * last one matters more than it looks — this codebase routes most of its
+ * imperative writes through a named constant, and a reader that only saw
+ * literal `setProperty` calls would miss every one of them.
  */
 export type SourceDeclaration = {
   name: string
@@ -209,10 +254,12 @@ let cachedDeclarations: Declaration[] | null = null
  * Every custom property declared anywhere under `src/styles`, in cascade order.
  *
  * The parser tracks the selector each declaration sits under by watching brace
- * depth: at depth 1 inside a top-level rule the selector is that rule's, and
- * a nested rule (`&:hover`, a media query's child) reports the nesting joined
- * by a space. That is enough to answer "does this rule apply under `.dark`",
- * which is the only question the cascade resolver asks.
+ * depth: at depth 1 inside a top-level rule the selector is that rule's, and a
+ * nested rule (`&:hover`, a media query's child, the `[data-blueprint-tone]`
+ * blocks nested inside the board's own scope) reports the innermost selector
+ * with everything outside it in `context`. That is enough to answer "does this
+ * rule apply at the root under `.dark`", which is the only question the
+ * cascade resolver asks.
  */
 export function declarations(): Declaration[] {
   if (cachedDeclarations) return cachedDeclarations
@@ -225,10 +272,8 @@ export function declarations(): Declaration[] {
 /**
  * Every rule that declares a given CSS property, anywhere in the tree.
  *
- * The motion guard is why this is here rather than in one test: it read two of
- * the three stylesheets that declare an `animation:`, so a keyframe in
- * `utilities.css` with no reduced-motion branch was invisible to it. A guard
- * that picks its own files picks the ones where its property already holds.
+ * Takes ordinary properties as well as custom ones, so a rule can ask about
+ * `animation:` or `transition:` without opening files of its own.
  */
 export function rulesDeclaring(property: string): Declaration[] {
   return allDeclarations().filter((entry) => entry.name === property)
@@ -240,16 +285,14 @@ let cachedAll: Declaration[] | null = null
  * Every declaration in every stylesheet, with the selector it sits under.
  *
  * A character scanner rather than a per-line regex, because the per-line
- * version could only see a declaration that closed its own line. Forty-one did
- * not — `--background`, `--foreground`, `--card`, `--popover`, `--secondary`,
- * `--muted-foreground`, `--tertiary-foreground`, the whole contrast ladder and
- * every chart step are written as multi-line `oklch(…)` calls, so the seam ADR
- * 0001 makes the single source of truth about the token layer was blind to the
- * most-read names in it. `compat.css`'s aliases pointed at two of them, and the
- * rule "an alias points at a name semantic.css declares" failed on names
- * semantic.css plainly declares.
+ * version could only see a declaration that closed its own line. Forty-two in
+ * this tree do not — `--primary`, `--primary-foreground`, `--border`,
+ * `--input` and thirty-two more in `semantic.css` alone are written as
+ * multi-line `oklch(…)` calls, so the most-derived names in the system would
+ * be invisible to the seam that exists to see them. Nothing would have failed:
+ * a rule only fails on what it can read.
  *
- * Values are whitespace-collapsed so a declaration means the same thing
+ * Values are whitespace-collapsed, so a declaration means the same thing
  * whichever way it was wrapped.
  */
 function allDeclarations(): Declaration[] {
@@ -265,8 +308,8 @@ function allDeclarations(): Declaration[] {
     let bufferLine = 1
     const flush = () => {
       // `--color-amber-*` is a Tailwind namespace reset, and a declaration:
-      // `unset-tw-colors.css` is thirteen of them and nothing else, and a name
-      // pattern that stopped at the hyphen made the whole file invisible.
+      // `unset-tw-colors.css` is seventeen of them and nothing else, and a
+      // name pattern that stopped at the hyphen made the whole file invisible.
       const declaration =
         /^\s*(-{2}[a-zA-Z0-9-]+\*?|[a-z-]+)\s*:\s*([\s\S]*)$/.exec(buffer)
       if (declaration) {
@@ -300,16 +343,16 @@ function allDeclarations(): Declaration[] {
     }
   }
   cachedAll = out
-  return out
+  return cachedAll
 }
 
 /**
- * Blank out `/* … *\/` while keeping every newline, so line numbers survive.
+ * Blank out CSS comments while keeping every newline, so line numbers survive.
  *
  * Needed because the selector a declaration sits under is assembled from the
  * text before its `{`, and this codebase writes a paragraph of prose above
- * almost every block — a per-line comment strip left that prose glued to the
- * selector.
+ * almost every block — a per-line comment strip would leave that prose glued
+ * to the selector.
  */
 function blankComments(text: string): string {
   return text.replace(/\/\*[\s\S]*?\*\//g, (comment) =>
@@ -343,18 +386,18 @@ export type StyleUse = {
 /**
  * Every declared value in every stylesheet that matches a pattern.
  *
- * The stylesheet counterpart of `sourceMatching`, and the reason the guard can
- * read a stylesheet at all: every rule this model backed until now sampled
- * `src/**.tsx` and stopped there, so a stylesheet was free to consume a name at
- * a tier the same rule forbade a component to touch. Widening the model once
- * widens it for every rule that asks (ADR 0001).
+ * The stylesheet counterpart of `sourceMatching`, and the reason a rule can
+ * read a stylesheet at all: a rule that sampled `src/**.tsx` and stopped there
+ * left a stylesheet free to consume a name at a tier the same rule forbade a
+ * component to touch. Widening the model once widens it for every rule that
+ * asks, which is what the seam ADR is for.
  *
  * Declared VALUES rather than raw text, for two reasons a raw-text scan gets
- * wrong. Comments are already blanked upstream, so the two `var(--color-amber-100)`
- * in `colors.css`'s header prose — which explain the Tailwind namespace split
- * and paint nothing — are not uses. And `layer` comes along, so a rule can say
- * which tier a match sits in rather than naming the files that happen to hold
- * one today.
+ * wrong. Comments are already blanked upstream, so the two
+ * `var(--color-amber-100)` in `colors.css`'s header prose — which explain the
+ * Tailwind namespace split and paint nothing — are not uses. And `layer` comes
+ * along, so a rule can say which tier a match sits in rather than naming the
+ * files that happen to hold one today.
  *
  * The pattern must carry `g`; `sourceMatching` asks the same.
  */
@@ -380,19 +423,46 @@ export function stylesheetMatching(pattern: RegExp): StyleUse[] {
 // ---------------------------------------------------------------------------
 
 /**
- * Does this selector list apply to the root element under `theme`?
+ * The subtree an answer is being read for, as the selectors that match it.
+ *
+ * Empty is the root element, which is what every rule asked for until a value
+ * in this system stopped being a property of the page. A role tint is measured
+ * from the surface it is drawn on, and `semantic.css` re-derives the block at
+ * `[data-ground]` for exactly that reason — so "what does this name resolve to"
+ * has a second half now, and the model answers it rather than each rule
+ * re-deriving a subtree's arithmetic in TypeScript beside the CSS.
+ *
+ * A scope is spelled the way the stylesheet spells it, so a rule can take the
+ * scopes it asks about FROM the stylesheet — `rulesDeclaring('--ground')` hands
+ * back every ground the file offers — and never carry a list of its own.
+ */
+export type Scope = readonly string[]
+
+/**
+ * Does this selector list apply to the element `scope` describes under `theme`?
  *
  * `:root`, `.light` and `.dark` all carry specificity (0,1,0), so whichever
  * rule comes last in source order wins — which is the whole mechanism behind
- * the warm-brown dark mode: `themes/light.css` matches bare `:root`, `:root`
- * matches `<html class="dark">`, and light imports before dark but after
- * `semantic.css`. Anything more specific, or scoped to a subtree, is not the
- * root cascade and is skipped.
+ * the theme flip: `themes/light.css` matches bare `:root`, `:root` matches
+ * `<html class="dark">` too, and light imports before dark but after
+ * `semantic.css`. Anything more specific, or scoped to a subtree the caller did
+ * not ask about, is skipped.
+ *
+ * A root declaration still applies inside a scope, and that is not a shortcut:
+ * every custom property inherits, so a name the subtree does not re-declare
+ * reaches it with the root's answer. The one reading this cannot give is a name
+ * declared ONLY at the root whose value depends on something the subtree
+ * overrides — inheritance carries the computed value, where this would
+ * substitute afresh. `--ground` is read by the seven tints and by nothing else,
+ * and all seven are inside the block the scope re-declares, so the case does
+ * not arise here; a name added outside that block and reading `--ground` would
+ * be the thing that made it arise.
  */
-function appliesAtRoot(selector: string, theme: Theme): boolean {
+function applies(selector: string, theme: Theme, scope: Scope): boolean {
   if (!selector) return false
   return selector.split(',').some((part) => {
     const trimmed = part.trim()
+    if (scope.includes(trimmed)) return true
     if (trimmed === ':root') return true
     if (trimmed === '.light') return theme === 'light'
     if (trimmed === '.dark') return theme === 'dark'
@@ -407,26 +477,54 @@ function appliesAtRoot(selector: string, theme: Theme): boolean {
 }
 
 /**
+ * Does the at-rule context wrapping a declaration apply on `medium`?
+ *
+ * Only the root cascade counts, so anything nested under a selector rather
+ * than an at-rule is out whichever medium is asked for. Among the at-rules,
+ * a query naming one medium and not the other applies on that one alone;
+ * everything else (`@supports`, `@layer`, a width query, `screen, print`)
+ * applies on both.
+ */
+function appliesOn(context: string[], medium: Medium): boolean {
+  return context.every((rule) => {
+    if (!rule) return true
+    if (!/^@(media|supports|layer)\b/.test(rule)) return false
+    if (!/^@media\b/.test(rule)) return true
+    const print = /\bprint\b/.test(rule)
+    const screen = /\bscreen\b/.test(rule)
+    if (print === screen) return true
+    return medium === 'print' ? print : screen
+  })
+}
+
+/**
  * The declaration that wins at the root element under `theme`, or undefined.
  *
- * This is the assertion that would have caught the hue defect: ask what
- * `--surface-hue` actually resolves to under `.dark` rather than what the
- * comment beside it claims.
+ * This is the question no reader in this repo could answer before: not what a
+ * file says about `--surface-hue`, but what `--surface-hue` resolves to once
+ * the medium's at-rules have been sorted out and source order has broken the
+ * `:root`/`.dark` tie.
+ *
+ * `medium` is what makes the printed page measurable. On `screen` the
+ * `@media print` block in `print.css` is set aside; on `print` it is the
+ * override that wins, and `colors.css`'s `@media screen` dark palette is the
+ * thing set aside instead. Printing from dark mode is a real cascade with a
+ * real answer, and asking for it is how a rule can hold that answer to
+ * something.
  */
 export function winningDeclaration(
   name: string,
   theme: Theme,
+  medium: Medium = 'screen',
+  scope: Scope = [],
 ): Declaration | undefined {
   const order = new Map(stylesheets().map((sheet) => [sheet.file, sheet.order]))
   let winner: Declaration | undefined
   for (const entry of declarations()) {
     if (entry.name !== name) continue
     if (!Number.isFinite(order.get(entry.file) ?? Infinity)) continue
-    if (entry.context.some((rule) => /^@media\b/.test(rule) && /\bprint\b/.test(rule)))
-      continue
-    if (entry.context.some((rule) => rule && !/^@(media|supports|layer)\b/.test(rule)))
-      continue
-    if (!appliesAtRoot(entry.selector, theme)) continue
+    if (!appliesOn(entry.context, medium)) continue
+    if (!applies(entry.selector, theme, scope)) continue
     winner = entry
   }
   return winner
@@ -436,25 +534,44 @@ export function winningDeclaration(
  * The value of `name` at the root under `theme`, with `var()` chased through.
  *
  * Falls back to a `var()`'s own default (`var(--x, 12px)`) when the referenced
- * name resolves to nothing, which is what the browser does.
+ * name resolves to nothing, which is what the browser does. `medium` selects
+ * which cascade is being asked about — the screen one by default, the printed
+ * one on request — and `scope` which subtree, the root by default.
  */
 export function resolveValue(
   name: string,
   theme: Theme,
-  seen: Set<string> = new Set(),
+  medium: Medium = 'screen',
+  scope: Scope = [],
+): string | undefined {
+  return resolveIn(name, theme, medium, scope, new Set())
+}
+
+function resolveIn(
+  name: string,
+  theme: Theme,
+  medium: Medium,
+  scope: Scope,
+  seen: Set<string>,
 ): string | undefined {
   if (seen.has(name)) return undefined
   seen.add(name)
-  const declaration = winningDeclaration(name, theme)
+  const declaration = winningDeclaration(name, theme, medium, scope)
   if (!declaration) return undefined
-  return substitute(declaration.value, theme, seen)
+  return substitute(declaration.value, theme, medium, scope, seen)
 }
 
-function substitute(value: string, theme: Theme, seen: Set<string>): string {
+function substitute(
+  value: string,
+  theme: Theme,
+  medium: Medium,
+  scope: Scope,
+  seen: Set<string>,
+): string {
   return value.replace(
     /var\(\s*(--[a-zA-Z0-9-]+)\s*(?:,\s*([^()]*))?\)/g,
     (whole, referenced: string, fallback: string | undefined) => {
-      const resolved = resolveValue(referenced, theme, new Set(seen))
+      const resolved = resolveIn(referenced, theme, medium, scope, new Set(seen))
       if (resolved !== undefined) return resolved
       if (fallback !== undefined) return fallback.trim()
       return whole
@@ -463,7 +580,7 @@ function substitute(value: string, theme: Theme, seen: Set<string>): string {
 }
 
 // ---------------------------------------------------------------------------
-// Consumers
+// Source
 // ---------------------------------------------------------------------------
 
 let cachedSource: SourceFile[] | null = null
@@ -471,22 +588,12 @@ let cachedSource: SourceFile[] | null = null
 /**
  * Every non-test TypeScript file under `src`, comments stripped.
  *
- * The whole tree, deliberately, rather than a list of roots that names the
- * directories someone thought of. A list was what stood here — `components`,
- * `contexts`, `hooks`, `lib`, `data`, `config.ts` — and it was already the
- * second version of the same mistake. The first version was
- * `tokenDiscipline.test.ts` walking `components/` alone, which is how
- * `lib/filterToolbarButton.ts` carried the exact `border-border/60` the
- * raw-value guard forbids and stayed green for months. Naming five roots
- * instead of one fixed that instance and kept the shape: `App.tsx`,
- * `main.tsx`, `content/`, `types/` and `dev/` — eleven files — sat outside
- * every style rule in this repository, and `dev/` was carrying twenty-one raw
- * hex colours the whole time (#414).
- *
- * A root list can only ever be right about the directories that existed when
- * it was written. Walking the tree is right about the next one too, which is
- * the property the ADR asks for: widen the sampling here, once, and every rule
- * that asks the model inherits the fix (ADR 0001).
+ * The whole of `src`, deliberately, and not the shorter list of roots that
+ * would look tidier. The rule this model absorbed — "every custom-property
+ * reference in the app resolves to something" — already read the entire tree,
+ * so a model sampling less than that would have narrowed a live guard while
+ * claiming to generalise it. Sampling is the one thing a single seam exists to
+ * get right, and the safe direction is outward.
  */
 export function sourceFiles(): SourceFile[] {
   if (cachedSource) return cachedSource
@@ -514,12 +621,13 @@ function tsFiles(dir: string): string[] {
  *
  * Block comments are BLANKED rather than deleted, for the same reason
  * `blankComments` blanks them in the stylesheets: every newline has to
- * survive, or every line number this model reports after the file's header
+ * survive, or every line number this model reports after a file's header
  * comment is wrong. It used to delete them, and the drift was not small —
  * `dev/ArrowSituationCatalogPage.tsx` opens with a thirteen-line header, so
  * the `#2563eb` on its line 28 was reported at line 15, pointing the reader
- * at an import. A guard that names the wrong line is a guard someone stops
- * trusting.
+ * at an import. Nothing failed while it was wrong, because a passing rule
+ * reports no lines at all; the number only has to be right at the moment a
+ * rule starts failing, which is the moment nobody is checking it.
  */
 export function stripComments(source: string): string {
   return blankComments(source).replace(/(^|[^:])\/\/.*$/gm, '$1')
@@ -551,18 +659,35 @@ export function sourceDeclarations(): SourceDeclaration[] {
   return out
 }
 
+/**
+ * Every name this app declares, from either side of the seam.
+ *
+ * A stylesheet declaration and a TypeScript one are the same fact to a
+ * consumer: the property has a value at the point it is read. Which side it
+ * came from is a question `declarationsIn` and `sourceDeclarations` answer
+ * separately, for the rules that care.
+ */
+export function declaredNames(): Set<string> {
+  return new Set([
+    ...declarations().map((entry) => entry.name),
+    ...sourceDeclarations().map((entry) => entry.name),
+  ])
+}
+
+// ---------------------------------------------------------------------------
+// Consumers
+// ---------------------------------------------------------------------------
+
 let cachedConsumers: Consumer[] | null = null
 
 /**
- * Everywhere a custom property is READ.
+ * Everywhere a custom property is read.
  *
  * Three shapes, and the model needs all three. `var(--x)` in a stylesheet is
  * the obvious one. `var(--x)` inside a class string or template literal in
  * source is the second. The third is Tailwind v4's bare-value shorthand —
- * `duration-(--motion-micro)`, `text-(--foreground-annotation-chrome)` — where
- * the utility name stands in for `var`, and which a `var(`-only scan reads
- * straight past. This repository consumes the whole annotation-chrome ink
- * ladder that way, because those rungs have no `@theme` entry.
+ * `duration-(--motion-micro)`, `w-(--sidebar-width)` — where the utility name
+ * stands in for `var`, and which a `var(`-only scan reads straight past.
  *
  * The inline style KEY (`{ '--x': value }`) is a declaration, not a read, and
  * lives in `sourceDeclarations` instead.
@@ -597,14 +722,13 @@ export function consumers(): Consumer[] {
   }
   for (const sheet of stylesheets()) {
     // Comments blanked: `var(--brand-N)` written in a header paragraph to
-    // explain a naming convention is prose, not a read, and several
-    // stylesheets carry exactly that. Blanking rather than deleting keeps the
-    // line numbers a failure reports.
+    // explain a naming convention is prose, not a read, and four stylesheets
+    // carry exactly that. Blanking rather than deleting keeps line numbers.
     //
     // `var(` only on this side, because the bare-value shorthand widened for
     // below is a UTILITY-CLASS idiom that cannot appear in a stylesheet. Left
-    // broad, it reads Tailwind v4's own `--value(--color-*)` inside an
-    // `@utility` body as a dangling reference, which it is not.
+    // broad, it reads Tailwind v4's own `--value(--color-*)` in an `@utility`
+    // body as a dangling reference, which it is not.
     push(blankComments(sheet.text), sheet.file, 'stylesheet', VAR_ONLY)
   }
   for (const source of sourceFiles()) {
@@ -684,15 +808,19 @@ export function sourceMatching(pattern: RegExp): string[] {
 // Colour
 // ---------------------------------------------------------------------------
 
-/*
- * The arithmetic itself lives in `oklch.ts` since #411, so the brand-accent
- * reader — which runs in the browser and cannot import a module that reads
- * the disk — shares one implementation with every guard that measures a
- * colour. Re-exported here so the model stays the single import a rule needs.
+/**
+ * Colour, re-exported.
+ *
+ * The arithmetic itself lives in `oklch.ts`, so the brand-accent reader — which
+ * runs in a browser — can reach it without dragging this module's `node:fs`
+ * reads along. Re-exported here rather than moved out of sight, because every
+ * colour rule in the suite asks this model its questions and the seam ADR says
+ * there is one place to ask.
  */
 export type { Rgb } from '@/lib/oklch'
 export {
   chromaCeiling,
+  composite,
   contrast,
   derivedFillInk,
   hexToRgb,
@@ -701,6 +829,7 @@ export {
   oklch,
   oklchFromSrgb,
   oklchHue,
+  oklchInGamut,
   oklchToLinearSrgb,
   relativeLuminance,
 } from '@/lib/oklch'
@@ -745,6 +874,420 @@ export function dial(name: string, theme: Theme): number {
   const value = resolveValue(name, theme)
   if (value === undefined) throw new Error(`dial not declared: ${name}`)
   const number = /^-?[\d.]+/.exec(value.trim())
-  if (!number) throw new Error(`dial ${name} is not numeric under ${theme}: ${value}`)
+  if (!number)
+    throw new Error(`dial ${name} is not numeric under ${theme}: ${value}`)
   return Number(number[0])
+}
+
+// ---------------------------------------------------------------------------
+// Colour
+// ---------------------------------------------------------------------------
+
+/**
+ * A colour as CSS computes it: OKLCH plus alpha, and deliberately NOT gamut
+ * mapped.
+ *
+ * Relative colour syntax reads `l`, `c` and `h` off the origin colour before
+ * any mapping happens, so a chain that multiplies chroma and then divides it
+ * again has to be carried at full precision or the round trip loses colour the
+ * browser never lost. Mapping is what `toRgb` does, once, at the end.
+ */
+export type ColorValue = { l: number; c: number; h: number; alpha: number }
+
+/**
+ * What `name` resolves to as a colour, at the root, under `theme`.
+ *
+ * `resolveValue` already chases `var()` to a literal; what it hands back is
+ * still CSS — `oklch(from oklch(0.68 0.14 clamp(65, calc(75 + 0), 95))
+ * calc(l - 0.4) calc(c * 0.9) h)` is a real value in this system. Everything
+ * below evaluates that: `calc`, `clamp`, `min`, `max`, percentages, relative
+ * colour syntax, `oklch()`, `hsl()` and hex.
+ *
+ * This is why it belongs on the model rather than in a test. Every contrast
+ * rule until now re-derived the arithmetic of the declaration it was measuring
+ * — writing `Math.min(0.985, Math.max(0.205, (0.62 - L) * 100))` in TypeScript
+ * beside the `clamp()` in CSS — so a rule could go on passing after the
+ * declaration it claims to measure had changed underneath it. Reading the
+ * cascade's own answer removes the second copy.
+ */
+export function resolveColorValue(
+  name: string,
+  theme: Theme,
+  medium: Medium = 'screen',
+  scope: Scope = [],
+): ColorValue {
+  const value = resolveValue(name, theme, medium, scope)
+  if (value === undefined) throw new Error(`not declared: ${name}`)
+  return parseColor(value, name)
+}
+
+/**
+ * `name` as sRGB under `theme`, chroma-reduced into the gamut.
+ *
+ * A translucent token needs the ground it is painted on: pass `over` and the
+ * result is the composite, omit it and a translucent token throws rather than
+ * quietly measuring as though it were opaque. That silent read is the shape of
+ * the defect this vocabulary exists to end — an alpha measured against nothing
+ * is a number with no ground under it.
+ *
+ * An OPAQUE token can have the same defect one level up, and `scope` is what
+ * asks about it: a colour derived from the page is a different colour on a
+ * surface that re-derives it, and a rule that only ever read the root would
+ * report the page's answer for every element on the screen.
+ */
+export function resolveColor(
+  name: string,
+  theme: Theme,
+  options: { over?: Rgb; medium?: Medium; scope?: Scope } = {},
+): Rgb {
+  const { l, c, h, alpha } = resolveColorValue(
+    name,
+    theme,
+    options.medium ?? 'screen',
+    options.scope ?? [],
+  )
+  const rgb = oklchInGamut(l, c, h)
+  if (alpha >= 1) return rgb
+  if (!options.over)
+    throw new Error(
+      `${name} is translucent under ${theme} (alpha ${alpha}); pass \`over\``,
+    )
+  return composite(rgb, alpha, options.over)
+}
+
+/** A CSS colour string as OKLCH + alpha. Exported so a literal is measurable. */
+export function parseColor(text: string, what = 'value'): ColorValue {
+  const tokens = lex(text)
+  const reader = { tokens, at: 0, depth: 0 }
+  const colour = readColor(reader, what)
+  if (reader.at !== tokens.length)
+    throw new Error(`trailing input in ${what}: ${text}`)
+  return colour
+}
+
+type Lexeme = { kind: 'number' | 'word' | 'punct'; text: string; value: number }
+/**
+ * `depth` is what tells an alpha separator from a division.
+ *
+ * At the top of a component slot `/` opens the alpha, and CSS requires real
+ * division to be written inside `calc()`. Track the bracket depth and both
+ * readings are available to the same parser: `oklch(from x l calc(c / 2) h /
+ * 30%)` divides once and separates once, and neither is a guess.
+ */
+type Reader = { tokens: Lexeme[]; at: number; depth: number }
+
+const NUMBER = /^[0-9.]+(%|deg|grad|rad|turn)?/
+const WORD = /^[a-zA-Z][a-zA-Z0-9-]*/
+const HEX = /^#[0-9a-fA-F]{3,8}/
+
+function lex(text: string): Lexeme[] {
+  const out: Lexeme[] = []
+  let rest = text.trim()
+  while (rest.length > 0) {
+    const head = rest[0]
+    if (/\s/.test(head)) {
+      rest = rest.slice(1)
+      continue
+    }
+    if (head === '#') {
+      const hex = HEX.exec(rest)
+      if (!hex) throw new Error(`bad hex in: ${text}`)
+      out.push({ kind: 'word', text: hex[0], value: NaN })
+      rest = rest.slice(hex[0].length)
+      continue
+    }
+    if ('()+*/,'.includes(head)) {
+      out.push({ kind: 'punct', text: head, value: NaN })
+      rest = rest.slice(1)
+      continue
+    }
+    // A `-` starts a negative literal only where a value may start; between
+    // two values it is CSS `calc()` subtraction, which the grammar reads as an
+    // operator. `calc(l - 0.4)` and `oklch(-0.1 0 0)` are both real.
+    if (head === '-' && !endsValue(out) && NUMBER.test(rest.slice(1))) {
+      const number = NUMBER.exec(rest.slice(1)) as RegExpExecArray
+      out.push(...[numberLexeme('-' + number[0])])
+      rest = rest.slice(1 + number[0].length)
+      continue
+    }
+    if (head === '-' || head === '%') {
+      out.push({ kind: 'punct', text: head, value: NaN })
+      rest = rest.slice(1)
+      continue
+    }
+    const number = NUMBER.exec(rest)
+    if (number) {
+      out.push(numberLexeme(number[0]))
+      rest = rest.slice(number[0].length)
+      continue
+    }
+    const word = WORD.exec(rest)
+    if (word) {
+      out.push({ kind: 'word', text: word[0], value: NaN })
+      rest = rest.slice(word[0].length)
+      continue
+    }
+    throw new Error(`cannot read: ${rest.slice(0, 24)} (in ${text})`)
+  }
+  return out
+}
+
+/**
+ * A percentage is carried as its fraction, so `20% * 0.5` is 0.1 and an alpha
+ * slot needs no unit knowledge at all. The two component slots that count in
+ * hundreds — HSL saturation and lightness — multiply back where they are read,
+ * which is the one place the convention has to be undone.
+ */
+function numberLexeme(text: string): Lexeme {
+  const percent = text.endsWith('%')
+  const number = Number(text.replace(/(%|deg|grad|rad|turn)$/, ''))
+  return { kind: 'number', text, value: percent ? number / 100 : number }
+}
+
+/** True where the token just read ends a value, so the next `-` is an operator. */
+function endsValue(out: Lexeme[]): boolean {
+  const last = out[out.length - 1]
+  if (!last) return false
+  if (last.kind === 'number') return true
+  if (last.kind === 'word') return true
+  return last.text === ')'
+}
+
+function peek(reader: Reader): Lexeme | undefined {
+  return reader.tokens[reader.at]
+}
+
+function take(reader: Reader, text: string): void {
+  const next = reader.tokens[reader.at]
+  if (!next || next.text !== text)
+    throw new Error(`expected ${text}, got ${next?.text ?? 'end'}`)
+  reader.at += 1
+}
+
+const COLOR_FUNCTIONS = new Set(['oklch', 'hsl', 'hsla'])
+
+function readColor(reader: Reader, what: string): ColorValue {
+  const head = peek(reader)
+  if (!head) throw new Error(`empty colour in ${what}`)
+  if (head.text.startsWith('#')) {
+    reader.at += 1
+    const [l, c, h] = oklchFromSrgb(hexToRgb(head.text))
+    return { l, c, h, alpha: 1 }
+  }
+  if (!COLOR_FUNCTIONS.has(head.text))
+    throw new Error(`not a colour in ${what}: ${head.text}`)
+  reader.at += 1
+  take(reader, '(')
+  const colour =
+    head.text === 'oklch' ? readOklch(reader, what) : readHsl(reader)
+  take(reader, ')')
+  return colour
+}
+
+function readOklch(reader: Reader, what: string): ColorValue {
+  let origin: ColorValue | undefined
+  if (peek(reader)?.text === 'from') {
+    reader.at += 1
+    origin = readColor(reader, what)
+  }
+  const scope = origin ?? { l: NaN, c: NaN, h: NaN, alpha: NaN }
+  const l = readExpression(reader, scope)
+  const c = readExpression(reader, scope)
+  const h = readExpression(reader, scope)
+  // CSS gives a relative colour the origin's own alpha when the slot is
+  // omitted, which is why `--sidebar-primary: var(--primary)` and
+  // `oklch(from var(--primary) l c h)` are the same colour and not two.
+  const alpha = readAlpha(reader, scope, origin?.alpha ?? 1)
+  return { l, c, h, alpha }
+}
+
+function readHsl(reader: Reader): ColorValue {
+  const scope = { l: NaN, c: NaN, h: NaN, alpha: NaN }
+  const h = readExpression(reader, scope)
+  skipComma(reader)
+  const s = readExpression(reader, scope) * 100
+  skipComma(reader)
+  const light = readExpression(reader, scope) * 100
+  // `hsla(0, 0%, 0%, 0.05)` puts the alpha behind a comma and `hsl(0deg 0% 0%
+  // / 5%)` behind a slash. Both spellings are in this tree — the legacy
+  // palette export uses the first — so both are read here.
+  const comma = peek(reader)?.text === ','
+  if (comma) reader.at += 1
+  const alpha = comma ? readExpression(reader, scope) : readAlpha(reader, scope, 1)
+  const [l, c, hue] = oklchFromSrgb(hslToRgb(h, s, light))
+  return { l, c, h: hue, alpha }
+}
+
+function skipComma(reader: Reader): void {
+  if (peek(reader)?.text === ',') reader.at += 1
+}
+
+function readAlpha(
+  reader: Reader,
+  scope: ColorValue,
+  fallback: number,
+): number {
+  if (peek(reader)?.text !== '/') return fallback
+  reader.at += 1
+  return readExpression(reader, scope)
+}
+
+/*
+ * The expression grammar CSS numeric functions actually use:
+ *
+ *   expression := term (('+' | '-') term)*
+ *   term       := factor (('*' | '/') factor)*
+ *   factor     := number | 'l' | 'c' | 'h' | 'alpha' | '(' expression ')'
+ *               | 'calc' '(' expression ')'
+ *               | ('clamp' | 'min' | 'max') '(' expression (',' …)* ')'
+ *
+ * `l`, `c`, `h` and `alpha` are the relative-colour keywords, and they are the
+ * reason `scope` is threaded through: inside `oklch(from X …)` they name X's
+ * own components, and outside one they are not defined at all — which is what
+ * the NaN scope makes true rather than silently zero.
+ */
+function readExpression(reader: Reader, scope: ColorValue): number {
+  let total = readTerm(reader, scope)
+  for (;;) {
+    const next = peek(reader)
+    if (!next || (next.text !== '+' && next.text !== '-')) return total
+    if (reader.depth === 0) return total
+    reader.at += 1
+    const right = readTerm(reader, scope)
+    total = next.text === '+' ? total + right : total - right
+  }
+}
+
+function readTerm(reader: Reader, scope: ColorValue): number {
+  let total = readFactor(reader, scope)
+  for (;;) {
+    const next = peek(reader)
+    if (!next || (next.text !== '*' && next.text !== '/')) return total
+    if (reader.depth === 0) return total
+    reader.at += 1
+    const right = readFactor(reader, scope)
+    total = next.text === '*' ? total * right : total / right
+  }
+}
+
+const KEYWORDS = new Set(['l', 'c', 'h', 'alpha'])
+const VARIADIC = new Set(['min', 'max', 'clamp'])
+
+function readFactor(reader: Reader, scope: ColorValue): number {
+  const head = peek(reader)
+  if (!head) throw new Error('expression ended early')
+  if (head.kind === 'number') {
+    reader.at += 1
+    return head.value
+  }
+  if (head.text === '-') {
+    reader.at += 1
+    return -readFactor(reader, scope)
+  }
+  if (head.text === '(') {
+    reader.at += 1
+    reader.depth += 1
+    const inner = readExpression(reader, scope)
+    reader.depth -= 1
+    take(reader, ')')
+    return inner
+  }
+  if (head.text === 'calc') {
+    reader.at += 1
+    take(reader, '(')
+    reader.depth += 1
+    const inner = readExpression(reader, scope)
+    reader.depth -= 1
+    take(reader, ')')
+    return inner
+  }
+  if (VARIADIC.has(head.text)) {
+    reader.at += 1
+    take(reader, '(')
+    reader.depth += 1
+    const args = [readExpression(reader, scope)]
+    while (peek(reader)?.text === ',') {
+      reader.at += 1
+      args.push(readExpression(reader, scope))
+    }
+    reader.depth -= 1
+    take(reader, ')')
+    if (head.text === 'min') return Math.min(...args)
+    if (head.text === 'max') return Math.max(...args)
+    return Math.min(Math.max(args[0], args[1]), args[2])
+  }
+  if (KEYWORDS.has(head.text)) {
+    reader.at += 1
+    const component = scope[head.text as keyof ColorValue]
+    if (Number.isNaN(component))
+      throw new Error(`${head.text} used outside a relative colour`)
+    return component
+  }
+  throw new Error(`cannot evaluate: ${head.text}`)
+}
+
+// ---------------------------------------------------------------------------
+// The role vocabulary
+// ---------------------------------------------------------------------------
+
+/**
+ * The coloured roles. A role is a meaning, never a position on a ramp.
+ *
+ * Adding one here is the whole edit a new role costs on this side: every rule
+ * that reads this list covers it from that moment, and fails until all seven
+ * of its names are declared.
+ */
+export const ROLES = [
+  'primary',
+  'brand',
+  'warning',
+  'destructive',
+  'info',
+  'success',
+  'secondary',
+] as const
+
+export type Role = (typeof ROLES)[number]
+
+/**
+ * The seven jobs, as the templates that build a role's names.
+ *
+ * An author picks one by answering what the colour is sitting on — the solid,
+ * the tint, or the page — rather than by reading a number. That is the whole
+ * difference between this list and a ramp.
+ */
+export const ROLE_JOBS = [
+  (role: string) => `--${role}`,
+  (role: string) => `--${role}-foreground`,
+  (role: string) => `--surface-${role}`,
+  (role: string) => `--text-on-surface-${role}`,
+  (role: string) => `--text-${role}`,
+  (role: string) => `--border-${role}`,
+  (role: string) => `--wash-${role}`,
+] as const
+
+/** The seven names one role must declare. */
+export function roleTokens(role: string): string[] {
+  return ROLE_JOBS.map((job) => job(role))
+}
+
+/**
+ * The role names that are not declared anywhere in the stylesheets.
+ *
+ * An invariant rather than a census, which is the difference between a rule
+ * that survives the next unrelated edit and one that breaks on it. "Every role
+ * declares all seven" holds when an eighth role arrives and starts failing the
+ * moment that role is short a name; "there are forty-nine role tokens" is true
+ * once and wrong forever after.
+ *
+ * `declared` is a parameter so the rule itself can be tested against a set it
+ * did not read off disk — a rule nothing can make fail is not a rule.
+ */
+export function missingRoleTokens(
+  roles: readonly string[] = ROLES,
+  declared: ReadonlySet<string> = declaredNames(),
+): string[] {
+  return roles.flatMap((role) =>
+    roleTokens(role).filter((name) => !declared.has(name)),
+  )
 }

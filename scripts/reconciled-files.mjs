@@ -810,14 +810,14 @@ export const RECONCILED_FILES = [
   'src/styles/base.css',
   'src/styles/utilities.css',
   'src/styles/unset-tw-colors.css',
-  'src/styles/compat.css',
   'src/styles/animations.css',
   'src/styles/tailwind.config.css',
   'src/styles/theme.css',
   'src/lib/motion.ts',
   'src/lib/motion.test.ts',
   'src/lib/tailwindColorReset.test.ts',
-  'src/lib/compatLayer.test.ts',
+  'src/lib/tokenDiscipline.test.ts',
+  'src/lib/aliasVocabulary.test.ts',
 
   // asb 1.9.0 adopt. Three slices land at once, and each earns its files a
   // different way.
