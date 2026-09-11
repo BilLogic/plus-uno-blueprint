@@ -25,7 +25,10 @@
  */
 import { BLUEPRINT_CONTRACT } from './blueprintContract.mjs'
 
-const DEFAULT_URL = 'https://uno-bot.bryanhuang628.workers.dev/health/blueprint'
+// The production Worker. The bot's first host, on its first Cloudflare
+// account, still answers with a build that stopped being deployed, and its
+// probes stay false forever — so probing it reports a live bot as broken.
+const DEFAULT_URL = 'https://uno-bot.plus-uno.workers.dev/health/blueprint'
 const TIMEOUT_MS = 30_000
 
 /** `semantic_search.match_corpus_chunks` is probed as `rpc_match_corpus_chunks`. */
