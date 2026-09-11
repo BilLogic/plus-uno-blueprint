@@ -18,14 +18,10 @@ import { useValueAudiences } from '@/hooks/useValueAudiences'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { upsertCell } from '@/lib/authoringRpc'
 import {
-  CELL_CONTENT_TARGET,
-  CELL_CONTENT_WARNING,
-  TOUCHPOINT_LABEL_TARGET,
-  TOUCHPOINT_LABEL_WARNING,
+  getCellContentLengthGuidance,
 } from '@/lib/cellContentLimits'
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import { shouldUseTouchpointCellContent } from '@/lib/blueprintLayout'
-import { PANEL_TEXT } from '@/lib/panelText'
 import { updateCellContent } from '@/lib/cellContentMutations'
 import { RoleSelect } from '@/components/blueprint/RoleSelect'
 import { OptionSelect } from '@/components/blueprint/OptionSelect'
@@ -369,19 +365,22 @@ function CellPanelEditorForm({
     ? parseCellContentItems(form.content)
     : []
   const longestTouchpointItem = touchpointItems.reduce(
-    (longest, item) => Math.max(longest, item.length),
-    0,
+    (longest, item) => (item.length > longest.length ? item : longest),
+    '',
   )
-  const contentTarget = isTouchpointCell
-    ? TOUCHPOINT_LABEL_TARGET
-    : CELL_CONTENT_TARGET
-  const contentWarning = isTouchpointCell
-    ? TOUCHPOINT_LABEL_WARNING
-    : CELL_CONTENT_WARNING
-  const measuredLength = isTouchpointCell
-    ? longestTouchpointItem
-    : form.content.length
-  const overContentWarning = measuredLength > contentWarning
+  // The numbers come from the deployment config, through the same function
+  // the agent's write tools call, so the note under this field and the note
+  // in the agent's tool result name the same thresholds.
+  const measuredText = isTouchpointCell ? longestTouchpointItem : form.content
+  const {
+    target: contentTarget,
+    warning: contentWarning,
+    overWarning: overContentWarning,
+  } = getCellContentLengthGuidance(
+    measuredText,
+    isTouchpointCell ? 'touchpointLabels' : 'prose',
+  )
+  const measuredLength = measuredText.length
 
   const effectiveSummary = descriptionTouched
     ? form.summary
@@ -551,7 +550,7 @@ function CellPanelEditorForm({
             because `text-warning` still resolves to the solid fill. */}
         <p
           className={cn(
-            'text-3xs',
+            'text-xs',
             overContentWarning ? 'text-text-warning' : 'text-muted-foreground',
           )}
           data-cell-content-guidance=""
@@ -579,10 +578,10 @@ function CellPanelEditorForm({
       {placement ? (
         <div className="flex flex-col gap-3 rounded-md border border-border bg-muted/20 p-3">
           <div className="flex flex-col gap-0.5">
-            <span className={PANEL_TEXT.sectionLabel}>
+            <span className="text-xs font-medium text-muted-foreground">
               “{placement.name}” at this step
             </span>
-            <p className="text-3xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               This touchpoint’s own words here. The same tool at another step
               keeps its own.
             </p>
@@ -897,7 +896,7 @@ function RegistryLink({
       className="flex flex-col gap-2 rounded-md border border-dashed border-border p-2"
       data-registry-link=""
     >
-      <p className="text-3xs text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         The registry has no “{placement.name}”. Link it to the entry it was
         about, or take it off this cell.
       </p>

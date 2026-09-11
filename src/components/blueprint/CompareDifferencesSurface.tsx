@@ -36,7 +36,6 @@ import {
   getBlueprintLaneZone,
 } from '@/lib/blueprintTheme'
 import { getPathBadgeStyle, getPathColor } from '@/lib/pathColorTheme'
-import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 
@@ -53,7 +52,7 @@ function VerdictBadge({ verdict }: { verdict: CompareStatus }) {
     return (
       <span
         className={cn(
-          'inline-flex shrink-0 items-center rounded-sm px-1 py-px text-3xs leading-none',
+          'inline-flex shrink-0 items-center rounded-sm px-1 py-px text-xs leading-none',
           MONO_NUM_CLASS,
           'bg-info/10 text-info',
         )}
@@ -66,7 +65,7 @@ function VerdictBadge({ verdict }: { verdict: CompareStatus }) {
   return (
     <span
       className={cn(
-        'inline-flex shrink-0 items-center rounded-sm px-1 py-px text-3xs leading-none',
+        'inline-flex shrink-0 items-center rounded-sm px-1 py-px text-xs leading-none',
         MONO_NUM_CLASS,
         'bg-warning/10 text-warning',
       )}
@@ -114,7 +113,7 @@ const CompareDiffRow = memo(function CompareDiffRow({
           style={{ backgroundColor: laneSwatchColor ?? 'var(--muted)' }}
         />
         <span
-          className="min-w-0 truncate text-2xs text-muted-foreground"
+          className="min-w-0 truncate text-xs text-muted-foreground"
           title={slot.laneLabel}
         >
           {slot.laneLabel}
@@ -124,7 +123,7 @@ const CompareDiffRow = memo(function CompareDiffRow({
       {pathIds.map((pathId) => {
         const entry = slot.perPath[pathId]
         return (
-          <div key={pathId} className="min-w-0 text-2xs leading-snug">
+          <div key={pathId} className="min-w-0 text-xs leading-snug">
             {entry?.present ? (
               <span className="line-clamp-2 text-foreground/85">
                 {entry.contents.join(' · ')}
@@ -176,7 +175,7 @@ function DiffTable({
   const pathIds = registration.blueprints.map((blueprint) => blueprint.path.id)
   if (slots.length === 0) {
     return (
-      <p className="px-1 py-2 text-2xs text-muted-foreground">
+      <p className="px-1 py-2 text-xs text-muted-foreground">
         No differences match the current filter.
       </p>
     )
@@ -197,7 +196,7 @@ function DiffTable({
           style={{ borderTopColor: getPathColor(blueprint.path) }}
         >
           <span
-            className="block truncate text-3xs font-medium text-muted-foreground"
+            className="block truncate text-xs font-medium text-muted-foreground"
             title={blueprint.path.name}
           >
             {blueprint.path.name}
@@ -234,7 +233,7 @@ function FilterToggle({
       aria-pressed={pressed}
       onClick={onToggle}
       className={cn(
-        'rounded-full border px-2 py-0.5 text-2xs leading-tight transition-colors duration-(--motion-micro)',
+        'rounded-full border px-2 py-0.5 text-xs leading-tight transition-colors duration-(--motion-micro)',
         pressed
           ? 'border-foreground/50 bg-foreground/10 text-foreground'
           : 'border-border text-muted-foreground hover:text-foreground',
@@ -373,14 +372,14 @@ export function CompareDifferencesSurface({
   const groupHeader = (label: string, count: number, title?: string) => (
     <span className="flex min-w-0 flex-1 items-center gap-1.5">
       <span
-        className="min-w-0 truncate text-2xs font-medium text-foreground"
+        className="min-w-0 truncate text-xs font-medium text-foreground"
         title={title}
       >
         {label}
       </span>
       <span
         className={cn(
-          'ml-auto shrink-0 pl-2 text-2xs text-muted-foreground',
+          'ml-auto shrink-0 pl-2 text-xs text-muted-foreground',
           MONO_NUM_CLASS,
         )}
       >
@@ -411,10 +410,10 @@ export function CompareDifferencesSurface({
                 className="flex min-w-0 items-center gap-1.5"
               >
                 {index > 0 ? (
-                  <span className="text-2xs text-muted-foreground">vs</span>
+                  <span className="text-xs text-muted-foreground">vs</span>
                 ) : null}
                 <span
-                  className="max-w-32 truncate rounded-full px-2 py-0.5 text-3xs font-medium leading-tight"
+                  className="max-w-32 truncate rounded-full px-2 py-0.5 text-xs font-medium leading-tight"
                   data-blueprint-fill
                   style={getPathBadgeStyle(blueprint.path)}
                   title={blueprint.path.name}
@@ -431,14 +430,14 @@ export function CompareDifferencesSurface({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-6 shrink-0 gap-1 px-2 text-2xs text-muted-foreground hover:text-foreground"
+                  className="h-6 shrink-0 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
                 />
               }
             >
               <Filter className="size-3" aria-hidden />
               Filter
               {activeFilterCount > 0 ? (
-                <span className={cn('text-3xs', MONO_NUM_CLASS)}>
+                <span className={cn('text-xs', MONO_NUM_CLASS)}>
                   {activeFilterCount}
                 </span>
               ) : null}
@@ -446,7 +445,7 @@ export function CompareDifferencesSurface({
             <PopoverContent align="end" className="w-64 gap-2 p-3">
               {/* The panel's one section-label role — these three group the
                   filter toggles exactly as a field label groups a field. */}
-              <p className={PANEL_TEXT.sectionLabel}>Lanes</p>
+              <p className="text-xs font-medium text-muted-foreground">Lanes</p>
               <div className="flex flex-wrap gap-1">
                 {laneFacets.map((facet) => (
                   <FilterToggle
@@ -457,7 +456,7 @@ export function CompareDifferencesSurface({
                   />
                 ))}
               </div>
-              <p className={cn('pt-1', PANEL_TEXT.sectionLabel)}>Verdict</p>
+              <p className="pt-1 text-xs font-medium text-muted-foreground">Verdict</p>
               <div className="flex flex-wrap gap-1">
                 <FilterToggle
                   label="≠ divergent"
@@ -474,7 +473,7 @@ export function CompareDifferencesSurface({
                   filter for a step with no differences filters to nothing. */}
               {stepGroups.length > 0 ? (
                 <>
-                  <p className={cn('pt-1', PANEL_TEXT.sectionLabel)}>Steps</p>
+                  <p className="pt-1 text-xs font-medium text-muted-foreground">Steps</p>
                   <div className="flex flex-wrap gap-1">
                     {stepGroups.map((group) => (
                       <FilterToggle
@@ -487,13 +486,13 @@ export function CompareDifferencesSurface({
                   </div>
                 </>
               ) : null}
-              <p className="pt-1 text-3xs text-muted-foreground">
+              <p className="pt-1 text-xs text-muted-foreground">
                 Nothing selected = everything shown.
               </p>
             </PopoverContent>
           </Popover>
         </div>
-        <p className="flex items-center gap-1 text-3xs text-muted-foreground/80">
+        <p className="flex items-center gap-1 text-xs text-muted-foreground/80">
           <Info className="size-3 shrink-0" aria-hidden />
           dependency edges are not compared
         </p>

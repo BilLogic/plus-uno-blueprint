@@ -65,12 +65,17 @@ function InfoHint({ label, className }: { label: string; className?: string }) {
   )
 }
 
-const ROW_LABEL = 'w-20 shrink-0 text-2xs text-muted-foreground'
+/*
+ * The settings column's shared row label. `w-14` is the agent rows' width,
+ * and these rows render into the same column — a second width here jogged
+ * the control edge partway down one popover.
+ */
+const ROW_LABEL = 'w-14 shrink-0 text-sm text-muted-foreground'
 
 /**
  * Settings → "For developers".
  *
- * Someone building on the kit needs to see both tiers without provisioning
+ * Someone building on the template needs to see both tiers without provisioning
  * two accounts. This flips what the CLIENT believes; the server is untouched.
  *
  * Two controls, because there are exactly two decisions: is the simulation
@@ -89,11 +94,11 @@ export function DevPortalSection() {
   if (!devPortalEnabled()) return null
 
   return (
-    <div className="flex flex-col gap-2" data-dev-portal>
+    <div className="flex flex-col gap-2.5" data-dev-portal>
       <div className="my-0.5 border-t border-muted" />
 
       <div className="flex items-center gap-1">
-        <p className="text-xs font-medium text-foreground">For developers</p>
+        <p className="text-sm font-medium text-foreground">For developers</p>
         <InfoHint label="Simulates a permission tier in this browser only. Row-level security and the RPC grants are unchanged, so a write your real account cannot make still fails server-side." />
       </div>
 

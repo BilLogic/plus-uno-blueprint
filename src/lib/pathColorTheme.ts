@@ -99,12 +99,20 @@ const step = (family: string, weight: 1000 | 1100) =>
  * the board came out `7 4 2 4`. Colour was doing all the work, which is the
  * exact failure SC 1.4.1 describes.
  */
-const PINNED_PATH_SLOTS: Record<string, number> = {
-  'Set Goals': 0,
-  'Update Goals': 1,
-  'Check Goals': 2,
-  'Set Goals Edge Case': 3,
-  'Update Goals Edge Case': 4,
+let pinnedPathSlots: Record<string, number> = {}
+
+/**
+ * Replace the pin table {@link getPathColor} and {@link getPathDashArray} read.
+ *
+ * Written from the deployment config's `pathColorPins` by
+ * `DeploymentConfigProvider` in a layout effect, and by tests directly.
+ * Replaces rather than merges: the resolved config is the whole table. The map
+ * is copied, so a later mutation of the host object cannot reach the theme.
+ *
+ * @param map Path name → slot index. Names absent from the map fall through.
+ */
+export function configurePathColorPins(map: Record<string, number>): void {
+  pinnedPathSlots = { ...map }
 }
 
 /** The open set, by slot. Step 1100, the badge weight. */
@@ -244,7 +252,7 @@ function hashKey(key: string): number {
  * is called; its type is a fact about it.
  */
 function pathSlot(path: PathColorInput): number {
-  return PINNED_PATH_SLOTS[path.name] ?? hashKey(path.name)
+  return pinnedPathSlots[path.name] ?? hashKey(path.name)
 }
 
 export function getPathColor(path: PathColorInput): string {

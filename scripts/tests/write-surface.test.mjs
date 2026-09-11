@@ -178,7 +178,7 @@ test('get_reference serving something other than the imported override fails', (
   const docs = WIRED.docs.replace("'canvas-adapter': canvasAdapter", "'canvas-adapter': somethingElse")
   const faults = wiringFaults({ ...WIRED, docs })
   assert.equal(faults.length, 1)
-  assert.match(faults[0].problem, /REFERENCE_DOCS maps 'canvas-adapter'/)
+  assert.match(faults[0].problem, /registers 'canvas-adapter' as something other than/)
 })
 
 test('the eval harness reading a different adapter fails', () => {

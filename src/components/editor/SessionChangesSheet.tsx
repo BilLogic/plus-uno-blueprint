@@ -537,7 +537,7 @@ export function SessionChangesSheet() {
               variant="ghost"
               size="sm"
               aria-label={`Review ${changes.length} changes`}
-              className="pointer-events-auto h-7 shrink-0 gap-1.5 border border-primary/30 bg-primary/10 px-2.5 text-xs text-primary hover:bg-primary/15 hover:text-primary"
+              className="pointer-events-auto shrink-0 gap-1.5 border border-primary/30 bg-primary/10 px-2.5 text-primary hover:bg-primary/15 hover:text-primary"
             >
               <History className="size-3.5" aria-hidden />
               Changes
@@ -554,7 +554,7 @@ export function SessionChangesSheet() {
         <DropdownMenuContent
           side="top"
           align="end"
-          className="w-80 p-0 text-xs"
+          className="w-80 p-0 text-sm"
           data-session-sheet=""
         >
           <div className="border-b border-muted px-3 py-2">
@@ -567,7 +567,7 @@ export function SessionChangesSheet() {
               back closes. Everything else the header used to say (that a list
               is a list, that reverting is possible) the rows demonstrate.
             */}
-            <p className="mt-0.5 text-2xs text-muted-foreground">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               Already saved — Save just clears the list.
             </p>
           </div>
@@ -581,7 +581,7 @@ export function SessionChangesSheet() {
                   heading for the obvious.
                 */}
                 {groups.length > 1 ? (
-                  <p className="px-2 py-1 text-3xs font-medium tracking-wide text-muted-foreground uppercase">
+                  <p className="px-2 py-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
                     {pathLabel(group.pathId)}
                   </p>
                 ) : null}
@@ -600,7 +600,7 @@ export function SessionChangesSheet() {
           <div className="flex items-center gap-2 border-t border-muted px-3 py-2">
             {confirming === 'revert' ? (
               <>
-                <p className="min-w-0 flex-1 text-2xs text-foreground">
+                <p className="min-w-0 flex-1 text-sm text-foreground">
                   Take back {revertible.length} change
                   {revertible.length === 1 ? '' : 's'}?
                   {unrevertible > 0
@@ -611,7 +611,7 @@ export function SessionChangesSheet() {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 shrink-0 px-2 text-xs"
+                  className="shrink-0 px-2"
                   onClick={() => setConfirming(null)}
                 >
                   Cancel
@@ -620,7 +620,7 @@ export function SessionChangesSheet() {
                   type="button"
                   variant="destructive"
                   size="sm"
-                  className="h-7 shrink-0 px-2.5 text-xs"
+                  className="shrink-0 px-2.5"
                   onClick={() =>
                     void revertAll().catch((error: unknown) => {
                       console.error('[authoring] revert all failed:', error)
@@ -632,14 +632,14 @@ export function SessionChangesSheet() {
               </>
             ) : confirming === 'save' ? (
               <>
-                <p className="min-w-0 flex-1 text-2xs text-foreground">
+                <p className="min-w-0 flex-1 text-sm text-foreground">
                   Deletes become permanent.
                 </p>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 shrink-0 px-2 text-xs"
+                  className="shrink-0 px-2"
                   onClick={() => setConfirming(null)}
                 >
                   Cancel
@@ -647,7 +647,7 @@ export function SessionChangesSheet() {
                 <Button
                   type="button"
                   size="sm"
-                  className="h-7 shrink-0 gap-1.5 px-2.5 text-xs"
+                  className="shrink-0 gap-1.5 px-2.5"
                   onClick={save}
                 >
                   <Check className="size-3.5" aria-hidden />
@@ -662,7 +662,7 @@ export function SessionChangesSheet() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-7 shrink-0 gap-1.5 px-2 text-xs text-muted-foreground"
+                    className="shrink-0 gap-1.5 px-2 text-muted-foreground"
                     disabled={reverting}
                     onClick={() => setConfirming('revert')}
                   >
@@ -676,7 +676,7 @@ export function SessionChangesSheet() {
                 <Button
                   type="button"
                   size="sm"
-                  className="h-7 shrink-0 gap-1.5 px-2.5 text-xs"
+                  className="shrink-0 gap-1.5 px-2.5"
                   disabled={reverting}
                   onClick={save}
                 >
@@ -696,7 +696,7 @@ export function SessionChangesSheet() {
           {stillHere.length > 0 ? (
             <div className="flex flex-col gap-1 border-t border-muted px-3 py-2">
               {stillHere.map((item) => (
-                <p key={item.id} className="text-2xs text-destructive">
+                <p key={item.id} className="text-xs text-destructive">
                   {item.kind === 'no-inverse'
                     ? `Couldn’t be taken back — ${item.label}: ${item.reason}.`
                     : `Failed — ${item.label}: ${item.reason}`}
@@ -764,7 +764,7 @@ function ChangeRow({
             same revert, same Save gate; the badge is the entire distinction. */}
         {entry.author === 'agent' ? (
           <span
-            className="shrink-0 text-3xs text-primary"
+            className="shrink-0 text-xs text-primary"
             title="Made by the agent"
             aria-label="Made by the agent"
           >
@@ -805,7 +805,7 @@ function ChangeRow({
         ) : null}
       </div>
       {error ? (
-        <p className="mt-0.5 text-3xs text-destructive">{error}</p>
+        <p className="mt-0.5 text-xs text-destructive">{error}</p>
       ) : null}
     </div>
   )

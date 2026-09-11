@@ -22,7 +22,6 @@ import {
   type DraftDependency,
 } from '@/lib/dependencyValidation'
 import type { DependencyKind } from '@/lib/authoringRpc'
-import { PANEL_TEXT } from '@/lib/panelText'
 import { cn, errorMessage } from '@/lib/utils'
 
 export type ExistingDependency = {
@@ -154,7 +153,7 @@ function RowAction({
 /** The kind hint, attached to the control it describes and nothing else. */
 function KindHint({ kind }: { kind: DependencyKind }) {
   return (
-    <p className={cn('text-2xs text-muted-foreground', ROW_DETAIL_INDENT)}>
+    <p className={cn('text-xs text-muted-foreground', ROW_DETAIL_INDENT)}>
       {DEPENDENCY_KIND_HINTS[kind]}
     </p>
   )
@@ -191,7 +190,7 @@ function NoteField({
 }) {
   return (
     <label className={cn('flex flex-col gap-1', ROW_DETAIL_INDENT)}>
-      <span className={PANEL_TEXT.sectionLabel}>
+      <span className="text-xs font-medium text-muted-foreground">
         {DEPENDENCY_EDIT_TEXT.noteLabel}
         {DEPENDENCY_EDIT_TEXT.noteOptional ? (
           <span className="font-normal text-muted-foreground/70"> · optional</span>
@@ -213,7 +212,7 @@ function NoteField({
 function RowError({ message }: { message: string }) {
   return (
     <p
-      className={cn('text-2xs text-destructive', ROW_DETAIL_INDENT)}
+      className={cn('text-xs text-destructive', ROW_DETAIL_INDENT)}
       data-dependency-row-error=""
     >
       {message}
@@ -539,7 +538,7 @@ export function DependencyAddRow({
         {problems.length > 0 && draft.targetCellId ? (
           <ul
             className={cn(
-              'flex flex-col gap-1 text-2xs text-muted-foreground',
+              'flex flex-col gap-1 text-xs text-muted-foreground',
               ROW_DETAIL_INDENT,
             )}
             data-dependency-problems=""

@@ -1,6 +1,4 @@
 import type { ReactNode } from 'react'
-import { PANEL_TEXT } from '@/lib/panelText'
-import { cn } from '@/lib/utils'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useBlueprintCell } from '@/hooks/useBlueprintCell'
 import { parseValueProps } from '@/lib/valueProps'
@@ -24,11 +22,11 @@ function SpecSection({
 }) {
   return (
     <section className="flex flex-col gap-1">
-      <h3 className={PANEL_TEXT.sectionLabel}>
+      <h3 className="text-xs font-medium text-muted-foreground">
         {title}
       </h3>
       {text !== undefined ? (
-        <p className={cn('whitespace-pre-wrap', PANEL_TEXT.value)}>{text}</p>
+        <p className="whitespace-pre-wrap text-sm font-normal text-foreground/80">{text}</p>
       ) : null}
       {children}
     </section>

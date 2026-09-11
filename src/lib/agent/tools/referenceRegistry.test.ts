@@ -1,14 +1,8 @@
+import { readFileSync } from 'node:fs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 /**
- * The host half of the reference-doc seam, and its TIMING.
- *
- * Nothing in this repository registers a document — the seam belongs to a host
- * that MOUNTS the package, and this repository is still the app rather than a
- * host of it. It is under test anyway because `referenceNames.ts` is byte-held
- * to the template's copy and already splices registered names into the shared
- * vocabulary: the registry is wired here whether or not anyone uses it, and a
- * wiring nobody exercises is a wiring nobody notices breaking.
+ * The deployment half of the reference-doc seam, and its TIMING.
  *
  * Every case reloads the module graph and imports dynamically, because what is
  * under test is what `referenceDocs.ts` and `referenceNames.ts` record while
@@ -20,35 +14,45 @@ beforeEach(() => {
 })
 
 describe('the reference registry', () => {
-  it('is empty until something registers, and the two halves agree', async () => {
+  it('is empty in the standalone template', async () => {
     const { REFERENCE_NAMES } = await import('@/lib/agent/tools/referenceNames')
     const { REFERENCE_DOCS } = await import('@/lib/agent/tools/referenceDocs')
-    // `canvas-adapter` is this deployment's override and `blueprint` is its own
-    // account of itself, spliced in by `referenceNamesExtra.ts` — both arrive
-    // by module edit, which is the seam an app that COPIES the kit uses.
-    expect(REFERENCE_NAMES.slice(0, 2)).toEqual(['canvas-adapter', 'blueprint'])
-    expect(REFERENCE_NAMES).not.toContain('runbook')
-    // The agreement `read.ts` asserts at module init, asserted here too.
+    const { REFERENCE_NAMES_EXTRA } = await import(
+      '@/lib/agent/tools/referenceNamesExtra'
+    )
+    expect(REFERENCE_NAMES).toContain('canvas-adapter')
+    expect(REFERENCE_NAMES).not.toContain('blueprint')
+    expect(REFERENCE_NAMES_EXTRA).toEqual([])
     expect(Object.keys(REFERENCE_DOCS).sort()).toEqual(
       [...REFERENCE_NAMES].sort(),
     )
   })
 
-  it("a host's own document is served, and named after this deployment's", async () => {
+  /**
+   * A generated account is a deployment's own content. The template loader must
+   * stay byte-identical after a deployment adopts it, so extra names arrive
+   * only through `REFERENCE_NAMES_EXTRA` (copy) or `registerReferenceDocs`
+   * (mount) — never a path import of another repo's file.
+   */
+  it('the template loader imports no generated account by path', () => {
+    const docs = readFileSync(new URL('./referenceDocs.ts', import.meta.url), 'utf8')
+    const names = readFileSync(new URL('./referenceNames.ts', import.meta.url), 'utf8')
+    expect(docs).not.toMatch(/blueprint\.md/)
+    expect(docs).not.toMatch(/from ['"][^'"]*\/docs\//)
+    expect(names).not.toMatch(/blueprint\.md/)
+  })
+
+  it("a deployment's own document is served, and named after the adapter", async () => {
     const { registerReferenceDocs } = await import(
       '@/lib/agent/tools/referenceRegistry'
     )
-    registerReferenceDocs({ runbook: '# On call\n' })
+    registerReferenceDocs({ blueprint: '# This service\n' })
 
     const { REFERENCE_NAMES } = await import('@/lib/agent/tools/referenceNames')
     const { readReference } = await import('@/lib/agent/tools/read')
 
-    expect(REFERENCE_NAMES.slice(0, 3)).toEqual([
-      'canvas-adapter',
-      'blueprint',
-      'runbook',
-    ])
-    expect(readReference('runbook')).toBe('# On call\n')
+    expect(REFERENCE_NAMES.slice(0, 2)).toEqual(['canvas-adapter', 'blueprint'])
+    expect(readReference('blueprint')).toBe('# This service\n')
   })
 
   /**
@@ -61,29 +65,27 @@ describe('the reference registry', () => {
     const { registerReferenceDocs } = await import(
       '@/lib/agent/tools/referenceRegistry'
     )
-    registerReferenceDocs({ runbook: '# On call\n' })
+    registerReferenceDocs({ blueprint: '# This service\n' })
 
     const { TOOL_SPECS } = await import('@/lib/agent/tools/specs')
     const getReference = TOOL_SPECS.find((spec) => spec.name === 'get_reference')
-    expect(getReference?.description).toContain('runbook')
+    expect(getReference?.description).toContain('blueprint')
   })
 
-  it('overriding a document already served replaces it and adds no name', async () => {
+  it('overriding a document the template serves replaces it and adds no name', async () => {
     const { registerReferenceDocs } = await import(
       '@/lib/agent/tools/referenceRegistry'
     )
-    registerReferenceDocs({ 'canvas-adapter': '# Their own adapter\n' })
+    registerReferenceDocs({ 'canvas-adapter': '# Our own adapter\n' })
 
     const { REFERENCE_NAMES } = await import('@/lib/agent/tools/referenceNames')
     const { REFERENCE_DOCS } = await import('@/lib/agent/tools/referenceDocs')
     const { readReference } = await import('@/lib/agent/tools/read')
 
-    expect(readReference('canvas-adapter')).toBe('# Their own adapter\n')
-    expect(
-      REFERENCE_NAMES.filter((name) => name === 'canvas-adapter'),
-    ).toHaveLength(1)
+    expect(readReference('canvas-adapter')).toBe('# Our own adapter\n')
+    expect(REFERENCE_NAMES.filter((n) => n === 'canvas-adapter')).toHaveLength(1)
     // `read.ts` asserts these agree at module init; say so here too, because
-    // the de-duplication in `referenceNames.ts` is the only reason it holds.
+    // the de-duplication above is the only reason it still holds.
     expect(Object.keys(REFERENCE_DOCS).sort()).toEqual(
       [...REFERENCE_NAMES].sort(),
     )
@@ -96,7 +98,7 @@ describe('the reference registry', () => {
     // Whatever imported the app has already built the served record.
     await import('@/lib/agent/tools/referenceDocs')
 
-    expect(() => registerReferenceDocs({ runbook: '# Too late\n' })).toThrow(
+    expect(() => registerReferenceDocs({ blueprint: '# Too late\n' })).toThrow(
       /already being served/,
     )
   })
@@ -105,8 +107,8 @@ describe('the reference registry', () => {
     const { registerReferenceDocs, registeredReferenceNames } = await import(
       '@/lib/agent/tools/referenceRegistry'
     )
-    registerReferenceDocs({ runbook: '# One\n' })
-    registerReferenceDocs({ escalations: '# Two\n' })
-    expect(registeredReferenceNames()).toEqual(['runbook', 'escalations'])
+    registerReferenceDocs({ blueprint: '# One\n' })
+    registerReferenceDocs({ runbook: '# Two\n' })
+    expect(registeredReferenceNames()).toEqual(['blueprint', 'runbook'])
   })
 })

@@ -116,7 +116,6 @@ export const RECONCILED_FILES = [
   'src/lib/laneSpecMutations.ts',
   'src/lib/stepSpecMutations.ts',
   'src/lib/entityStatus.ts',
-  'src/lib/panelText.ts',
   'src/lib/panelEditorBusy.ts',
 
   // The panel surface (#357): the drawer shell every panel is drawn in, the
@@ -501,8 +500,6 @@ export const RECONCILED_FILES = [
   // enrolment alone. `serviceScope.ts` itself stays apart by a few sentences
   // (the template has no `search_blueprint` and says its catalog carries no
   // `service_id` rather than dropped it — Q21) and is not here.
-  'src/components/editor/AgentScopeField.tsx',
-  'src/components/editor/agentScopeField.test.tsx',
 
   // #327 S1 — the free set. Two of the seven the survey named were already
   // byte-identical at the 1.6.0 pin and are enrolment alone. The other five
@@ -834,7 +831,6 @@ export const RECONCILED_FILES = [
   // the other dropped, and neither is the superset.
   'src/lib/agent/placement.ts',
   'src/lib/agent/settings.ts',
-  'src/lib/agent/settings.scope.test.ts',
   'src/lib/agent/tools/referenceNames.ts',
   'src/lib/mobilePathMemory.ts',
 
@@ -2050,4 +2046,8 @@ export const RECONCILED_FILES = [
   'src/lib/illustrationUpload.ts',
   'src/components/editor/SlideImagesField.tsx',
   'src/lib/bundledSample.ts',
+  'src/lib/cellContentLimits.ts',
+  'src/lib/agent/tools/referenceDocs.ts',
+  'src/lib/agent/tools/referenceNamesExtra.ts',
+  'src/lib/agent/tools/referenceRegistry.test.ts',
 ]

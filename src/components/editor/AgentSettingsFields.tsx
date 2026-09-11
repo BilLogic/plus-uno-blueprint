@@ -1,6 +1,5 @@
 import { AdminSessionFields } from '@/components/editor/AdminSessionFields'
 import { AgentProviderFields } from '@/components/editor/AgentProviderFields'
-import { AgentScopeField } from '@/components/editor/AgentScopeField'
 import { DevPortalSection } from '@/components/editor/DevPortal'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 
@@ -20,6 +19,13 @@ import { useSupabase } from '@/contexts/SupabaseProvider'
  * sit in, the section headings, the rule between them, and the `canAgent`
  * gate that decides whether the second half exists at all.
  *
+ * That gate is `canAgent` and NOT `canWrite`: a regular creator and an admin
+ * see the same provider, model and key rows. The agent is a reading tool, the
+ * key is the creator's own, and tier gates writing rather than asking — the
+ * write half of the line is `canAgentWrite`, which the agent panel reads and
+ * this surface does not. `SupabaseProvider`'s `canAgent` carries the whole
+ * reasoning; a tier check added here fails a test that names the decision.
+ *
  * `active` is only the model-list fetch gate: skip the provider round-trip
  * while the surface is closed.
  */
@@ -35,24 +41,23 @@ export function AgentSettingsFields({ active = true }: { active?: boolean }) {
     <div className="flex flex-col gap-2.5">
       {/* Show/hide the chat is the rail's ✦ toggle — settings hold
           settings, not surface toggles. */}
-      <p className="text-xs font-medium text-foreground">Admin</p>
+      <p className="text-sm font-medium text-foreground">Admin</p>
       {/* Template-only: an unconfigured build has no account to sign in to,
           so the front door is a sentence rather than a form. */}
       {configured ? (
         <AdminSessionFields />
       ) : (
-        <p className="text-3xs leading-snug text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           No database configured — there is no account to sign in to. The
-          canvas is showing the kit’s bundled sample blueprint.
+          canvas is showing the template’s bundled sample blueprint.
         </p>
       )}
 
       {showAgentSettings ? (
         <>
           <div className="my-0.5 border-t border-muted" />
-          <p className="text-xs font-medium text-foreground">Agent</p>
+          <p className="text-sm font-medium text-foreground">Agent</p>
           <AgentProviderFields active={active} />
-          <AgentScopeField />
         </>
       ) : null}
 

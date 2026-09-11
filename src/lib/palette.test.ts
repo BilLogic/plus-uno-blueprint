@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { unoDeploymentConfig } from '@/deployment'
+import { resolveDeploymentConfig } from '@/deploymentConfig'
 import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { CELL_STEP } from '@/lib/blueprintCellStyle'
 import {
@@ -6,6 +8,7 @@ import {
   getPathColor,
   getPathDashArray,
   PATH_IDENTITY_PERIOD,
+  configurePathColorPins,
 } from '@/lib/pathColorTheme'
 import {
   chromaCeiling,
@@ -410,6 +413,13 @@ describe('blueprint cells', () => {
  * not have caught it.
  */
 describe('path badges', () => {
+  // This deployment's pins come from its config, the way the provider installs
+  // them before the first paint.
+  beforeAll(() =>
+    configurePathColorPins(resolveDeploymentConfig(unoDeploymentConfig).pathColorPins),
+  )
+  afterAll(() => configurePathColorPins({}))
+
   const paths = Object.entries(PATH_KIND_COLORS)
 
   describe.each(['light', 'dark'] as const)('%s', (theme) => {

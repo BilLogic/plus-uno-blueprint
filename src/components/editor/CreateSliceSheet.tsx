@@ -194,13 +194,13 @@ export function CreateSliceSheet({
             </IconTooltip>
           ) : null}
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium text-foreground">New slice</p>
+            <p className="text-sm font-medium text-foreground">New slice</p>
             {/*
               What the selection *is*, stated rather than asked. The old
               five-way toggle made the author classify something the picking
               had already decided.
             */}
-            <p className="truncate text-2xs text-muted-foreground">
+            <p className="truncate text-xs text-muted-foreground">
               {describeSliceType(sliceKind, cellCount)}
             </p>
           </div>
@@ -220,7 +220,7 @@ export function CreateSliceSheet({
               <Button
                 type="button"
                 size="sm"
-                className="h-7 shrink-0 px-2.5 text-xs"
+                className="shrink-0 px-2.5"
                 disabled={cellCount === 0}
                 onClick={() => setStep('name')}
               >
@@ -232,7 +232,7 @@ export function CreateSliceSheet({
           <>
             <div className="flex flex-col gap-2.5 px-3 py-3">
               <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-foreground">
+                <span className="text-sm font-medium text-foreground">
                   Title<span className="ml-0.5 text-destructive">*</span>
                 </span>
                 <Input
@@ -248,7 +248,7 @@ export function CreateSliceSheet({
                   pixels and cost a discovery. Required-ness is carried by the
                   labels, not by which field is on screen. */}
               <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground">
+                <span className="text-sm font-medium text-muted-foreground">
                   Subtitle{' '}
                   <span className="font-normal text-muted-foreground/70">
                     · optional
@@ -281,7 +281,7 @@ export function CreateSliceSheet({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs"
+                className="px-2"
                 disabled={busy}
                 onClick={() => onOpenChange(false)}
               >
@@ -290,7 +290,7 @@ export function CreateSliceSheet({
               <Button
                 type="button"
                 size="sm"
-                className="h-7 px-2.5 text-xs"
+                className="px-2.5"
                 disabled={busy || problems.length > 0 || cellIds.length === 0}
                 onClick={handleCreate}
               >

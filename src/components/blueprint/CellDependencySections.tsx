@@ -30,7 +30,6 @@ import {
   DEPENDENCY_EDIT_TEXT,
 } from '@/lib/dependencyValidation'
 import type { DependencyKind } from '@/lib/authoringRpc'
-import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 
 export type CellDependencyTechEntry = {
@@ -182,7 +181,7 @@ function DependencyRow({
         </span>
       </span>
       {connection.contentPreview && !connection.isTech ? (
-        <span className={cn('truncate text-2xs text-muted-foreground', detailIndentClass)}>
+        <span className={cn('truncate text-xs text-muted-foreground', detailIndentClass)}>
           {connection.contentPreview}
         </span>
       ) : null}
@@ -190,7 +189,7 @@ function DependencyRow({
         <span
           className={cn(
             WHY_LINE_QUIET_CLASS,
-            'text-2xs leading-snug text-muted-foreground italic',
+            'text-xs leading-snug text-muted-foreground italic',
             detailIndentClass,
           )}
         >
@@ -242,7 +241,7 @@ function DependencyRow({
                   compact
                   asSpan
                   inline
-                  className="!w-fit max-w-full !px-2 !py-0.5 !text-3xs !font-normal leading-none text-foreground/75"
+                  className="!w-fit max-w-full !px-2 !py-0.5 !text-xs !font-normal leading-none text-foreground/75"
                 />
               </button>
             ))}
@@ -269,7 +268,7 @@ function DependencyGroup({
       {/* The same section-label role the spec sections use. Two treatments
           for one job — 11px medium sentence case here, 10px semibold
           uppercase there — read as two unrelated panels. */}
-      <p className={PANEL_TEXT.sectionLabel}>
+      <p className="text-xs font-medium text-muted-foreground">
         {title}
       </p>
       <ul className="flex flex-col">{children}</ul>
@@ -518,7 +517,7 @@ export function CellDependencySections({
                     compact
                     asSpan
                     inline
-                    className="!w-fit max-w-full !px-2 !py-0.5 !text-3xs !font-normal leading-none text-foreground/75"
+                    className="!w-fit max-w-full !px-2 !py-0.5 !text-xs !font-normal leading-none text-foreground/75"
                   />
                 </button>
               ))}

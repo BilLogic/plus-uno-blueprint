@@ -9,6 +9,7 @@ import { readFileSync } from 'node:fs'
 import {
   coverage,
   entityKinds,
+  evaluate,
   handWritten,
   prohibitionCount,
   ratchetFailures,
@@ -17,6 +18,7 @@ import {
   splice,
   tableColumns,
 } from '../agent-account.mjs'
+import { credentials } from '../generate-agent-account.mjs'
 
 const ROOT = new URL('../..', import.meta.url).pathname
 
@@ -85,6 +87,94 @@ test('the ratchet: coverage may only rise, prohibitions may only fall, and an un
   assert.match(ratchetFailures({ columnComments: { described: 40, of: 100 }, prohibitions: 3 }, baseline)[0], /3 prohibition/)
   assert.match(ratchetFailures({ columnComments: { described: 41, of: 100 }, prohibitions: 2 }, baseline)[0], /stale/)
   assert.match(ratchetFailures({ columnComments: { described: 40, of: 100 }, prohibitions: 1 }, baseline)[0], /stale/)
+})
+
+const MARKED = `---
+summary: a fixture
+---
+
+hand.
+
+<!-- generated:vocabulary from panelTerms.ts -->
+
+old vocab
+
+<!-- /generated:vocabulary -->
+
+<!-- generated:schema from the catalog -->
+
+old schema
+
+<!-- /generated:schema -->
+`
+
+test('the check fails when the account is stale or column-comment coverage falls', () => {
+  const kinds = [{ kind: 'lane', label: 'Lane', definition: 'One row of the board.' }]
+  const sources = { columns, comments, readable }
+  const matching = evaluate({
+    doc: MARKED,
+    kinds,
+    sources,
+    baseline: { columnComments: { described: 1, of: 3 }, prohibitions: 0 },
+    check: false,
+  })
+  const held = evaluate({
+    doc: matching.next,
+    kinds,
+    sources,
+    baseline: { columnComments: { described: 1, of: 3 }, prohibitions: 0 },
+    check: true,
+  })
+  assert.deepEqual(held.failures, [])
+
+  const stale = evaluate({
+    doc: MARKED,
+    kinds,
+    sources,
+    baseline: { columnComments: { described: 1, of: 3 }, prohibitions: 0 },
+    check: true,
+  })
+  assert.match(stale.failures[0], /is not what its sources render/)
+
+  const fell = evaluate({
+    doc: matching.next,
+    kinds,
+    sources,
+    baseline: { columnComments: { described: 1, of: 2 }, prohibitions: 0 },
+    check: true,
+  })
+  assert.match(fell.failures[0], /coverage fell/)
+})
+
+test('recording the baseline is not judged against the baseline it replaces', () => {
+  const kinds = [{ kind: 'lane', label: 'Lane', definition: 'One row of the board.' }]
+  const sources = { columns, comments, readable }
+  const first = evaluate({ doc: MARKED, kinds, sources, baseline: null, check: false, record: true })
+  assert.deepEqual(first.failures, [], 'the first record writes the baseline the missing-file failure asks for')
+
+  const gained = { columnComments: { described: 0, of: 3 }, prohibitions: 0 }
+  const rerecord = evaluate({ doc: MARKED, kinds, sources, baseline: gained, check: false, record: true })
+  assert.deepEqual(rerecord.failures, [], 'a re-record after a gain is the fix the stale failure names')
+
+  const unrecorded = evaluate({ doc: MARKED, kinds, sources, baseline: gained, check: false })
+  assert.match(unrecorded.failures[0], /stale/)
+  const missing = evaluate({ doc: MARKED, kinds, sources, baseline: null, check: false })
+  assert.match(missing.failures[0], /does not exist/)
+})
+
+test('with no database configured, nothing is generated', () => {
+  assert.equal(credentials({}), null)
+  assert.equal(
+    credentials({ VITE_SUPABASE_URL: 'http://127.0.0.1:54321', VITE_SUPABASE_ANON_KEY: 'your-anon-key' }),
+    null,
+  )
+  assert.deepEqual(
+    credentials({
+      VITE_SUPABASE_URL: 'http://127.0.0.1:54321/',
+      VITE_SUPABASE_ANON_KEY: 'sb_anon_test_key',
+    }),
+    { url: 'http://127.0.0.1:54321', key: 'sb_anon_test_key' },
+  )
 })
 
 test('the committed core has no prohibitions', () => {

@@ -485,7 +485,7 @@ function ShapeStyleBar({
           data-annotation-chrome=""
           onMouseDown={(e) => e.preventDefault()}
         >
-          <div className="mb-1.5 text-3xs font-semibold tracking-wide text-(--foreground-annotation-chrome-tertiary) uppercase">
+          <div className="mb-1.5 text-xs font-semibold tracking-wide text-(--foreground-annotation-chrome-tertiary) uppercase">
             Fill
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
@@ -551,7 +551,7 @@ function ShapeStyleBar({
           onMouseDown={(e) => e.preventDefault()}
         >
           <div className="mb-1.5 flex items-center justify-between gap-3">
-            <span className="text-3xs font-semibold tracking-wide text-(--foreground-annotation-chrome-tertiary) uppercase">
+            <span className="text-xs font-semibold tracking-wide text-(--foreground-annotation-chrome-tertiary) uppercase">
               Stroke
             </span>
             {shape.color ? (
@@ -566,7 +566,7 @@ function ShapeStyleBar({
                 ))}
               </div>
             ) : (
-              <span className="text-3xs text-(--foreground-annotation-chrome-tertiary)">
+              <span className="text-xs text-(--foreground-annotation-chrome-tertiary)">
                 None
               </span>
             )}
@@ -666,7 +666,7 @@ function StickyStyleBar({
           data-annotation-chrome=""
           onMouseDown={(e) => e.preventDefault()}
         >
-          <div className="mb-1.5 text-3xs font-semibold tracking-wide text-(--foreground-annotation-chrome-tertiary) uppercase">
+          <div className="mb-1.5 text-xs font-semibold tracking-wide text-(--foreground-annotation-chrome-tertiary) uppercase">
             Color
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
@@ -835,7 +835,7 @@ function TextStyleBar({
           data-annotation-chrome=""
           onMouseDown={(e) => e.preventDefault()}
         >
-          <div className="mb-1.5 text-3xs font-semibold tracking-wide text-(--foreground-annotation-chrome-tertiary) uppercase">
+          <div className="mb-1.5 text-xs font-semibold tracking-wide text-(--foreground-annotation-chrome-tertiary) uppercase">
             Color
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
