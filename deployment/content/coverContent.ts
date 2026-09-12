@@ -1,3 +1,4 @@
+import { packageCoverFigures } from 'agentic-service-blueprinting'
 import type { CoverContent } from 'agentic-service-blueprinting'
 
 /**
@@ -10,10 +11,28 @@ import type { CoverContent } from 'agentic-service-blueprinting'
  * verbatim: they describe the blueprint model, slices, and the skills, none
  * of which are template-specific.
  *
- * Figure dimensions are each SVG's viewBox width and height, so the page
- * reserves the right box before the image decodes. The SVGs live in
- * `public/cover/` (committed here rather than synced, since uno has no
- * `docs/assets/` single source).
+ * THE THIRTEEN DIAGRAMS COME FROM THE PACKAGE, and are values rather than
+ * paths. Who authored a figure is who supplies it: those thirteen draw the
+ * blueprint MODEL — a numbered user, frontstage and backstage, what a slice
+ * selects out of a path — and are the same drawing whichever service is
+ * blueprinted, so `packageCoverFigures` brings them and this deployment gets
+ * them by depending on the package. It used to keep its own copies under
+ * `public/cover/`, which was two bad things at once: nobody here had authored
+ * any of them, so the copies could only drift, and a copy that went missing
+ * did not 404 — the single-page fallback answered `200 text/html` and a
+ * reader got a broken-image box while the network tab said success. A figure
+ * is an import now; a missing one stops the build.
+ *
+ * The two portraits on the service tab ARE this deployment's own artwork — its
+ * logomark and its tutor illustration — so they stay in `public/` and stay
+ * named as paths. That is the split, and it is about authorship rather than
+ * file type.
+ *
+ * A figure's fields are overridable one at a time, which is what the two
+ * spreads below are for: the drawings say "Inside one path" and "Inside one
+ * cell" in their own titles, and this page's alt text says it the same way.
+ * Everything else — the dimensions, which are each SVG's viewBox, so the page
+ * reserves the right box before the image decodes — is taken whole.
  */
 export const coverContent: CoverContent = {
   title: 'Uno Blueprint',
@@ -86,12 +105,7 @@ export const coverContent: CoverContent = {
             'Service blueprints have always been worth having and have always gone stale. They were strategic artifacts — commissioned, workshopped, opened a few times a year — because reading one took facilitation and context you had to rebuild every time. The map decayed quietly, and nothing in the week depended on it enough to force a correction.',
             'This project makes one bet: put the blueprint in a structure an agent can query, and the cost of reading it collapses. Interpretation stops being the expensive part, so the map gets consulted in ordinary work rather than at offsites — and because something now depends on it daily, keeping it accurate has a practical reason rather than a virtuous one.',
           ],
-          figure: {
-            src: '/cover/why-now.svg',
-            alt: 'The same service before and after it has a reader that opens the blueprint constantly',
-            width: 880,
-            height: 376,
-          },
+          figure: packageCoverFigures.whyNow,
         },
         {
           kind: 'defs',
@@ -122,12 +136,7 @@ export const coverContent: CoverContent = {
                 'The audit roster names what has stopped holding since the service last moved, so the map is corrected rather than abandoned by degrees.',
             },
           ],
-          figure: {
-            src: '/cover/when-to-use.svg',
-            alt: 'How teams use the blueprint — onboarding, stakeholder alignment, decision evaluation, and context management',
-            width: 880,
-            height: 406,
-          },
+          figure: packageCoverFigures.whenToUse,
         },
         {
           kind: 'prose',
@@ -137,12 +146,7 @@ export const coverContent: CoverContent = {
             'Four ways to work the same blueprint. The app is where people read, compare, and present. The in-app agent drafts changes in place, using the same write path the interface uses. Agentic tools reach the same rows from an IDE or a terminal — that is where the four skills run. The Slack bot answers questions and links back to the exact cell it read.',
             'All four sit on one shared context layer, so what any surface reads is what the others wrote. Who may do what follows from the account a surface signs in with, not from which surface it is.',
           ],
-          figure: {
-            src: '/cover/four-ways-in.svg',
-            alt: 'Four ways into the blueprint — the app, the in-app agent, agentic tools, and the Slack bot — over one shared context layer',
-            width: 880,
-            height: 334,
-          },
+          figure: packageCoverFigures.fourWaysIn,
         },
       ],
       link: {
@@ -162,12 +166,7 @@ export const coverContent: CoverContent = {
             'A **service** holds ordered **phases**, and a phase may loop back to an earlier one — which is how renewals and repeat visits are modeled without duplicating the journey. A phase holds **scenarios**: the distinct situations someone can be in. A scenario holds **paths** — variants of that same situation, the one that goes well and the ones where something does not.',
             'Every path is a grid. That is the next level down.',
           ],
-          figure: {
-            src: '/cover/data-model-hierarchy.svg',
-            alt: 'How a blueprint is organized — service to phase to scenario to path',
-            width: 880,
-            height: 634,
-          },
+          figure: packageCoverFigures.dataModelHierarchy,
         },
         {
           kind: 'prose',
@@ -178,10 +177,8 @@ export const coverContent: CoverContent = {
             "The divider lines — **line of interaction**, **line of visibility**, **line of internal interaction** — are derived from the lanes' roles rather than drawn on top of them, so they cannot drift out of agreement with the lanes they separate. Steps are canonical per scenario and each path includes a subset in its own order, which is what makes comparing two paths exact rather than approximate.",
           ],
           figure: {
-            src: '/cover/blueprint-anatomy.svg',
+            ...packageCoverFigures.blueprintAnatomy,
             alt: 'Inside one path — lanes, steps, cells, dependencies, and the derived divider lines',
-            width: 880,
-            height: 544,
           },
         },
         {
@@ -194,10 +191,8 @@ export const coverContent: CoverContent = {
             'That last one runs both ways: open a cell and you can see which views would change if you edited it.',
           ],
           figure: {
-            src: '/cover/cell-anatomy.svg',
+            ...packageCoverFigures.cellAnatomy,
             alt: 'Inside one cell — placement, ownership, function, evidence, dependencies, and the slices that quote it',
-            width: 880,
-            height: 730,
           },
         },
       ],
@@ -219,12 +214,7 @@ export const coverContent: CoverContent = {
             'A slice quotes cells rather than copying them — it keeps naming its sources. That is the difference between a view and a snapshot: when the cells move, the slice does not go on asserting the old thing.',
             'It opens as its own tab beside the blueprint, so a reader can move between the view and the board it came from. In presentation mode it runs slide by slide, for when the audience is a room rather than a person. Both states are addressable — a slice link carries its id, a presented one carries the slide — so you can send someone exactly what you are looking at.',
           ],
-          figure: {
-            src: '/cover/slice-concept.svg',
-            alt: 'One path becoming a presentation — the cells a slice quotes, ordered into slides',
-            width: 880,
-            height: 364,
-          },
+          figure: packageCoverFigures.sliceConcept,
         },
         {
           kind: 'defs',
@@ -241,12 +231,7 @@ export const coverContent: CoverContent = {
             { term: 'cell', definition: 'One cell in full.' },
             { term: 'custom', definition: 'Whatever the question needs.' },
           ],
-          figure: {
-            src: '/cover/slicing-model.svg',
-            alt: 'The five slice types and what each one selects out of a path',
-            width: 880,
-            height: 214,
-          },
+          figure: packageCoverFigures.slicingModel,
         },
       ],
       link: {
@@ -266,12 +251,7 @@ export const coverContent: CoverContent = {
             'Four Claude Code skills maintain the blueprint, rather than anyone keeping it up by hand. Each carries its own playbooks and scripts and links only the shared references its task needs, and each ends at a deterministic gate — a validator exit, a sign-off, a read-back that matches — rather than at "looks done".',
             'The heavy reading happens in fresh-context agents that return a summary instead of their raw material. That is deliberate: a context that never saw the drafting catches what the drafting context is anchored on.',
           ],
-          figure: {
-            src: '/cover/skill-architecture.svg',
-            alt: 'The four skills, the resources each owns, the shared references they link, and the agents they spawn',
-            width: 880,
-            height: 548,
-          },
+          figure: packageCoverFigures.skillArchitecture,
         },
         {
           kind: 'skill',
@@ -279,12 +259,7 @@ export const coverContent: CoverContent = {
           command: '/sb:map',
           summary:
             "Builds a blueprint from what you already have — documents, a working session, or someone else's diagram — and produces a validated blueprint file, signed off scenario by scenario and imported into the workspace.",
-          figure: {
-            src: '/cover/sb-map.svg',
-            alt: 'How sb:map turns documents, sessions, or a foreign diagram into a validated blueprint',
-            width: 880,
-            height: 292,
-          },
+          figure: packageCoverFigures.sbMap,
         },
         {
           kind: 'skill',
@@ -292,12 +267,7 @@ export const coverContent: CoverContent = {
           command: '/sb:audit',
           summary:
             'Runs the check roster to find what is missing, conflicting, or unowned, and produces findings for triage — the audit writes no changes of its own.',
-          figure: {
-            src: '/cover/sb-audit.svg',
-            alt: 'How sb:audit runs its check roster and records findings for triage',
-            width: 880,
-            height: 292,
-          },
+          figure: packageCoverFigures.sbAudit,
         },
         {
           kind: 'skill',
@@ -305,12 +275,7 @@ export const coverContent: CoverContent = {
           command: '/sb:whatif',
           summary:
             'Traces a proposed change through the dependency graph before anyone commits, producing the cells it would reach and the assumptions it would break — worked on a copy, never the live blueprint.',
-          figure: {
-            src: '/cover/sb-whatif.svg',
-            alt: 'How sb:whatif traces a proposed change downstream on a copy',
-            width: 880,
-            height: 292,
-          },
+          figure: packageCoverFigures.sbWhatif,
         },
         {
           kind: 'skill',
@@ -318,12 +283,7 @@ export const coverContent: CoverContent = {
           command: '/sb:slice',
           summary:
             'Cuts the view one stakeholder needs out of the whole, producing one slice per view that still cites the cells it quotes.',
-          figure: {
-            src: '/cover/sb-slice.svg',
-            alt: 'How sb:slice selects and orders cells into a stakeholder view',
-            width: 880,
-            height: 292,
-          },
+          figure: packageCoverFigures.sbSlice,
         },
         {
           kind: 'prose',

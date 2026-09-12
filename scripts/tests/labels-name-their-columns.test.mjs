@@ -68,7 +68,7 @@ import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { APP_SOURCE_ROOT, appSourceFiles, deploymentSourceFiles } from '../app-source.mjs'
+import { APP_SOURCE_ROOT, appPackageRoot, appSourceFiles, deploymentSourceFiles } from '../app-source.mjs'
 import { LABEL_COLUMNS } from '../interface-schema-map.mjs'
 import { replayMigrations } from '../migration-replay.mjs'
 
@@ -227,20 +227,29 @@ test('the label check goes red on each of the four, and leaves their neighbours 
 /**
  * A figure that draws the panel is a LABEL SITE, and until now nobody checked it.
  *
- * `public/cover/*.svg` is not documentation: `EditorShell` renders those files
- * as a deck inside the app. `cell-anatomy.svg` draws the cell panel field by
- * field, and it was still labelling one of them **Value** — the first entry in
+ * The cover's diagrams are not documentation: the cover page renders them
+ * inside the app. `cell-anatomy.svg` draws the cell panel field by field, and
+ * it was still labelling one of them **Value** — the first entry in
  * `RETIRED_LABELS`, retired because `cells` has no `value` column and a reader
  * asking an engineer about that word asks about a word the engineer has never
  * seen. The label was fixed in the panel and missed in the picture of the
  * panel, which is the same defect with a longer half-life: a figure is what a
  * new reader looks at first.
  *
+ * THE FIGURES ARE THE PACKAGE'S, and this sweeps them where they are authored.
+ * This deployment used to keep committed copies under `public/cover/` and no
+ * longer does — the drawings are of the blueprint MODEL, nobody here authored
+ * one, and they arrive as imports from the package instead. The subject did
+ * not go away with the copies: these are the figures this deployment's cover
+ * puts on screen, so a retired label in one is on screen here. What changes is
+ * where a finding goes — upstream, since the file is the package's to fix.
+ *
  * SUBJECT: `<text class="uiLabel">` — the figures' own marker for "this node is
  * a UI label". Not every string in the file. The captions beside them are prose
  * and are `check:copy`'s subject, with a different rule and a different list.
  */
-const FIGURES = resolve(ROOT, 'public', 'cover')
+const FIGURES_ROOT = join(appPackageRoot(ROOT), 'docs', 'assets')
+const FIGURES_LABEL = 'the package’s docs/assets'
 
 const UI_LABEL = /<text\b[^>]*class="uiLabel"[^>]*>([\s\S]*?)<\/text>/g
 
@@ -259,13 +268,23 @@ export function figureLabels(files = figureFiles()) {
 }
 
 function figureFiles() {
-  return readdirSync(FIGURES)
+  const found = readdirSync(FIGURES_ROOT)
     .filter((name) => name.endsWith('.svg'))
     .sort()
     .map((name) => ({
-      file: `public/cover/${name}`,
-      code: readFileSync(join(FIGURES, name), 'utf8'),
+      file: `${FIGURES_LABEL}/${name}`,
+      code: readFileSync(join(FIGURES_ROOT, name), 'utf8'),
     }))
+  // A SWEEP WITH NO SUBJECT IS A FAILURE. The figures are inside a dependency
+  // now, so an install that has not run or a release that moves the folder
+  // would leave this reading an empty directory and reporting it in green.
+  if (found.length === 0)
+    throw new Error(
+      `no figure under ${FIGURES_ROOT}: this sweep has no subject, which is a ` +
+        `failure and not a pass. Run npm ci, or check whether the pinned ` +
+        `release still ships docs/assets.`,
+    )
+  return found
 }
 
 test('no figure draws a label the schema has never heard', () => {
@@ -281,7 +300,7 @@ test('no figure draws a label the schema has never heard', () => {
 test('the figure reader takes the labels and leaves the prose', () => {
   const planted = [
     {
-      file: 'public/cover/planted.svg',
+      file: 'docs/assets/planted.svg',
       code: [
         '<text x="10" y="20" class="uiLabel">Value</text>',
         '<text x="10" y="40" class="uiLabel"><tspan>Perceived</tspan> owner</text>',
@@ -302,7 +321,7 @@ test('the figure reader takes the labels and leaves the prose', () => {
 
 test('the figures are actually there to be read', () => {
   // A reader that found nothing passes the assertion above in silence.
-  assert.ok(figureFiles().length >= 10, 'no figures found under public/cover')
+  assert.ok(figureFiles().length >= 10, `no figures found under ${FIGURES_ROOT}`)
   assert.ok(figureLabels().length >= 5, 'the figures parsed to almost no labels')
 })
 
