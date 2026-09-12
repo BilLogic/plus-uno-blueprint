@@ -604,6 +604,8 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/agent/tools/referenceDocs.ts',
     'src/lib/agent/tools/referenceNamesExtra.ts',
     'src/lib/agent/tools/referenceRegistry.test.ts',
+    'src/components/blueprint/optionSelect.test.tsx',
+    'src/lib/overviewLayout.ts',
   ])
 })
 

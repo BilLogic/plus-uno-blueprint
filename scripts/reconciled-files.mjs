@@ -2050,4 +2050,14 @@ export const RECONCILED_FILES = [
   'src/lib/agent/tools/referenceDocs.ts',
   'src/lib/agent/tools/referenceNamesExtra.ts',
   'src/lib/agent/tools/referenceRegistry.test.ts',
+
+  // Two files that differed in their comments alone, and in one direction:
+  // the template's sentences were the tie-break, which is the rule this
+  // header already states. `optionSelect.test.tsx` carried an issue number
+  // here that the template does not carry, and an address is the one thing an
+  // enrolled file may not hold. `overviewLayout.ts` said the same three
+  // things about overview spacing in longer sentences. Nothing about either
+  // file's behaviour moved.
+  'src/components/blueprint/optionSelect.test.tsx',
+  'src/lib/overviewLayout.ts',
 ]
