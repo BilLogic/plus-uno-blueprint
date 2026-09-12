@@ -29,10 +29,52 @@
  * check, because the first is believed.
  */
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { join, relative as relativeTo, resolve } from 'node:path'
 
-/** The installed package's own source root — the application, as imported. */
-export const APP_SOURCE_ROOT = 'node_modules/agentic-service-blueprinting/src'
+/**
+ * The two roots an application can be at, in the order the build resolves
+ * them — this repository's own `src`, then the package's.
+ *
+ * The template states the same pair in `vite.config.ts` and the two tsconfigs,
+ * and its `scripts/tests/the-build-and-a-walk-find-one-root.test.mjs` holds
+ * all four equal. This deployment holds no `src`, so the second always wins
+ * here; the pair is still written as a pair, because the suites this
+ * repository holds byte-identical with the template ask this module for it.
+ */
+export const APP_SOURCE_ROOTS = [
+  'src',
+  'node_modules/agentic-service-blueprinting/src',
+]
+
+/**
+ * The first of `APP_SOURCE_ROOTS` that exists under `repoRoot`, absolute.
+ *
+ * Throws when neither does, naming both — a tree with no application is not a
+ * tree with an empty application, and a walk pointed at a root that is not
+ * there sweeps nothing and reports it in green.
+ */
+export function appSourceRoot(repoRoot) {
+  const roots = APP_SOURCE_ROOTS.map((root) => resolve(repoRoot, root))
+  const found = roots.find((root) => existsSync(root))
+  if (!found) {
+    throw new Error(
+      `no application source under ${repoRoot}: neither ${roots.join(' nor ')} exists`,
+    )
+  }
+  return found
+}
+
+/**
+ * The application's source root as a repo-relative path — what a finding in
+ * this repository's own checks is printed against.
+ *
+ * Derived from the pair above rather than spelled again, so there is one
+ * statement of where the application is and not two that can disagree.
+ */
+export const APP_SOURCE_ROOT = relativeTo(
+  process.cwd(),
+  appSourceRoot(process.cwd()),
+)
 
 /** This deployment's own source root, the other side of the `~/…` alias. */
 export const DEPLOYMENT_SOURCE_ROOT = 'deployment'
