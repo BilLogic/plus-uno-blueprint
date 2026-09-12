@@ -15,6 +15,7 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
+import { existsSync } from 'node:fs'
 import { auditReconciled } from '../check-reconciled-files.mjs'
 import { RECONCILED_FILES } from '../reconciled-files.mjs'
 
@@ -27,606 +28,77 @@ test('an empty allowlist has nothing to fail on, and reads nothing', () => {
   assert.deepEqual(auditReconciled({ files: [], readInstance: refuse, readAsb: refuse }), [])
 })
 
-test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), the viewport/layout convergence (#323 slices S0–S5), the asb 1.5.0 adopt, the display flags (#326 S1), the asb 1.5.1 adopt (#324 S1+S2), the cell-detail context (#324 S1), the touchpoint-cell face (#325 S6), the #391 phase-B storyboard rename, the #403 identical-by-history sweep, the cell-selection builders (#405), the blueprint resolver (#326 S4), the entity-detail provider (#324, #396 Q31), and the two router checks that now read their numbers from scripts/repo-config.mjs', () => {
-  // #319 shipped the gate EMPTY; #351 enrolled the first files — the shared
-  // arrow-routing geometry — #357 enrolled the entity panel editors asb
-  // ported back out of uno, and #323's slice S0 swept every remaining
-  // byte-identical path under src/ (viewport/layout/compare, mobile shell,
-  // agent providers, shadcn primitives, and the rest). Every pin bump since
-  // has ended the same way: adopt what the template moved ahead on, then sweep
-  // whatever that left byte-identical. A stray add or removal trips here, so
-  // enrolment stays a deliberate act in a reconciliation ticket.
+test('the shipped allowlist is exactly the fifteen files still shared after the import flip', () => {
+  // The list is mirrored here in full, in order, so that changing it is a
+  // two-file change somebody has to mean. That mattered most when it was five
+  // hundred paths long and growing one ticket at a time; it matters differently
+  // now, because the list can only shrink by a file leaving this repository and
+  // can only grow by this repository gaining a shared one.
   //
-  // #403 is the first entry that also declines. Eleven paths were identical at
-  // the 1.6.4 pin without ever having been enrolled — identical by history
-  // rather than by decision — and six of them were judged worth holding. The
-  // other five are named, with their reasons, at the foot of
-  // `scripts/reconciled-files.mjs`; this list is the record that they were
-  // considered and left off on purpose, not overlooked.
-  //
-  // #405 is the newest entry and the end of a two-ticket sequence: #401 fixed
-  // the name-only predicate and stopped deliberately at the boundary, and
-  // #405 moved the selection path from `cells.links` onto placements, which
-  // is what finally made `blueprintCellSelection.ts` the template's file.
-
-  // #324 is the newest entry, and it is the first won by MOVING a component
-  // rather than by editing one. `EntityDetailContext.tsx` differed from the
-  // template in a single function: the hook returned an inert value outside
-  // its provider, because the provider was mounted on one tab body and every
-  // affordance elsewhere in the shell had to survive not reaching it. #396's
-  // Q31 hoists the provider to `EditorShell`, above both trees, so nothing is
-  // outside it any more and the hook can throw the way the template's does.
-  // The file was not so much reconciled as made true.
-  //
-  // #326 S4 was the entry before it, and it is the first enrolment won by
-  // DELETING deployment code rather than by adopting the template's. `resolveBlueprint`
-  // carried two read-time repairs for this deployment's own rows, gated on
-  // hardcoded PLUS UUIDs, and they were the reason the file could never be
-  // byte-identical to anything. Both faults had already been corrected at
-  // source, so the repairs were removed rather than generalised, and what was
-  // left of the two copies differed only in the fallback merge model and in
-  // one key name.
-  //
-  // The 1.15.0 bump is the newest entry, and it is the first where a file was
-  // taken OFF this list and put back before either state reached `main`. The
-  // cell's Resources tab was given the list the placement's group already had,
-  // which moved that list into `ResourcesList.tsx` — one component, two
-  // owners, each handing it rows and a pair of writes — and left the
-  // placement's file as the wrapper naming its owner's writes. Written before
-  // 1.15.0 shipped, that read as un-enrolling `PlacementResourcesList.tsx`,
-  // because the template still carried the whole list inline and the two were
-  // no longer one comment apart. 1.15.0 makes the same move upstream, so they
-  // are one comment apart again, and the gate stays whole: the wrapper is
-  // held, and the shared list and the row-reveal rule join it.
-  //
-  // #407 asked whether a whole-array `deepEqual` is still the right ratchet
-  // now that the list is 211 long and every reconciliation ticket touches it,
-  // or whether set-equality plus a separate ordering rule would hold the same
-  // ground for a smaller diff each time. It is KEPT, on three grounds.
-  //
-  // The diff is already small. The list grows by appending a block to the end
-  // of `scripts/reconciled-files.mjs` and the same paths to the end of this
-  // literal, so an ordinary ticket touches the tail of two files and nothing
-  // between them. A large diff here means an entry moved or was inserted
-  // mid-list — which is exactly the change that ought to be loud.
-  //
-  // The order is not incidental. The source file is grouped by ticket in the
-  // order the tickets landed, so the sequence IS the reconciliation history,
-  // and the blocks' prose reads against it. An "ordering rule" strong enough
-  // to hold that would have to know which ticket each path belongs to and when
-  // it merged, which is a fact no assertion in this file can reach.
-  //
-  // And set-equality would have made #407's own bug permanent instead of
-  // catching it. Comparing sets discards cardinality, so it passes on a list
-  // that enrols the same path twice — the precise defect being fixed. The
-  // duplicate check below is what closes that hole, and it closes it BESIDE
-  // `deepEqual` rather than in place of it.
+  // `deepEqual` and not set-equality, for the reason it always was: comparing
+  // sets discards cardinality, so it passes on a list that enrols the same path
+  // twice — which was a real defect once. The duplicate check below closes that
+  // hole BESIDE this assertion rather than in place of it.
   assert.deepEqual(RECONCILED_FILES, [
-    'src/lib/blueprintArrowGeometry.ts',
-    'src/lib/arrowAnchorSlots.ts',
-    'src/lib/serviceSpecMutations.ts',
-    'src/lib/scenarioSpecMutations.ts',
-    'src/lib/phaseSpecMutations.ts',
-    'src/lib/laneSpecMutations.ts',
-    'src/lib/stepSpecMutations.ts',
-    'src/lib/entityStatus.ts',
-    'src/lib/panelEditorBusy.ts',
-    'src/components/blueprint/panelShell.tsx',
-    'src/components/blueprint/panelLoading.tsx',
-    'src/components/blueprint/StepPanel.tsx',
-    'src/components/blueprint/PanelSectionLabel.tsx',
-    'src/components/blueprint/PanelTextareaField.tsx',
-    'src/components/blueprint/OptionSelect.tsx',
-    'src/components/blueprint/StatusSelect.tsx',
-    'src/components/blueprint/StatusBadge.tsx',
-    'src/components/blueprint/StakeholderBadge.tsx',
-    'src/components/ui/select.tsx',
-    'src/components/blueprint/EntityHeader.tsx',
-    'src/components/blueprint/EntityTitleAffordance.tsx',
-    'src/components/blueprint/EntityPropertiesButton.tsx',
-    'src/components/blueprint/LaneHeaderAffordance.tsx',
-    'src/components/blueprint/StepHeaderAffordance.tsx',
-    'src/components/editor/ServiceOverviewHeader.tsx',
-    'src/lib/openPanelStore.ts',
-    'src/lib/panelSheetSnap.ts',
-    'src/hooks/useCanvasTopOffset.ts',
-    'src/hooks/usePanelFooterHost.ts',
-    'src/contexts/scenarioBoardScopeContext.ts',
-    'src/contexts/shellBootStore.ts',
-    'src/components/blueprint/laneStepHeaderAffordance.test.tsx',
-    'src/components/blueprint/panelDrawerShell.test.tsx',
-    'src/lib/panelSheetSnapContract.test.ts',
-    'src/hooks/useZoomPanViewport.ts',
-    'src/lib/cameraTransition.ts',
-    'src/lib/cameraTransition.test.ts',
-    'src/lib/canvasGestureZoom.ts',
-    'src/lib/canvasGestureZoom.test.ts',
-    'src/lib/canvasWheelDelta.ts',
-    'src/lib/canvasWheelDelta.test.ts',
-    'src/lib/canvasKeyboardCamera.ts',
-    'src/lib/canvasKeyboardCamera.test.ts',
-    'src/lib/canvasKeyboardState.ts',
-    'src/lib/canvasScrollRegions.ts',
-    'src/lib/canvasScrollRegions.test.ts',
-    'src/lib/canvasChromeResize.ts',
-    'src/lib/keyboardTarget.ts',
-    'src/contexts/CanvasZoomChromeContext.tsx',
-    'src/components/editor/EditorZoomIndicator.tsx',
-    'src/lib/layoutTokens.ts',
-    'src/lib/slideLayout.ts',
-    'src/components/editor/canvasPhaseSectionLayout.ts',
-    'src/lib/compareGridTracks.ts',
-    'src/lib/compareReviewStore.ts',
-    'src/lib/compareZoneNavigation.ts',
-    'src/lib/compareGate.report.test.ts',
-    'src/lib/mergedMembershipRailContract.test.ts',
-    'src/lib/blueprintLayoutEstimate.test.ts',
-    'src/components/cover/CoverTabStrip.tsx',
-    'src/components/cover/coverMeasure.ts',
-    'src/hooks/use-mobile.ts',
-    'src/hooks/useMobileShell.ts',
-    'src/components/mobile/MobileAgentFab.tsx',
-    'src/components/mobile/MobileAgentSheet.tsx',
-    'src/components/mobile/mobileAgentBridge.ts',
-    'src/components/mobile/mobileAgentFab.test.tsx',
-    'src/components/mobile/mobileShellLogic.test.ts',
-    'src/lib/agent/panelState.ts',
-    'src/lib/agent/persistence.ts',
-    'src/lib/agent/providers/anthropic.ts',
-    'src/lib/agent/providers/google.ts',
-    'src/lib/agent/providers/models.ts',
-    'src/lib/agent/providers/provider.ts',
-    'src/lib/ground.ts',
-    'src/components/ui/accordion.tsx',
-    'src/components/ui/attachment.tsx',
-    'src/components/ui/breadcrumb.tsx',
-    'src/components/ui/bubble.tsx',
-    'src/components/ui/card.tsx',
-    'src/components/ui/carousel.tsx',
-    'src/components/ui/collapsible.tsx',
-    'src/components/ui/command.tsx',
-    'src/components/ui/context-menu.tsx',
-    'src/components/ui/deferred-skeleton.tsx',
-    'src/components/ui/dialog.tsx',
-    'src/components/ui/drawer.tsx',
-    'src/components/ui/dropdown-menu.tsx',
-    'src/components/ui/input-group.tsx',
-    'src/components/ui/input.tsx',
-    'src/components/ui/marker.tsx',
-    'src/components/ui/menubar.tsx',
-    'src/components/ui/message-scroller.tsx',
-    'src/components/ui/message.tsx',
-    'src/components/ui/navigation-menu.tsx',
-    'src/components/ui/popover.tsx',
-    'src/components/ui/separator.tsx',
-    'src/components/ui/sheet.tsx',
-    'src/components/ui/sidebar.tsx',
-    'src/components/ui/spinner.tsx',
-    'src/components/ui/tabs.tsx',
-    'src/components/ui/textarea.tsx',
-    'src/components/ui/toggle-group.tsx',
-    'src/components/ui/toggle.tsx',
-    'src/components/ui/tooltip.tsx',
-    'src/components/blueprint/BlueprintEmptyCellSlot.tsx',
-    'src/components/blueprint/BlueprintStoryboardPlayButton.tsx',
-    'src/components/blueprint/EntityDetailPanel.tsx',
-    'src/components/blueprint/LaneCollapseToggle.tsx',
-    'src/components/blueprint/NotionPropertyRow.tsx',
-    'src/components/blueprint/PhasePanel.tsx',
-    'src/components/blueprint/ScenarioSlideFilters.tsx',
-    'src/components/blueprint/StoryboardWalkthroughShell.tsx',
-    'src/contexts/StoryboardWalkthroughContext.tsx',
-    'src/contexts/ViewStateContext.tsx',
-    'src/contexts/sliceMembershipContext.ts',
-    'src/components/editor/CanvasLoadProgress.tsx',
-    'src/components/editor/canvasLoadProgress.test.tsx',
-    'src/lib/canvasLoadProgress.ts',
-    'src/components/editor/CanvasSlideConnectors.tsx',
-    'src/components/editor/EditorSidebarRail.tsx',
-    'src/components/editor/IconTooltip.tsx',
-    'src/components/editor/OverviewPhaseRowDivider.tsx',
-    'src/components/editor/ScenarioMenubarBreadcrumb.tsx',
-    'src/components/editor/SegmentedControl.tsx',
-    'src/components/editor/SlideNav.tsx',
-    'src/dev/ArrowSituationCatalogPage.tsx',
-    'src/dev/arrowSituationCatalog.ts',
-    'src/dev/arrowSituationCatalog.test.tsx',
-    'src/dev/__snapshots__/arrowSituationCatalog.test.tsx.snap',
-    'src/hooks/usePathSelection.ts',
-    'src/hooks/useSliceBlueprint.ts',
-    'src/lib/annotationCapture.ts',
-    'src/lib/attachmentUpload.test.ts',
-    'src/lib/cellPickGrammar.ts',
-    'src/lib/parseCellContent.ts',
-    'src/lib/placementLinkMutations.test.ts',
-    'src/lib/resolveBlueprintCellId.ts',
-    'src/lib/resourceUrl.ts',
-    'src/lib/supabase.ts',
-    'src/lib/valueProps.ts',
-    'src/styles/tailwind-plugins/hit-area.css',
-    'src/styles/typography.config.js',
-    'src/styles/variants.css',
-    'src/components/EditorErrorBoundary.tsx',
-    'src/components/editor/SidebarNav.tsx',
-    'src/contexts/viewStateStore.ts',
-    'src/styles/global.css',
-    'src/assets/hero.png',
-    'src/assets/react.svg',
-    'src/assets/vite.svg',
-    'src/vite-env.d.ts',
-    'src/components/editor/ZoomPanViewport.tsx',
-    'src/components/editor/MarqueeSelection.tsx',
-    'src/components/editor/CanvasPenCursor.tsx',
-    'src/components/editor/CanvasAnnotationToolbar.tsx',
-    'src/contexts/CanvasAnnotationProvider.tsx',
-    'src/contexts/canvasAnnotationContext.ts',
-    'src/contexts/canvasAnnotationSubscription.test.tsx',
-    'src/lib/agent/uiBridge.ts',
-    'src/lib/agent/uiBridge.camera.test.ts',
-    'src/lib/agent/uiCommands.ts',
-    'src/lib/canvasFocusCells.ts',
-    'src/lib/canvasFocus.ts',
-    'src/lib/canvasTouchContract.test.tsx',
-    'src/hooks/useCompareGridAxis.ts',
-    'src/components/blueprint/CompareLaneRowShell.tsx',
-    'src/lib/railRhythmContract.test.ts',
-    'src/components/blueprint/BlueprintLabelRail.tsx',
-    'src/components/blueprint/ComparePathSectionFrame.tsx',
-    'src/components/blueprint/PathLabelBadge.tsx',
-    'src/components/blueprint/PathKindBadge.tsx',
-    'src/components/blueprint/PathKindColorKey.tsx',
-    'src/components/blueprint/PathSummaryTooltip.tsx',
-    'src/components/blueprint/ScenarioTitleBadge.tsx',
-    'src/components/blueprint/BlueprintDividerBadge.tsx',
-    'src/hooks/useCollapsedBlueprintLanes.ts',
-    'src/lib/blueprintLaneCollapse.ts',
-    'src/components/blueprint/CompareTrackDecorations.tsx',
-    'src/lib/phaseRowPanelHeight.ts',
-    'src/lib/phaseRowPanelHeight.test.ts',
-    'src/hooks/useAlignedPhaseRowPanelHeight.ts',
-    'src/components/blueprint/ScenarioPanel.tsx',
-    'src/components/editor/AdminSessionFields.tsx',
-    'src/components/editor/AgentProviderFields.tsx',
-    'src/components/editor/CanvasSelectionProvider.tsx',
-    'src/components/editor/EditorSequenceNav.tsx',
-    'src/components/editor/PhaseSectionFlowArrow.tsx',
-    'src/components/editor/ToolFamilyMenu.tsx',
-    'src/contexts/canvasRevealContext.ts',
-    'src/lib/applyBlueprintDisplayFilters.ts',
-    'src/lib/compareMergedGrid.test.ts',
-    'src/types/integratedBlueprint.ts',
-    'scripts/erd-value-sets.mjs',
-    'src/lib/blueprintDisplayFlags.ts',
-    'src/components/blueprint/badgeGeometry.test.tsx',
-    'src/components/cover/CoverCommandCopy.tsx',
-    'src/components/editor/PhaseOverviewPhaseLoopArrow.tsx',
-    'src/lib/canvasCameraPolicy.ts',
-    'src/lib/comparisonCameraContract.test.ts',
-    'src/contexts/BlueprintCellDetailContext.tsx',
-    'src/components/blueprint/TouchpointCellFace.tsx',
-    'src/components/blueprint/BlueprintCellButton.tsx',
-    'public/step-visual-placeholder.svg',
     'tsconfig.json',
     'tsconfig.app.json',
     'components.json',
-    'src/components/mobile/MobilePathSelector.tsx',
-    'src/components/ui/alert.tsx',
-    'docs/agents/triage-labels.md',
-    'src/lib/blueprintCellSelection.ts',
-    'src/types/blueprintCellDetail.ts',
-    'src/lib/resolveBlueprint.ts',
-    'src/lib/compareSlots.ts',
-    'src/lib/compareMergedGrid.ts',
-    'src/lib/compareLedger.ts',
-    'src/lib/compareSlots.test.ts',
-    'src/lib/compareLedger.test.ts',
-    'src/contexts/EntityDetailContext.tsx',
-    'src/styles/base.css',
-    'src/styles/utilities.css',
-    'src/styles/unset-tw-colors.css',
-    'src/styles/animations.css',
-    'src/styles/tailwind.config.css',
-    'src/styles/theme.css',
-    'src/lib/motion.ts',
-    'src/lib/motion.test.ts',
-    'src/lib/tailwindColorReset.test.ts',
-    'src/lib/tokenDiscipline.test.ts',
-    'src/lib/aliasVocabulary.test.ts',
-    'src/lib/agent/placement.ts',
-    'src/lib/agent/settings.ts',
-    'src/lib/agent/tools/referenceNames.ts',
-    'src/lib/mobilePathMemory.ts',
-    'src/lib/sideBySideCompareLayout.ts',
-    'src/lib/blueprintLayout.ts',
-    'src/components/blueprint/ResizableComparePanel.tsx',
-    'src/components/blueprint/StackedCompareGrid.tsx',
-    'src/components/editor/EditorLoadingSkeletons.tsx',
-    'src/components/cover/coverInline.tsx',
-    'src/components/editor/AgentMarkdown.tsx',
-    'src/components/editor/EditorShell.tsx',
-    'src/components/editor/EditorRail.tsx',
-    'src/components/editor/SlideModeView.tsx',
-    'src/components/editor/collapsedPathSelector.test.tsx',
-    'src/components/editor/serviceBarSidebarResponse.test.tsx',
-    'src/components/editorErrorBoundary.test.tsx',
-    'src/contexts/sidebarCollapsedContext.ts',
-    'src/lib/shellContext.ts',
-    'src/lib/shellContext.test.ts',
-    'src/lib/agent/attachments.ts',
-    'src/lib/agent/providers/openai.ts',
-    'src/lib/agent/role.md',
-    'src/lib/agent/sessions.ts',
-    'src/lib/touchpointColors.ts',
-    'src/hooks/useTouchpointToneResolver.ts',
-    'src/lib/blueprintTechPictures.ts',
-    'src/lib/orderedNamedRows.ts',
-    'src/components/blueprint/BlueprintPathBand.tsx',
-    'src/components/blueprint/MergedCompareGrid.tsx',
-    'src/components/blueprint/RoleSelect.tsx',
-    'src/components/blueprint/PlacementResourcesList.tsx',
-    'src/lib/utils.ts',
-    'src/contexts/DeploymentConfigContext.tsx',
-    'src/lib/agent/tools/referenceRegistry.ts',
-    'src/components/editor/WriteFailureNotices.tsx',
-    'src/lib/writeFailures.ts',
-    'src/components/editor/CanvasCellContextMenu.tsx',
-    'src/lib/scenarioLayout.ts',
-    'src/lib/overviewFlowArrowAnchor.test.ts',
-    'src/types/slideViewType.test.ts',
-    'src/deploymentConfig.ts',
-    'src/lib/brandAccent.ts',
-    'src/hooks/useSupabaseQuery.ts',
-    'src/lib/supabaseFetchTimeout.ts',
-    'src/lib/queryClient.ts',
-    'src/lib/service.ts',
-    'src/hooks/useEvidence.ts',
-    'src/hooks/usePhaseSpec.ts',
-    'src/hooks/useScenarioSpec.ts',
-    'src/hooks/useStepSpec.ts',
-    'src/hooks/useScenarioPaths.ts',
-    'src/hooks/useSliceScenarioId.ts',
-    'src/lib/readLifetime.test.ts',
-    'src/lib/service.test.ts',
-    'src/hooks/useSupabaseQuery.test.tsx',
-    'src/hooks/useOwnerTags.ts',
-    'src/hooks/useLaneSpec.ts',
-    'src/hooks/useCellDeepLink.ts',
-    'src/hooks/useStakeholders.ts',
-    'src/components/blueprint/BlueprintColumnHandles.tsx',
-    'src/components/blueprint/DefinitionCard.tsx',
-    'src/components/blueprint/EntityDefinitionPopover.tsx',
-    'src/components/blueprint/StakeholderSelect.tsx',
-    'src/components/editor/SliceHeaderBand.tsx',
-    'src/contexts/cellPickContext.ts',
-    'src/lib/blueprintCellStyle.ts',
-    'src/lib/canvasCellQuery.ts',
-    'src/lib/filterToolbarButton.ts',
-    'src/lib/openCellStore.ts',
-    'src/lib/serviceRoute.ts',
-    'src/lib/touchpointRole.ts',
-    'scripts/always-loaded.mjs',
-    'src/components/blueprint/ServicePanel.test.tsx',
-    'src/components/editor/SliceView.tsx',
-    'src/components/mobile/MobileTopBar.tsx',
-    'src/contexts/activeServiceStore.ts',
-    'src/hooks/useRegistryTouchpoints.ts',
-    'src/lib/agent/tools/serviceScope.test.ts',
-    'src/lib/agent/tools/serviceScope.ts',
-    'src/lib/attachmentUpload.ts',
-    'src/lib/canvasHeaderStyle.ts',
-    'src/lib/placementLinkMutations.ts',
-    'src/lib/placementResourceMutations.ts',
-    'src/lib/resourcePresentation.ts',
-    'src/lib/serviceSlug.ts',
-    'src/components/blueprint/featuredResources.test.tsx',
-    'src/components/mobile/mobileTopBar.test.tsx',
-    'src/lib/compareReviewStore.test.ts',
-    'src/lib/placementResourceMutations.test.ts',
-    'src/lib/resourcePresentation.test.ts',
-    'src/lib/blueprintStoryboardPlaceholder.ts',
-    'src/lib/stakeholderMutations.ts',
-    'src/lib/touchpointMutations.ts',
-    'src/lib/cssCascadeLayerContract.test.ts',
-    'src/components/editor/CreatePhaseDialog.tsx',
-    'src/components/editor/DeleteStructureDialog.tsx',
-    'src/components/editor/SliceSlideComposer.tsx',
     'eslint.config.js',
     'tsconfig.node.json',
     'vite.config.ts',
-    'src/lib/sliceKind.ts',
-    'src/components/blueprint/BlueprintArrowMarkerDefs.tsx',
-    'src/components/editor/CreateVersionDialog.tsx',
-    'src/lib/pathKindContract.test.ts',
-    'src/components/blueprint/CellInSlicesFooter.tsx',
-    'src/components/blueprint/ZoomableImage.tsx',
-    'src/components/blueprint/zoomableImage.test.tsx',
-    'src/components/cover/CoverFigure.tsx',
-    'src/components/cover/coverFigure.test.tsx',
-    'src/hooks/useImageZoom.ts',
-    'src/lib/imageZoomReducer.ts',
-    'src/lib/imageZoomReducer.test.ts',
-    'src/components/editor/AnnotationCaptureMenu.tsx',
-    'src/components/mobile/MobileNavSheet.tsx',
-    'src/lib/findingFingerprint.ts',
-
-    'src/lib/blueprintCellConnections.ts',
-    'src/components/blueprint/cellDependencyWhyLine.test.tsx',
-    'src/lib/sliceValidation.ts',
-    'src/lib/cellSpecMutations.ts',
-    'src/lib/optimisticConcurrency.ts',
-
-    'src/styles/colors.css',
-    'src/styles/semantic.css',
-    'src/components/blueprint/StoryboardStepDetailStack.tsx',
-    'src/components/cover/CoverSections.tsx',
-    'src/components/editor/CanvasEmptyState.tsx',
-    'src/components/cover/coverCommandCopy.test.tsx',
-    'src/lib/serviceSlug.test.ts',
-    'src/components/cover/CoverPage.tsx',
-    'src/components/cover/CoverServicesSelector.tsx',
-    'src/components/cover/coverServicesTab.test.tsx',
-    'src/components/editor/AgentDock.tsx',
-    'src/components/editor/CanvasModeProvider.tsx',
-    'src/components/editor/CreateSliceSheet.tsx',
-    'src/components/ui/badge.tsx',
-    'src/components/ui/skeleton.tsx',
-    'src/contexts/canvasModeContext.ts',
-    'src/components/blueprint/ResourcesList.tsx',
-    'src/lib/rowReveal.ts',
-    'src/lib/linkedText.ts',
-    'src/lib/sessionReconcile.ts',
-    'src/lib/sessionReconcile.test.ts',
-    'src/components/blueprint/ScenarioSlideHeader.tsx',
-    'src/components/blueprint/ScenarioTitleDefinition.tsx',
-    'src/components/editor/SlideStickyHeader.tsx',
-    'src/hooks/useServicePhases.ts',
-    'src/lib/phasesToSlides.ts',
-    'scripts/tests/one-badge-one-size.test.mjs',
-    'src/components/editor/SlideArtboard.tsx',
-    'src/components/blueprint/StoryboardWalkthroughModal.tsx',
-    'src/components/editor/StructureRowMenu.tsx',
-    'src/lib/blueprintStepTech.ts',
-    'src/lib/serviceSpecMutations.test.ts',
-    'src/components/ui/button.tsx',
-    'src/components/editor/ThemeToggle.tsx',
-     'src/components/blueprint/cellResourcesTab.test.tsx',
-    'src/components/blueprint/placementResourcesList.test.tsx',
-    'src/components/blueprint/stakeholderDefinitionReader.test.ts',
-    'src/components/editor/pathSelectorMenu.test.tsx',
-    'src/contexts/activeServiceStore.test.ts',
-    'src/contexts/canvasModeContext.test.ts',
-    'src/lib/activeService.test.ts',
-    'src/lib/agent/uiCommands.test.ts',
-    'src/lib/annotationChromeInk.test.ts',
-    'src/lib/annotationSwatchContrast.test.ts',
-    'src/lib/blueprintDisplayFlags.test.ts',
-    'src/lib/blueprintDomainTokens.test.ts',
-    'src/lib/blueprintLayout.test.ts',
-    'src/lib/canvasFocus.test.ts',
-    'src/lib/customerBandRail.test.ts',
-    'src/lib/placementGateContract.test.ts',
-    'src/lib/scenarioLayout.test.ts',
-    'src/lib/serviceRoute.test.ts',
-    'src/lib/tokenResolution.test.ts',
-    'src/lib/workspaceTabNavigationContract.test.ts',
-    'src/lib/panelLayoutContract.test.ts',
-    'src/components/blueprint/FeaturedResources.tsx',
-    'src/components/blueprint/ScenarioBlueprintPanel.tsx',
-    'src/components/cover/coverPage.test.tsx',
-    'src/components/blueprint/BlueprintTouchpointCell.tsx',
-    'src/components/blueprint/resourcesList.test.tsx',
-    'src/contexts/PathSelectionContext.test.tsx',
-    'src/contexts/canvasActiveContext.test.tsx',
-    'src/contexts/viewStateStore.test.ts',
-    'src/hooks/useStepSpec.test.ts',
-    'src/lib/agent/skills.test.ts',
-    'src/lib/agent/tools/surfacePartition.test.ts',
-    'src/lib/canvasCellQuery.test.ts',
-    'src/lib/canvasFocusCells.test.ts',
-    'src/lib/customerBand.test.ts',
-    'src/lib/findingFingerprint.test.ts',
-    'src/lib/queryClient.test.ts',
-    'src/lib/writeTranslationContract.test.ts',
-    'src/styles/theme.shape.test.ts',
-    'src/lib/blueprintTechPictures.test.ts',
-    'src/contexts/TouchpointRegistryProvider.tsx',
-    'src/hooks/useSlice.ts',
-    'src/hooks/useSlices.ts',
-    'src/hooks/useTouchpointRegistryTones.ts',
-    'src/lib/cellTouchpoints.ts',
-    'src/lib/cellTouchpoints.test.ts',
-    'src/lib/cellResources.ts',
-    'src/lib/touchpointColors.test.ts',
-    'src/lib/blueprintCellSelection.nameOnly.test.ts',
-    'src/lib/canvasNavigationOutcome.test.ts',
-    'src/lib/canvasViewState.ts',
-    'src/lib/canvasViewState.test.ts',
-    'src/lib/linkedText.test.ts',
-    'src/components/mobile/MobileScenarioTransition.tsx',
-    'src/components/mobile/MobileScenarioTransition.test.tsx',
-    'src/hooks/useBlueprintCell.ts',
-    'src/components/editor/WorkspaceServiceSwitcher.tsx',
-    'src/components/editor/workspaceServiceSwitcher.test.tsx',
-    'src/components/editor/TabStrip.tsx',
-    'src/lib/resolveBlueprint.test.ts',
-    'src/components/blueprint/compareTouchpointDifferences.test.tsx',
-    'src/contexts/supabaseProviderWriteGate.test.tsx',
-    'src/hooks/serviceSpecReaderTier.test.tsx',
-    'src/lib/canvasStackingContract.test.ts',
-    'src/lib/findingMutations.test.ts',
-    'src/components/blueprint/CellContentSection.tsx',
-    'src/components/blueprint/compareCellBlockNameOnly.test.tsx',
-    'src/components/editor/SlicesSidebarSection.tsx',
-    'src/components/editor/sliceRenameGuard.test.tsx',
-    'src/components/editor/PhaseMenubarHeader.tsx',
-    'src/components/editor/menubarIconTooltips.test.tsx',
-    'src/components/blueprint/BlueprintDependencyArrows.tsx',
-    'src/lib/authoringLog.ts',
-    'src/lib/authoringLog.test.ts',
-    'src/lib/revertBoundaryContract.test.ts',
-    'src/hooks/useArchiveAvailable.ts',
-    'src/components/editor/SessionChangesSheet.tsx',
+    'scripts/erd-value-sets.mjs',
+    'scripts/always-loaded.mjs',
     'scripts/authoring-archivers.mjs',
-    'scripts/tests/authoring-log.test.mjs',
-    'src/lib/boardAddress.ts',
-    'src/lib/boardAddress.test.ts',
-    'src/components/editor/BoardAddressSync.tsx',
-    'src/components/editor/boardAddressSync.test.tsx',
-    'src/lib/panelTerms.ts',
-    'src/components/blueprint/IntegratedDependencyArrows.tsx',
-    'src/lib/evidenceMutations.ts',
-    'src/components/mobile/mobileNavSheet.test.tsx',
-    'src/components/editor/CanvasDesignTools.tsx',
-    'src/lib/workflowQueries.ts',
-    'src/components/blueprint/LanePanel.tsx',
-    'src/components/blueprint/ServicePanel.tsx',
-    'src/lib/canvasAnnotations.ts',
-    'src/lib/oklch.ts',
-    'src/lib/canvasNavigationOutcome.ts',
-    'src/components/blueprint/OwnerTagSelect.tsx',
-    'src/components/blueprint/BlueprintLaneHandles.tsx',
-    'src/types/nav.ts',
-    'src/contexts/canvasActiveContext.tsx',
-    'src/components/cover/coverModel.ts',
-    'src/lib/deletionSafety.ts',
-    'src/lib/devPortal.ts',
-    'src/components/editor/DevPortal.tsx',
-    'src/components/ui/switch.tsx',
-    'src/components/editor/AgentSettingsFields.tsx',
-    'src/components/editor/agentSettingsFields.test.tsx',
-    'src/lib/slideImages.ts',
-    'src/lib/slideImages.test.ts',
-    'src/lib/slideImagesField.test.ts',
-    'src/lib/illustrationUpload.ts',
-    'src/components/editor/SlideImagesField.tsx',
-    'src/lib/bundledSample.ts',
-    'src/lib/cellContentLimits.ts',
-    'src/lib/agent/tools/referenceDocs.ts',
-    'src/lib/agent/tools/referenceNamesExtra.ts',
-    'src/lib/agent/tools/referenceRegistry.test.ts',
-    'src/components/blueprint/optionSelect.test.tsx',
-    'src/lib/overviewLayout.ts',
-    'src/lib/classList.ts',
-    'src/lib/typeWeight.ts',
-    'src/lib/typeWeight.test.ts',
-    'src/lib/typeInk.ts',
-    'src/lib/typeInk.test.ts',
-    'src/components/labelVocabulary.test.ts',
-    'src/components/blueprint/Eyebrow.tsx',
-    'src/contexts/cellPanelResetOnTab.test.tsx',
-    'src/lib/agent/embedQuestion.test.ts',
-    'src/lib/agent/embedQuestion.ts',
-    'src/lib/agent/modelOptions.test.ts',
-    'src/lib/agent/searchPlan.test.ts',
-    'src/lib/agent/searchPlan.ts',
-    'src/lib/agent/tools/format.ts',
-    'src/lib/agent/tools/search.ts',
-    'src/lib/tokenModel.ts',
-    'src/lib/versionValidation.ts',
-    'src/lib/overviewPathFilters.ts',
     'scripts/check-pointers.mjs',
     'scripts/check-router-budget.mjs',
+    'scripts/tests/one-badge-one-size.test.mjs',
+    'scripts/tests/authoring-log.test.mjs',
+    'public/step-visual-placeholder.svg',
+    'docs/agents/triage-labels.md',
   ])
+})
+
+test('every enrolled path is a file this repository actually has', () => {
+  // THE ASSERTION THIS FILE WAS MISSING, and the flip is what made its absence
+  // expensive.
+  //
+  // Every other test here feeds `auditReconciled` readers injected in memory,
+  // which is right — they are testing the comparison, and a comparison should
+  // be testable without a filesystem. The consequence was that this suite
+  // asserted nothing about the filesystem at all: when `src/` was deleted, all
+  // 507 enrolled paths under it stopped existing and these eight tests stayed
+  // green. `check:reconciled` caught it, loudly, 507 times over — but that is a
+  // gate, and a gate catching what a suite cannot see is the wrong way round.
+  //
+  // A path enrolled here and absent from disk is not a small bookkeeping error.
+  // It is a promise about a file nobody is keeping, and it reads exactly like a
+  // promise being kept.
+  for (const path of RECONCILED_FILES) {
+    assert.ok(
+      existsSync(new URL(`../../${path}`, import.meta.url)),
+      `${path} is enrolled as reconciled but is not in this repository. Either ` +
+        `restore it, or remove the entry — an enrolment over a missing file ` +
+        `holds nothing.`,
+    )
+  }
+})
+
+test('every enrolled path is a file the package ships too', () => {
+  // The other half of the same point. `auditReconciled` already fails on a path
+  // the package does not have, and that is the gate; this is the suite saying
+  // the shipped list satisfies it today. A release that drops a file this
+  // deployment enrolled is a real event — it is how `src/` ended, from the
+  // other direction — and it should be visible here rather than only at the
+  // gate.
+  for (const path of RECONCILED_FILES) {
+    assert.ok(
+      existsSync(
+        new URL(`../../node_modules/agentic-service-blueprinting/${path}`, import.meta.url),
+      ),
+      `${path} is enrolled as reconciled but the pinned release does not ship ` +
+        `it. Run npm ci; if the release really dropped it, the entry goes.`,
+    )
+  }
 })
 
 test('no path is enrolled twice, so removing one entry really un-enrols a file', () => {

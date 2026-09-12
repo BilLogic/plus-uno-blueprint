@@ -11,7 +11,11 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { deriveSliceType, describeSliceType } from '../../src/lib/sliceKind.ts'
+// The subject is the APPLICATION's slice-kind reader, and the application is
+// no longer a directory in this repository — it is the installed package. `@/…`
+// is the alias that names it, in the test exactly as in the app code, so this
+// keeps importing the very module the deployment runs rather than a copy of it.
+import { deriveSliceType, describeSliceType } from '@/lib/sliceKind.ts'
 
 /** A fake grid: `id` is "step/lane". */
 const at = (id) => {

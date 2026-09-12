@@ -32,9 +32,33 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
 import { replacementFor, retiredFragmentsIn } from './retired-vocabulary.mjs'
+import { APP_SOURCE_ROOT } from './app-source.mjs'
 
 const REPO_ROOT = resolve(new URL('..', import.meta.url).pathname)
-const ROOTS = ['src', 'scripts']
+/**
+ * The trees this sweeps, and why the application is one of them.
+ *
+ * `deployment` is this repository's own code. `scripts` is its tooling. The
+ * third is the APPLICATION, read out of the package this deployment imports it
+ * from — and it belongs here for the reason the check exists at all: the
+ * queries in it run against THIS database, and the retired vocabulary is this
+ * schema's. A relation the package still names in a string literal is a read
+ * that comes back empty against this deployment's database at runtime, which
+ * is precisely the failure this check was written to catch and is not made
+ * less real by the file living in `node_modules`.
+ *
+ * What it is NOT is fixable here. A hit in the package is a pin to bump or an
+ * upstream ticket, not an edit — so the finding is worth having and the fix is
+ * somebody else's. That is a better place to be than not knowing.
+ *
+ * `src` is gone. Leaving it on this list would have been worse than removing
+ * it: `sourceFilesUnder` returns `[]` for a missing root, so this check went on
+ * printing `ok — every database name in a string literal is one the schema
+ * still has` while sweeping only `scripts/`. It examined none of the code the
+ * sentence is about and said so in the affirmative, which is the one failure
+ * mode a guard must not have.
+ */
+const ROOTS = ['deployment', 'scripts', APP_SOURCE_ROOT]
 const SOURCE = /\.(?:[cm]?[jt]sx?)$/
 /**
  * Test files are out of subject.
@@ -216,6 +240,29 @@ export function namedObjects(code) {
 
 /* ------------------------------------------------------------------- walk */
 
+/**
+ * Every root must contribute at least one file.
+ *
+ * `sourceFilesUnder` answers `[]` for a root that is not there, and a sweep
+ * over nothing passes every assertion it makes. This is the guard against
+ * that: a root that has moved, been renamed by a package release, or been
+ * emptied by an install that did not run is a broken check, not a clean one.
+ */
+function assertEveryRootContributed(byRoot) {
+  const empty = Object.entries(byRoot)
+    .filter(([, files]) => files.length === 0)
+    .map(([root]) => root)
+  if (empty.length > 0) {
+    console.error(
+      `::error::swept no source file under ${empty.join(', ')}. An empty root ` +
+        `is not a clean sweep — this check would have reported success having ` +
+        `read nothing. Run npm ci, or correct ROOTS in ` +
+        `scripts/check-database-names.mjs.`,
+    )
+    process.exit(1)
+  }
+}
+
 function sourceFilesUnder(root) {
   const abs = resolve(REPO_ROOT, root)
   let stats
@@ -239,8 +286,10 @@ function sourceFilesUnder(root) {
 /** Every finding, in file order. */
 export function findings() {
   const out = []
+  const byRoot = Object.fromEntries(ROOTS.map((root) => [root, sourceFilesUnder(root)]))
+  assertEveryRootContributed(byRoot)
   for (const root of ROOTS) {
-    for (const file of sourceFilesUnder(root)) {
+    for (const file of byRoot[root]) {
       const relativePath = relative(REPO_ROOT, file).split('\\').join('/')
       for (const use of namedObjects(readFileSync(file, 'utf8'))) {
         const words = retiredFragmentsIn(use.name)

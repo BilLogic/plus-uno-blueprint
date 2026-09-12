@@ -12,6 +12,7 @@ import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { appSource } from '../app-source.mjs'
 import {
   CONSTRAINT_MIGRATION,
   MIGRATIONS_DIR,
@@ -65,10 +66,13 @@ test('the constraint still permits a lane with no role', () => {
 test('every canonical role has a description and a style', () => {
   const roles = rolesInCode()
   const descriptions = readFileSync(resolve(REPO_ROOT, ROLES_PATH), 'utf8')
-  const styles = readFileSync(
-    resolve(REPO_ROOT, 'src/lib/blueprintTheme.ts'),
-    'utf8',
-  )
+  // Both lists belong to the APPLICATION, and the application is the installed
+  // package now rather than a directory here. `ROLES_PATH` already names it;
+  // the theme is read the same way, through the helper that says which package
+  // file is missing instead of surfacing a bare ENOENT — an unreadable theme
+  // here would otherwise look like a theme with no roles in it, which is
+  // exactly the vacuous pass the rest of this suite is built to refuse.
+  const styles = appSource('lib/blueprintTheme.ts')
 
   const undescribed = roles.filter(
     (role) => !new RegExp(`\\[${roleConstant(role)}\\]:`).test(descriptions),

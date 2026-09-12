@@ -20,13 +20,18 @@
 > evidence tools (#325 S3). The write rows now match exactly, in both
 > directions. What remains is one journey read the package names and this
 > app does not register — deliberately NOT repeated here, because a
-> prompt is no place to rehearse an identifier that does not resolve —
-> and two reads this app has and the package's row omits:
-> `list_blueprint`, the name the two repositories spell differently and
-> #396 Q24 has yet to reconcile, and `search_blueprint`, whose ranked
-> read needs a `public.search_blueprint` RPC the portable core cannot
-> carry (asb #163 part B). The absent name is written down in
-> `docs/engineering/agent-system.md` and in plus-uno-blueprint#115.
+> prompt is no place to rehearse an identifier that does not resolve.
+> The rest of that gap has closed: `list_blueprint` is the package's own
+> name now, and `search_blueprint` is a tool the package ships switched
+> off and this deployment turns on, because this database carries the
+> `public.search_blueprint` function the portable core cannot. The one
+> row still ours is `list_scenarios`, listed below as what the package
+> made it — a retiring alias of `list_blueprint`, kept for one release so
+> a caller that learned the old name still gets an answer. It is named
+> here rather than omitted because the surface row is read as the FULL
+> read surface, and a tool the agent can call and the rulebook does not
+> list is the gap this document exists to close. It leaves when the
+> package drops it.
 >
 > **Everything else is the package's text, deliberately.** The rulebook is
 > shared; only the names and the enum are ours. Keep the structure so the
@@ -64,7 +69,7 @@ so the agent reads past that one point.
 | Skill-world operation | Here |
 |---|---|
 | Edit IR JSON | call write tools: `create_step`, `create_lane`, `upsert_cell`, `update_cell`, `create_cell_dependency`, `update_path`, `create_phase`, `create_scenario`, `create_path`, `duplicate_path`, `duplicate_scenario`, `create_slice`, `update_slice`, `replace_slides`, `create_evidence`, `update_evidence`, `create_finding`, `update_finding`, `create_stakeholder`, `update_stakeholder` — plus `ui_command`'s few commands marked "[changes data]". That is the FULL write surface; nothing else writes. Each tool's own description carries its binding rules — trust it over memory. |
-| Read the blueprint | call read tools: `get_reference`, `list_references`, `list_blueprint`, `search_blueprint`, `get_blueprint`, `compare_blueprint`, `get_cell`, `list_lanes`, `list_cell_dependencies`, `list_slices`, `get_slice`, `list_owner_tags`, `list_stakeholders`, `list_evidence`, `get_evidence`, `get_business_model`, `list_sessions`, `get_session`, `get_ui_state`, `get_change_history`, `list_ui_commands`, `measure_deletion_impact`, `list_findings` — none of them move the user's canvas or change a row. That is the FULL read surface; nothing else reads. Each tool's own description carries its binding rules — trust it over memory. |
+| Read the blueprint | call read tools: `get_reference`, `list_references`, `list_blueprint`, `list_scenarios`, `search_blueprint`, `get_blueprint`, `compare_blueprint`, `get_cell`, `list_lanes`, `list_cell_dependencies`, `list_slices`, `get_slice`, `list_owner_tags`, `list_stakeholders`, `list_evidence`, `get_evidence`, `get_business_model`, `list_sessions`, `get_session`, `get_ui_state`, `get_change_history`, `list_ui_commands`, `measure_deletion_impact`, `list_findings` — none of them move the user's canvas or change a row. That is the FULL read surface; nothing else reads. Each tool's own description carries its binding rules — trust it over memory. |
 | Save / rework a slice | `create_slice`, `update_slice`, `replace_slides` |
 | Drive the interface | `open_phase`, `open_scenario`, `focus_cell`, `open_cell_panel`, `set_canvas_mode` (view/design), `set_sidebar`, `annotate_cells` (ephemeral marker boxes + note) — the same gestures the human has; none of these touch data. `ui_command` fires any other control by name; it is the one tool that is neither a read nor a pure interface move, because the commands it marks "[changes data]" count against your write batch. `list_ui_commands` (a read) tells you which exist right now. |
 | Rename an owner tag everywhere | no tool — point the human at the owner-tag dropdown's rename (it renames everywhere at once) |

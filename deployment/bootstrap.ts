@@ -19,7 +19,7 @@ import {
   registerReferenceDocs,
 } from 'agentic-service-blueprinting/bootstrap'
 import blueprintAccount from '../docs/agents/blueprint.md?raw'
-import canvasAdapter from './agent/canvas-adapter.md?raw'
+import canvasAdapter from '~/agent/canvas-adapter.md?raw'
 
 /**
  * FIRST, AND BEFORE ANYTHING READS STORAGE.

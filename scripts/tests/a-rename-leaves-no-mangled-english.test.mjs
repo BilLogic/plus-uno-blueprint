@@ -10,14 +10,17 @@
  * check and review, because a sentence is the subject of almost nothing.
  *
  * SUBJECT: every file a commit would carry — tracked, plus untracked files git
- * would not ignore. Not `src` alone and not the swept docs alone: the residue
- * lands wherever the rename's `sed` reached, which is a comment in a
- * stylesheet, a heading in a guideline, a test's own name. That listing is
+ * would not ignore — AND the application's source, which is the installed
+ * package now. The residue lands wherever the rename's `sed` reached, which is
+ * a comment in a stylesheet, a heading in a guideline, a test's own name; the
+ * stylesheets and the components moved into `node_modules` and the `sed` that
+ * mangled them ran upstream, where the wreckage is somebody else's to repair
+ * and this deployment's to ship. Both listings are
  * `scripts/scanned-files.mjs`, which moved out of this file when
- * `a-lane-is-not-a-layer.test.mjs` became the second sweep to need it. This is
- * the widest subject in `scripts/tests/`, and it can afford to be, because the
- * patterns below match strings that are not English words rather than words
- * that are.
+ * `a-lane-is-not-a-layer.test.mjs` became the second sweep to need it, and
+ * `sweptFiles` there is the union. This is the widest subject in
+ * `scripts/tests/`, and it can afford to be, because the patterns below match
+ * strings that are not English words rather than words that are.
  *
  * WHY IT IS NOT IN `retired-copy.test.mjs`, where the template put it: that
  * file fixes its subject in its header to JSX text nodes, reader-facing props
@@ -64,7 +67,7 @@ import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { BINARY, scannedFiles } from '../scanned-files.mjs'
+import { BINARY, SWEPT_ROOTS, sweptFiles } from '../scanned-files.mjs'
 
 const REPO_ROOT = resolve(new URL('../..', import.meta.url).pathname)
 
@@ -132,7 +135,7 @@ export function mangledIn(source) {
 }
 
 test('a rename left no mangled English behind', () => {
-  const found = scannedFiles()
+  const found = sweptFiles()
     .filter((path) => !mangleExempt(path))
     .flatMap((path) => {
       let source
@@ -215,9 +218,14 @@ test('the sweep reads the tree it claims to', () => {
   // a tree with no residue. Three facts about the corpus, cheap and
   // load-bearing: it is large, it reaches past `src`, and the exclusions
   // excluded something that is really there.
-  const files = scannedFiles()
+  const files = sweptFiles()
   assert.ok(files.length > 500, `only ${files.length} files listed`)
-  for (const root of ['src/', 'scripts/', 'docs/', 'supabase/']) {
+  // `src/` was one of these until the application left the repository. Dropping
+  // it and stopping there would have been the vacuous half of the flip: the
+  // sweep would have gone on passing while reading no component at all. The
+  // package's root replaces it, and `deployment/` is beside it because this
+  // repository's own application code lives there now.
+  for (const root of SWEPT_ROOTS) {
     assert.ok(
       files.some((path) => path.startsWith(root)),
       `${root} is not in the subject`,

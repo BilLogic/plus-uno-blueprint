@@ -52,20 +52,44 @@ test('an exact path matches only itself', () => {
 })
 
 test('a clean template merge reports nothing', () => {
-  const files = ['src/lib/blueprintLayout.ts', 'src/components/blueprint/BlueprintGrid.tsx']
+  // Shared paths a merge is entitled to carry. `docs/agents/triage-labels.md`
+  // is enrolled in the drift gate, which is the strongest possible statement
+  // that the template is allowed to move it.
+  const files = ['docs/agents/triage-labels.md', 'scripts/erd-value-sets.mjs']
   assert.deepEqual(violations(files, manifest.quarantine), [])
 })
 
 test('a merge touching instance-owned files reports each one with its reason', () => {
+  // `deployment/` replaced the five `src/…` entries this list used to carry.
+  // The deployment's files are no longer scattered through a copy of the
+  // application, so they are quarantined as a tree rather than one at a time.
   const hits = violations(
-    ['src/lib/blueprintLayout.ts', 'src/types/database.ts', 'supabase/seed.sql'],
+    [
+      'docs/agents/triage-labels.md',
+      'deployment/deployment.ts',
+      'supabase/seed.sql',
+    ],
     manifest.quarantine,
   )
   assert.deepEqual(
     hits.map((h) => h.file),
-    ['src/types/database.ts', 'supabase/seed.sql'],
+    ['deployment/deployment.ts', 'supabase/seed.sql'],
   )
   assert.ok(hits.every((h) => h.reason.length > 0), 'every hit explains itself')
+})
+
+test('the application is not a quarantine subject, because a merge cannot reach it', () => {
+  // It arrives as an installed dependency. What it contains is settled by the
+  // pin in package.json and by scripts/check-reconciled-files.mjs. A pattern
+  // here would read as protection over a tree no merge can touch.
+  assert.deepEqual(
+    violations(
+      ['node_modules/agentic-service-blueprinting/src/lib/blueprintLayout.ts'],
+      manifest.quarantine,
+    ),
+    [],
+  )
+  assert.ok(manifest.notQuarantined['node_modules/agentic-service-blueprinting/**'])
 })
 
 test('the schema reference is deliberately NOT quarantined', () => {

@@ -1,8 +1,12 @@
 # This repo now shares history with agentic-service-blueprinting (the graft in
 # #105), so upstream changes arrive as an ordinary `git merge template/main`.
-# Most of src/ SHOULD arrive that way. A handful of paths never should — this
-# instance's migrations, its blueprint data, its generated database types, its
-# agent persona — and a merge that quietly takes the package's version of those
+# Since the import flip the application does not arrive by merge at all: it is a
+# pinned dependency, and what it contains is settled by package.json and by
+# scripts/check-reconciled-files.mjs. What a merge can still reach is this
+# repository's own trees, and a handful of them never should — its migrations,
+# its seeds, its Supabase settings, and `deployment/`, which is everything the
+# flip kept: the DeploymentConfig, the bootstrap, the cover, the brand dials and
+# the cross-repo contract. A merge that quietly takes the package's version of those
 # is a data-shaped regression, not a conflict anyone would notice in review.
 #
 # The alternative was .gitattributes with a `merge=ours` driver. It was rejected

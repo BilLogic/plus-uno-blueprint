@@ -40,12 +40,22 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { appSource } from '../app-source.mjs'
 import { RETIRED_PRESENTATION_SPELLINGS } from '../retired-vocabulary.mjs'
 
-const STYLE_MODULE = 'src/lib/blueprintCellStyle.ts'
-const STYLESHEET = 'src/styles/blueprint.css'
-const THEME = 'src/lib/blueprintTheme.ts'
+/*
+ * All three files are the APPLICATION's, and the application is the installed
+ * package rather than a directory here. The fill vocabulary is one this
+ * deployment's schema still constrains, so the check is worth more after the
+ * move than before: it now holds the palette the deployment actually renders
+ * against the rename map its own migrations wrote, instead of holding one
+ * local file to its neighbour. `appSource` names the missing package file if
+ * an install has not run, because an unreadable module here would otherwise
+ * read as a module with no retired spelling in it.
+ */
+const STYLE_MODULE = 'lib/blueprintCellStyle.ts'
+const STYLESHEET = 'styles/blueprint.css'
+const THEME = 'lib/blueprintTheme.ts'
 
 /** The declared fill names, read from the array the type is checked against. */
 export function declaredFills(source) {
@@ -70,9 +80,9 @@ export function retiredSpellingsIn(fill) {
   return RETIRED_PRESENTATION_SPELLINGS.filter((word) => lower.includes(word))
 }
 
-const styleModule = readFileSync(STYLE_MODULE, 'utf8')
-const stylesheet = readFileSync(STYLESHEET, 'utf8')
-const theme = readFileSync(THEME, 'utf8')
+const styleModule = appSource(STYLE_MODULE)
+const stylesheet = appSource(STYLESHEET)
+const theme = appSource(THEME)
 
 test('no fill name contains a word the schema has retired', () => {
   const offenders = declaredFills(styleModule)

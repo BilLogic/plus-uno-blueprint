@@ -144,9 +144,13 @@ test('dated records and test files are out of subject, and documents are not', (
     assert.equal(isExemptPath(record.endsWith('/') ? `${record}whatever.md` : record), true, record)
   }
   assert.equal(isExemptPath('scripts/tests/lane-role-values.test.mjs'), true)
-  assert.equal(isExemptPath('src/lib/laneRoles.test.ts'), true)
+  // The tree the sweep walks is what git tracks HERE, and since the
+  // application moved into the installed package that tree is this
+  // deployment's own code — so the fixtures name files this repository can
+  // really hold rather than paths under a `src/` nobody would find.
+  assert.equal(isExemptPath('deployment/lib/blueprintContract.test.ts'), true)
   assert.equal(isExemptPath('docs/reference/erd.mmd'), false)
-  assert.equal(isExemptPath('src/lib/agent/tools/specs.ts'), false)
+  assert.equal(isExemptPath('deployment/lib/blueprintContract.ts'), false)
   // `docs/reference` is not `docs/adr`, and a prefix rule that matched on the
   // parent would take the whole of `docs/` with it.
   assert.equal(isExemptPath('docs/adr-notes.md'), false)

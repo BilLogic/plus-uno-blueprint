@@ -14,6 +14,14 @@
  * the screen. `tsc` cannot help either — the key is renamed at both edges, so
  * the types agree with themselves.
  *
+ * BOTH SUBJECTS ARE THE APPLICATION'S, AND THE APPLICATION IS THE INSTALLED
+ * PACKAGE NOW. The paths below are relative to its source root and are read
+ * through `scripts/app-source.mjs`; the schema they are judged against is the
+ * generated `types/database.ts` that ships with it. That makes this a stronger
+ * join than it was rather than a weaker one — the form keys are the ones this
+ * deployment's editor actually renders, and the columns are the ones its
+ * database actually has.
+ *
  * TWO SUBJECTS, BOTH NARROW.
  *
  * 1. THE EDITOR FORM TYPES. Each panel declares a `FormState` for the table it
@@ -38,21 +46,23 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { readFileSync, readdirSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { RENAME_MAP } from '../retired-vocabulary.mjs'
+import { appSource, appSourceFiles, deploymentSourceFiles } from '../app-source.mjs'
 
 const REPO_ROOT = process.cwd()
-const DATABASE_TYPES = 'src/types/database.ts'
+/** Named as the reader reports it; read out of the package by `appSource`. */
+const DATABASE_TYPES = 'types/database.ts'
 
 /**
- * Which table each editor form writes. `nested` names a key whose value is
- * itself a form for another table; `suffix` names the two keys that could not
- * be spelled as their column.
+ * Which table each editor form writes, by its path inside the application's
+ * source. `nested` names a key whose value is itself a form for another table;
+ * `suffix` names the two keys that could not be spelled as their column.
  */
 export const EDITOR_FORMS = [
   {
-    file: 'src/components/blueprint/CellPanelEditor.tsx',
+    file: 'components/blueprint/CellPanelEditor.tsx',
     type: 'FormState',
     table: 'cells',
     nested: { placement: 'cell_touchpoints' },
@@ -62,33 +72,33 @@ export const EDITOR_FORMS = [
     suffix: { functionText: 'function', formText: 'form' },
   },
   {
-    file: 'src/lib/touchpointMutations.ts',
+    file: 'lib/touchpointMutations.ts',
     type: 'PlacementDetailDraft',
     table: 'cell_touchpoints',
   },
   {
-    file: 'src/components/blueprint/ServicePanel.tsx',
+    file: 'components/blueprint/ServicePanel.tsx',
     type: 'FormState',
     table: ['services', 'business_models'],
   },
   {
-    file: 'src/components/blueprint/PhasePanel.tsx',
+    file: 'components/blueprint/PhasePanel.tsx',
     type: 'FormState',
     table: 'phases',
   },
   {
-    file: 'src/components/blueprint/ScenarioPanel.tsx',
+    file: 'components/blueprint/ScenarioPanel.tsx',
     type: 'FormState',
     table: 'scenarios',
     nested: { paths: 'paths' },
   },
   {
-    file: 'src/components/blueprint/ScenarioPanel.tsx',
+    file: 'components/blueprint/ScenarioPanel.tsx',
     type: 'PathForm',
     table: 'paths',
   },
   {
-    file: 'src/components/blueprint/LanePanel.tsx',
+    file: 'components/blueprint/LanePanel.tsx',
     type: 'FormState',
     table: 'lanes',
   },
@@ -196,20 +206,29 @@ export function columnsArrivingUnderOldNames(source, pairs = renamePairs()) {
   return findings
 }
 
-function sourceFiles(dir) {
-  const found = []
-  for (const entry of readdirSync(dir)) {
-    const path = join(dir, entry)
-    if (statSync(path).isDirectory()) found.push(...sourceFiles(path))
-    else if (/\.tsx?$/.test(entry) && !/\.test\.tsx?$/.test(entry)) found.push(path)
-  }
-  return found
+/**
+ * Every source file a renamed column could arrive in.
+ *
+ * TWO ROOTS: the application, read out of the package, and this deployment's
+ * own source beside it — the same pair `scripts/check-database-names.mjs`
+ * sweeps, for the same reason. A column arriving under its retired name in a
+ * deployment file is the identical defect, and the sweep that could not see it
+ * would say so in the affirmative.
+ *
+ * Both readers refuse an empty result. This walk used to be `src`, six hundred
+ * files that threw on a typo; the root it points at now is inside
+ * `node_modules`, where absent is a state a tree can genuinely be in, and a
+ * walk of nothing reports no findings and reads as clean.
+ */
+function sourceFiles() {
+  const wanted = (path) => /\.tsx?$/.test(path) && !/\.test\.tsx?$/.test(path)
+  return [...appSourceFiles(wanted), ...deploymentSourceFiles(wanted)]
 }
 
 test('every editor form key is a column of the table it writes', () => {
-  const tables = tableColumns(readFileSync(resolve(REPO_ROOT, DATABASE_TYPES), 'utf8'))
+  const tables = tableColumns(appSource(DATABASE_TYPES))
   const found = EDITOR_FORMS.flatMap((form) =>
-    keysThatAreNotColumns(form, readFileSync(resolve(REPO_ROOT, form.file), 'utf8'), tables),
+    keysThatAreNotColumns(form, appSource(form.file), tables),
   )
   assert.deepEqual(
     found,
@@ -220,21 +239,20 @@ test('every editor form key is a column of the table it writes', () => {
 })
 
 test('no column arrives in the app under a name the schema retired', () => {
-  const tables = tableColumns(readFileSync(resolve(REPO_ROOT, DATABASE_TYPES), 'utf8'))
+  const tables = tableColumns(appSource(DATABASE_TYPES))
   const pairs = renamePairs(RENAME_MAP, tables)
-  const root = resolve(REPO_ROOT, 'src')
   const found = []
-  for (const path of sourceFiles(root)) {
-    const rel = path.slice(resolve(REPO_ROOT).length + 1)
-    for (const finding of columnsArrivingUnderOldNames(readFileSync(path, 'utf8'), pairs)) {
-      found.push(`${rel}:${finding.line}  ${finding.text}`)
+  for (const path of sourceFiles()) {
+    const source = readFileSync(resolve(REPO_ROOT, path), 'utf8')
+    for (const finding of columnsArrivingUnderOldNames(source, pairs)) {
+      found.push(`${path}:${finding.line}  ${finding.text}`)
     }
   }
   assert.deepEqual(found, [], `A column keeps its name on the way in (#261):\n${found.join('\n')}`)
 })
 
 test('the roster yields the pairs this check runs on', () => {
-  const tables = tableColumns(readFileSync(resolve(REPO_ROOT, DATABASE_TYPES), 'utf8'))
+  const tables = tableColumns(appSource(DATABASE_TYPES))
   const pairs = renamePairs(RENAME_MAP, tables)
   assert.ok(!pairs.some((p) => p.was === 'label'), '`label` is still live on deleted_structure and must not be a pair')
   assert.ok(pairs.some((p) => p.was === 'description' && p.is === 'summary' && p.table === 'cells'),

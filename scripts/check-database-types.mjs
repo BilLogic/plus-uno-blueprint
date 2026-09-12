@@ -1,7 +1,26 @@
 #!/usr/bin/env node
 /**
- * `npm run check:database-types:live` — does `src/types/database.ts` still
- * describe the database?
+ * `npm run check:database-types:live` — does this deployment's database still
+ * satisfy the types the application was compiled against?
+ *
+ * THE SUBJECT CHANGED WHEN THE APPLICATION MOVED INTO THE PACKAGE, and the
+ * check got stronger rather than weaker. It used to ask whether a
+ * hand-maintained `src/types/database.ts` still described the database — two
+ * artifacts in one repository, both editable here, and the answer was mostly
+ * about whether somebody had remembered to regenerate.
+ *
+ * There is no local copy now. `types/database.ts` is the PACKAGE's, and the
+ * v1.42.0 release notes say why it has no config seam: every import of it is a
+ * TYPE import, so it is the application's compile-time statement of the schema
+ * its code needs — satisfied by HAVING that schema, not by swapping a module
+ * underneath code that was typechecked against it.
+ *
+ * So the question this asks now is the one that actually matters to a
+ * deployment: is this database a runtime superset of what the application it
+ * imports expects? A missing column here is not a stale file, it is a read
+ * that fails in production. Extra tables and extra functions of this
+ * deployment's own are fine and expected — this database has always been
+ * ahead of the template's.
  *
  * The comparison, and why nothing else could have caught the drift it exists
  * for, are written once in `scripts/database-types.mjs`. This file is the
@@ -31,7 +50,8 @@ import { fileURLToPath } from 'node:url'
 import { functionsInFile, tablesInFile, typesDrift } from './database-types.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const TYPES = path.join(ROOT, 'src', 'types', 'database.ts')
+const TYPES_RELATIVE = 'node_modules/agentic-service-blueprinting/src/types/database.ts'
+const TYPES = path.join(ROOT, TYPES_RELATIVE)
 
 const COLUMNS_SQL = `
   select coalesce(json_agg(json_build_object(
@@ -130,6 +150,15 @@ function main() {
     functions.map((row) => [row.name, parseArguments(row.args ?? '')]),
   )
 
+  if (!fs.existsSync(TYPES)) {
+    console.error(
+      `The application's types are not on disk at ${TYPES_RELATIVE}. This ` +
+        `deployment reads the application out of agentic-service-blueprinting, ` +
+        `so there is nothing to compare the database against — which is a ` +
+        `broken check, not a passing one. Run npm ci.`,
+    )
+    process.exit(1)
+  }
   const source = fs.readFileSync(TYPES, 'utf8')
   const problems = typesDrift({
     fileTables: tablesInFile(source),
@@ -141,7 +170,7 @@ function main() {
 
   if (problems.length === 0) {
     console.log(
-      `src/types/database.ts agrees with the database: ${dbTables.size} table(s), ` +
+      `this database satisfies the application's types: ${dbTables.size} table(s), ` +
         `${dbFunctions.size} function(s).`,
     )
     return

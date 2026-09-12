@@ -12,7 +12,8 @@
  *
  * One-sourced vs mirrored (be honest about which is which):
  * - ONE-SOURCED: the tool specs and rosters (TOOL_SPECS, WRITE_TOOL_NAMES,
- *   MOBILE_READ_TOOL_NAMES) are IMPORTED from src/lib/agent/tools/specs.ts
+ *   MOBILE_READ_TOOL_NAMES) are IMPORTED from the application's
+ *   lib/agent/tools/specs.ts, in the installed package
  *   — rolldown bundles it at startup, so the harness offers byte-identical
  *   declarations to the app's. Likewise role.md, canvas-adapter.md and the
  *   skill files are the SAME FILES the app loads (`?raw` there,
@@ -20,9 +21,10 @@
  *   agentic-service-blueprinting package. No copies, so no drift.
  * - MIRRORED BY HAND: the system-prompt ASSEMBLY (buildSystem + the tier /
  *   mobile injections), the Gemini provider glue, the batch limiter and
- *   the round cap follow src/lib/agent/loop.ts and providers/google.ts by
- *   copy — edit both sides together. The tool RESULT texts below are
- *   harness-local mocks of registry.ts behavior, not the real wrappers.
+ *   the round cap follow the application's lib/agent/loop.ts and its
+ *   lib/agent/providers/google.ts by copy — edit both sides together. The
+ *   tool RESULT texts below are harness-local mocks of registry.ts
+ *   behavior, not the real wrappers.
  *
  * Usage:
  *   node scripts/agent-harness/run.mjs             # full suite, Gemini
@@ -38,6 +40,21 @@ import { fileURLToPath } from 'node:url'
 import { CASES } from './cases.mjs'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+
+/**
+ * The application, as installed.
+ *
+ * This deployment holds no `src/` of its own any more: it imports the
+ * application out of `agentic-service-blueprinting` and the harness follows it
+ * there, so the files one-sourced below — role.md, the tool specs — are still
+ * the SAME files the app loads rather than copies of them. Resolved through
+ * the package's own entry point instead of a spelled-out `node_modules/…`
+ * path, so a hoisted or linked install resolves too.
+ */
+const PACKAGE = dirname(
+  fileURLToPath(import.meta.resolve('agentic-service-blueprinting/package.json')),
+)
+const APP_SOURCE = resolve(PACKAGE, 'src')
 
 // ---------------------------------------------------------------------------
 // Env
@@ -101,12 +118,18 @@ async function rest(pathAndQuery) {
 }
 
 // ---------------------------------------------------------------------------
-// System prompt (mirror of src/lib/agent/loop.ts — see header)
+// System prompt (mirror of the application's lib/agent/loop.ts — see header)
 // ---------------------------------------------------------------------------
-const ROLE = readFileSync(resolve(ROOT, 'src/lib/agent/role.md'), 'utf8').trimEnd()
+const ROLE = readFileSync(resolve(APP_SOURCE, 'lib/agent/role.md'), 'utf8').trimEnd()
 
-/** The instance's canvas adapter — see `referencePath` below and #115. */
-const ADAPTER_OVERRIDE = 'src/lib/agent/canvas-adapter.md'
+/**
+ * The instance's canvas adapter — see `referencePath` below and #115.
+ *
+ * This one is the DEPLOYMENT's own file and stays in this repository: it is
+ * the override, and an override that lived in the package would be overriding
+ * itself. It moved to `deployment/` with the rest of this repository's code.
+ */
+const ADAPTER_OVERRIDE = 'deployment/agent/canvas-adapter.md'
 
 
 // The rulebook is the INSTALLED package, not a copy in this repo — the
@@ -121,9 +144,6 @@ const ADAPTER_OVERRIDE = 'src/lib/agent/canvas-adapter.md'
 // whatever npm installed; a harness that demanded a fresher tree than the
 // dev server runs on would be answering a question about npm rather than
 // about the agent.
-const PACKAGE = dirname(
-  fileURLToPath(import.meta.resolve('agentic-service-blueprinting/package.json')),
-)
 const SKILL_IDS = ['map', 'slice', 'audit', 'whatif']
 const REFERENCE_PATHS = new Map()
 for (const dir of [
@@ -178,9 +198,10 @@ function buildSystem(skillId, contextNote) {
 async function loadToolSpecs() {
   const { rolldown } = await import('rolldown')
   const bundle = await rolldown({
-    input: resolve(ROOT, 'src/lib/agent/tools/specs.ts'),
-    // Honor tsconfig's `@/*` → `src/*` path alias.
-    resolve: { alias: { '@': resolve(ROOT, 'src') } },
+    input: resolve(APP_SOURCE, 'lib/agent/tools/specs.ts'),
+    // Honor the `@/*` alias, which points at the application's source — the
+    // installed package's, since this deployment has no `src/` of its own.
+    resolve: { alias: { '@': APP_SOURCE } },
     logLevel: 'silent',
   })
   const { output } = await bundle.generate({ format: 'esm' })
@@ -221,9 +242,9 @@ async function rpc(fn, body) {
 }
 
 /**
- * Mirrors `renderPortalRows` in src/lib/agent/tools/read.ts. Both portal
- * doors render the same way in the app, so they must here too — a harness
- * that formats results differently rehearses a different agent.
+ * Mirrors `renderPortalRows` in the application's lib/agent/tools/read.ts.
+ * Both portal doors render the same way in the app, so they must here too —
+ * a harness that formats results differently rehearses a different agent.
  */
 function renderPortalRows(rows, emptyMessage, ranked) {
   if (!rows?.length) return emptyMessage
@@ -270,21 +291,6 @@ async function realSearchBlueprint(args) {
     `Nothing matches the words "${args.query}". That means no row USES those words — it does not mean the blueprint has no such moment. Try the board's own vocabulary, or list_blueprint to see what exists.`,
     true,
   )
-}
-
-async function realListScenarios() {
-  const data = await rest(
-    'phases?select=id,name,position,scenarios(id,name,position)&order=position',
-  )
-  return data
-    .map((phase) => {
-      const scenarios = (phase.scenarios ?? [])
-        .sort((a, b) => a.position - b.position)
-        .map((s) => `  - scenario "${s.name}" (${s.id})`)
-        .join('\n')
-      return `phase "${phase.name}" (${phase.id})\n${scenarios}`
-    })
-    .join('\n')
 }
 
 async function realGetBlueprint(scenarioId) {
@@ -440,6 +446,14 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
         record.result = readFileSync(referencePath(String(args.name).replace(/[^a-z-]/g, '')), 'utf8')
         return record.result
       case 'list_blueprint': record.result = await realListBlueprint(args); return record.result
+      // The alias the app keeps for a release: `list_blueprint` at the two
+      // orientation levels, same read and same text. Answered by the same
+      // function for that reason — the harness's own pre-rename phases query
+      // is what made it rehearse a different agent than the app runs, so it
+      // is gone rather than kept beside this.
+      case 'list_scenarios':
+        record.result = await realListBlueprint({ ...args, granularity: ['phase', 'scenario'] })
+        return record.result
       case 'search_blueprint': record.result = await realSearchBlueprint(args); return record.result
       case 'get_blueprint': record.result = await realGetBlueprint(args.scenario_id); return record.result
       case 'list_lanes': {
@@ -582,7 +596,8 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
 }
 
 // ---------------------------------------------------------------------------
-// Gemini (mirrors src/lib/agent/providers/google.ts incl. thoughtSignature)
+// Gemini (mirrors the application's lib/agent/providers/google.ts incl.
+// thoughtSignature)
 // ---------------------------------------------------------------------------
 async function geminiGenerate(model, body) {
   const response = await fetch(

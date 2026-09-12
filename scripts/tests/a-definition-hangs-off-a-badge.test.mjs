@@ -18,9 +18,9 @@
  * "is the thing this definition is attached to a badge".
  *
  * THE SUBJECT IS THE RAW CARD, `DefinitionPopover`, AND NOT THE PAGE. A sweep
- * of `src/` for the classes a definition used to wear would need an exemption
- * for every legitimate underline in the app, and the classes are gone anyway
- * (#243). `EntityDefinitionPopover` is deliberately NOT swept: its `kind` is
+ * of the app's source for the classes a definition used to wear would need an
+ * exemption for every legitimate underline in the app, and the classes are
+ * gone anyway (#243). `EntityDefinitionPopover` is deliberately NOT swept: its `kind` is
  * typed to `EntityKindTerm`, so its vocabulary is already finite and already
  * checked by the compiler, and it is the one surface allowed to hang off bare
  * text — the step and lane column headers on the board, which teach the words
@@ -43,22 +43,37 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { readFileSync, readdirSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { APP_SOURCE_ROOT, appSourceFiles, deploymentSourceFiles } from '../app-source.mjs'
 
 const REPO_ROOT = process.cwd()
-const SOURCE_ROOT = 'src'
-/** The card itself. Its own module declares the surface rather than using it. */
-const CARD_MODULE = 'src/components/blueprint/DefinitionCard.tsx'
+/**
+ * The card itself. Its own module declares the surface rather than using it.
+ *
+ * It is a path inside the installed package now: the components this checks
+ * are the APPLICATION's, and the application is no longer a directory in this
+ * repository — it is read out of `agentic-service-blueprinting`.
+ */
+const CARD_MODULE = `${APP_SOURCE_ROOT}/components/blueprint/DefinitionCard.tsx`
 
-function sourceFiles(dir) {
-  const found = []
-  for (const entry of readdirSync(dir)) {
-    const path = join(dir, entry)
-    if (statSync(path).isDirectory()) found.push(...sourceFiles(path))
-    else if (/\.tsx$/.test(entry) && !/\.test\.tsx$/.test(entry)) found.push(path)
-  }
-  return found
+/**
+ * Every component file the app this deployment runs is built from.
+ *
+ * TWO ROOTS, because the app is two. The application arrives from the package;
+ * this deployment's own components sit beside it under `deployment/`, and a
+ * definition one of those hangs off a label is the same defect in the same
+ * product. `scripts/check-database-names.mjs` sweeps the same pair for the same
+ * reason.
+ *
+ * Both readers refuse an empty result, and that is the half worth stating: a
+ * walk of a root that is not there returns no files, finds no findings and
+ * reports a clean app, which is indistinguishable from a clean app and is the
+ * one failure mode this guard must not have.
+ */
+function componentFiles() {
+  const component = (path) => /\.tsx$/.test(path) && !/\.test\.tsx$/.test(path)
+  return [...appSourceFiles(component), ...deploymentSourceFiles(component)]
 }
 
 /**
@@ -143,9 +158,7 @@ export function definitionsNotOnABadge(source) {
 }
 
 test('every definition in the app hangs off a badge', () => {
-  const files = sourceFiles(resolve(REPO_ROOT, SOURCE_ROOT))
-    .map((path) => path.slice(resolve(REPO_ROOT).length + 1))
-    .filter((path) => path !== CARD_MODULE)
+  const files = componentFiles().filter((path) => path !== CARD_MODULE)
 
   const found = []
   for (const path of files) {

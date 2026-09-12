@@ -67,14 +67,32 @@ import { PACKAGE, refuseOnStaleInstall } from './template-pin.mjs'
 
 const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url))
 
-const ADAPTER = 'src/lib/agent/canvas-adapter.md'
-const SPECS = 'src/lib/agent/tools/specs.ts'
-const LOOP = 'src/lib/agent/loop.ts'
-const DOCS = 'src/lib/agent/tools/referenceDocs.ts'
+/**
+ * The two sides this check spans, since the application moved into the package.
+ *
+ * `ADAPTER` and `REGISTRATION` are THIS DEPLOYMENT's: the adapter is its
+ * override of the template's, and the registration is the module `main.tsx`
+ * imports before the application so the document is registered while the
+ * agent's vocabulary is still being built. Both moved into `deployment/` with
+ * the rest of this repository's own code.
+ *
+ * `SPECS`, `LOOP`, `DOCS` and `VENDORED` are the APPLICATION's, and are read
+ * out of the package. The check is more useful for the split, not less: it now
+ * asserts that this deployment's override actually reaches the prompt of an
+ * application it does not control, which is the wiring most likely to come
+ * apart at a pin bump and the least likely to be noticed when it does — a
+ * loop that stopped splicing the loader's record would serve the template's
+ * rulebook with nothing on screen to say so.
+ */
+const APP = 'node_modules/agentic-service-blueprinting/src'
+const ADAPTER = 'deployment/agent/canvas-adapter.md'
+const SPECS = `${APP}/lib/agent/tools/specs.ts`
+const LOOP = `${APP}/lib/agent/loop.ts`
+const DOCS = `${APP}/lib/agent/tools/referenceDocs.ts`
 /** Where this deployment registers its reference documents, adapter included. */
-const REGISTRATION = 'src/deployment.ts'
+const REGISTRATION = 'deployment/bootstrap.ts'
 /** The template's vendored skill references, which its loader imports. */
-const VENDORED = 'src/lib/agent/skill'
+const VENDORED = `${APP}/lib/agent/skill`
 const HARNESS = 'scripts/agent-harness/run.mjs'
 const SCHEMA = 'supabase/schema.reference.sql'
 const MIGRATIONS = 'supabase/migrations'
@@ -82,8 +100,16 @@ const MIGRATIONS = 'supabase/migrations'
 /** The package specifier the override exists to displace. */
 const PACKAGE_ADAPTER = 'agentic-service-blueprinting/references/canvas-adapter.md'
 
-/** The alias specifier the app must import instead. */
-const OVERRIDE_SPECIFIER = '@/lib/agent/canvas-adapter.md'
+/**
+ * The specifier this deployment's registration must import the override under.
+ *
+ * `~/…`, not `@/…`. Two roots, two prefixes: `@/…` is the application's and now
+ * resolves into the package, so an override written that way would ask the
+ * package for a file only this repository has. The alias says at a glance which
+ * side of the seam an import is on, and this is the one import in the wiring
+ * that has to be on the deployment's side.
+ */
+const OVERRIDE_SPECIFIER = '~/agent/canvas-adapter.md'
 
 /**
  * The heading whose list names the installed references that still teach the

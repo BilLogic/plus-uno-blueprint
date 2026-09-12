@@ -31,9 +31,9 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { readFileSync, readdirSync, statSync } from 'node:fs'
-import { join, relative, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import { replayMigrations } from '../migration-replay.mjs'
+import { APP_SOURCE_ROOT, appSource, appSourceFiles, hasAppSource } from '../app-source.mjs'
 
 const ROOT = resolve(new URL('../..', import.meta.url).pathname)
 
@@ -172,6 +172,11 @@ test('no column of a slide carries a picture of its own', () => {
 /**
  * The surfaces where a slide is named, and nothing else.
  *
+ * PATHS INSIDE THE APPLICATION'S SOURCE, which is the installed package rather
+ * than a directory here. That is what makes the two halves of this file a join
+ * worth having: the schema is replayed from THIS repository's migrations and
+ * the words are read from the application this deployment actually serves.
+ *
  * A LIST OF FILES RATHER THAN A LIST OF WORDS, and that is the whole design.
  * `frame` is a live name — one image on one cell — so forbidding it globally
  * would flag every correct use. What is wrong is `frame` used for a SLIDE, and
@@ -183,13 +188,13 @@ test('no column of a slide carries a picture of its own', () => {
  * purpose.
  */
 export const SLIDE_SURFACES = Object.freeze([
-  'src/components/editor/SliceSlideEditor.tsx',
-  'src/components/editor/SliceSlideComposer.tsx',
-  'src/components/editor/SlicePresentation.tsx',
-  'src/components/editor/CreateSliceSheet.tsx',
-  'src/components/editor/SliceView.tsx',
-  'src/components/editor/SliceEditSession.tsx',
-  'src/components/editor/SlicesSidebarSection.tsx',
+  'components/editor/SliceSlideEditor.tsx',
+  'components/editor/SliceSlideComposer.tsx',
+  'components/editor/SlicePresentation.tsx',
+  'components/editor/CreateSliceSheet.tsx',
+  'components/editor/SliceView.tsx',
+  'components/editor/SliceEditSession.tsx',
+  'components/editor/SlicesSidebarSection.tsx',
 ])
 
 /** What a slide must never be called where a reader can see it. */
@@ -234,18 +239,18 @@ export function slidesCalledSomethingElse(sources) {
 }
 
 const surfaceSources = () =>
-  SLIDE_SURFACES.map((file) => ({
-    file,
-    code: readFileSync(resolve(ROOT, file), 'utf8'),
-  }))
+  SLIDE_SURFACES.map((file) => ({ file, code: appSource(file) }))
 
 test('every slide surface this check names is still a file', () => {
   // The failure mode this whole file exists to prevent, one level up: a check
   // that reads nothing passes exactly as loudly as a codebase that is clean.
+  // It is a sharper question than it was — the surfaces ship with a pinned
+  // release now, so a rename upstream empties this list without anything in
+  // this repository changing.
   for (const file of SLIDE_SURFACES) {
     assert.ok(
-      statSync(resolve(ROOT, file), { throwIfNoEntry: false })?.isFile(),
-      `${file} is named as a slide surface and does not exist — move the entry or drop it`,
+      hasAppSource(file),
+      `${file} is named as a slide surface and the application does not ship it — move the entry or drop it`,
     )
   }
 })
@@ -303,13 +308,18 @@ test('the reader check leaves a cell’s frame alone', () => {
  * at all.
  */
 test('no slice component with reader-facing prose is missing from the list', () => {
-  const dir = resolve(ROOT, 'src/components/editor')
+  // `appSourceFiles` refuses an empty walk, which is what this guard-on-the-
+  // guard needs most: a directory that has moved inside the package would
+  // otherwise leave the list covering nothing and reporting nothing.
+  const components = appSourceFiles(
+    (path) => /\/Slice[^/]*\.tsx$/.test(path) && !path.includes('.test.'),
+    'components/editor',
+  )
   const missing = []
-  for (const name of readdirSync(dir)) {
-    if (!/^Slice.*\.tsx$/.test(name) || name.includes('.test.')) continue
-    const file = relative(ROOT, join(dir, name))
+  for (const path of components) {
+    const file = path.slice(APP_SOURCE_ROOT.length + 1)
     if (SLIDE_SURFACES.includes(file)) continue
-    const strings = readerFacingStrings(file, readFileSync(join(dir, name), 'utf8'))
+    const strings = readerFacingStrings(file, appSource(file))
     if (strings.length > 0) missing.push(file)
   }
   assert.deepEqual(

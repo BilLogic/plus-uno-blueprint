@@ -13,16 +13,21 @@
  *    list — goes to the database in one call.
  * 2. A resource URL that is not `https:` must be refused rather than coerced.
  *
+ * All three modules are the APPLICATION's, read through `@/…` — the alias
+ * `vite.config.ts` points at the installed package's source now that this
+ * repository holds no `src`. The stubbed client below is unchanged: what is
+ * asserted is still what the application sends to the database.
+ *
  * Run: npm test
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { validateResourceUrl } from '../../src/lib/resourceUrl.ts'
+import { validateResourceUrl } from '@/lib/resourceUrl.ts'
 import {
   updateCellContent,
   updateCellResources,
-} from '../../src/lib/cellContentMutations.ts'
-import { updateCellSpec } from '../../src/lib/cellSpecMutations.ts'
+} from '@/lib/cellContentMutations.ts'
+import { updateCellSpec } from '@/lib/cellSpecMutations.ts'
 
 test('bare host is upgraded to https', () => {
   const result = validateResourceUrl('figma.com/file/abc')

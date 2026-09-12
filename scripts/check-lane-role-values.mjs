@@ -82,16 +82,21 @@
  *   other guards read their word lists from. A map of what retired has to be
  *   able to spell what retired.
  *
- *   `support_systems` and `step_visual` are named by `scripts/lane-roles.mjs`
- *   and `src/lib/laneRoles.ts`, in one sentence each, and the sentence is the
- *   history: both were listed as canonical roles for months while no lane
- *   ever held either, which is why the vocabulary is now a constraint instead
- *   of three lists that disagreed. Neither was renamed, so neither has a
- *   replacement to point at, and a comment that said "two roles nothing used"
- *   without naming them would be explaining nothing. `src/lib/laneRoles.ts`
- *   is additionally the one file where a resurrected value could not hide:
- *   `scripts/tests/lane-roles.test.mjs` holds its `CANONICAL_LANE_ROLES` to
- *   the CHECK constraint, value for value.
+ *   `support_systems` and `step_visual` are named by `scripts/lane-roles.mjs`,
+ *   in one sentence each, and the sentence is the history: both were listed
+ *   as canonical roles for months while no lane ever held either, which is
+ *   why the vocabulary is now a constraint instead of three lists that
+ *   disagreed. Neither was renamed, so neither has a replacement to point at,
+ *   and a comment that said "two roles nothing used" without naming them
+ *   would be explaining nothing.
+ *
+ *   The application's `laneRoles.ts` used to carry the same two words and the
+ *   same exemption. It is no longer a file in this repository — the
+ *   application is read out of the installed package now — so the sweep,
+ *   whose subject is what `git ls-files` tracks HERE, no longer meets it and
+ *   the exemption went with it. Nothing is unguarded by that: the vocabulary
+ *   that file declares is still held to the CHECK constraint value for value
+ *   by `scripts/tests/lane-roles.test.mjs`, which reads it from the package.
  *
  * AND THIS FILE, for the values it exempts and no others. The house rule is
  * that a permanent exemption is explained where it is applied, which means
@@ -181,18 +186,6 @@ export const LANE_ROLE_VALUE_EXEMPTIONS = [
     because:
       'the reader of the vocabulary explains, in one sentence, that this role ' +
       'was listed as canonical for months while no lane ever held it',
-  },
-  {
-    identifier: 'src/lib/laneRoles.ts support_systems',
-    because:
-      'CANONICAL_LANE_ROLES says why it no longer lists this role, and the ' +
-      'list itself is held to the CHECK constraint by lane-roles.test.mjs',
-  },
-  {
-    identifier: 'src/lib/laneRoles.ts step_visual',
-    because:
-      'CANONICAL_LANE_ROLES says why it no longer lists this role, and the ' +
-      'list itself is held to the CHECK constraint by lane-roles.test.mjs',
   },
 ]
 

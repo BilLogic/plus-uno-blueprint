@@ -24,41 +24,60 @@ import {
 } from '../measure-template-divergence.mjs'
 import { RECONCILED_FILES } from '../reconciled-files.mjs'
 
-test('the specific bucket wins over the src catch-all', () => {
-  assert.equal(bucketOf('src/lib/agent/tools/read.ts'), 'src/lib')
-  assert.equal(bucketOf('src/components/editor/EditorShell.tsx'), 'src/components')
-  assert.equal(bucketOf('src/content/coverContent.ts'), 'src (other)')
+test('every bucketed tree is one this repository still holds', () => {
+  // The eight `src/…` buckets went with `src/`. This is the guard against them
+  // coming back as a bucket that can never match, which would read as coverage
+  // and be none.
+  assert.equal(bucketOf('deployment/deployment.ts'), 'deployment')
+  assert.equal(bucketOf('deployment/lib/blueprintContract.ts'), 'deployment')
   assert.equal(bucketOf('package.json'), 'root files')
   assert.equal(bucketOf('docs/engineering/standards.md'), 'docs')
+  assert.equal(bucketOf('scripts/app-source.mjs'), 'scripts')
+  // Nothing under the old application root is bucketed any more, so nothing
+  // there is in scope either.
+  assert.equal(bucketOf('src/lib/agent/tools/read.ts'), null)
+  assert.equal(inScope('src/lib/agent/tools/read.ts'), false)
 })
 
-test('supabase and generated trees stay out of scope', () => {
+test('supabase, generated trees and the application stay out of scope', () => {
   assert.equal(inScope('supabase/migrations/20250602160000_initial.sql'), false)
   assert.equal(inScope('dist/index.js'), false)
   assert.equal(inScope('.claude/settings.json'), false)
   assert.equal(inScope('public/blueprint-images/one.png'), false)
-  assert.equal(inScope('src/lib/blueprintContract.ts'), true)
+  // The application is an installed dependency. Measuring divergence against
+  // it would be comparing the package to itself.
+  assert.equal(
+    inScope('node_modules/agentic-service-blueprinting/src/lib/blueprintContract.ts'),
+    false,
+  )
+  assert.equal(inScope('deployment/lib/blueprintContract.ts'), true)
   assert.equal(inScope('hooks/secret_guard.py'), true)
 })
 
 test('a shared path is identical or differing, never counted as only-one-side', () => {
   const rows = tally(
     new Map([
-      ['src/lib/same.ts', 'aaa'],
-      ['src/lib/drifted.ts', 'bbb'],
-      ['src/data/ours.ts', 'ccc'],
+      ['deployment/same.ts', 'aaa'],
+      ['deployment/drifted.ts', 'bbb'],
+      ['docs/ours.md', 'ccc'],
     ]),
     new Map([
-      ['src/lib/same.ts', 'aaa'],
-      ['src/lib/drifted.ts', 'zzz'],
+      ['deployment/same.ts', 'aaa'],
+      ['deployment/drifted.ts', 'zzz'],
       ['hooks/theirs.py', 'ddd'],
     ]),
   )
   assert.deepEqual(
-    { ...rows.get('src/lib'), differing: rows.get('src/lib').differing },
-    { identical: 1, differ: 1, oursOnly: 0, theirsOnly: 0, differing: ['src/lib/drifted.ts'] },
+    { ...rows.get('deployment'), differing: rows.get('deployment').differing },
+    {
+      identical: 1,
+      differ: 1,
+      oursOnly: 0,
+      theirsOnly: 0,
+      differing: ['deployment/drifted.ts'],
+    },
   )
-  assert.equal(rows.get('src/data').oursOnly, 1)
+  assert.equal(rows.get('docs').oursOnly, 1)
   assert.equal(rows.get('hooks').theirsOnly, 1)
 })
 

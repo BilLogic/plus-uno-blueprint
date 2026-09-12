@@ -32,15 +32,36 @@ import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { APP_SOURCE_ROOT, appSource } from '../app-source.mjs'
 
 const REPO_ROOT = process.cwd()
 const read = (path) => readFileSync(resolve(REPO_ROOT, path), 'utf8')
 
-/** Every place that TEACHES the kinds, as opposed to storing them. */
+/**
+ * Every place that TEACHES the kinds, as opposed to storing them — each with
+ * the reader that reaches it, because the three no longer live in one tree.
+ *
+ * Two of them moved when this repository stopped holding the application.
+ * `canvas-adapter.md` is this deployment's own override of the package's copy
+ * and sits in `deployment/`; `specs.ts` is the application's, read out of the
+ * installed package. `CONTEXT.md` is this repository's and never moved.
+ *
+ * The split makes the check worth MORE than it was. It used to hold three
+ * neighbours to each other; it now holds the prompt this deployment splices
+ * in, the tool descriptions the application actually ships, and this
+ * repository's own vocabulary to one direction. A pin bump that inverted the
+ * package's sentence would go red here.
+ */
 const TEACHING_SURFACES = [
-  'CONTEXT.md',
-  'src/lib/agent/canvas-adapter.md',
-  'src/lib/agent/tools/specs.ts',
+  { path: 'CONTEXT.md', read: () => read('CONTEXT.md') },
+  {
+    path: 'deployment/agent/canvas-adapter.md',
+    read: () => read('deployment/agent/canvas-adapter.md'),
+  },
+  {
+    path: `${APP_SOURCE_ROOT}/lib/agent/tools/specs.ts`,
+    read: () => appSource('lib/agent/tools/specs.ts'),
+  },
 ]
 
 /**
@@ -67,10 +88,10 @@ export function offendingLines(path, source, pattern) {
 }
 
 test('no surface that teaches the kinds puts the target first', () => {
-  const offenders = TEACHING_SURFACES.flatMap((path) => {
-    const source = read(path)
+  const offenders = TEACHING_SURFACES.flatMap((surface) => {
+    const source = surface.read()
     return TARGET_FIRST.flatMap((pattern) =>
-      offendingLines(path, source, pattern),
+      offendingLines(surface.path, source, pattern),
     )
   })
 
@@ -87,11 +108,11 @@ test('all three surfaces say source-first out loud', () => {
   // Not merely the absence of the wrong sentence: a file that says nothing
   // about direction passes the rule above while leaving a reader to guess,
   // and guessing is what produced the inversion.
-  for (const path of TEACHING_SURFACES) {
+  for (const surface of TEACHING_SURFACES) {
     assert.match(
-      read(path),
+      surface.read(),
       /source-first/i,
-      `${path} teaches the two kinds without saying which end comes first`,
+      `${surface.path} teaches the two kinds without saying which end comes first`,
     )
   }
 })
@@ -99,8 +120,8 @@ test('all three surfaces say source-first out loud', () => {
 test('the retired distinction stays retired', () => {
   // `20260820110000`: "The words temporal and functional are retired from
   // every doc. They named the distinction without making it usable."
-  const offenders = TEACHING_SURFACES.flatMap((path) =>
-    offendingLines(path, read(path), RETIRED_DISTINCTION),
+  const offenders = TEACHING_SURFACES.flatMap((surface) =>
+    offendingLines(surface.path, surface.read(), RETIRED_DISTINCTION),
   )
   assert.deepEqual(offenders, [], offenders.join('\n'))
 })

@@ -7,6 +7,10 @@
  * can quietly lie: undercounting the cascade, and implying an undo it cannot
  * perform.
  *
+ * `deletionSafety.ts` is the APPLICATION's module, reached through `@/…` —
+ * the alias `vite.config.ts` points at the installed package's source, since
+ * this repository no longer carries the application itself.
+ *
  * Run: npm test
  */
 import { test } from 'vitest'
@@ -19,7 +23,7 @@ import {
   splitByRecoverability,
   summarizeImpact,
   summarizeSliceImpact,
-} from '../../src/lib/deletionSafety.ts'
+} from '@/lib/deletionSafety.ts'
 
 test('deleting is unavailable without the archive', () => {
   const result = deletionReadiness(false)

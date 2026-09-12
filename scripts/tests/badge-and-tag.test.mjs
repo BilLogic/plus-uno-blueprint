@@ -11,15 +11,19 @@
  * enumerates the files that exist right now passes for a codebase that has
  * quietly grown a thirty-first offender.
  *
- * 1. **No NAME says chip or pill.** The subject is every source file under
- *    `src`, comments removed, so a component, a prop, a constant, a variant
+ * 1. **No NAME says chip or pill.** The subject is every source file of the
+ *    APPLICATION — read out of the installed package, because that is where
+ *    the application lives now — and of this deployment's own `deployment/`
+ *    root, comments removed, so a component, a prop, a constant, a variant
  *    string, a data attribute or a file name that reintroduces either word
- *    fails — including one written next week. `src` is the whole subject
- *    because `docs/adr` and `supabase/migrations` are DATED RECORDS of what
- *    was decided and applied on a day, and rewriting a record is worse than
- *    the word it removes. The living docs — `docs/guidelines`,
- *    `docs/reference` — were swept by hand with this change and are held by
- *    review, not by this file.
+ *    fails, including one written next week. Both roots, because the rename
+ *    is the design system's and a deployment writes design-system code too:
+ *    a `LaneChip` is the same offence in `deployment/lib` as in the package.
+ *    Neither `docs/adr` nor `supabase/migrations` is in the subject, because
+ *    both are DATED RECORDS of what was decided and applied on a day, and
+ *    rewriting a record is worse than the word it removes. The living docs —
+ *    `docs/guidelines`, `docs/reference` — were swept by hand with this
+ *    change and are held by review, not by this file.
  *
  * 2. **No COMMENT says chip or pill either.** The same walk, read on its other
  *    axis: `commentsOnly()` is the exact complement of `stripComments`, so one
@@ -29,14 +33,15 @@
  *    any tree that explains its own history. That argument is right about the
  *    DOCUMENTS and wrong about the axis. What it protects is the rename map
  *    and this file, and both live under `scripts/`, outside a subject that was
- *    always `src`. Inside `src` a comment is not history — it is the sentence
- *    the next reader learns the name from, which is how six of them went on
- *    calling the badge a chip after #182 renamed everything around them.
+ *    always the source tree. Inside it a comment is not history — it is the
+ *    sentence the next reader learns the name from, which is how six of them
+ *    went on calling the badge a chip after #182 renamed everything around
+ *    them.
  *
  *    NO EXEMPTION LIST, and that is a property of the subject rather than an
  *    omission. The four documents this repository exempts everywhere else —
  *    a guard's own file, `.changeset/`, `CHANGELOG.md` and
- *    `supabase/migrations/` — are outside `src` by construction, so nothing
+ *    `supabase/migrations/` — are outside both roots by construction, so nothing
  *    whose job is to write the retired word down is ever read. `lane_role`'s
  *    catalogue comment still says "pill cells" because no migration has
  *    changed it, and the scripts that quote that comment as a fixture quote it
@@ -55,11 +60,15 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { readFileSync, readdirSync, statSync } from 'node:fs'
-import { join, relative, resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import {
+  APP_SOURCE_ROOT,
+  appSourceFiles,
+  deploymentSourceFiles,
+} from '../app-source.mjs'
 
 const ROOT = resolve(new URL('../..', import.meta.url).pathname)
-const SRC = resolve(ROOT, 'src')
 
 /* --------------------------------------------------------------- the tree */
 
@@ -95,32 +104,25 @@ export function commentsOnly(source) {
   return out.join('')
 }
 
-function walk(dir) {
-  return readdirSync(dir).flatMap((entry) => {
-    const path = join(dir, entry)
-    // A vanished entry is skipped — see `designSystemSources` for whose file
-    // it is and why it vanishes mid-walk.
-    let directory
-    try {
-      directory = statSync(path).isDirectory()
-    } catch {
-      return []
-    }
-    if (directory) return walk(path)
-    if (!/\.(tsx?|css)$/.test(entry)) return []
-    return [path]
-  })
-}
+/** A TypeScript source or a stylesheet, in either root. */
+const IS_DESIGN_SOURCE = (path) => /\.(tsx?|css)$/.test(path)
 
 /**
- * Every TypeScript and stylesheet file under `src`, split into its two halves:
- * `code` is the file with comments stripped, `comments` is what the stripping
- * removed.
+ * Every TypeScript and stylesheet file in the subject, split into its two
+ * halves: `code` is the file with comments stripped, `comments` is what the
+ * stripping removed.
  *
- * ONE walk, because the name assertion and the comment assertion are one
+ * ONE pass, because the name assertion and the comment assertion are one
  * corpus read on two axes; a second walk would be a second thing to keep in
  * step, and the sampling gap asserted below would then have to be asserted
  * twice.
+ *
+ * BOTH walks go through `scripts/app-source.mjs`, which refuses to return an
+ * empty list. That is not politeness: the application's root is now inside
+ * `node_modules`, where a tree nobody has installed, a renamed release or a
+ * half-finished install leaves it absent — and a guard shaped `for (file of
+ * walk(root)) assert(...)` reports an absent root as a clean codebase. The
+ * floor asserted below is the same argument said twice on purpose.
  *
  * Test files are IN, unlike `sourceFiles()`'s roots: a test that asserts
  * against `techPillFace` is carrying the retired name just as surely as the
@@ -128,28 +130,18 @@ function walk(dir) {
  * this ticket found.
  */
 export function designSystemSources() {
-  return walk(SRC)
-    .map((path) => {
-      /*
-        A file listed by the walk and gone by the time it is read is SKIPPED,
-        not thrown on. `harness-claims.test.mjs` writes a probe component into
-        `src/components/cover/` and deletes it again to prove the claim checker
-        goes red, and vitest runs files in parallel — so this walk really does
-        see a path that no longer exists, at a rate of roughly one run in four.
-        The subject is every file that IS there.
-      */
-      try {
-        const source = readFileSync(path, 'utf8')
-        return {
-          file: relative(ROOT, path).split('\\').join('/'),
-          code: stripComments(source),
-          comments: commentsOnly(source),
-        }
-      } catch {
-        return null
-      }
+  return [
+    ...appSourceFiles(IS_DESIGN_SOURCE),
+    ...deploymentSourceFiles(IS_DESIGN_SOURCE),
+  ]
+    .map((file) => {
+      // Read, not tried: both roots are checked-in or installed trees that no
+      // test writes into, so a file the walk just listed and cannot read is a
+      // broken install, and this check should say so rather than shrink its
+      // own subject in silence.
+      const source = readFileSync(resolve(ROOT, file), 'utf8')
+      return { file, code: stripComments(source), comments: commentsOnly(source) }
     })
-    .filter((one) => one !== null)
     .sort((a, b) => a.file.localeCompare(b.file))
 }
 
@@ -202,13 +194,23 @@ test('the tree the name check reads is the tree, not a handful of files', () => 
   // The failure this whole file exists to prevent, one level up: a walker that
   // found nothing would pass exactly as loudly as a codebase that is clean.
   const sources = designSystemSources()
-  assert.ok(sources.length > 200, `only ${sources.length} source files found under src`)
+  assert.ok(
+    sources.length > 200,
+    `only ${sources.length} source files found — the application is read out of ` +
+      `${APP_SOURCE_ROOT}, so a short count means a missing or partial install`,
+  )
   for (const root of ['components/', 'lib/', 'contexts/', 'hooks/', 'styles/', 'types/']) {
     assert.ok(
-      sources.some((one) => one.file.startsWith(`src/${root}`)),
-      `src/${root} is not in the subject — the sampling gap that let a guard read only components/`,
+      sources.some((one) => one.file.startsWith(`${APP_SOURCE_ROOT}/${root}`)),
+      `${APP_SOURCE_ROOT}/${root} is not in the subject — the sampling gap that let a guard read only components/`,
     )
   }
+  // And this deployment's own code, which is the half no package release can
+  // put back if it drops out of the walk.
+  assert.ok(
+    sources.some((one) => one.file.startsWith('deployment/')),
+    'the deployment’s own source is not in the subject',
+  )
 })
 
 /* ------------------------------------------- 2. chip and pill, in a comment */
