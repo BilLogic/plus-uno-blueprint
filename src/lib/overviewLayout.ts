@@ -1,9 +1,9 @@
 /** Service overview canvas spacing — compact row/grid rhythm. */
 
 /**
- * Horizontal breathing room between scenario panels in a phase row.
- * Large enough to keep adjacent hover/click targets visually separate after
- * the overview is scaled down, while still carrying the flow connector.
+ * Horizontal gap between scenario panels in a phase row. Wide enough that,
+ * scaled down to overview zoom, neighbouring panels are still separate hover
+ * and click targets, with room left for the flow connector between them.
  */
 export const OVERVIEW_SCENARIO_GAP = 360
 
@@ -13,9 +13,9 @@ export const OVERVIEW_SCENARIO_GAP = 360
 export const OVERVIEW_PHASE_ROW_GAP = 320
 
 /**
- * Phase-frame padding around its scenario row. This exposed neutral band is
- * the phase-level interaction target, so it must read separately from the
- * scenario cards nested inside it.
+ * Phase frame padding around its scenario row. The exposed band is the
+ * phase's own target — hover and click open the phase — so it has to read as
+ * separate from the scenario panels nested inside it.
  */
 export const OVERVIEW_PHASE_SECTION_INSET = 120
 export const OVERVIEW_PHASE_SECTION_TOP_INSET = 28

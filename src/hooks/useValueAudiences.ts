@@ -10,9 +10,14 @@ import type { Json } from '@/types/database'
  * It used to be only the second half — every distinct string in
  * `value_props[].for` — which suggested the drift back at you: "tutor" and
  * "Regular Tutor" were offered as two audiences because they had been typed as
- * two. The registry is the answer to who exists; the leftovers stay in the
+ * two, and a party the registry named was not offered until somebody had
+ * typed it. The registry is the answer to who exists; the leftovers stay in the
  * list so an author can see (and correct) what does not match it yet, rather
  * than losing a value that already exists.
+ *
+ * A leftover is matched against the registry's names and aliases without
+ * regard to case, for the same reason owners became tags: "Tutor", "Tutors"
+ * and "tutor" are one audience, not three.
  */
 export function useValueAudiences(): QueryResult<string[]> {
   const fallback = useCallback(() => [], [])
