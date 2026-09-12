@@ -127,8 +127,9 @@ repositories so that one harness review uses one language.
 
 **pointer** — a line held in always-loaded context that names material outside
 it and the branch that should reach it: a row of `AGENTS.md` § Progressive
-loading, a path beside a security line. Its wording, not its target, decides
-whether a session gets there. A *reference* is what a pointer points at.
+loading, a path beside a rule that holds for every skill. Its wording, not its
+target, decides whether a session gets there. A *reference* is what a pointer
+points at.
 
 **ladder** — where a piece of writing sits by how immediately a session needs
 it: an in-file step, then an in-file reference, then a **disclosed** reference
