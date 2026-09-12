@@ -36,11 +36,16 @@ describe("this deployment's default config", () => {
 
 describe("this deployment's search index", () => {
   it('names the one model its database was embedded with', () => {
-    // The database refuses a question embedded with any other model, so this
-    // list is a statement of fact about the index rather than a preference.
-    // If the index is ever re-embedded, this is the line that has to move with
-    // it — and a search that suddenly refuses everything is what a stale line
-    // here looks like from the outside.
+    // The database refuses a question embedded with any model it holds no set
+    // for, so this list is a statement of fact about the index rather than a
+    // preference. If the index is ever re-embedded, this is the line that has
+    // to move with it — and a search that suddenly refuses everything is what
+    // a stale line here looks like from the outside.
+    //
+    // ONE ENTRY IS NOT A LIMIT OF THE SCHEMA. The index can hold a set per
+    // model, and this asserts the LIST rather than its length precisely so
+    // that adding one is a deliberate edit here: the day a second set is
+    // built, this line moves with it, and not a day before.
     const search = unoDeploymentConfig.agent?.search
     expect(search?.enabled).toBe(true)
     expect(search?.indexes).toEqual([

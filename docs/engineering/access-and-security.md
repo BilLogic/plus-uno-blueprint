@@ -236,13 +236,14 @@ unchanged.
 
 | Object | What it is |
 | --- | --- |
-| `corpus_chunks` | One row per embedded cell: breadcrumb `title`, the enriched `chunk` text, a 768-dim `embedding` (Vertex `text-embedding-005`), HNSW index. **RLS-sealed — nothing reads it directly.** |
+| `corpus_chunks` | One row per embedded cell: breadcrumb `title`, the enriched `chunk` text, and a 768-dim `embedding` in the model `index_meta` names — `gemini-embedding-001` since 2026-09-12. HNSW index. **RLS-sealed — nothing reads it directly.** |
 | `blueprint_chunks_src` | Read-only view joining each non-empty cell up its hierarchy into the chunk + title. `service_role` only. |
-| `index_meta` | Which model built the index. The hybrid RPC rejects a caller declaring a different one. |
+| `chunk_embeddings` | One row per (chunk, model) for every embedding model BESIDE the one `index_meta` names — the second index, held so people searching on another provider's key can be served. Keyed by source, source key and model, cascading from the chunk, HNSW index, RLS-sealed. Empty in this deployment. |
+| `index_meta` | Which model the index's own vectors were built with. The portal rejects a caller declaring a model it holds no set for. |
 | `match_corpus_chunks()` | Vector-only lookup. Legacy; the portal superseded it for the bot. |
 | `prune_orphans()` | Deletes exactly the chunks whose cell no longer qualifies. Returns the count. |
 | `index_health()` | Counts only — total, eligible, orphaned, stale, last embed. |
-| `public.search_blueprint()` | **The portal — every consumer's one search entry point.** Three modes in one function: ranked search (vector + prose + structural-name, fused by reciprocal rank), scoped search (`filter_phase` / `filter_scenario` / `filter_path_kind` / `filter_lane_role` apply to all retrievers), and filter-only predicate select (no `q`, no embedding → the COMPLETE matching set in structural order). Every row carries `matched_by` (which retrievers agreed) and `total_matched` (the corpus-wide count behind the top-k, so "113 cells mention Zoom, here are 15" is sayable). The legacy ilike function of this name and the transitional `blueprint_hybrid_search` are both gone. |
+| `public.search_blueprint()` | **The portal — every consumer's one search entry point**, and the only one that takes `embed_model`, so the only one that can choose between models. Three modes in one function: ranked search (vector + prose + structural-name, fused by reciprocal rank), scoped search (`filter_phase` / `filter_scenario` / `filter_path_kind` / `filter_lane_role` apply to all retrievers), and filter-only predicate select (no `q`, no embedding → the COMPLETE matching set in structural order). Every row carries `matched_by` (which retrievers agreed) and `total_matched` (the corpus-wide count behind the top-k, so "113 cells mention Zoom, here are 15" is sayable). The legacy ilike function of this name and the transitional `blueprint_hybrid_search` are both gone. |
 
 **The pattern to keep: narrow doors, not wide grants.** The table is sealed and
 every capability is a `security definer` function that permits exactly one
@@ -271,6 +272,52 @@ A change to `blueprint_chunks_src` alters chunk *text* without touching
 `cells.updated_at`, so it requires a **full** re-embed — the nightly pass is
 incremental and would skip every row. Run the uno-bot repo's *embed blueprint*
 workflow with `full: true`.
+
+### Serving a second embedding model
+
+A person using the in-app agent embeds their question with **their own browser
+key**. That key decides which model they can reach, and a question embedded by
+one model cannot be scored against cells embedded by another — the two are
+different vector spaces, and the portal refuses the pairing (`embedding model
+mismatch`) rather than ranking the numbers as if they meant something. So a
+provider is served only if this index holds a set built with a model that
+provider can reach.
+
+Today it holds one set, `gemini-embedding-001`, so people on a Google key get
+meaning matching and people on an OpenAI key are **not offered the search tool
+at all** — quietly, without a keyword consolation dressed as the same search.
+Anthropic publishes no embedding model and is never served.
+
+Turning a second provider on is three steps, and **the order is the whole
+instruction**:
+
+1. **Set the key as a server secret.** `OPENAI_API_KEY` on the uno-bot repo
+   (Settings → Secrets and variables → Actions). No agent handles it, and it is
+   never the browser's key: a person's key embeds one question and never
+   reaches this job.
+2. **Run the backfill for that model.** The uno-bot repo's *embed blueprint*
+   workflow already carries the pass —
+   `backfill-semantic-search.mjs --model=text-embedding-3-small` — and it has
+   been skipping nightly for want of the secret. With the secret set it fills
+   `chunk_embeddings` beside the existing set. Wait for it to finish.
+3. **Then list the index**, in `src/deployment.ts`:
+   `agent.search.indexes` gains
+   `{ provider: 'openai', model: 'text-embedding-3-small', dimensions: 768 }`.
+
+**Why that order and not any other.** The list states what the database
+*holds*. It is not a wish and not a preference — it is what a browser reads to
+decide whether to embed at all. List an index before its vectors exist and
+every meaning search from that provider raises `embedding model mismatch`, and
+the person sees a broken tool rather than a missing one. Build before listing
+and the worst case at every moment is the state we are in now: nothing offered,
+nothing broken. Removing a provider runs the same way backwards — unlist first,
+then delete the set.
+
+All three names have to agree. The model string in the config is matched as
+text against the `model` column the vectors were written under, and
+`dimensions` is the width both sides ask their provider for — 768 here, which
+is *not* OpenAI's default for `text-embedding-3-small` and is sent explicitly
+by both the browser (`src/lib/agent/embedQuestion.ts`) and the backfill.
 
 ## Authoring writes
 

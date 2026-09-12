@@ -43,13 +43,23 @@ export const unoDeploymentConfig: DeploymentConfig = {
   },
   agent: {
     // This database carries `search_blueprint`, so the tool is real here. The
-    // one index it holds is named exactly as the database records it: a
-    // question embedded with any other model, or any other size, is refused
-    // rather than ranked as noise.
+    // index it holds is named exactly as the database records it: a question
+    // embedded with any other model, or any other size, is refused rather than
+    // ranked as noise.
     //
-    // Only a person holding a Google key has their question embedded; the
-    // keyword and structural arms answer for everyone else, which is what the
-    // in-app agent had before meaning search reached it at all.
+    // ONE ENTRY, AND THAT IS A STATEMENT ABOUT THE DATABASE. Only a person
+    // holding a Google key has their question embedded and is offered the
+    // tool. A person on any other provider is not offered it — quietly, not
+    // handed the keyword arms as a consolation — because a list that names
+    // some providers and not others is `agentSearchPlan`'s `offered: false`.
+    // An empty list would be the different case, where nobody is singled out
+    // and keyword search is what ranked search means.
+    //
+    // The schema can hold a second model's set beside this one, so an OpenAI
+    // entry here is legal. It is absent because no such set has been built,
+    // and listing an index with no vectors behind it makes every meaning
+    // search from that provider raise. The order to turn one on, and why it is
+    // that order, is in docs/engineering/access-and-security.md.
     search: {
       enabled: true,
       indexes: [{ provider: 'google', model: 'gemini-embedding-001', dimensions: 768 }],

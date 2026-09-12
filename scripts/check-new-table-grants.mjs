@@ -90,16 +90,25 @@ export function withoutComments(sql) {
  * A `create or replace view` on a view that already exists grants nothing new,
  * so naming it here can only ask for a revoke that is already owed — the check
  * is series-wide, and one revoke anywhere at or after the creation covers it.
+ *
+ * THE SCHEMA IS READ, NOT SKIPPED. The qualifier used to be optional in the
+ * pattern and thrown away, which meant `create table semantic_search.foo`
+ * matched with `semantic_search` captured as the relation name — a schema
+ * reported as a table nobody ever created, and a revoke on the real table
+ * unable to clear it. The rule is about `public` because that is the schema
+ * whose relations the platform hands `anon` on creation; a relation created
+ * anywhere else is outside it, so it is skipped rather than renamed.
  */
 export function relationsCreated(sql) {
   const created = []
   sql = withoutComments(sql)
   const pattern =
-    /\bcreate\s+(?:or\s+replace\s+)?(?:(temp(?:orary)?)\s+)?(?:unlogged\s+)?(?:materialized\s+)?(?:table|view)\s+(?:if\s+not\s+exists\s+)?(?:"?public"?\s*\.\s*)?"?([a-z_][a-z0-9_]*)"?/gi
+    /\bcreate\s+(?:or\s+replace\s+)?(?:(temp(?:orary)?)\s+)?(?:unlogged\s+)?(?:materialized\s+)?(?:table|view)\s+(?:if\s+not\s+exists\s+)?(?:"?([a-z_][a-z0-9_]*)"?\s*\.\s*)?"?([a-z_][a-z0-9_]*)"?/gi
   let match
   while ((match = pattern.exec(sql)) !== null) {
     if (match[1]) continue
-    created.push(match[2].toLowerCase())
+    if (match[2] !== undefined && match[2].toLowerCase() !== 'public') continue
+    created.push(match[3].toLowerCase())
   }
   return created
 }
@@ -133,8 +142,10 @@ export function relationsRevoked(sql) {
       ANON_WRITE_PRIVILEGES.every((privilege) => listed.includes(privilege))
     if (!complete) continue
     for (const named of relations.replace(/^\s*table\s+/i, '').split(',')) {
-      const name = /(?:"?public"?\s*\.\s*)?"?([a-z_][a-z0-9_]*)"?\s*$/i.exec(named.trim())
-      if (name) revoked.add(name[1].toLowerCase())
+      const name = /(?:"?([a-z_][a-z0-9_]*)"?\s*\.\s*)?"?([a-z_][a-z0-9_]*)"?\s*$/i.exec(named.trim())
+      if (!name) continue
+      if (name[1] !== undefined && name[1].toLowerCase() !== 'public') continue
+      revoked.add(name[2].toLowerCase())
     }
   }
   return revoked
