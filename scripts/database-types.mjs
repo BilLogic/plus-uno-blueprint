@@ -8,7 +8,8 @@
  * account can reach, and the `--db-url` form needs Docker. Every hand edit was
  * careful and every one of them said so in the header. The result was still a
  * file describing a schema that had moved: eight columns were missing outright
- * — `cells.origin`, `cells.cell_key`, `stakeholders.parent_id` and `origin` on
+ * — `cells.origin`, `cells.cell_key`, the stakeholders link then spelled
+ * `parent_id` (`part_of_id` since `20260912210000`) and `origin` on
  * five more tables — and two foreign-key names still spelled a relation that a
  * migration had renamed.
  *

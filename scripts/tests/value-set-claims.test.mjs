@@ -216,7 +216,7 @@ test('a rename pair around an arrow is neither a list nor a scope', () => {
 
 test('a bare column scopes only through a predicate', () => {
   // "`kind`, `note`" — a column list; `kind` is a member, not a subject.
-  assert.deepEqual(markdown('`id`, `service_id`, `name`, `kind`, `note`, plus the `parent_id` and `updated_at`.'), [])
+  assert.deepEqual(markdown('`id`, `service_id`, `name`, `kind`, `note`, plus the `part_of_id` and `updated_at`.'), [])
   // "the retired `slice_type` and `check_name` spellings, and `origin` on slices"
   assert.deepEqual(markdown('still writes the retired `slice_type` and `check_name` spellings, and `origin` on slices.'), [])
   assert.equal(markdown('`kind`: `happy` / `variant` / `unhappy`').length, 1)

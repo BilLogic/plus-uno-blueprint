@@ -113,8 +113,8 @@ const gatedPolicies = (name) => [
 const agentBaseline = () => ({
   tables: [table('agent_sessions'), table('agent_messages'), table('lanes')],
   policies: [
-    ...ownerPolicies('agent_sessions', 'owns_agent_session(user_id)'),
-    ...ownerPolicies('agent_messages', 'owns_agent_session(s.user_id)'),
+    ...ownerPolicies('agent_sessions', 'owns_agent_session(created_by)'),
+    ...ownerPolicies('agent_messages', 'owns_agent_session(s.created_by)'),
     ...gatedPolicies('lanes'),
   ],
   grants: [

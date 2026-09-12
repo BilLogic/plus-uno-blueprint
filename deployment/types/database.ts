@@ -23,9 +23,9 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * times — three extensions this deployment made (`cells.search_tsv`,
  * `services.origin`, `slices.stakeholder_id`), four functions of its own,
  * two relations the template has and this deployment does not, and two
- * columns the template has since respelled and this deployment has not
- * adopted (`stakeholders.parent_id`, `agent_sessions.user_id`). Not one of
- * those thirteen was a defect in either file. A check with no true answer
+ * columns spelled differently on each side. Those last two are now aligned:
+ * an actor is `part_of` another, and a session says who `created_by` it.
+ * Not one of those thirteen was a defect in either file. A check with no true answer
  * available to it is the thing that was broken.
  *
  * Its own reasoning is why a later cleanup must not delete it for having no
@@ -170,21 +170,21 @@ export type Database = {
           id: string
           title: string
           updated_at: string
-          user_id: string | null
+          created_by: string | null
         }
         Insert: {
           created_at?: string
           id: string
           title?: string
           updated_at?: string
-          user_id?: string | null
+          created_by?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           title?: string
           updated_at?: string
-          user_id?: string | null
+          created_by?: string | null
         }
         Relationships: []
       }
@@ -1085,7 +1085,7 @@ export type Database = {
           id: string
           kind: string
           name: string
-          parent_id: string | null
+          part_of_id: string | null
           summary: string | null
           updated_at: string
         }
@@ -1095,7 +1095,7 @@ export type Database = {
           id?: string
           kind: string
           name: string
-          parent_id?: string | null
+          part_of_id?: string | null
           summary?: string | null
           updated_at?: string
         }
@@ -1105,14 +1105,14 @@ export type Database = {
           id?: string
           kind?: string
           name?: string
-          parent_id?: string | null
+          part_of_id?: string | null
           summary?: string | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "stakeholders_parent_id_fkey"
-            columns: ["parent_id"]
+            foreignKeyName: "stakeholders_part_of_id_fkey"
+            columns: ["part_of_id"]
             isOneToOne: false
             referencedRelation: "stakeholders"
             referencedColumns: ["id"]

@@ -286,9 +286,9 @@ create table public.slide_images (
 -- structural one and would have warned six times per scenario.
 create table public.stakeholders (
   id uuid primary key default gen_random_uuid(),
-  parent_id uuid references public.stakeholders (id) on delete set null,
+  part_of_id uuid references public.stakeholders (id) on delete set null,
   name text not null,
-  -- `team` is a container, not a person: a team holds its people via parent_id.
+  -- `team` is a container, not a person: a team holds its people via part_of_id.
   kind text not null check (kind in ('recipient','staff','partner','provider','team')),
   note text,
   aliases text[] not null default '{}',   -- other spellings seen in THIS blueprint
@@ -324,8 +324,8 @@ create table public.agent_sessions (
   updated_at timestamptz not null default now(),
   -- 20260828120000. NULL = written before ownership was recorded; service
   -- accounts only. New rows cannot be NULL — the insert policy is the strict
-  -- `user_id = auth.uid()` and the default supplies it.
-  user_id uuid references auth.users (id) on delete cascade default auth.uid()
+  -- `created_by = auth.uid()` and the default supplies it.
+  created_by uuid references auth.users (id) on delete cascade default auth.uid()
 );
 
 create table public.agent_messages (

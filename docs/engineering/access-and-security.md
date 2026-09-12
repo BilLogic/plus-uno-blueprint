@@ -218,12 +218,13 @@ findings forever).
 **Agent tables** — `agent_sessions` / `agent_messages`, gated PER USER, not
 per tier. Chatting is what a viewer account is for, so a service gate here
 would close a confidentiality hole by deleting the feature; the gate is
-`agent_sessions.user_id` instead, reached through `session_id` for messages,
-via `public.owns_agent_session(uuid)`. No anon policies. A NULL `user_id` means
+`agent_sessions.created_by` instead, reached through `session_id` for
+messages, via `public.owns_agent_session(uuid)`. No anon policies. A NULL
+`created_by` means
 the row predates ownership (2026-08-28) and is readable by service accounts
 only — 33 sessions and 340 messages are in that state, deliberately not
 backfilled because nothing in either table records who wrote it. New rows
-cannot join them: the insert policy is the strict `user_id = auth.uid()`.
+cannot join them: the insert policy is the strict `created_by = auth.uid()`.
 Before `20260828120000` there was one blanket `for all to authenticated using
 (true)` policy per table and any signed-in account could read, edit or delete
 everybody's transcript (#60, #136).
