@@ -28,6 +28,30 @@ Quick picks: *"what is this product?"* →
 [`docs/guidelines/overview.md`](docs/guidelines/overview.md) · *where does code
 live* → [`docs/engineering/codebase-guide.md`](docs/engineering/codebase-guide.md).
 
+## It runs the template
+
+The app is not written here. It comes from
+[agentic-service-blueprinting](https://github.com/BilLogic/agentic-service-blueprinting),
+the open-source template this deployment is one instance of, pinned in
+`package.json` by release tag — a tag rather than a branch, so a consumer
+always knows exactly which code it is running.
+
+A shared file that this repository also carries is held **byte-identical** to
+the template's copy. `npm run check:reconciled` is that promise, and it fails
+CI if either side moves. The set it holds only grows: enrolling a file is how
+a difference stops being something somebody has to remember.
+
+Where a shared file has to change, the change goes **upstream first** — into
+the template, released, then adopted here with a pin bump. The alternative,
+editing the copy, is how a deployment quietly becomes a fork. What stays local
+is what is genuinely this deployment's: its config, its environment, its
+content, its brand, and the database that holds them.
+
+One consequence worth knowing before writing a comment: a file in that set is
+read in two repositories at once, so it **cites no issue, ADR or migration
+number**. Each of those is an address in one repository and means something
+else in the other. Name the decision instead.
+
 ## How `docs/` is arranged
 
 Two lanes, never mixed.
@@ -58,6 +82,7 @@ frontmatter `summary`, and a doc without one fails the index build.
 | `npm run lint` | eslint — the baseline is zero problems |
 | `npm run typecheck` | the type-check; `npm run build` runs it and bundles |
 | `npm run check:harness` | every assembled component is claimed by one composition doc |
+| `npm run check:reconciled` | every shared file is still byte-identical to the template's copy |
 | `npm run docs:index` | regenerate `INDEX.md` after a doc move |
 | `npm run supabase:start` / `:stop` | local Supabase lifecycle (`:reset` cannot rebuild this schema — [ADR 0009](docs/adr/0009-the-migration-series-is-a-narrative.md)) |
 | `npm run apply:pending -- --from=<version>` | what is written and not applied (add `--apply` to write) |
