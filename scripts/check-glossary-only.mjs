@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 /**
- * `CONTEXT.md` defines the blueprint's terms and stops.
+ * `CONTEXT.md` defines this repository's terms and stops.
  *
- * The engineering skills this team runs assume one shape: `AGENTS.md` routes,
- * `CONTEXT.md` defines terms, `docs/adr/` holds decisions. This repository's
- * glossary had grown two reference documents inside it — a rename map of some
- * two hundred lines and an interface-to-schema map of ninety — and every
- * session that opened the file to look up one word paid for both. #365 moved
- * them out: the rename map to `scripts/retired-vocabulary.mjs`, where the
- * checks that enforce it live, and the interface map to
- * `docs/reference/interface-schema-map.md`, where one pointer reaches it.
+ * The engineering skills this repo routes to assume one shape: `AGENTS.md`
+ * routes, `CONTEXT.md` defines terms, `docs/adr/` holds decisions. A glossary
+ * grows reference sections inside it — a rename map, an interface-to-schema
+ * map, reasoning about which words a check should exempt — and every session
+ * that opens the file to look up one word pays for all of them. Each belongs
+ * elsewhere: a rename map beside the checks that enforce it, and the interface
+ * map in the generated document `repoConfig.interfaceMap` names, where one
+ * pointer reaches it.
  *
  * A file that has been cut once grows back unless something holds it. The
- * glossary already SAID it was definitions and nothing else, in its own second
- * paragraph, and said so throughout the year it was two thirds reference. This
- * is that sentence with a build behind it.
+ * glossary already SAID it was definitions only, and went on saying it while
+ * sections of it were something else. This is that sentence with a build
+ * behind it.
  *
  * ── THE GRAMMAR, READ OFF WHAT IS LEFT ──────────────────────────────────────
  *
@@ -27,24 +27,27 @@
  *      and reference documents are disclosed rather than always-open.
  *   2. NO TABLE NAMES A COLUMN. Both evicted maps were tables of
  *      `table.column` spans, and that is the tell: a table whose cells are
- *      schema names restates the catalog, which is what a generated reference
- *      is for. Tables as such are allowed — the file draws two, of where a
- *      spec lives and of who writes what, and neither names a column — because
- *      the rule that catches the real thing is narrower than "no tables" and
- *      needs no exemption to stay true.
+ *      schema names restates the catalogue, which is what a generated
+ *      reference is for. Tables as such are allowed — a glossary may draw one,
+ *      of who writes what, and no cell of it names a column — because the rule
+ *      that catches the real thing is narrower than "no tables" and needs no
+ *      exemption to stay true.
  *   3. EVERY SECTION DEFINES A TERM. A `##` or `###` section with no term row
  *      in it is a body: prose that is about something other than what a word
- *      means. Both evicted sections failed this rule on the day they were
+ *      means. Every evicted section failed this rule on the day it was
  *      written, and it is the one that catches the next one before it is a
  *      hundred lines long.
  *
  * SUBJECT is `CONTEXT.md` alone. It is named here rather than walked for,
  * because the glossary is one file by the shape's own definition: a second
- * glossary would be a second vocabulary.
+ * glossary would be a second vocabulary. Every repository that carries this
+ * check holds its own glossary to it.
  *
- * Sibling of the router's three checks (#366) — same shape, same failure
- * style, same place in `gates` — because `CONTEXT.md` is the first pointer
- * `AGENTS.md` fires and a session that reads the router reads this next.
+ * Sibling of the router's three checks — same shape, same failure style, same
+ * place in CI — because `CONTEXT.md` is the first pointer `AGENTS.md` fires
+ * and a session that reads the router reads this next. Like them it is the
+ * same file in every repository; the one path it names that differs, the
+ * interface map, comes from `scripts/repo-config.mjs`.
  *
  * Run: node scripts/check-glossary-only.mjs   (also: npm run check:glossary)
  */
@@ -52,7 +55,12 @@ import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { repoConfig } from './repo-config.mjs'
+
 const REPO_ROOT = resolve(new URL('..', import.meta.url).pathname)
+
+/** Where a table of column names belongs instead of the glossary. */
+const INTERFACE_MAP = repoConfig.interfaceMap
 
 /** The glossary. One file, by the shape's own definition. */
 export const SUBJECT = 'CONTEXT.md'
@@ -61,7 +69,7 @@ export const SUBJECT = 'CONTEXT.md'
 export const TERM_ROW = /^\*\*[^*\n]+\*\*\s+—\s+\S/
 
 /** Extensions that make a dotted code span a path rather than a column. */
-const PATH_SUFFIX = /\.(?:md|mjs|js|ts|tsx|jsx|json|ya?ml|sql|css|sh|toml|png|svg)$/
+const PATH_SUFFIX = /\.(?:md|mjs|js|ts|tsx|jsx|json|ya?ml|sql|css|sh|py|toml|png|svg)$/
 
 /** Does this code span name a `table.column`? */
 export function namesAColumn(span) {
@@ -98,6 +106,11 @@ export function findings(text, subject = SUBJECT) {
   const out = []
   const lines = text.split('\n')
 
+  const fenceFailure = (line) =>
+    `${subject}:${line} a fenced code block — the glossary is headings, prose and ` +
+    '`**term** — definition` rows. A snippet, a listing or an example is a reference, ' +
+    'and a reference is a document of its own that a pointer reaches.'
+
   let fence = null
   const inFence = []
   lines.forEach((line, index) => {
@@ -105,23 +118,13 @@ export function findings(text, subject = SUBJECT) {
     if (marker) {
       if (fence === null) fence = { char: marker[1][0], line: index + 1 }
       else if (marker[1][0] === fence.char) {
-        out.push(
-          `${subject}:${fence.line} a fenced code block — the glossary is headings, prose and ` +
-            '`**term** — definition` rows. A snippet, a listing or an example is a reference, ' +
-            'and a reference is a document under docs/ that a pointer reaches.',
-        )
+        out.push(fenceFailure(fence.line))
         fence = null
       }
     }
     inFence[index] = fence !== null || Boolean(marker)
   })
-  if (fence !== null) {
-    out.push(
-      `${subject}:${fence.line} a fenced code block — the glossary is headings, prose and ` +
-        '`**term** — definition` rows. A snippet, a listing or an example is a reference, ' +
-        'and a reference is a document under docs/ that a pointer reaches.',
-    )
-  }
+  if (fence !== null) out.push(fenceFailure(fence.line))
 
   lines.forEach((line, index) => {
     if (inFence[index]) return
@@ -132,8 +135,8 @@ export function findings(text, subject = SUBJECT) {
     if (named.length === 0) return
     out.push(
       `${subject}:${index + 1} a table row naming ${named.map((one) => `\`${one}\``).join(', ')} — ` +
-        'a table of column names restates the catalog, which is what ' +
-        'docs/reference/interface-schema-map.md is generated to do. Put the row there ' +
+        'a table of column names restates the catalogue, which is what ' +
+        `${INTERFACE_MAP} is generated to do. Put the row there ` +
         'and leave the glossary the word.',
     )
   })
@@ -163,7 +166,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       `[glossary] ${failures.length} thing(s) in ${SUBJECT} that are not a definition:\n` +
         failures.map((one) => `  ${one}`).join('\n') +
         '\n  -> the glossary defines the words and stops. Everything else is a document ' +
-        'under docs/ with a pointer in AGENTS.md.',
+        'of its own with a pointer in AGENTS.md.',
     )
     process.exit(1)
   }

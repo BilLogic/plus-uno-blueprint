@@ -148,8 +148,10 @@ test('the subject is the swept prose the template also carries, and it is not em
   // Not empty is the anti-vacuity assertion. A sweep whose subject has emptied
   // out reports green on any input, so the shape of the subject is asserted
   // here as well as guarded in the script's own main().
+  // The order is `swept-docs.mjs`'s, root docs first in the order it lists
+  // them, and this assertion follows it rather than restating a second one.
   const documents = subjectDocuments()
-  assert.deepEqual(documents, ['CONTEXT.md', 'README.md', 'AGENTS.md'])
+  assert.deepEqual(documents, ['README.md', 'CONTEXT.md', 'AGENTS.md'])
 })
 
 test('vendored skill config is out of subject, and it really is shared prose', () => {

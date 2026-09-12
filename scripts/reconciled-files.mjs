@@ -2115,4 +2115,34 @@ export const RECONCILED_FILES = [
   // sentence the template words better — an option is a path IDENTITY,
   // `kind:name`, which is what the function actually collects.
   'src/lib/overviewPathFilters.ts',
+  // ── THE HARNESS CHECKS READ THEIR NUMBERS FROM A CONFIG ───────────────────
+  //
+  // Six scripts and the suite that proves them were the same mechanism as the
+  // template's all along, and differed only where each had this repository's
+  // own values typed into it: the router's char budget and its slack, the
+  // prohibition baseline, the folders a prose sweep walks, the heading whose
+  // items are rules rather than routes, and the path a glossary row naming a
+  // column belongs at instead.
+  //
+  // `scripts/repo-config.mjs` is now the one place those live. It is this
+  // repository's own file and never joins this list: a budget copied from
+  // another router passes while measuring nothing. What is shared is the
+  // mechanism that reads it.
+  //
+  // The one prose change the adoption asked for was a rename, not a rewrite:
+  // the router's inline rules sat under a heading of this repository's own
+  // wording, and the exempt section is one category wherever it sits, so the
+  // heading took the shared name and the glossary sentence pointing at it
+  // followed.
+  //
+  // Four of the six are byte-identical today and still not here, because the
+  // citation rule reads them as citing this repository: `swept-docs.mjs` and
+  // two of its readers carry `docs/adr` as a VALUE — the tree a prose sweep
+  // skips, which is a string the code compares against rather than an address
+  // a reader follows — and the router suite builds throwaway repositories
+  // holding `docs/a.md` and `docs/gone.md`, fixtures that exist for the length
+  // of one test and address nothing in either repository. Enrolling them waits
+  // on that distinction being drawn, upstream or in the rule.
+  'scripts/check-pointers.mjs',
+  'scripts/check-router-budget.mjs',
 ]

@@ -3,18 +3,17 @@
  * Pointer sweep over the always-loaded router.
  *
  * A POINTER is a routing item that names material outside the router and the
- * branch that should reach it — a row of § Progressive loading, a numbered step
- * of § Boot protocol, a backticked path beside a security line. Its wording,
- * not its target, decides whether the agent gets there. Three ways a router
- * fails silently, all caught here on every run:
+ * branch that should reach it — a row of a routing table, a bullet of a boot
+ * list, a backticked path beside a rule. Its wording, not its target, decides
+ * whether the agent gets there. Three ways a router fails silently, all caught
+ * here on every run:
  *
  *   1. A POINTER DOES NOT RESOLVE. A path renamed under a pointer leaves the
  *      agent told to load a document that is not there; nothing errors, the
- *      agent guesses. Same failure as a stale schema name in prose
- *      (`a-doc-names-the-schema-it-has.test.mjs`), one layer up. Where the
- *      pointer names a section (`path.md` § Heading), the heading is checked
- *      too, case-insensitively, so a section renamed under a pointer is caught
- *      the same way.
+ *      agent guesses. Same failure as a stale path in prose, one layer up.
+ *      Where the pointer names a section (`path.md` § Heading), the heading is
+ *      checked too, case-insensitively, so a section renamed under a pointer
+ *      is caught the same way.
  *   2. A POINTER BURIES ITS TRIGGER. An always-loaded pointer is scanned, not
  *      read; the first word is where it does its triggering work. "Any task
  *      that writes data" makes the agent read "Any" before it learns the item
@@ -36,25 +35,27 @@
  * stripped, lowercased and reduced to letters and hyphens. That word must not
  * be one of `FILLER`, the words that carry no branch.
  *
- * SECURITY LINES ARE EXEMPT FROM RULES 2 AND 3, and only from those. They are
- * rules rather than routes — they bind before any pointer could fire, which is
- * why they are inline at all — so "state the branch first" does not apply and
- * neither does "carry a pointer". Their pointers, where they have them, still
- * have to resolve: a security line that cites a section is citing it for a
- * reader who needs the body. The exemption is keyed to the section heading
- * naming `EXEMPT_SECTION`, so it is a property of where the item lives rather
- * than a list of item texts that quietly stops matching.
+ * THE RULES THAT HOLD FOR EVERY SKILL ARE EXEMPT FROM RULES 2 AND 3, and only
+ * from those. They are rules rather than routes — they bind before any pointer
+ * could fire, which is why they are inline at all — so "state the branch
+ * first" does not apply and neither does "carry a pointer". Their pointers,
+ * where they have them, still have to resolve: a rule that cites a reference
+ * is citing it for a reader who needs the body. The exemption is keyed to the
+ * section heading naming `EXEMPT_SECTION`, so it is a property of where the
+ * item lives rather than a list of item texts that quietly stops matching.
  *
  * SUBJECTS are the always-loaded tier (`scripts/always-loaded.mjs`), and the
  * sweep is by structure rather than by a list of pointers, so a pointer added
  * tomorrow is swept tomorrow.
  *
- * Mirrors plus-uno's `scripts/check-pointers.mjs` (BilLogic/plus-uno#420) —
- * same pointer grammar, same filler set, same failure shape — so that one
- * harness review reads both repositories the same way. It differs in two
- * places, both because this router has a different shape: pointers here may
- * name a directory (`docs/connectors/`), and triggers are read from every
- * routing item rather than from one named table.
+ * The same file in every repository that carries it — same pointer grammar,
+ * same filler set, same exempt section, same failure shape — so that one
+ * harness review reads every router the same way. `py` is in the extension
+ * list because a router may point at a Python validator or hook, and without
+ * it that pointer would read as prose and go unswept, which is the one failure
+ * this check exists to prevent. A router that names its inline rules something
+ * other than `EXEMPT_SECTION` renames the heading, not the constant: the
+ * category is one category wherever it sits.
  *
  * Run: node scripts/check-pointers.mjs   (also: npm run check:pointers)
  */
@@ -70,7 +71,7 @@ export const REPO_ROOT = resolve(new URL('..', import.meta.url).pathname)
 export const SUBJECTS = ALWAYS_LOADED
 
 /** The section whose items are rules rather than routes. */
-export const EXEMPT_SECTION = 'Security lines'
+export const EXEMPT_SECTION = 'Rules that hold for every skill'
 
 /** Words that carry no branch. An item opening with one has buried its trigger. */
 export const FILLER = new Set([
@@ -80,7 +81,7 @@ export const FILLER = new Set([
 
 /** `path.ext`, or `dir/`, inside backticks, optionally followed by ` § Heading`. */
 const POINTER =
-  /`([A-Za-z0-9_@./-]+(?:\.(?:md|json|mjs|js|ts|tsx|yml|yaml|toml|sh|sql|css)|\/))`(?:\s*§\s*([^`|\n(—–:;]+))?/g
+  /`([A-Za-z0-9_@./-]+(?:\.(?:md|json|mjs|js|ts|tsx|py|yml|yaml|toml|sh|sql|css)|\/))`(?:\s*§\s*([^`|\n(—–:;]+))?/g
 
 /** A section name ends where the sentence resumes. */
 export function sectionName(raw) {

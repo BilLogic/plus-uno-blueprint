@@ -2,8 +2,8 @@
 
 Short by design. This file is the whole always-loaded tier, and every routing
 item in it is a **pointer** — a trigger word, then the document that carries the
-body — or a **security line**, which stays inline by rule because it binds
-before any pointer could fire. Three checks hold that shape:
+body — or one of the **rules that hold for every skill**, which stay inline
+by rule because they bind before any pointer could fire. Three checks hold that shape:
 `scripts/check-router-budget.mjs`, `scripts/check-negation-ratchet.mjs`,
 `scripts/check-pointers.mjs`. Where a rule here fights the code, the code is
 newer; say so and follow the code.
@@ -23,7 +23,7 @@ newer; say so and follow the code.
 4. **Placement** — where a task belongs, when nothing above answers it:
    `docs/engineering/codebase-guide.md`.
 
-## Security lines (non-negotiable — inline by rule, so they bind before any pointer fires)
+## Rules that hold for every skill (non-negotiable — inline by rule, so they bind before any pointer fires)
 
 - Keys and secrets live only in gitignored `.env` / `.env.local` or browser
   localStorage. Anywhere else is a leak — a committable file, chat, the Netlify
