@@ -29,7 +29,7 @@
  * check, because the first is believed.
  */
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
-import { join, relative as relativeTo, resolve } from 'node:path'
+import { dirname, join, relative as relativeTo, resolve } from 'node:path'
 
 /**
  * The two roots an application can be at, in the order the build resolves
@@ -62,6 +62,20 @@ export function appSourceRoot(repoRoot) {
     )
   }
   return found
+}
+
+/**
+ * The directory the application's root sits in, absolute.
+ *
+ * Here that is always `<repo>/node_modules/agentic-service-blueprinting`, and
+ * in a repository that keeps its own `src` it is the repository root. It is
+ * what a pointer INTO the application is resolved against, so `src/lib/…`
+ * reads the same on either side and a check's expected paths are one list
+ * rather than one per deployment. `check-pointers.mjs` is held byte-identical
+ * with the template and asks for it by that name.
+ */
+export function appPackageRoot(repoRoot) {
+  return dirname(appSourceRoot(repoRoot))
 }
 
 /**

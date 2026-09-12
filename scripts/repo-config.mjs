@@ -45,6 +45,26 @@ export const repoConfig = {
   sweptDirs: ['docs'],
 
   /**
+   * Trees whose markdown keeps the words of the day it was written, so no
+   * sweep rewrites it (`swept-docs.mjs`). Decision records are the whole of
+   * it here: rewriting one is falsifying it. Prefixes, matched against the
+   * repo-relative path.
+   */
+  datedRecords: ['docs/adr'],
+
+  /**
+   * The agent-account document and the ratchet baseline beside it
+   * (`generate-agent-account.mjs`). The generator is one mechanism in every
+   * repository that carries it; WHERE it writes is this deployment's own, and
+   * the two docs trees do not agree — the baseline sits with the rest of the
+   * generated reference material here.
+   */
+  agentAccount: {
+    document: 'docs/agents/blueprint.md',
+    baseline: 'docs/reference/agent-account-baseline.json',
+  },
+
+  /**
    * Where a glossary row that names a column belongs instead
    * (`check-glossary-only.mjs`), and a routing target below.
    */
