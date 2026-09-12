@@ -1,94 +1,55 @@
 #!/usr/bin/env node
 /**
- * The divergence reporter's bucketing and tally.
+ * The enrollable-candidate report: which files it lists, and what it is
+ * allowed to CLAIM about them.
  *
- * The report is only worth reading if a file lands in exactly one row and
- * every column means what its header says. Two ways that goes wrong quietly:
- * an ordering slip that files `src/lib/x.ts` under the catch-all `src (other)`
- * so a whole area reads as empty, and a scope leak that pulls `supabase/`
- * back in — ~800 instance migrations against a dummy backend would swamp
- * every other number in the table. Both are pinned here.
+ * This is what is left of `measure-template-divergence.mjs` after the import
+ * flip — the half that reads the pinned package rather than a git remote no
+ * fresh clone has. Its subject is the reconciled set's intake: a shared file
+ * whose code already matches the template and whose comments do not.
  *
  * Run: npm test
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import {
-  bucketOf,
   enrollableCandidates,
   formatEnrollableReport,
   inScope,
   splitOnCitations,
   stripProse,
-  tally,
-} from '../measure-template-divergence.mjs'
+} from '../enrollable-candidates.mjs'
 import { RECONCILED_FILES } from '../reconciled-files.mjs'
 
-test('every bucketed tree is one this repository still holds', () => {
-  // The eight `src/…` buckets went with `src/`. This is the guard against them
-  // coming back as a bucket that can never match, which would read as coverage
-  // and be none.
-  assert.equal(bucketOf('deployment/deployment.ts'), 'deployment')
-  assert.equal(bucketOf('deployment/lib/blueprintContract.ts'), 'deployment')
-  assert.equal(bucketOf('package.json'), 'root files')
-  assert.equal(bucketOf('docs/engineering/standards.md'), 'docs')
-  assert.equal(bucketOf('scripts/app-source.mjs'), 'scripts')
-  // Nothing under the old application root is bucketed any more, so nothing
-  // there is in scope either.
-  assert.equal(bucketOf('src/lib/agent/tools/read.ts'), null)
-  assert.equal(inScope('src/lib/agent/tools/read.ts'), false)
-})
-
-test('supabase, generated trees and the application stay out of scope', () => {
+/*
+  Scope. A candidate list is a list a person acts on, so a path on it that is
+  shared by coincidence rather than by intent costs a reader more than it
+  saves — and the whole of `supabase/` is that: ~800 migrations of this
+  deployment's own against a package shipping a dummy backend, two of which
+  happen to carry a matching filename.
+*/
+test('this deployment\'s own database and the template itself stay out of scope', () => {
   assert.equal(inScope('supabase/migrations/20250602160000_initial.sql'), false)
+  assert.equal(inScope('supabase/seed.sql'), false)
   assert.equal(inScope('dist/index.js'), false)
   assert.equal(inScope('.claude/settings.json'), false)
-  assert.equal(inScope('public/blueprint-images/one.png'), false)
-  // The application is an installed dependency. Measuring divergence against
-  // it would be comparing the package to itself.
+  // The template is what a candidate is compared AGAINST. Offering its own
+  // files as candidates would be proposing to reconcile it with itself.
   assert.equal(
     inScope('node_modules/agentic-service-blueprinting/src/lib/blueprintContract.ts'),
     false,
   )
+  // Everything this repository actually holds and could share is in scope.
+  // There is no per-tree allowlist any more: the tally that needed one is
+  // gone, and a bucket that can never match reads as coverage and is none.
   assert.equal(inScope('deployment/lib/blueprintContract.ts'), true)
-  assert.equal(inScope('hooks/secret_guard.py'), true)
-})
-
-test('a shared path is identical or differing, never counted as only-one-side', () => {
-  const rows = tally(
-    new Map([
-      ['deployment/same.ts', 'aaa'],
-      ['deployment/drifted.ts', 'bbb'],
-      ['docs/ours.md', 'ccc'],
-    ]),
-    new Map([
-      ['deployment/same.ts', 'aaa'],
-      ['deployment/drifted.ts', 'zzz'],
-      ['hooks/theirs.py', 'ddd'],
-    ]),
-  )
-  assert.deepEqual(
-    { ...rows.get('deployment'), differing: rows.get('deployment').differing },
-    {
-      identical: 1,
-      differ: 1,
-      oursOnly: 0,
-      theirsOnly: 0,
-      differing: ['deployment/drifted.ts'],
-    },
-  )
-  assert.equal(rows.get('docs').oursOnly, 1)
-  assert.equal(rows.get('hooks').theirsOnly, 1)
-})
-
-test('out-of-scope paths are dropped rather than bucketed somewhere', () => {
-  const rows = tally(new Map([['supabase/seed.sql', 'aaa']]), new Map([['supabase/seed.sql', 'bbb']]))
-  const counted = [...rows.values()].reduce((n, r) => n + r.identical + r.differ + r.oursOnly + r.theirsOnly, 0)
-  assert.equal(counted, 0)
+  assert.equal(inScope('scripts/app-source.mjs'), true)
+  assert.equal(inScope('docs/engineering/standards.md'), true)
+  assert.equal(inScope('package.json'), true)
 })
 
 /*
-  `--enrollable`: shared files that differ from the pinned template by prose
+  The measurement: shared files that differ from the pinned template by prose
   alone — the code identical, the comments not. What follows that measurement
   is a separate question, and the second block below is where it is asked.
 
