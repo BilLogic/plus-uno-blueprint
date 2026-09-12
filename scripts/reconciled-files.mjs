@@ -2081,4 +2081,24 @@ export const RECONCILED_FILES = [
   'src/lib/typeInk.test.ts',
   'src/components/labelVocabulary.test.ts',
   'src/components/blueprint/Eyebrow.tsx',
+
+  // Every remaining shared file that is ALREADY byte-identical. Enrolling one
+  // asserts nothing new — it holds what measuring already found. What it adds
+  // is the difference between a file that happens to match today and a file
+  // that cannot stop matching without CI saying so, and that distinction is
+  // the evidence the import flip depends on: every deleted file has to be one
+  // that was demonstrably identical, not one that looked identical the last
+  // time somebody checked.
+  //
+  // No ticket owns this block, because no file in it needed work. The gate's
+  // citation rule was run over all of them and found nothing to fix.
+  'src/contexts/cellPanelResetOnTab.test.tsx',
+  'src/lib/agent/embedQuestion.test.ts',
+  'src/lib/agent/embedQuestion.ts',
+  'src/lib/agent/modelOptions.test.ts',
+  'src/lib/agent/searchPlan.test.ts',
+  'src/lib/agent/searchPlan.ts',
+  'src/lib/agent/tools/format.ts',
+  'src/lib/agent/tools/search.ts',
+  'src/lib/tokenModel.ts',
 ]
