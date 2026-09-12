@@ -754,6 +754,64 @@ export const RENAME_MAP = Object.freeze(
       retired: ['slides.narrative'],
       copy: [],
     },
+    /*
+      AN ACTOR IS PART OF ANOTHER (`20260912210000`).
+
+      `20260821280000` gave `stakeholders` a self-reference, asserted in the
+      same file that the hierarchy is never more than one level deep, and then
+      named the column for the SHAPE rather than for the relationship — and
+      the shape `parent_id` describes is a tree of any depth. `part_of_id`
+      names the membership, which is flat by nature. The template took the
+      same decision upstream in `21000217000000`; the schemas are separate, so
+      the sentence is said in both.
+
+      `retired` is the bare column name, and here it CAN be: this schema has
+      exactly one `parent_id`, the fragment is a substring of nothing else that
+      survives, and the only dependent identifier — the foreign key — is
+      renamed in the same file.
+
+      `copy` is empty, and that is the entry rather than an omission. The word
+      never reached a reader. No panel re-parents an actor, no label says
+      parent, and a lane badge names the actor the lane names rather than the
+      one it is part of — so a copy spelling here would be a guard that cannot
+      fire, which this map calls a comment wearing a check's clothes.
+    */
+    {
+      was: ['stakeholders.parent_id'],
+      is: ['stakeholders.part_of_id'],
+      migrations: ['20260912210000'],
+      retired: ['parent_id'],
+      copy: [],
+    },
+    /*
+      A SESSION SAYS WHO MADE IT (`20260912220000`), and this row is the only
+      one in the map that records a rename with no upstream twin to follow.
+
+      The template CREATED its `agent_sessions` with `created_by`
+      (`20260819000000`); this deployment created its own without an owner at
+      all (`20260804210000`) and added one five weeks later as `user_id`
+      (`20260828120000`). Two repositories built the same table and gave the
+      same column two names. `created_by` is the word the rest of this schema
+      already uses for authorship — `cells`, `resources`, `evidence` and
+      `slices` all say it — and `user_id` says which user where every sibling
+      says who created it.
+
+      `retired` is the bare column name for the same reason as the row above:
+      the fragment survives in nothing else once `agent_sessions_user_idx` and
+      `agent_sessions_user_id_fkey` are renamed beside the column, which
+      `20260912220000` does longhand.
+
+      `copy` is empty for the same reason too. The owner of a conversation is
+      never shown: the session list renders titles, and the column exists so
+      that RLS can gate on it.
+    */
+    {
+      was: ['agent_sessions.user_id'],
+      is: ['agent_sessions.created_by'],
+      migrations: ['20260912220000'],
+      retired: ['user_id'],
+      copy: [],
+    },
   ].map((row) => Object.freeze({ ...row, ...Object.fromEntries(
     ['was', 'is', 'migrations', 'retired', 'copy'].map((k) => [k, Object.freeze(row[k])]),
   ) })),
