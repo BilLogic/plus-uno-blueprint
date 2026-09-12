@@ -9,11 +9,13 @@
  * ticket covers. Nothing asserts that a button says "lane" when the table says
  * `lanes`. It is true today because the rename was done carefully by hand.
  *
- * SUBJECT: JSX text nodes, and the props that reach a reader — `aria-label`,
- * `title`, `placeholder`, `alt`, `label`. Nothing else. Not comments, not
- * identifiers, not imports, not test files, not `data-*`, and not a string
- * that names a database object — that is #145 Check B, a different check with
- * a different exemption list.
+ * SUBJECT: JSX text nodes, the props that reach a reader — `aria-label`,
+ * `title`, `placeholder`, `alt`, `label` — and, since #635, the MESSAGE a
+ * module hands a person: a quoted string bound to `message`, `error`,
+ * `errorMessage`, `warning`, `notice`, `toast` or `fallback`. Nothing else.
+ * Not comments, not identifiers, not imports, not test files, not `data-*`,
+ * and not a string that names a database object — that is #145 Check B, a
+ * different check with a different exemption list.
  *
  * IF THIS PRODUCES A FALSE POSITIVE, NARROW THE SUBJECT — NEVER THE WORD LIST.
  * Fewer prop names, fewer node kinds. `src/lib/tokenDiscipline.test.ts` states
@@ -58,6 +60,79 @@ const PROP_VALUE = new RegExp(
  */
 const JSX_TEXT = />([^<>{}]+)</g
 
+/**
+ * THIRD SUBJECT (#635): the message a module hands a person.
+ *
+ * The two subjects above read `.tsx` only, and a `.tsx` file is where the
+ * RENDERING lives. Copy that originates in a plain `.ts` module was invisible
+ * to all of it — `src/lib/authoringErrors.ts` said "That column is not part of
+ * this version yet" and "Two columns ended up in the same position", on screen,
+ * for as long as this guard has existed. The guard's own header called those
+ * words "enforced as retired copy", which was true of JSX and not of that file.
+ *
+ * HOW THE SUBJECT IS SCOPED, and it is by the NAME the string is bound to, not
+ * by the string. Every quoted literal in every `.ts` file is not a subject —
+ * it is table names, SQL fragments, route paths, CSS class names and test
+ * fixtures, and a guard that read all of them would be argued down to nothing
+ * within a week. A non-rendering module hands a reader one kind of string and
+ * it is almost always a message: an error, a warning, a refusal. So the
+ * subject is a quoted string bound with `:` or `=` to one of `MESSAGE_NAMES`,
+ * in any `.ts` or `.tsx` under `src/`.
+ *
+ * WHAT THAT DELIBERATELY MISSES — written down because a guard whose blind
+ * spot is recorded is worth more than one that claims to catch everything, and
+ * every item here is a live string in this tree today, not a hypothetical:
+ *
+ *   1. Template literals and concatenation. `sliceValidation.ts` raises
+ *      `` `Unknown slice type “${draft.sliceKind}”.` `` — "slice type" is
+ *      retired for `slices.kind` — and this subject does not read it. That
+ *      file is enrolled in the drift gate and says exactly what the template
+ *      says, so the fix is upstream, not here; reading the static halves of
+ *      template literals is the obvious next widening and belongs with it.
+ *   2. Copy bound to any OTHER name. `panelTerms.ts` defines a step as
+ *      "A column of the board", `coverContent.ts` has an `alt` and a
+ *      `definition`, `CanvasAnnotationProvider.tsx` gives an agent command the
+ *      summary "…the canvas scratch layer". Those names — `definition`,
+ *      `summary`, `alt`, `description` — carry copy in CONTENT modules and
+ *      developer-facing catalogues alike (`dev/arrowSituationCatalog.ts` is
+ *      twelve legitimate uses of "column" about arrow geometry), and no
+ *      name-list separates the two audiences. Widening to them is a decision
+ *      about who `src/dev/` and `src/lib/agent/` are written for, and that is
+ *      a bigger question than this one.
+ *   3. A string passed positionally — `toast('…')`, `new Error('…')`. There is
+ *      no name to read, and `writeBoundaryContract.test.ts` already forbids the
+ *      second from reaching a reader.
+ *   4. The `hint` prop. `StepPanel.tsx` renders
+ *      `hint="…makes the column legible…"`, which is JSX and therefore the
+ *      FIRST subject's business — `READER_FACING_PROPS` simply does not list
+ *      `hint` yet. Adding it there is a one-word change and a separate one.
+ *
+ * The word list is untouched by all of this, which is the rule the header
+ * states. Everything above narrows WHERE a string is looked for.
+ */
+const MESSAGE_NAMES = [
+  'message',
+  'messages',
+  'errorMessage',
+  'error',
+  'warning',
+  'notice',
+  'toast',
+  'fallback',
+]
+
+/**
+ * `name: 'value'` or `name = 'value'`, the name matched whole so `errorMessage`
+ * is its own entry rather than a suffix of `message`, and `\s*` crossing lines
+ * because the two strings that prompted this sit on the line below their key.
+ * `!=` is excluded so `message !== 'x'` is a comparison, not a binding.
+ */
+const MESSAGE_VALUE = new RegExp(
+  `(?<![\\w$])(${MESSAGE_NAMES.join('|')})\\s*(?::|=(?!=))\\s*` +
+    `(?:'((?:[^'\\\\\\n]|\\\\.)*)'|"((?:[^"\\\\\\n]|\\\\.)*)")`,
+  'gi',
+)
+
 /** Each retired spelling as a whole-word pattern, spaces matching any run. */
 const PATTERNS = RETIRED_COPY_WORDS.map((word) => ({
   word,
@@ -68,6 +143,10 @@ const PATTERNS = RETIRED_COPY_WORDS.map((word) => ({
 export function readerFacingStrings(files = sourceFiles()) {
   const out = []
   for (const { file, code } of files) {
+    for (const match of code.matchAll(MESSAGE_VALUE)) {
+      const value = match[2] ?? match[3]
+      if (value && /[A-Za-z]/.test(value)) out.push({ file, where: `${match[1]}:`, value })
+    }
     if (!file.endsWith('.tsx')) continue
     for (const match of code.matchAll(PROP_VALUE)) {
       const value = match[2] ?? match[3] ?? match[4]
@@ -139,6 +218,79 @@ test('the guard does not read what it excludes', () => {
       ].join('\n'),
     },
     { file: 'lib/not-a-component.ts', code: '<span>the layer</span>' },
+  ]
+  assert.deepEqual(offenders(readerFacingStrings(quiet)), [])
+})
+
+/**
+ * The two sentences #635 was filed about, planted as a `.ts` module.
+ *
+ * They are here rather than only in `authoringErrors.ts` because the fix to
+ * that file and the guard are different things: the file can be corrected in
+ * one edit, and only this test stops the next message being written the same
+ * way. If `authoringErrors.ts` is ever replaced wholesale by the template's,
+ * these cases survive the replacement.
+ */
+test('a message a module raises is read, even with no JSX in the file', () => {
+  const planted = [
+    {
+      file: 'lib/planted.ts',
+      code: [
+        'const TRANSLATIONS = [',
+        '  {',
+        "    match: 'cells.step_id must be linked',",
+        '    message:',
+        "      'That column is not part of this version yet. Add the column to the version before putting a cell in it.',",
+        '  },',
+        '  {',
+        "    match: 'path_steps_path_column_unique',",
+        "    message: 'Two columns ended up in the same position. Reload and try the move again.',",
+        '  },',
+        ']',
+      ].join('\n'),
+    },
+  ]
+  assert.deepEqual(offenders(readerFacingStrings(planted)), [
+    'lib/planted.ts (message:) "That column is not part of this version yet. Add the column to ' +
+      'the version before putting a cell in it." — "column"',
+    'lib/planted.ts (message:) "Two columns ended up in the same position. Reload and try the ' +
+      'move again." — "columns"',
+  ])
+})
+
+test('the other names in the message family are read too', () => {
+  const planted = [
+    {
+      file: 'lib/planted.ts',
+      code: [
+        "const FALLBACK = 'That layer could not be saved.'",
+        "const warning = 'This chip is already open.'",
+        "toast({ errorMessage: 'Two lifecycles ended up with one name.' })",
+      ].join('\n'),
+    },
+  ]
+  const found = offenders(readerFacingStrings(planted)).map((one) => one.split(' — ')[1])
+  assert.deepEqual(found.sort(), ['"chip"', '"layer"', '"lifecycles"'])
+})
+
+test('the message subject reads the binding and not everything else in a .ts file', () => {
+  // The false positives the scoping exists to refuse. Every line here carries
+  // a retired word and none of them is copy: the `match` half of the very
+  // table the two sentences live in is the database's own text, which the
+  // header says belongs to #145 Check B.
+  const quiet = [
+    {
+      file: 'lib/quiet.ts',
+      code: [
+        "  match: 'path_steps_path_column_unique',",
+        "  const columns = 'column, position'",
+        "  supabase.from('cells').select('column_id, layer')",
+        "  order('slot position')",
+        '  type Problem = { message: string }',
+        "  if (error.message !== 'column') return",
+        '  const className = "grid-cols-3 flex-col"',
+      ].join('\n'),
+    },
   ]
   assert.deepEqual(offenders(readerFacingStrings(quiet)), [])
 })
