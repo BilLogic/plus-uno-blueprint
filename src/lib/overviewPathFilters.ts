@@ -6,7 +6,7 @@ export function getOverviewPathKey(path: Pick<PathListItem, 'kind' | 'name'>): s
   return getPathColorKey(path)
 }
 
-/** One entry per unique path name/type across all overview scenarios. */
+/** One entry per path identity (`kind:name`) across the given scenarios. */
 export function collectOverviewPathOptions(
   pathsByScenario: Map<string, PathListItem[]>,
 ): PathOption[] {

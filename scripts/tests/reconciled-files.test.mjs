@@ -623,6 +623,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/agent/tools/search.ts',
     'src/lib/tokenModel.ts',
     'src/lib/versionValidation.ts',
+    'src/lib/overviewPathFilters.ts',
   ])
 })
 
