@@ -11,6 +11,13 @@
  * `cellBudget` proves someone typed it; the resolved value is what the
  * application reads, and the resolution is where an overlay can be dropped.
  */
+// FIRST, and for its side effects — the same order `main.tsx` keeps, and for
+// the same reason. Imports evaluate in source order, and an application module
+// named above this line builds its storage key before the prefix is set, which
+// makes the call below it a late one and raises. That this file has to obey
+// the ordering it asserts is the point: a test that could be written in any
+// order would not be testing anything.
+import '~/bootstrap'
 import { describe, expect, it } from 'vitest'
 import { resolveDeploymentConfig } from 'agentic-service-blueprinting'
 import { currentStoragePrefix } from 'agentic-service-blueprinting/bootstrap'
@@ -21,8 +28,6 @@ import {
 import { unoDeploymentConfig } from '~/deployment'
 import { coverContent } from '~/content/coverContent'
 import { SAMPLE_NAV } from '~/data/sampleNav'
-// Imported for its side effects, which are the subject of the first test.
-import '~/bootstrap'
 
 const resolved = resolveDeploymentConfig(unoDeploymentConfig)
 

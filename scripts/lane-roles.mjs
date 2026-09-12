@@ -31,7 +31,17 @@ import { resolve } from 'node:path'
 
 const REPO_ROOT = resolve(new URL('..', import.meta.url).pathname)
 
-export const ROLES_PATH = 'src/lib/laneRoles.ts'
+/**
+ * The lane roles the APPLICATION knows, read out of the package this
+ * deployment imports it from rather than out of a local copy.
+ *
+ * This check got sharper when the path moved. It used to compare one file in
+ * this repository against its neighbour in the same repository; it now compares
+ * the application this deployment actually runs against the database this
+ * deployment actually has, which is the disagreement that can really bite.
+ */
+export const ROLES_PATH =
+  'node_modules/agentic-service-blueprinting/src/lib/laneRoles.ts'
 export const MIGRATIONS_DIR = 'supabase/migrations'
 
 /** The CHECK constraint that owns the vocabulary, by filename. */
