@@ -613,6 +613,15 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/typeInk.test.ts',
     'src/components/labelVocabulary.test.ts',
     'src/components/blueprint/Eyebrow.tsx',
+    'src/contexts/cellPanelResetOnTab.test.tsx',
+    'src/lib/agent/embedQuestion.test.ts',
+    'src/lib/agent/embedQuestion.ts',
+    'src/lib/agent/modelOptions.test.ts',
+    'src/lib/agent/searchPlan.test.ts',
+    'src/lib/agent/searchPlan.ts',
+    'src/lib/agent/tools/format.ts',
+    'src/lib/agent/tools/search.ts',
+    'src/lib/tokenModel.ts',
   ])
 })
 
