@@ -83,11 +83,45 @@ test('the tool-spec reader reads the pipe list, wrapped or on one line', () => {
   ].join('\n')
   assert.deepEqual(rolesInToolSpec(wrapped), {
     line: 5,
+    derived: false,
     values: ['kept_role', 'listed_role', 'third_role'],
   })
 
   const inline = "const LANE_ROLE_FILTER_PARAM = str('kept_role | listed_role')\n"
-  assert.deepEqual(rolesInToolSpec(inline), { line: 1, values: ['kept_role', 'listed_role'] })
+  assert.deepEqual(rolesInToolSpec(inline), {
+    line: 1,
+    derived: false,
+    values: ['kept_role', 'listed_role'],
+  })
+})
+
+test('a roster derived from CANONICAL_LANE_ROLES is agreement, not a second list', () => {
+  // The shape the package ships, and the one that makes drift impossible: there
+  // is no second statement to fall behind, and the one statement there is is
+  // already held to the constraint by lane-roles.test.mjs. The reader says so
+  // rather than pretending to compare, and reports the live set it was handed.
+  const derived = [
+    'export const LANE_ROLE_FILTER_PARAM = str(',
+    '  `Optional. Restrict to lanes with this role, one of: ${CANONICAL_LANE_ROLES.join(\' | \')}`,',
+    ')',
+    '',
+  ].join('\n')
+  assert.deepEqual(rolesInToolSpec(derived, 'specs.ts', ['kept_role', 'listed_role']), {
+    line: 1,
+    derived: true,
+    values: ['kept_role', 'listed_role'],
+  })
+})
+
+test('a roster written out by hand again is compared the old way', () => {
+  // The regression this arm still guards. If anyone replaces the derivation
+  // with a literal, the duplication is back and so is the comparison.
+  const restated = "export const LANE_ROLE_FILTER_PARAM = str('kept_role | listed_role')\n"
+  assert.deepEqual(rolesInToolSpec(restated, 'specs.ts', ['ignored']), {
+    line: 1,
+    derived: false,
+    values: ['kept_role', 'listed_role'],
+  })
 })
 
 test('the tool-spec reader throws rather than reporting an empty vocabulary', () => {

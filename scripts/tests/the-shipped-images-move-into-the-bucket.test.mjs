@@ -8,8 +8,9 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { existsSync, readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { appSourceFiles, deploymentSourceFiles } from '../app-source.mjs'
 import { replayMigrations } from '../migration-replay.mjs'
 import { firstCellByPath, objectId, objectKey, SHELF_CELL } from '../move-images-to-bucket.mjs'
 
@@ -23,18 +24,19 @@ test('the series refuses a site-relative resource url or storyboard frame', () =
 
 test('the repo ships no blueprint-images folder and no source names one', () => {
   assert.ok(!existsSync(resolve(ROOT, 'public/blueprint-images')), 'public/blueprint-images is back')
-  const offenders = []
-  const walk = (dir) => {
-    for (const entry of readdirSync(dir)) {
-      const path = join(dir, entry)
-      if (statSync(path).isDirectory()) walk(path)
-      else if (/\.tsx?$/.test(entry) && !/\.test\.tsx?$/.test(entry)) {
-        const source = readFileSync(path, 'utf8')
-        if (/['"`]\/blueprint-images\//.test(source)) offenders.push(path.slice(ROOT.length + 1))
-      }
-    }
-  }
-  walk(resolve(ROOT, 'src'))
+  // There are two source roots now, and the claim is about both: the
+  // APPLICATION, read out of the package this deployment imports it from, and
+  // this deployment's OWN modules. A site-relative image path is a broken
+  // image whichever side writes it.
+  //
+  // Both walks go through readers that refuse to return nothing. This test
+  // walked `src/`, and the day that directory left, a walk of it reported
+  // "no source names one" having opened no source at all — a green tick for a
+  // check with no subject, which is worse than no check.
+  const isSource = (path) => /\.tsx?$/.test(path) && !/\.test\.tsx?$/.test(path)
+  const offenders = [...appSourceFiles(isSource), ...deploymentSourceFiles(isSource)].filter(
+    (path) => /['"`]\/blueprint-images\//.test(readFileSync(resolve(ROOT, path), 'utf8')),
+  )
   assert.deepEqual(offenders, [])
 })
 

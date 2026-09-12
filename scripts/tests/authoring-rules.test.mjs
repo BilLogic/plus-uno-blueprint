@@ -10,11 +10,16 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { validateDraftDependency } from '../../src/lib/dependencyValidation.ts'
+// The subjects are the APPLICATION's validators, and the application is no
+// longer a directory in this repository — it is the installed package. `@/…` is
+// the alias that names it, in the test exactly as in the app code, so these
+// keep exercising the very modules the deployment runs rather than copies of
+// them.
+import { validateDraftDependency } from '@/lib/dependencyValidation.ts'
 import {
   validateDraftVersion,
   describeVersionOutcome,
-} from '../../src/lib/versionValidation.ts'
+} from '@/lib/versionValidation.ts'
 
 const source = { cellId: 'a', pathId: 'p1', label: 'Greet student' }
 const sameVersion = { cellId: 'b', pathId: 'p1', label: 'Share screen' }

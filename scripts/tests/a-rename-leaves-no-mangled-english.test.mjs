@@ -68,6 +68,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { BINARY, SWEPT_ROOTS, sweptFiles } from '../scanned-files.mjs'
+import { APP_SOURCE_ROOT } from '../app-source.mjs'
 
 const REPO_ROOT = resolve(new URL('../..', import.meta.url).pathname)
 
@@ -167,7 +168,7 @@ test('the documents that record a rename may quote what it mangled', () => {
   assert.ok(mangleExempt('scripts/tests/a-rename-leaves-no-mangled-english.test.mjs'))
   assert.ok(!mangleExempt('docs/guidelines/foundations/tokens.md'))
   assert.ok(!mangleExempt('scripts/reconciled-files.mjs'))
-  assert.ok(!mangleExempt('src/styles/blueprint.css'))
+  assert.ok(!mangleExempt(`${APP_SOURCE_ROOT}/styles/blueprint.css`))
 })
 
 test('the sweep reads the residue and not the column it resembles', () => {

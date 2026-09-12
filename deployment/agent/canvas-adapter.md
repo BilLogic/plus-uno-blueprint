@@ -2,10 +2,15 @@
 
 > **This file OVERRIDES a pinned package document.** It replaces
 > `references/canvas-adapter.md` from `agentic-service-blueprinting`, at
-> whatever release `package-lock.json` pins. It is spliced into every
-> system prompt by `src/lib/agent/loop.ts` and served under the bare name
-> `canvas-adapter` by `src/lib/agent/tools/referenceDocs.ts`; the
-> package's own copy reaches neither.
+> whatever release `package-lock.json` pins. This deployment registers it
+> from `deployment/bootstrap.ts`, before the application's modules
+> evaluate — the agent's tool description quotes the reference vocabulary
+> while it is being built, so a document handed over any later would be
+> served by a tool that never mentions it. The application then splices it
+> into every system prompt from its own `lib/agent/loop.ts` and serves it
+> under the bare name `canvas-adapter` from `lib/agent/tools/referenceDocs.ts`,
+> reading the loader's record rather than importing a second copy; the
+> package's own text reaches neither.
 >
 > **Why an override rather than the package's text.** The package's
 > adapter enumerates the PACKAGE's registry, and the two registries do

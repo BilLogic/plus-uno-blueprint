@@ -231,29 +231,56 @@ function argKeysByHelper(source) {
     if (!/\bargs\b/.test(mark[2])) continue
     const start = mark.index
     const end = source.indexOf('\n}', start)
-    helpers.set(mark[1], new Set(argKeysRead(source.slice(start, end === -1 ? source.length : end))))
+    const body = source.slice(start, end === -1 ? source.length : end)
+    // A function holding `case '…':` arms is a DISPATCHER, not a helper. Both
+    // of registry.ts's take the bag, and reading one as a helper would credit
+    // whichever case called it with every key the whole switch reads.
+    if (/case '[a-z_]+':/.test(body)) continue
+    helpers.set(mark[1], new Set(argKeysRead(body)))
   }
   return helpers
 }
 
+/**
+ * The argument keys read for each tool name, UNIONED over every arm that
+ * answers it.
+ *
+ * A tool name appears in two switches: the live dispatcher and the
+ * no-database trial that answers from the bundled sample. Keeping only one
+ * arm per name — which is what building the map from pairs did — let the
+ * trial's arm stand in for the real one, and the trial deliberately reads
+ * less: it has no services, so it ignores `service` and every scoped read
+ * looked like a handler throwing the model's word away. An argument either
+ * arm reads is an argument the handler reads.
+ */
 function argKeysByCase(source) {
   const helpers = argKeysByHelper(source)
   const marks = [...source.matchAll(/case '([a-z_]+)':/g)]
-  return new Map(
-    marks.map((mark, index) => {
-      const start = mark.index + mark[0].length
-      const end = index + 1 < marks.length ? marks[index + 1].index : source.length
-      const body = source.slice(start, end)
-      const keys = new Set(argKeysRead(body))
-      for (const [name, delegated] of helpers) {
-        // The helper has to be handed the bag — a call that passes something
-        // else is not this case reading these keys.
-        if (!new RegExp(`\\b${name}\\([^)]*\\bargs\\b`).test(body)) continue
-        for (const key of delegated) keys.add(key)
-      }
-      return [mark[1], keys]
-    }),
-  )
+  const byName = new Map()
+  marks.forEach((mark, index) => {
+    const start = mark.index + mark[0].length
+    // The LAST case ends where its function does — at the first closing brace
+    // in the first column. Running it to the end of the file instead swallows
+    // the helpers declared below the dispatcher, and credited the last tool in
+    // the switch with every argument they read.
+    const tail = source.slice(start)
+    const rest = tail.search(/\n\}/)
+    const end =
+      index + 1 < marks.length
+        ? marks[index + 1].index
+        : start + (rest === -1 ? tail.length : rest)
+    const body = source.slice(start, end)
+    const keys = byName.get(mark[1]) ?? new Set()
+    for (const key of argKeysRead(body)) keys.add(key)
+    for (const [name, delegated] of helpers) {
+      // The helper has to be handed the bag — a call that passes something
+      // else is not this case reading these keys.
+      if (!new RegExp(`\\b${name}\\([^)]*\\bargs\\b`).test(body)) continue
+      for (const key of delegated) keys.add(key)
+    }
+    byName.set(mark[1], keys)
+  })
+  return byName
 }
 
 /**

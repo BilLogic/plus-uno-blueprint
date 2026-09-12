@@ -57,6 +57,20 @@ function repo(files = {}) {
 }
 
 /** A composition doc claiming the files it names. */
+/**
+ * A file's path inside the throwaway tree, as the walk will find it.
+ *
+ * A composition doc CLAIMS the application's own path (`src/components/…`) and
+ * is right to — that is what the file is called inside the application, and it
+ * is what the doc will still say after the next pin bump. Where the tree
+ * actually holds it is under the package, because that is where this
+ * deployment reads the application from. `check-harness-claims.mjs` maps
+ * between the two; these fixtures have to plant on the disk side of that map,
+ * and go on claiming on the doc side, or they would be testing neither.
+ */
+const APP = 'node_modules/agentic-service-blueprinting/src'
+const planted = (claim) => `${APP}/${claim.slice('src/'.length)}`
+
 function claiming(...claims) {
   const list = claims.map((claim) => `  - ${claim}\n`).join('')
   return `---\nsummary: a throwaway composition doc\nclaims:\n${list}---\n`
@@ -69,8 +83,8 @@ test('every assembled component is claimed by exactly one composition doc', () =
 
 test('an unclaimed new file fails the check, and is named', () => {
   const { root, done } = repo({
-    'src/components/cover/CoverPage.tsx': 'export const page = null\n',
-    'src/components/cover/Unclaimed.tsx': 'export const stray = null\n',
+    [planted('src/components/cover/CoverPage.tsx')]: 'export const page = null\n',
+    [planted('src/components/cover/Unclaimed.tsx')]: 'export const stray = null\n',
     'docs/guidelines/composition/cover-page.md': claiming('src/components/cover/CoverPage.tsx'),
   })
   try {
@@ -101,7 +115,7 @@ test('a claim on a file that no longer exists fails, and names both', () => {
 test('a file two docs claim fails, and names both docs', () => {
   const shared = 'src/components/cover/CoverPage.tsx'
   const { root, done } = repo({
-    [shared]: 'export const page = null\n',
+    [planted(shared)]: 'export const page = null\n',
     'docs/guidelines/composition/cover-page.md': claiming(shared),
     'docs/guidelines/composition/sidebar.md': claiming(shared),
   })
@@ -117,8 +131,8 @@ test('a file two docs claim fails, and names both docs', () => {
 
 test('a co-located test file needs no claim', () => {
   const { root, done } = repo({
-    'src/components/cover/CoverPage.tsx': 'export const page = null\n',
-    'src/components/cover/coverPage.test.tsx': 'export const probe = null\n',
+    [planted('src/components/cover/CoverPage.tsx')]: 'export const page = null\n',
+    [planted('src/components/cover/coverPage.test.tsx')]: 'export const probe = null\n',
     'docs/guidelines/composition/cover-page.md': claiming('src/components/cover/CoverPage.tsx'),
   })
   try {

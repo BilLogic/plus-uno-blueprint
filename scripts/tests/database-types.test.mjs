@@ -199,7 +199,15 @@ test('a function only one side has is a finding, in either direction', () => {
 })
 
 test('the real types file parses, and carries more than the fixture', () => {
-  const source = readFileSync('src/types/database.ts', 'utf8')
+  // The application's types, in the package. There is no local copy any more:
+  // every import of this file is a TYPE import, so it is the application's
+  // compile-time statement of the schema its code needs — satisfied by having
+  // that schema, not by holding a file. What this deployment still owes is that
+  // its database is a runtime superset of it, which is `check:database-types:live`.
+  const source = readFileSync(
+    'node_modules/agentic-service-blueprinting/src/types/database.ts',
+    'utf8',
+  )
   const tables = tablesInFile(source)
   const functions = functionsInFile(source)
   // Not a census — a floor. The file described thirteen functions while the

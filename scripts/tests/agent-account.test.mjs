@@ -22,8 +22,16 @@ import { credentials } from '../generate-agent-account.mjs'
 
 const ROOT = new URL('../..', import.meta.url).pathname
 
+/**
+ * The application's source, inside the package this deployment imports it from.
+ * `panelTerms.ts` and the generated `types/database.ts` are both the
+ * application's — the account is generated from this deployment's DATABASE, but
+ * its shape is read off the application that queries it.
+ */
+const APP = 'node_modules/agentic-service-blueprinting/src'
+
 test('the six entity kinds are read off panelTerms.ts as written', () => {
-  const kinds = entityKinds(readFileSync(`${ROOT}src/lib/panelTerms.ts`, 'utf8'))
+  const kinds = entityKinds(readFileSync(`${ROOT}${APP}/lib/panelTerms.ts`, 'utf8'))
   assert.deepEqual(
     kinds.map((k) => k.kind),
     ['service', 'phase', 'scenario', 'path', 'step', 'lane'],
@@ -33,7 +41,7 @@ test('the six entity kinds are read off panelTerms.ts as written', () => {
 })
 
 test('every relation with a Row type is a column inventory', () => {
-  const columns = tableColumns(readFileSync(`${ROOT}src/types/database.ts`, 'utf8'))
+  const columns = tableColumns(readFileSync(`${ROOT}${APP}/types/database.ts`, 'utf8'))
   assert.ok(columns.get('paths').includes('kind'))
   assert.ok(columns.get('evidence_counts'), 'views carry a Row too')
   assert.equal(columns.has('search_blueprint'), false, 'a function has no Row')

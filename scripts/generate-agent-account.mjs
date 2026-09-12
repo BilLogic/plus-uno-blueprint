@@ -31,8 +31,24 @@ import { parseEnvFile } from './check-target-schema.mjs'
 const REPO_ROOT = resolve(new URL('..', import.meta.url).pathname)
 const DOC = resolve(REPO_ROOT, 'docs/agents/blueprint.md')
 const BASELINE = resolve(REPO_ROOT, 'docs/reference/agent-account-baseline.json')
-const PANEL_TERMS = resolve(REPO_ROOT, 'src/lib/panelTerms.ts')
-const DATABASE_TS = resolve(REPO_ROOT, 'src/types/database.ts')
+/**
+ * The two application files the account's SHAPE is read off.
+ *
+ * The account itself is generated from this deployment's DATABASE — that is the
+ * whole point of it, and why it lives in `docs/agents/`. But the shape it is
+ * rendered in comes from the application that queries that database: the six
+ * entity kinds off `panelTerms.ts`, the column inventories off the generated
+ * `types/database.ts`. Both are the package's now, and reading them there is
+ * what keeps the account describing the app this deployment actually serves.
+ *
+ * Worth noting how this one failed. With no database configured `main()`
+ * returns before either read, so the whole check exited 0 while naming two
+ * files that had not existed since the flip — green locally, and a hard failure
+ * only in CI, which supplies the credentials.
+ */
+const APP_SOURCE = resolve(REPO_ROOT, 'node_modules/agentic-service-blueprinting/src')
+const PANEL_TERMS = resolve(APP_SOURCE, 'lib/panelTerms.ts')
+const DATABASE_TS = resolve(APP_SOURCE, 'types/database.ts')
 
 const PLACEHOLDER_KEY = 'your-anon-key'
 const PLACEHOLDER_URL = 'YOUR_PROJECT'

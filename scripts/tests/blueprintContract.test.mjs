@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
+import { appSource } from '../app-source.mjs'
 import { BLUEPRINT_CONTRACT, CONTRACT_PATH } from '../blueprintContract.mjs'
 import { expectedProbeKeys, probeFailures } from '../check-bot-contract-probe.mjs'
 import {
@@ -427,6 +428,44 @@ test('the breadcrumb the embedding view builds carries the declared labels, in o
 })
 
 /**
+ * The URL layer spells the params the contract promises.
+ *
+ * This row of the coverage table used to need no test of its own: the
+ * application imported `BLUEPRINT_CONTRACT.urlParams` and read the names
+ * straight out of it, so a rename could not miss. It cannot import it any
+ * more — the application is the installed package now, and the contract is
+ * this deployment's file, so the package declares its own `PARAMS` object and
+ * the one-sourcing is gone. What replaces it is not a promise to remember but
+ * this: the two literals are compared, and uno-bot keeps building `?cell=`
+ * links from the half declared here.
+ *
+ * A wrong param name is silent on both sides — the app reads a query string
+ * that is not there and shows the base view, which is what it shows anyway.
+ */
+test('the application spells the same URL params the contract declares', () => {
+  const source = appSource('lib/urlViewState.ts')
+  const block = /const PARAMS = \{([\s\S]*?)\} as const/.exec(source)
+  assert.ok(
+    block,
+    "the application's lib/urlViewState.ts no longer declares `const PARAMS = {…} as const`, " +
+      'so the param names the contract promises are being compared to nothing. Fix this ' +
+      'reader rather than the declaration.',
+  )
+  const declared = Object.fromEntries(
+    [...block[1].matchAll(/([a-z]+):\s*'([^']+)'/g)].map(([, key, value]) => [key, value]),
+  )
+  assert.ok(Object.keys(declared).length > 0, 'no param was parsed out of PARAMS')
+  assert.deepEqual(
+    declared,
+    BLUEPRINT_CONTRACT.urlParams,
+    `the application's URL layer accepts ${JSON.stringify(declared)} and the contract ` +
+      `declares ${JSON.stringify(BLUEPRINT_CONTRACT.urlParams)}. uno-bot vendors the ` +
+      `contract to build its links, so a name only one side has is a link that opens ` +
+      `the base view and reports nothing wrong.`,
+  )
+})
+
+/**
  * Nothing in the contract is unchecked, and it stays that way.
  *
  * The audit grew `blueprintContract.ts` from 76 lines to 161 and every addition
@@ -436,8 +475,8 @@ test('the breadcrumb the embedding view builds carries the declared labels, in o
  */
 const COVERAGE = {
   urlParams: {
-    by: 'src/lib/urlViewState.ts',
-    how: 'the URL layer reads these names directly, so a rename breaks the app’s own tests',
+    by: 'scripts/tests/blueprintContract.test.mjs',
+    how: 'compared, name for name, against the PARAMS literal the installed application declares',
   },
   appUrl: {
     by: 'scripts/check-blueprint-contract.mjs',

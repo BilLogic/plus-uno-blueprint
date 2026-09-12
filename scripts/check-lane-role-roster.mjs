@@ -206,17 +206,34 @@ export function rolesInToolSpec(source, path = SPECS_PATH, live = null) {
     )
   }
 
-  // The declaration, however it is spelled, up to the closing `)` of `str(`.
-  const declaration = /(?:export )?const LANE_ROLE_FILTER_PARAM\s*=\s*str\(([\s\S]*?)\n\)/.exec(
-    source,
-  )
-  if (!declaration) {
+  // The declaration's body: everything between `str(` and ITS closing paren.
+  //
+  // Counted rather than matched. The body legitimately contains parentheses —
+  // the derived form ends `CANONICAL_LANE_ROLES.join(' | ')}\`` — so a
+  // non-greedy regex stops at the wrong one, and a greedy one runs to the end
+  // of the file. It also has to accept the declaration on one line and wrapped
+  // over several, because how long the string is has nothing to do with what
+  // the model is told.
+  const open = source.indexOf('str(', source.indexOf('LANE_ROLE_FILTER_PARAM'))
+  let depth = 0
+  let close = -1
+  for (let i = open + 'str('.length - 1; i < source.length; i += 1) {
+    if (source[i] === '(') depth += 1
+    else if (source[i] === ')') {
+      depth -= 1
+      if (depth === 0) {
+        close = i
+        break
+      }
+    }
+  }
+  if (open === -1 || close === -1) {
     throw new Error(
       `${path} declares LANE_ROLE_FILTER_PARAM but not as \`str(...)\`, so this ` +
         `reader cannot see what the model is told. Fix the reader.`,
     )
   }
-  const body = declaration[1]
+  const body = source.slice(open + 'str('.length, close)
 
   // Derived — the shape the package ships, and the one that makes drift
   // impossible. Nothing further to compare.
@@ -224,8 +241,11 @@ export function rolesInToolSpec(source, path = SPECS_PATH, live = null) {
     return { line: start + 1, derived: true, values: live ?? [] }
   }
 
-  // Restated by hand. The duplication is back, so compare it the old way.
-  const literal = /'([^']*\|[^']*)'/.exec(body)
+  // Restated by hand. The duplication is back, so compare it the old way. Any
+  // single-quoted string counts, INCLUDING an empty one — an empty roster is a
+  // filter that admits nothing, and it has to reach the "names no lane role"
+  // error below rather than read as a declaration this reader cannot parse.
+  const literal = /'([^']*)'/.exec(body)
   if (!literal) {
     throw new Error(
       `LANE_ROLE_FILTER_PARAM in ${path} neither derives its roster from ` +

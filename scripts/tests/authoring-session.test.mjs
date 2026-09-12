@@ -11,6 +11,10 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
+// The subject is the APPLICATION's change log, and the application is no longer
+// a directory in this repository — it is the installed package. `@/…` is the
+// alias that names it, in the test exactly as in the app code, so this goes on
+// exercising the very module the deployment runs rather than a copy of it.
 import {
   clearSession,
   describeChange,
@@ -18,7 +22,7 @@ import {
   recordChange,
   sessionHasDestructive,
   sessionSnapshot,
-} from '../../src/lib/authoringSession.ts'
+} from '@/lib/authoringSession.ts'
 
 const entry = (fn, args = {}) => ({ id: 'x', fn, args, at: 0 })
 
@@ -172,9 +176,9 @@ test('a destructive session is flagged, an additive one is not', () => {
  * to sit here pinned; it is gone, because a deny-list that silently drops
  * whatever it matches can only ever *lose* a write once a future operation
  * reuses one of those names. The guarantee is now made by the `WriteFn` union
- * at `recordChange`'s own signature, and pinned as a type-level check in
- * `src/lib/authoringSession.test.ts` — a read name handed to the ledger does
- * not compile.
+ * at `recordChange`'s own signature, and pinned as a type-level check in the
+ * application's own `lib/authoringSession.test.ts` — a read name handed to the
+ * ledger does not compile.
  */
 
 test('a slice delete is named and counts as destructive', () => {

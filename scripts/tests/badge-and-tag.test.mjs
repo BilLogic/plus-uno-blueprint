@@ -72,7 +72,7 @@ const ROOT = resolve(new URL('../..', import.meta.url).pathname)
 
 /* --------------------------------------------------------------- the tree */
 
-/** Comments removed, verbatim from `src/lib/tokenModel.ts`. */
+/** Comments removed, verbatim from the application's `lib/tokenModel.ts`. */
 export function stripComments(source) {
   return source
     .replace(/\/\*[\s\S]*?\*\//g, '')
@@ -231,12 +231,12 @@ test('no comment in the app says chip or pill', () => {
   assert.deepEqual(
     found,
     [],
-    'A comment says "chip" or "pill". A comment inside `src` is where the next ' +
-      'reader learns what to call the thing, so it teaches the retired name as ' +
-      'surely as a component would: a BADGE describes the thing it sits on, a ' +
-      'TAG is one value out of a set. Where neither word is what the sentence ' +
-      'means, say what it means — the default size, a filled square, a ' +
-      `button — rather than reaching for a third:\n${found.join('\n')}`,
+    'A comment says "chip" or "pill". A comment inside the source tree is where ' +
+      'the next reader learns what to call the thing, so it teaches the retired ' +
+      'name as surely as a component would: a BADGE describes the thing it ' +
+      'sits on, a TAG is one value out of a set. Where neither word is what the ' +
+      'sentence means, say what it means — the default size, a filled square, ' +
+      `a button — rather than reaching for a third:\n${found.join('\n')}`,
   )
 })
 
