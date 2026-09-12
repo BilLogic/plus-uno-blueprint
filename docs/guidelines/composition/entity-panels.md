@@ -16,6 +16,7 @@ claims:
   - src/components/blueprint/EntityDetailPanel.tsx
   - src/components/blueprint/EntityPropertiesButton.tsx
   - src/components/blueprint/EntityTitleAffordance.tsx
+  - src/components/blueprint/Eyebrow.tsx
   - src/components/blueprint/FeaturedResources.tsx
   - src/components/blueprint/LaneHeaderAffordance.tsx
   - src/components/blueprint/LanePanel.tsx
