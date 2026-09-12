@@ -12,7 +12,8 @@ claims:
   - src/components/cover/coverInline.tsx
   - src/components/cover/coverMeasure.ts
   - src/components/cover/coverModel.ts
-last-reviewed: 2026-08-25
+  - src/components/cover/packageCoverFigures.ts
+last-reviewed: 2026-09-12
 ---
 
 # Cover page
@@ -58,6 +59,21 @@ in the model are worth keeping:
   measure; a portrait is a fixed small square, because blowing it up to the page
   measure would blur a logomark or let a character illustration dominate a page
   otherwise made of technical diagrams.
+
+**Who authored a figure is who supplies it.** The thirteen wide diagrams draw the
+blueprint model rather than any one service, so the template brings them:
+`packageCoverFigures` exports each as a value whose `src` is a module import, and
+a content module places one by naming it. A deployment that wants its own words
+spreads the figure and overrides `alt`; it does not fork the cover to do so. The
+portraits are the other half — this deployment's logomark and its tutor
+illustration are its own artwork, served out of `public/` and named as paths.
+
+That split is about authorship, not file type, and the mechanism follows it. A
+path is served by whatever tree holds the file, so a figure named as `/cover/…`
+and absent from the tree serving the page does not 404: the single-page fallback
+answers **200 with `text/html`**, the reader gets a broken-image box and the
+network tab reports success. An import has no such slack — it resolves at build
+time or the build stops.
 
 **Figure dimensions come from each SVG's viewBox**, so the page reserves the
 right box before the image decodes.

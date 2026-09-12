@@ -42,7 +42,7 @@ import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { sourceFiles, stripComments } from '@/lib/tokenModel.ts'
-import { deploymentSourceFiles } from '../app-source.mjs'
+import { appPackageRoot, deploymentSourceFiles } from '../app-source.mjs'
 import { RETIRED_COPY_WORDS } from '../retired-vocabulary.mjs'
 
 /** The props whose string value a person reads. */
@@ -345,15 +345,21 @@ test('the message subject reads the binding and not everything else in a .ts fil
 /**
  * SECOND SUBJECT: the text inside the shipped diagrams.
  *
- * Added because the first subject missed four of them at once. `public/cover/`
- * is not documentation — `EditorShell` renders those files as a deck inside
- * the app, so their words reach a reader the same way a heading does, and
+ * Added because the first subject missed four of them at once. The cover's
+ * diagrams are not documentation — the cover page renders them inside the app,
+ * so their words reach a reader the same way a heading does, and
  * `data-model-hierarchy.svg` was still labelling the top of the hierarchy
  * **Service lifecycle** four months after `service_lifecycles` became
  * `services`. `cell-anatomy.svg` was drawing a Dependencies tab headed
  * "Set off by" / "Sets off", which is the wording `dependencyValidation.ts`
  * replaced with "Follows" / "Leads to" — and that file's own comment names
  * those two headings as the clearest place the old words showed.
+ *
+ * THEY ARE SWEPT WHERE THE PACKAGE AUTHORS THEM. This deployment kept
+ * committed copies under `public/cover/` and no longer does: the thirteen draw
+ * the blueprint model, nobody here authored one, and the cover imports them
+ * from the package. The words still reach this deployment's readers, so the
+ * sweep stays; a finding is filed upstream rather than fixed here.
  *
  * This is a widened SUBJECT, not a widened word list. The same
  * `RETIRED_COPY_WORDS` and the same `offenders()` decide; all that changed is
@@ -364,7 +370,8 @@ test('the message subject reads the binding and not everything else in a .ts fil
  * `<text>` only. Not `id`, not `class`, not a comment, not the filename — a
  * figure named `four-ways-in.svg` is nobody's copy.
  */
-const FIGURES = join(process.cwd(), 'public', 'cover')
+const FIGURES = join(appPackageRoot(process.cwd()), 'docs', 'assets')
+const FIGURES_LABEL = 'the package’s docs/assets'
 
 /** `<text>` content, with any `<tspan>` markup inside it flattened away. */
 const SVG_TEXT = /<text\b[^>]*>([\s\S]*?)<\/text>/g
@@ -381,10 +388,23 @@ export function figureStrings(files = figureFiles()) {
 }
 
 function figureFiles() {
-  return readdirSync(FIGURES)
+  const found = readdirSync(FIGURES)
     .filter((name) => name.endsWith('.svg'))
     .sort()
-    .map((name) => ({ file: `public/cover/${name}`, code: readFileSync(join(FIGURES, name), 'utf8') }))
+    .map((name) => ({
+      file: `${FIGURES_LABEL}/${name}`,
+      code: readFileSync(join(FIGURES, name), 'utf8'),
+    }))
+  // A SWEEP WITH NO SUBJECT IS A FAILURE, not a clean one. The figures sit
+  // inside a dependency now, where an install that has not run leaves an empty
+  // directory and a green line that would be printed every run after.
+  if (found.length === 0)
+    throw new Error(
+      `no figure under ${FIGURES}: this sweep has no subject, which is a ` +
+        `failure and not a pass. Run npm ci, or check whether the pinned ` +
+        `release still ships docs/assets.`,
+    )
+  return found
 }
 
 test('no retired spelling reaches a reader through a figure', () => {
@@ -403,7 +423,7 @@ test('the figure guard reads the text nodes it claims to', () => {
   // are deliberately NOT read.
   const planted = [
     {
-      file: 'public/cover/planted.svg',
+      file: 'docs/assets/planted.svg',
       code: [
         '<text x="10" y="20" class="uiLabel">Service lifecycle</text>',
         '<text x="10" y="40">what sets',
@@ -431,6 +451,6 @@ test('every figure the deck ships is covered, and there are some', () => {
   // A reader that found no files would pass the assertion above in silence,
   // which is the failure this whole file is written against.
   const files = figureFiles()
-  assert.ok(files.length >= 10, `only ${files.length} figure(s) found under public/cover`)
+  assert.ok(files.length >= 10, `only ${files.length} figure(s) found under ${FIGURES}`)
   assert.ok(figureStrings(files).length > 100, 'the figures parsed to almost no text')
 })

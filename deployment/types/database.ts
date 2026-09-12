@@ -23,10 +23,11 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * times — three extensions this deployment made (`cells.search_tsv`,
  * `services.origin`, `slices.stakeholder_id`), four functions of its own,
  * two relations the template has and this deployment does not, and two
- * columns spelled differently on each side. Those last two are now aligned:
- * an actor is `part_of` another, and a session says who `created_by` it.
- * Not one of those thirteen was a defect in either file. A check with no true answer
- * available to it is the thing that was broken.
+ * columns spelled differently on each side — each of those last two counting
+ * twice, once on each side, which is what carries the total to thirteen. They
+ * are aligned now: an actor is `part_of` another, and a session says who
+ * `created_by` it. Not one of the thirteen was a defect in either file. A
+ * check with no true answer available to it is the thing that was broken.
  *
  * Its own reasoning is why a later cleanup must not delete it for having no
  * importers: deleting it does not break a build, it silently falls back to the
@@ -38,8 +39,10 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * connector. Every hand-edited block this file carried is gone: the two
  * placement RPCs, the two rename RPCs, `touchpoints`, `cell_touchpoints`,
  * `resources`, `services.entity_examples` and the rest now read the way the
- * generator emits them, and the whole `Functions` map — fifty-one entries
- * where the hand-maintained file had thirteen — arrived at once.
+ * generator emits them, and the whole `Functions` map — forty-six entries
+ * where the hand-maintained file had thirteen — arrived at once. It holds
+ * forty-nine today; the three that arrived since are in the list below,
+ * beside everything else that has.
  *
  * The hand edits were not wrong. `cells_layer_id_fkey` and `layers_path_id_fkey`
  * were, and they had survived a migration that renamed both constraints,
@@ -90,21 +93,34 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * `scripts/check-database-names.mjs` rests its argument on this file arriving
  * by machine. As of this change it does again.
  *
- * TWO EDITS SINCE, both named here rather than hidden in a diff, and both the
- * same kind of thing: a migration in this repository's own series applies to
- * production before the code that reads it is merged, so this file has to
- * describe the schema on the far side of an apply that has not happened yet.
- * A generator cannot be run against a database that has not been changed.
- * Neither is a fourth layer and neither may be re-applied: the next
- * regeneration through the connector emits both, and this paragraph goes with
- * the run that proves it.
+ * FIVE EDITS SINCE, each named here rather than hidden in a diff, and every
+ * one the same kind of thing: a migration in this repository's own series
+ * applies to production before the code that reads it is merged, so this file
+ * has to describe the schema on the far side of an apply that may not have
+ * happened yet. A generator cannot be run against a database that has not been
+ * changed. None of them is a fourth layer and none may be re-applied: the next
+ * regeneration through the connector emits all five, and this paragraph goes
+ * with the run that proves it.
  *
+ * KEEP THE LIST WHOLE, AND THE COUNT WITH IT. This is the only statement of
+ * how far the file has travelled from its last generated state, so an edit
+ * left out of it is invisible — which is exactly what happened twice: three
+ * functions and two renames landed here while the paragraph went on saying
+ * two.
+ *
+ *  - `update_cell_dependency` (20260909030000), `restore_cell_dependency`
+ *    (20260909070000) and `restore_cell_content` (20260909080000) — the three
+ *    entries the `Functions` map has gained since it was generated.
  *  - `slides.narrative` is `slides.caption`, in the three shapes of `slides`
  *    (20260910020000).
  *  - `slides.shows_all_images` and the whole `slide_images` table
  *    (20260910030000). The `Slide` alias at the foot of the file carries the
  *    embedded members beside it, and that half IS layer 2 above — an embed is
  *    not a column and no generator has ever emitted one.
+ *  - `stakeholders.parent_id` is `stakeholders.part_of_id`, and the foreign
+ *    key beside it (20260912210000).
+ *  - `agent_sessions.user_id` is `agent_sessions.created_by`, and its foreign
+ *    key (20260912220000).
  */
 
 export type Json =

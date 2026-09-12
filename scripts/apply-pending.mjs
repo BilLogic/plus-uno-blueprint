@@ -266,10 +266,19 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     try {
       applyOne(url, entry)
       console.log(`   applied, ledger row written under ${entry.version}`)
-    } catch (error) {
+    } catch {
+      // NOTHING IS SWALLOWED BY BINDING NO ERROR HERE, and the reason is in
+      // `applyOne`: psql runs with stdout and stderr INHERITED, so Postgres has
+      // already written the failing statement and its message to this
+      // terminal by the time control reaches here. What the catch would hold is
+      // `execFileSync`'s wrapper — "Command failed with exit code 3" — which
+      // says less than the line above it already does. The binding is dropped
+      // rather than renamed `_error`, because an underscore reads as "there is
+      // something here we are choosing not to look at" and there is not.
       console.error(
         `\n${entry.file} failed. Its transaction rolled back, so it has NO ledger row ` +
-          'and the database is as it was before this file. Nothing after it was attempted.',
+          'and the database is as it was before this file. Nothing after it was attempted. ' +
+          "psql's own error is above.",
       )
       process.exit(1)
     }

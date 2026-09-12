@@ -33,8 +33,7 @@ import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { RENAME_MAP, RETIRED_IDENTIFIER_FRAGMENTS } from '../retired-vocabulary.mjs'
-import { renameSectionLines, retiredSpans, staleSpans } from '../stale-prose.mjs'
+import { retiredSpans, staleSpans } from '../stale-prose.mjs'
 import { sweptDocs } from '../swept-docs.mjs'
 
 const REPO_ROOT = process.cwd()

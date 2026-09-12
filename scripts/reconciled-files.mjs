@@ -22,7 +22,7 @@
  * repository still HOLDS and still shares, where two copies genuinely exist
  * and can still disagree.
  *
- * There are fifteen, and they fall into three groups.
+ * There are twenty-one, and they fall into three groups.
  *
  *   - **The build's own configuration.** `vite.config.ts`, `tsconfig.json`,
  *     `tsconfig.app.json`, `tsconfig.node.json`, `eslint.config.js`,
@@ -35,10 +35,14 @@
  *     what forces that conversation upstream instead.
  *   - **Shared scripts and their tests.** `erd-value-sets.mjs`,
  *     `always-loaded.mjs`, `authoring-archivers.mjs`, `check-pointers.mjs`,
- *     `check-router-budget.mjs`, and two suites. `scripts/` is the one tree
- *     the flip did not touch: it is not the application, so it did not move
- *     into the package, and where both repositories run the same check they
- *     still run two copies of it.
+ *     `check-router-budget.mjs`, `check-glossary-only.mjs`,
+ *     `check-negation-ratchet.mjs`, `check-target-schema.mjs`,
+ *     `generate-agent-account.mjs`, `swept-docs.mjs`, and four suites.
+ *     `scripts/` is the one tree the flip did not touch: it is not the
+ *     application, so it did not move into the package, and where both
+ *     repositories run the same check they still run two copies of it. This is
+ *     also the group that grows: the last six arrived together, when the
+ *     addresses that had kept them off came out of both copies.
  *   - **Two data files.** `public/step-visual-placeholder.svg`, whose NAME is
  *     written into fourteen applied migrations so only the copy inside it is
  *     shareable, and `docs/agents/triage-labels.md`, which maps the five
@@ -99,50 +103,32 @@
  * one is still a one-line append under its own reasoning — and the append is
  * the last step, not the first. The section below is what comes before it.
  *
- * ── THE BYTE-IDENTICAL FILES THAT ARE STILL NOT ON THIS LIST ──────────────
+ * ── THE BYTE-IDENTICAL FILE THAT IS STILL NOT ON THIS LIST ────────────────
  *
- * Seven paths this repository holds are byte-identical to the pinned
- * template's copy today and are not enrolled. Identical-and-unenrolled reads
- * like a list seven lines short, and the cost of that reading is that the
- * seven get proposed again every time somebody measures. So the reasoning is
- * written down here rather than rediscovered.
+ * One path this repository holds is byte-identical to the pinned template's
+ * copy today and is not enrolled. Identical-and-unenrolled reads like a list
+ * one line short, and the cost of that reading is that it gets proposed again
+ * every time somebody measures. So the reasoning is written down here rather
+ * than rediscovered.
  *
- * Byte-identity is only the FIRST of the two promises an entry makes. The
- * second is the citation rule above, and `check:reconciled` holds every
- * enrolled file to both. Six of the seven cite a `docs/` path, so enrolling
- * any of them reddens the gate on the day it is added rather than on some
- * later day somebody edits it. That is not an argument against the rule: a
- * file that is byte-identical AND cites a repo-local path carries the same
- * address in both repositories, where it resolves in at most one of them, so
- * the citation has to come out of both copies — the template's change to make
- * — before the enrolment is available at all.
+ * There were seven. Six of them cited a `docs/` path, and every one of those
+ * six is now enrolled — which is the whole argument for the citation rule
+ * playing out rather than an exception to it. Byte-identity is only the FIRST
+ * of the two promises an entry makes; the second is the citation rule above,
+ * and a file that is byte-identical AND carries an address resolving in at
+ * most one of the two repositories had to have the citation taken out of BOTH
+ * copies before enrolment was available at all. The template made that change:
+ * a `docs/` path is a defect where it dangles, so the three that pointed a
+ * deployment's maintainer at a document only the template has now name the
+ * thing instead of its address, the two that WROTE to a repo-local path read
+ * it from `repo-config.mjs` — the file that exists for exactly that and is
+ * never shared — and the suite whose throwaway fixtures merely looked like an
+ * address spells them somewhere no tree claims. Six enrolments, none of them
+ * forced.
  *
- *   - `scripts/check-target-schema.mjs` sends a reader to
- *     `docs/connectors/supabase/database.md`, which the template has and this
- *     repository does not, and to `npm run check:target`, which this
- *     deployment does not define. Both are already dead here; enrolling it
- *     would freeze them dead.
- *   - `scripts/generate-agent-account.mjs` names `docs/agents/blueprint.md`
- *     and `docs/reference/agent-account-baseline.json` — the second exists
- *     here and not upstream — and not in prose: those are the paths it writes
- *     to. Nothing about them can be reworded, so this one is not a citation to
- *     remove but a difference to live with.
- *   - `scripts/check-glossary-only.mjs`, `scripts/check-negation-ratchet.mjs`
- *     and `scripts/swept-docs.mjs` each name the `docs/adr/` TREE rather than
- *     a decision inside it, and that tree exists on both sides, so the address
- *     is the one kind that does resolve twice. The scan refuses it anyway: the
- *     pattern that catches `ADR 3` cannot tell it from the folder it lives in.
- *     The gate is the gate, and these three wait on a narrower scan or a
- *     rephrased sentence — either of which is one change, made upstream.
- *   - `scripts/tests/the-router-is-a-router.test.mjs` writes `docs/a.md` and
- *     `docs/t.md` into throwaway repositories under a temp directory. They
- *     address nothing in either repository, which makes this the one finding
- *     here that is a false positive — and a false positive the gate fails on
- *     just the same.
- *
- * The seventh, `public/favicon.svg`, cites nothing and would pass. It stays
- * off for the other reason, the one asked of every candidate: whether this
- * deployment has cause to diverge later. It does. The favicon is identity
+ * The remaining one, `public/favicon.svg`, cites nothing and would pass. It
+ * stays off for the other reason, the one asked of every candidate: whether
+ * this deployment has cause to diverge later. It does. The favicon is identity
  * rather than behaviour, and `index.html` beside it already diverges on
  * exactly that — `<title>PLUS</title>` against the template's — so the icon in
  * the browser tab is the next thing to become this deployment's own. Enrolling
@@ -221,6 +207,27 @@ export const RECONCILED_FILES = [
   // It imports its client half through `@/…`, so it finds the application
   // where the build resolves it rather than where this repository keeps it.
   'scripts/tests/authoring-log.test.mjs',
+
+  // ── The six that used to name a `docs/` path ──
+  //
+  // Each of these ran here already and each was byte-identical already; what
+  // held them off the list was an address. Three of them SENT A READER
+  // somewhere — a connector document, the decision-record tree — and a
+  // sentence naming a tree only one repository has is a dead pointer in the
+  // other, so those sentences now name the thing rather than the path. Two of
+  // them WROTE to a repo-local path, which no rewording reaches: the document
+  // the agent account renders, the baseline beside it, and the trees a sweep
+  // must not rewrite are values now, read from `repo-config.mjs` — the file
+  // that exists to hold this repository's own paths and is never shared. And
+  // the router suite's `docs/a.md` was never an address at all, only a
+  // fixture spelled like one; it builds them under `notes/` now, which costs
+  // nothing and saves a line-based gate from a finding it cannot judge.
+  'scripts/check-glossary-only.mjs',
+  'scripts/check-negation-ratchet.mjs',
+  'scripts/check-target-schema.mjs',
+  'scripts/generate-agent-account.mjs',
+  'scripts/swept-docs.mjs',
+  'scripts/tests/the-router-is-a-router.test.mjs',
 
   // ── Two data files ──
   //

@@ -126,7 +126,7 @@
  * Run: node scripts/check-retired-identifiers.mjs   (also: npm run check:identifiers)
  */
 import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
   RETIRED_IDENTIFIER_FRAGMENTS,
