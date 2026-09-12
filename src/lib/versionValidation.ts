@@ -15,21 +15,14 @@ export type VersionMode = 'blank' | 'duplicate'
  * constraint, and anything outside this list is refused by the insert. The
  * list here was previously `happy | alternative | edge-case | sad`, of which
  * **two did not exist**: picking "Edge case" or "Sad path" built a row the
- * database rejected, so half the dropdown could not be submitted. In the other
- * direction `custom` was unreachable, and `custom` is what Goal Setting's five
- * paths are — the app could not have created the data it was already showing.
+ * database rejected, so half the dropdown could not be submitted — the app
+ * could not create the data it was already showing.
  *
  * Keep this in step with the constraint. If a new kind is wanted, the
  * constraint changes first.
  */
 export const PATH_KINDS = ['happy', 'variant', 'exception'] as const
 export type PathKind = (typeof PATH_KINDS)[number]
-
-export const PATH_KIND_LABELS: Record<PathKind, string> = {
-  happy: 'Happy',
-  variant: 'Variant',
-  exception: 'Exception',
-}
 
 export type DraftVersion = {
   mode: VersionMode
