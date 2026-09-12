@@ -46,18 +46,25 @@ you and measuring against it reports no divergence at all.
 
 ## The paths upstream may never change
 
-`scripts/template-quarantine.json` declares nine patterns this instance owns:
-its migrations, its seed files and `seed.sql`, its Supabase config, `src/data/`,
-`src/config.ts`, the generated `src/types/database.ts`, and the canvas agent's
-`role.md` and `canvas-adapter.md`. `npm run check:template-quarantine` inspects
+`scripts/template-quarantine.json` declares five patterns this instance owns:
+its migrations, its seed files and `seed.sql`, its Supabase config, and
+`deployment/**` — its own source root, whole, which holds the
+`DeploymentConfig`, the bootstrap, the cover, the brand dials, the canvas
+agent's `canvas-adapter.md`, this deployment's own `types/database.ts` and the
+cross-repo contract with uno-bot. `npm run check:template-quarantine` inspects
 every merge commit in a range whose merged-in side descends from the template's
 root, and fails the merge that took the package's version of one.
 
-It held eleven patterns until #326 S4, when the two one-off data repair shims
-were deleted rather than defended. That is the healthier way off this list: a
-quarantine entry protects a file the template must not touch, so an entry that
-goes away because its file did is the list getting shorter for the right
-reason.
+It held eleven patterns, then nine, and it has never grown. Two one-off data
+repair shims came off it when they were deleted rather than defended. Five more
+came off when this deployment stopped keeping a copy of the application: they
+named files under `src/` one at a time, because the deployment's own files were
+scattered through that copy; three of them no longer exist here in any form,
+and the two that survived moved into the deployment root and are covered now as
+part of a tree. That is the healthier way off this list — an entry that goes
+away because its subject did is the list getting shorter for the right reason,
+and a pattern that can never match again reads as protection without being
+any.
 
 It is a check and not a `merge=ours` driver on purpose. The driver is *declared*
 in the committed `.gitattributes` and *defined* in `.git/config`, which is not

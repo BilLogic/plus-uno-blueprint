@@ -44,9 +44,17 @@
  * inverted. `lane` is this vocabulary's OWN word, so the damage is not a name
  * misusing English — it is prose using the domain word for something that is
  * not in the domain, and all but a handful of the sites #605 repaired live in
- * a comment. So comments are IN the subject, over the whole tree
- * (`scripts/scanned-files.mjs`), and the price of that is paid below: every
- * pattern has to earn its place one at a time.
+ * a comment. So comments are IN the subject, over the whole tree — the
+ * commit's files AND the application's, which is the installed package now
+ * (`sweptFiles` in `scripts/scanned-files.mjs`) — and the price of that is
+ * paid below: every pattern has to earn its place one at a time.
+ *
+ * READING THE COMMIT ALONE WOULD BE A LIE HERE, and a quiet one. Every file
+ * this guard was written about — `CanvasAnnotationLayer.tsx`,
+ * `ServiceOverviewView.tsx`, `PhaseScenarioOverview.tsx` — left this
+ * repository with the application, and `git ls-files` cannot reach where they
+ * went. A sweep of the commit alone would go on reporting a clean tree while
+ * reading none of the sentences #605 repaired.
  *
  * ── WHY THIS IS COLLOCATION AND NOT A LIST OF SITES ────────────────────────
  *
@@ -132,7 +140,8 @@ import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { scannedFiles } from '../scanned-files.mjs'
+import { SWEPT_ROOTS, sweptFiles } from '../scanned-files.mjs'
+import { APP_SOURCE_ROOT, appSource } from '../app-source.mjs'
 
 const REPO_ROOT = resolve(new URL('../..', import.meta.url).pathname)
 
@@ -249,7 +258,19 @@ export function layerSenseIn(source) {
 }
 
 test('nothing called a lane is a layer', () => {
-  const found = scannedFiles(REPO_ROOT)
+  const files = sweptFiles(REPO_ROOT)
+  // The listing is asserted before it is read. A sweep whose corpus has lost a
+  // root reports nothing and is indistinguishable from a tree with nothing
+  // wrong in it — and this guard's own worst-hit files are inside the package,
+  // which is the one root a file listing cannot reach on its own.
+  for (const root of SWEPT_ROOTS) {
+    assert.ok(
+      files.some((path) => path.startsWith(root)),
+      `${root} is not in the subject, so this sweep is not reading it`,
+    )
+  }
+
+  const found = files
     .filter((path) => !quotesTheRetiredSense(path))
     .flatMap((path) => {
       let source
@@ -338,16 +359,18 @@ test('the two files that hold the most lanes are read whole and stay quiet', () 
   // lines apart, and is the standing proof that a per-file sense does not
   // exist. The floor on the count is what stops either assertion from going
   // quietly vacuous if the word leaves the file.
-  const read = (path) => readFileSync(resolve(REPO_ROOT, path), 'utf8')
-
-  const overview = read('src/components/editor/ServiceOverviewView.tsx')
+  // Both files belong to the APPLICATION, so both are read out of the package
+  // through the helper that names the missing file and where it was expected:
+  // an unreadable component would otherwise read as a component with no lanes
+  // in it, which is the vacuous pass this suite is built around refusing.
+  const overview = appSource('components/editor/ServiceOverviewView.tsx')
   assert.ok(
     (overview.match(/lanes?/gi) ?? []).length >= 15,
     'ServiceOverviewView.tsx no longer holds the genuine uses this asserts about',
   )
   assert.deepEqual(layerSenseIn(overview), [])
 
-  const phase = read('src/components/blueprint/PhaseScenarioOverview.tsx')
+  const phase = appSource('components/blueprint/PhaseScenarioOverview.tsx')
   assert.ok(
     phase.includes("The reveal's arrow layer (stage 4)"),
     'the layer sense left the block',
@@ -381,7 +404,9 @@ test('the documents that record the rename may quote what it mangled', () => {
       'supabase/migrations/20260831100000_three_variables_that_still_said_layer.sql',
     ),
   )
-  assert.ok(!quotesTheRetiredSense('src/styles/blueprint.css'))
-  assert.ok(!quotesTheRetiredSense('src/components/editor/ServiceOverviewView.tsx'))
+  assert.ok(!quotesTheRetiredSense(`${APP_SOURCE_ROOT}/styles/blueprint.css`))
+  assert.ok(
+    !quotesTheRetiredSense(`${APP_SOURCE_ROOT}/components/editor/ServiceOverviewView.tsx`),
+  )
   assert.ok(!quotesTheRetiredSense('scripts/authored_fields.mjs'))
 })

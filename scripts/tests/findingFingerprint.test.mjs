@@ -1,6 +1,14 @@
+/**
+ * The identity of an audit finding, held to its algorithm.
+ *
+ * The function under test is the APPLICATION's, and this repository no longer
+ * holds the application — so it is reached through `@/…`, the alias
+ * `vite.config.ts` points at the installed package's source. The subject did
+ * not change; only where it is read from did.
+ */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { findingFingerprint } from '../../src/lib/findingFingerprint.ts'
+import { findingFingerprint } from '@/lib/findingFingerprint.ts'
 
 test('cell order never changes identity', async () => {
   const a = await findingFingerprint('gap-sweep', ['c', 'a', 'b'], undefined)

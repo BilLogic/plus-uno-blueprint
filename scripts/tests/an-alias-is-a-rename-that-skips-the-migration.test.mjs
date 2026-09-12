@@ -19,36 +19,43 @@
  * design. `check-retired-identifiers` argues at length that a check which
  * greps prose needs an exemption for every filename and every sentence, "dozens
  * of entries, each one a place to hide something real." That argument applies
- * here with force: `src/` holds Tailwind's `hover:text`, `visible:ring` and 115
- * more colon pairs per variant, so a repository-wide sweep for `word:word`
- * would be exemptions all the way down. An alias in a select string is the one
+ * here with force: the application holds Tailwind's `hover:text`,
+ * `visible:ring` and 115 more colon pairs per variant, so a tree-wide sweep
+ * for `word:word` would be exemptions all the way down. An alias in a select string is the one
  * construct that can rename a live column to a retired word for every consumer
  * at once, it has exact syntax, and it lives only where a select string lives.
  * That is a subject small enough to check without exempting anything.
+ *
+ * WHERE THAT SUBJECT LIVES NOW. A select string is written wherever a query
+ * is, which is the APPLICATION — the installed package this deployment reads
+ * the app out of — and this deployment's own source beside it. The retired
+ * words are THIS database's, so a package release that aliases one of them
+ * hands it to this deployment's consumers at runtime; that the fix would be a
+ * pin or an upstream ticket rather than an edit here does not make the finding
+ * less true. `scripts/check-database-names.mjs` sweeps the same pair of roots
+ * on the same reasoning.
  *
  * Run: npm test
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { readFileSync, readdirSync, statSync } from 'node:fs'
-import { join, relative, resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { RETIRED_IDENTIFIER_FRAGMENTS } from '../retired-vocabulary.mjs'
+import { appSourceFiles, deploymentSourceFiles } from '../app-source.mjs'
 
 const REPO_ROOT = process.cwd()
-const SOURCE_ROOT = 'src'
 
-/** Files that may hold a select string. */
-function sourceFiles(dir) {
-  const found = []
-  for (const entry of readdirSync(dir)) {
-    const path = join(dir, entry)
-    if (statSync(path).isDirectory()) {
-      found.push(...sourceFiles(path))
-    } else if (/\.tsx?$/.test(entry) && !/\.test\.tsx?$/.test(entry)) {
-      found.push(path)
-    }
-  }
-  return found
+/**
+ * Files that may hold a select string, from both roots.
+ *
+ * Both readers refuse an empty result, which is the assertion this check needs
+ * most: it reports a finding per alias, so a walk that reached no file reports
+ * none and reads exactly like a repository with no retired alias in it.
+ */
+function sourceFiles() {
+  const wanted = (path) => /\.tsx?$/.test(path) && !/\.test\.tsx?$/.test(path)
+  return [...appSourceFiles(wanted), ...deploymentSourceFiles(wanted)]
 }
 
 /**
@@ -93,11 +100,11 @@ export function retiredAliases(select) {
 
 test('no select string aliases a row field to a word the database retired', () => {
   const findings = []
-  for (const file of sourceFiles(resolve(REPO_ROOT, SOURCE_ROOT))) {
-    const source = readFileSync(file, 'utf8')
+  for (const file of sourceFiles()) {
+    const source = readFileSync(resolve(REPO_ROOT, file), 'utf8')
     for (const select of selectStrings(source)) {
       for (const alias of retiredAliases(select)) {
-        findings.push(`${relative(REPO_ROOT, file)}: ${alias}`)
+        findings.push(`${file}: ${alias}`)
       }
     }
   }

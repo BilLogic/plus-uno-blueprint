@@ -16,9 +16,15 @@
  * sweeps, one listing, one tree. The template solves the same problem the same
  * way in `scripts/check-standalone.mjs`, whose exclusions are that
  * repository's and not ours.
+ *
+ * Since this deployment stopped holding the application, "one tree" is two:
+ * the commit's files and the installed package's source. `sweptFiles` is the
+ * union, and it is what a sweep claiming to read this codebase's prose must
+ * use — see its own header for why the git listing alone stopped being that.
  */
 import { execFileSync } from 'node:child_process'
 import { resolve } from 'node:path'
+import { APP_SOURCE_ROOT, appSourceFiles } from './app-source.mjs'
 
 const REPO_ROOT = resolve(new URL('..', import.meta.url).pathname)
 
@@ -39,3 +45,37 @@ export function scannedFiles(root = REPO_ROOT) {
     return true
   })
 }
+
+/**
+ * The commit's files PLUS the application's, which is what a prose sweep of
+ * "this codebase" now has to mean.
+ *
+ * `git ls-files` can never reach `node_modules`, and since this deployment
+ * stopped holding the application that is where two thirds of the prose went.
+ * The listing above did not start reporting an error when that happened; it
+ * went on returning eleven hundred files and every sweep over it went on
+ * passing, having stopped reading a single component, hook or stylesheet. That
+ * is the exact failure `scripts/app-source.mjs` exists to refuse, and a guard
+ * that cannot see the code it is about is worse than no guard, because the
+ * first is believed.
+ *
+ * A finding inside the package is NOT fixable here — it is a pin to hold or an
+ * upstream ticket, the same position `scripts/check-database-names.mjs` takes
+ * about the same tree — and it is still worth knowing, because the sentences
+ * in there are the ones this deployment ships to a reader.
+ *
+ * The package walk resolves from the working directory, which is the
+ * repository root under vitest; `root` addresses the git listing only.
+ */
+export function sweptFiles(root = REPO_ROOT) {
+  return [...scannedFiles(root), ...appSourceFiles((path) => !BINARY.test(path))]
+}
+
+/** The roots a whole-tree sweep must have read something from. @see sweptFiles */
+export const SWEPT_ROOTS = Object.freeze([
+  'deployment/',
+  'scripts/',
+  'docs/',
+  'supabase/',
+  `${APP_SOURCE_ROOT}/`,
+])

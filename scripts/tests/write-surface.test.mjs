@@ -3,7 +3,7 @@
  * The served-adapter guard's matchers, and the manifest it grades.
  *
  * The guard exists because a list of identifiers wearing prose reads like
- * prose: `src/lib/agent/canvas-adapter.md` names every write tool and every
+ * prose: `deployment/agent/canvas-adapter.md` names every write tool and every
  * read tool and calls each row "the FULL surface", and the agent reads that
  * sentence as permission. Upstream's copy of that row named five tools that
  * have never existed here and omitted thirty-three that do (#115).
@@ -42,8 +42,13 @@ import {
 const REPO_ROOT = process.cwd()
 const read = (path) => readFileSync(resolve(REPO_ROOT, path), 'utf8')
 
-const ADAPTER = 'src/lib/agent/canvas-adapter.md'
+// This deployment's own adapter, and the application it overrides one document
+// of. The adapter moved to `deployment/` with the rest of this repository's
+// code; the application moved into the package. `APP` is how the two are told
+// apart at every read below.
+const ADAPTER = 'deployment/agent/canvas-adapter.md'
 const PACKAGE = 'node_modules/agentic-service-blueprinting'
+const APP = `${PACKAGE}/src`
 
 // ---------------------------------------------------------------------------
 // The surface rows
@@ -128,12 +133,12 @@ const WIRED = {
     '}',
   ].join('\n'),
   docs: [
-    "import canvasAdapter from '@/lib/agent/canvas-adapter.md?raw'",
+    "import canvasAdapter from '~/agent/canvas-adapter.md?raw'",
     'export const REFERENCE_DOCS = {',
     "  'canvas-adapter': canvasAdapter,",
     '}',
   ].join('\n'),
-  harness: "const adapterDoc = readFileSync(resolve(ROOT, 'src/lib/agent/canvas-adapter.md'))",
+  harness: "const adapterDoc = readFileSync(resolve(ROOT, 'deployment/agent/canvas-adapter.md'))",
 }
 
 test('correctly wired modules report no fault', () => {
@@ -161,7 +166,7 @@ test('loop.ts importing the override again fails, even while splicing the record
   // A second copy of the same document. It reads as harmless — the two are
   // identical today — and it is how the prompt and `get_reference` came apart
   // before: one of them keeps the stale bytes after the other is re-registered.
-  const loop = `import canvasAdapterDoc from '@/lib/agent/canvas-adapter.md?raw'\n${WIRED.loop}`
+  const loop = `import canvasAdapterDoc from '~/agent/canvas-adapter.md?raw'\n${WIRED.loop}`
   const faults = wiringFaults({ ...WIRED, loop })
   assert.equal(faults.length, 1)
   assert.match(faults[0].problem, /imports the override directly/)
@@ -318,7 +323,7 @@ test('listDifferences names both a missing warning and a stale one', () => {
 
 function liveResult() {
   const referenceDocs = [
-    ...read('src/lib/agent/tools/referenceDocs.ts').matchAll(
+    ...read(`${APP}/lib/agent/tools/referenceDocs.ts`).matchAll(
       /from 'agentic-service-blueprinting\/([^']+\.md)\?raw'/g,
     ),
   ].map(([, name]) => ({ name, text: read(join(PACKAGE, name)) }))
@@ -354,31 +359,52 @@ test('the override is the file the app serves, and the package copy still differ
   // `search_blueprint`, on the reasoning that ranked search needs pgvector a
   // portable core cannot carry.
   //
-  // THAT REASON IS GONE. The template ships `search_blueprint` now — switched
-  // off by default, listed in its adapter, built by the deployment that has
-  // the index — and the two rosters have converged to one name apart. What
-  // still keeps this override is that one name: the package adapter lists
-  // `list_scenarios`, the old name for `list_blueprint`, which it serves for
-  // one more release and this app does not have at all. Importing their copy
-  // would ship a "FULL read surface" sentence naming a tool the agent cannot
-  // call — the exact defect this check exists to catch, in the exact shape it
-  // was first caught in.
+  // THAT REASON IS GONE TOO, and so is the one after it. The template ships
+  // `search_blueprint` — switched off by default, built by the deployment that
+  // has the index — and the rosters have converged. The anchor then moved to
+  // `list_scenarios`, on the reasoning that the package named a tool "this app
+  // does not have at all". Since the import flip that sentence cannot be true
+  // of anything: this app IS the package's registry, so the two can no longer
+  // disagree about which tools exist. `check:write-surface` proves it on every
+  // run by holding both rows to WRITE_TOOL_NAMES and READ_TOOL_NAMES.
   //
-  // So the anchor moves to that alias. When the template retires it, this
-  // trips, and deleting the override in favour of the package's copy becomes
-  // the right thing to do rather than the convenient one.
+  // What still keeps the override is not a roster difference but an AUDIENCE
+  // one, and it is the more durable kind. The package's adapter is written for
+  // every deployment at once, so its read row hedges: `search_blueprint` comes
+  // with "not every deployment has it; if it is not in your tool list it does
+  // not exist here". That hedge is correct upstream and is noise here — this
+  // deployment's database carries the function, always, and an agent told to
+  // doubt a tool it definitely has is an agent that will decline to use it.
+  // The override states the surface flatly instead.
+  //
+  // And one structural dependency: `## Superseded package references` is a
+  // heading `scripts/check-write-surface.mjs` uses to BOUND its retired-
+  // spelling scan of the rest of this file. The package's copy has no such
+  // heading, so serving it would silently unbound that scan.
+  //
+  // Both anchors are asserted. When the package stops hedging AND grows the
+  // heading, this trips, and deleting the override becomes the right thing to
+  // do rather than the convenient one.
   const ours = read(ADAPTER)
   const theirs = read(join(PACKAGE, 'references/canvas-adapter.md'))
   assert.notEqual(ours, theirs)
   assert.match(ours, /OVERRIDES a pinned package document/)
   assert.match(
-    theirs,
-    /`list_scenarios`/,
-    'the package adapter no longer names list_scenarios — the last reason this override exists is gone. Delete it and serve the package copy.',
+    ours,
+    /^## Superseded package references$/m,
+    'the override lost the heading check-write-surface.mjs bounds its scan with',
   )
-  // And the reason is real: this app does not declare that tool, so the
-  // package sentence would be naming something the agent cannot call.
-  assert.doesNotMatch(read('src/lib/agent/tools/specs.ts'), /name: 'list_scenarios'/)
+  assert.match(
+    theirs,
+    /not every deployment has it/,
+    'the package adapter stopped hedging about search_blueprint. If it has also ' +
+      'grown a "Superseded package references" heading, the last two reasons this ' +
+      'override exists are gone — delete it and serve the package copy.',
+  )
+  // The hedge is what this deployment does not want, and the reason is real:
+  // its config turns the tool on, so the agent always has it.
+  assert.doesNotMatch(ours, /not every deployment has it/)
+  assert.match(read('deployment/deployment.ts'), /search:\s*\{\s*\n?\s*enabled: true/)
 })
 
 test('every declared tool is on exactly one surface', () => {
@@ -387,7 +413,7 @@ test('every declared tool is on exactly one surface', () => {
   // on files. The bug: a new tool is declared, classified nowhere, and so is
   // absent from both "FULL surface" rows — #115's shape, reintroduced one tool
   // at a time.
-  const specs = read('src/lib/agent/tools/specs.ts')
+  const specs = read(`${APP}/lib/agent/tools/specs.ts`)
   const declared = [...specs.matchAll(/^ {4}name: '([a-z_]+)',$/gm)].map(([, name]) => name)
   const rosters = ['READ_TOOL_NAMES', 'INTERFACE_TOOL_NAMES', 'WRITE_TOOL_NAMES'].map((name) => [
     name,
@@ -410,7 +436,7 @@ test('the supersession list is the installed docs that actually teach the wrong 
   // Reported as names rather than a count so a failure says which document.
   const claimed = supersededPaths(read(ADAPTER))
   const actual = [
-    ...read('src/lib/agent/tools/referenceDocs.ts').matchAll(
+    ...read(`${APP}/lib/agent/tools/referenceDocs.ts`).matchAll(
       /from 'agentic-service-blueprinting\/([^']+\.md)\?raw'/g,
     ),
   ]

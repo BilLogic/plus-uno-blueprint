@@ -7,6 +7,10 @@
  * individually defensible, no two agreeing. These tests exist so that the
  * table in `cellPickGrammar` is the only place the answer lives.
  *
+ * The table is the APPLICATION's, and the application is no longer in this
+ * repository — `@/…` is the alias `vite.config.ts` points at the installed
+ * package's source, so this reads the grammar the deployment actually runs.
+ *
  * Run: npm test
  */
 import { test } from 'vitest'
@@ -16,7 +20,7 @@ import {
   clickPicks,
   pickModeForClick,
   pickModeForMarquee,
-} from '../../src/lib/cellPickGrammar.ts'
+} from '@/lib/cellPickGrammar.ts'
 
 const click = (mods = {}) => ({
   shiftKey: false,

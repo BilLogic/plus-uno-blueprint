@@ -66,13 +66,13 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { readFileSync, readdirSync, statSync } from 'node:fs'
-import { join, relative, resolve } from 'node:path'
+import { readFileSync, readdirSync } from 'node:fs'
+import { join, resolve } from 'node:path'
+import { APP_SOURCE_ROOT, appSourceFiles, deploymentSourceFiles } from '../app-source.mjs'
 import { LABEL_COLUMNS } from '../interface-schema-map.mjs'
 import { replayMigrations } from '../migration-replay.mjs'
 
 const ROOT = resolve(new URL('../..', import.meta.url).pathname)
-const SRC = resolve(ROOT, 'src')
 
 /* ----------------------------------------------------------- the subject */
 
@@ -113,21 +113,24 @@ const LABEL_ELEMENT = new RegExp(
 */
 const LABEL_PROP = /\b(label|term|title)\s*=\s*"([^"]*)"/
 
-function walk(dir) {
-  return readdirSync(dir).flatMap((entry) => {
-    const path = join(dir, entry)
-    if (statSync(path).isDirectory()) return walk(path)
-    if (!/\.tsx$/.test(entry) || entry.includes('.test.')) return []
-    return [path]
-  })
-}
-
+/**
+ * Every file a panel can be written in, from both source roots.
+ *
+ * The panels are the APPLICATION's and are read out of the package this
+ * deployment imports it from; the deployment's own `.tsx` is walked too,
+ * because a panel this repository writes labels a column exactly as one
+ * upstream does and would otherwise be the one label site with nothing
+ * watching it.
+ *
+ * Both walks refuse to come back empty. That is not ceremony here: this
+ * walked `src/`, and the day that directory left, "no panel label says a word
+ * the schema has never heard" would have been true of no panel at all. The
+ * label-count assertion below is the second half of the same guard.
+ */
 export function panelSources() {
-  return walk(SRC)
-    .map((path) => ({
-      file: relative(ROOT, path).split('\\').join('/'),
-      code: readFileSync(path, 'utf8'),
-    }))
+  const isPanel = (path) => /\.tsx$/.test(path) && !path.includes('.test.')
+  return [...appSourceFiles(isPanel), ...deploymentSourceFiles(isPanel)]
+    .map((file) => ({ file, code: readFileSync(resolve(ROOT, file), 'utf8') }))
     .sort((a, b) => a.file.localeCompare(b.file))
 }
 
@@ -196,7 +199,7 @@ test('no panel label says a word the schema has never heard', () => {
 test('the label check goes red on each of the four, and leaves their neighbours alone', () => {
   const planted = [
     {
-      file: 'src/components/blueprint/Planted.tsx',
+      file: `${APP_SOURCE_ROOT}/components/blueprint/Planted.tsx`,
       code: [
         '<Field label="Text" hint="What this cell says on the grid." />',
         '<Field label="Value" hint="Who gets what from it." />',
@@ -424,7 +427,7 @@ test('every panel label is a word the map binds to the schema', () => {
 test('the unmapped-label check goes red on a label nobody bound', () => {
   const planted = [
     {
-      file: 'src/components/blueprint/Planted.tsx',
+      file: `${APP_SOURCE_ROOT}/components/blueprint/Planted.tsx`,
       code: [
         '<Field label="Cadence" hint="How often this repeats." />',
         // Already mapped, and must not be reported: the check is about words
@@ -437,7 +440,7 @@ test('the unmapped-label check goes red on a label nobody bound', () => {
     },
   ]
   assert.deepEqual(labelsMissingFromMap(panelLabels(planted)), [
-    '"Cadence" (src/components/blueprint/Planted.tsx)',
+    `"Cadence" (${APP_SOURCE_ROOT}/components/blueprint/Planted.tsx)`,
   ])
 })
 
@@ -465,7 +468,7 @@ test('the fossil check goes red on a row no panel says', () => {
     { label: 'Content', names: ['cells.content'], because: '' },
     { label: 'Applies when', names: ['paths.summary'], because: '' },
   ]
-  const labels = [{ file: 'src/x.tsx', component: 'Field', label: 'Content' }]
+  const labels = [{ file: `${APP_SOURCE_ROOT}/x.tsx`, component: 'Field', label: 'Content' }]
   assert.deepEqual(rowsNoPanelSays(labels, map), ['Applies when'])
 })
 

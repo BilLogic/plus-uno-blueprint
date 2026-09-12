@@ -1,7 +1,28 @@
 #!/usr/bin/env node
 /**
- * `npm run check:database-types:live` — does `src/types/database.ts` still
- * describe the database?
+ * `npm run check:database-types:live` — does this deployment's database still
+ * satisfy the types the application was compiled against?
+ *
+ * WHOSE STATEMENT OF THE SCHEMA THIS READS. The application's own
+ * `types/database.ts` is the PACKAGE's, and it describes the template's
+ * database. This is not the template's database: it carries columns and
+ * functions of this deployment's own, and it spells two relations the way this
+ * deployment's migrations spelled them. Comparing against the package's copy
+ * therefore asks a question with no true answer — it reported thirteen
+ * disagreements, and not one of them was a defect in either artifact.
+ *
+ * So the declaration is the DEPLOYMENT'S, and where it is found is
+ * `schemaDeclaration` in `scripts/agent-account.mjs` — the same three roots, in
+ * the same order, that the agent account resolves: this deployment's own root
+ * first, then a repository that still keeps a copy of the application, then the
+ * package's as a last-resort default. One owner for the question "where does
+ * this repository say what its schema is", read by both the check and the
+ * generator, so the two cannot come to disagree about the subject.
+ *
+ * The question the comparison asks is unchanged and is the one that matters to
+ * a deployment: is this database a runtime superset of what the code reading it
+ * expects? A missing column here is not a stale file, it is a read that fails in
+ * production.
  *
  * The comparison, and why nothing else could have caught the drift it exists
  * for, are written once in `scripts/database-types.mjs`. This file is the
@@ -28,10 +49,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { schemaDeclaration } from './agent-account.mjs'
 import { functionsInFile, tablesInFile, typesDrift } from './database-types.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const TYPES = path.join(ROOT, 'src', 'types', 'database.ts')
 
 const COLUMNS_SQL = `
   select coalesce(json_agg(json_build_object(
@@ -130,7 +151,18 @@ function main() {
     functions.map((row) => [row.name, parseArguments(row.args ?? '')]),
   )
 
-  const source = fs.readFileSync(TYPES, 'utf8')
+  const declaration = schemaDeclaration(ROOT, (candidate) => fs.existsSync(candidate))
+  const relative = path.relative(ROOT, declaration.path)
+  if (!fs.existsSync(declaration.path)) {
+    console.error(
+      `No statement of the schema is on disk. The last place looked was ` +
+        `${relative}, which is the package's own and arrives with an install — ` +
+        `so there is nothing to compare the database against, which is a broken ` +
+        `check and not a passing one. Run npm ci.`,
+    )
+    process.exit(1)
+  }
+  const source = fs.readFileSync(declaration.path, 'utf8')
   const problems = typesDrift({
     fileTables: tablesInFile(source),
     fileFunctions: functionsInFile(source),
@@ -141,15 +173,16 @@ function main() {
 
   if (problems.length === 0) {
     console.log(
-      `src/types/database.ts agrees with the database: ${dbTables.size} table(s), ` +
-        `${dbFunctions.size} function(s).`,
+      `this database satisfies ${relative} (the ${declaration.owner}'s): ` +
+        `${dbTables.size} table(s), ${dbFunctions.size} function(s).`,
     )
     return
   }
   for (const problem of problems) console.error(problem)
   console.error(
-    `\n${problems.length} disagreement(s). Regenerate the file rather than patching it — ` +
-      'its header says which generator works here and which two hand-applied layers to put back.',
+    `\n${problems.length} disagreement(s) against ${relative}. Regenerate the file ` +
+      'rather than patching it — its header says which generator works here and which ' +
+      'hand-applied layers to put back.',
   )
   process.exit(1)
 }

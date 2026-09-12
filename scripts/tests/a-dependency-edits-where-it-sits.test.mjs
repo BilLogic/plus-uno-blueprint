@@ -14,7 +14,11 @@
  *
  * What is here is the DECLARATION side: that those assertions are in those
  * files, that the proof is not an owner run, and that the two halves of the
- * retirement actually happened in the app. Every one is shown going red
+ * retirement actually happened in the app. The app half is read out of the
+ * installed package, because that is where the application lives now — which
+ * makes the join these tests perform a STRONGER one than it was: the migration
+ * is this deployment's, the code is the code this deployment actually runs,
+ * and neither is a copy of the other sitting in the same tree. Every one is shown going red
  * against a copy with the declaration cut out, because a search two lists
  * failed to find passes exactly as loudly as a search that agreed — the
  * argument `scripts/tests/rls-posture.test.mjs` makes and `integrity-guards`
@@ -26,8 +30,10 @@ import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { appSource, appSourceFiles, deploymentSourceFiles } from '../app-source.mjs'
 
 const REPO_ROOT = process.cwd()
+/** A file of THIS repository: a migration, the replay baseline. */
 const read = (path) => readFileSync(resolve(REPO_ROOT, path), 'utf8')
 
 const EDIT_MIGRATION =
@@ -170,7 +176,7 @@ test('the drawn kind the proof counts is the kind the canvas filters on', () => 
   // a kind change" is two claims in two places. The migration proves the data
   // half — the count of `leads_to` rows goes to 0 and back to 1 across the
   // change — and this is the line that makes that count the thing that draws.
-  const arrows = read('src/components/blueprint/BlueprintDependencyArrows.tsx')
+  const arrows = appSource('components/blueprint/BlueprintDependencyArrows.tsx')
   assert.match(arrows, /kind \?\? 'leads_to'\) === 'leads_to'/)
   assert.match(read(EDIT_MIGRATION), /kind = 'leads_to'/)
 })
@@ -219,27 +225,72 @@ test('the backfill is not in the replay baseline', () => {
   assert.doesNotMatch(baseline.why, /20260909040000/)
 })
 
+/** One source file's code, with its comments taken out. */
+function codeOf(source) {
+  return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
+}
+
+/** Every `setCellDependency(client, { … })` argument object in `source`. */
+export function setCellDependencyArguments(source) {
+  return [...source.matchAll(/setCellDependency\(\s*client,\s*\{([\s\S]*?)\n\s*\}\)/g)].map(
+    (match) => match[1],
+  )
+}
+
 test('neither the editor nor the agent tool writes name any more', () => {
   // The other half of stage 1. The column keeps its data and loses its job, so
-  // the two things that used to write it have to stop.
-  // Scoped to the two dependency wrappers: `name` is an ordinary argument on
-  // half the file's other functions, and a whole-file search would be about
-  // lanes and paths rather than about edges.
-  const rpc = read('src/lib/authoringRpc.ts')
-  for (const wrapper of ['setCellDependency', 'updateCellDependency']) {
-    const body =
-      rpc.match(new RegExp(`export function ${wrapper}\\(([\\s\\S]*?)\\n\\}`))?.[0] ?? ''
-    assert.notEqual(body, '', `${wrapper} is gone`)
-    // Comments stripped first. The rule is about what the wrapper SENDS, and
-    // the reason `name` is omitted rather than nulled has to be sayable in the
-    // code that omits it — a test that forbids the word outright forbids its
-    // own explanation.
-    const code = body.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
-    assert.doesNotMatch(code, /\bname\b/, `${wrapper} still names the retired column`)
-    assert.match(body, /\bnote\b/, `${wrapper} does not carry the note`)
-  }
+  // the things that used to write it have to stop.
+  //
+  // THE QUESTION MOVED FROM THE WRAPPER TO ITS CALLERS, and the move is the
+  // flip's doing rather than a softening. `setCellDependency` belongs to the
+  // application, which is the installed package now, and there the wrapper
+  // still declares an optional `name` and forwards `input.name ?? null`. This
+  // deployment cannot edit that and should not want to: the argument is passed
+  // by nothing, it arrives as null, and the sibling migration
+  // `20260909050000_an_omitted_argument_is_not_an_erasure.sql` makes a null
+  // name coalesce against the row already there — so the column is neither
+  // written nor erased. What stage 1 actually claims is that no CALLER supplies
+  // one, and that is the claim asked here, of every call site in the app rather
+  // than of the one function they all go through.
+  const rpc = appSource('lib/authoringRpc.ts')
+  const update =
+    rpc.match(/export function updateCellDependency\(([\s\S]*?)\n\}/)?.[0] ?? ''
+  assert.notEqual(update, '', 'updateCellDependency is gone')
+  // Comments stripped first. The rule is about what the wrapper SENDS, and the
+  // reason `name` is absent has to be sayable in the code that leaves it out —
+  // a test that forbids the word outright forbids its own explanation.
+  assert.doesNotMatch(
+    codeOf(update),
+    /\bname\b/,
+    'updateCellDependency still names the retired column',
+  )
+  assert.match(update, /\bnote\b/, 'updateCellDependency does not carry the note')
 
-  const registry = read('src/lib/agent/tools/registry.ts')
+  // Both roots, because either could hold a call site: the application's own
+  // editor and agent tool, and whatever this deployment writes beside them.
+  // Both readers refuse an empty walk, and the floor below refuses a walk that
+  // read files and found no call — a search that failed to find the editor
+  // passes exactly as loudly as an editor that has stopped writing the column.
+  const wanted = (path) => /\.tsx?$/.test(path) && !/\.test\.tsx?$/.test(path)
+  const callSites = [...appSourceFiles(wanted), ...deploymentSourceFiles(wanted)].flatMap(
+    (path) =>
+      setCellDependencyArguments(codeOf(readFileSync(resolve(REPO_ROOT, path), 'utf8'))).map(
+        (args) => ({ path, args }),
+      ),
+  )
+  assert.ok(
+    callSites.length >= 2,
+    `only ${callSites.length} call sites of setCellDependency found — the editor ` +
+      'and the agent tool are both meant to be here',
+  )
+  const naming = callSites.filter((site) => /\bname\s*:/.test(site.args))
+  assert.deepEqual(
+    naming.map((site) => site.path),
+    [],
+    'a call site still supplies the retired column',
+  )
+
+  const registry = appSource('lib/agent/tools/registry.ts')
   const call = registry.match(/case 'create_cell_dependency': \{[\s\S]*?\n      \}/)?.[0] ?? ''
   assert.notEqual(call, '', 'create_cell_dependency is gone from the registry')
   assert.match(call, /note: s\(args, 'label'\) \?\? null/)
@@ -248,7 +299,7 @@ test('neither the editor nor the agent tool writes name any more', () => {
   // The argument itself does NOT move: `specs.ts` is a pinned cross-repo
   // contract and renaming an argument there without an upstream release is a
   // skill telling a model to send something this app rejects.
-  assert.match(read('src/lib/agent/tools/specs.ts'), /label: str\(/)
+  assert.match(appSource('lib/agent/tools/specs.ts'), /label: str\(/)
 
   // Red.
   assert.match(call.replace("note: s(args, 'label')", "name: s(args, 'label')"), /name: s\(args, 'label'\)/)

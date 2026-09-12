@@ -10,14 +10,17 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { appSource } from '../app-source.mjs'
+// The subject is the APPLICATION's capture helper, and the application is no
+// longer a directory in this repository — it is the installed package. `@/…` is
+// the alias that names it, in the test exactly as in the app code, so this goes
+// on exercising the very module the deployment runs rather than a copy of it.
 import {
   captureMarks,
   describeMarks,
   markBounds,
   overlaps,
-} from '../../src/lib/annotationCapture.ts'
+} from '@/lib/annotationCapture.ts'
 
 const cell = (cellId, left, top, right, bottom) => ({
   cellId,
@@ -179,29 +182,38 @@ test('the description names what is being handed over', () => {
  */
 const ATTRIBUTE = 'data-canvas-annotation-layer'
 
-/** Files that emit the attribute, and files that query for it. */
-const EMITTERS = ['src/components/editor/CanvasAnnotationLayer.tsx']
+/**
+ * Files that emit the attribute, and files that query for it.
+ *
+ * Paths inside the APPLICATION's source, which is the installed package — the
+ * element, its four readers and the stylesheet all went there with the rest of
+ * the app. The join is the same one and is worth more for having moved: the
+ * selector a pinned release ships is the selector this deployment's agent runs
+ * against the element that release draws.
+ */
+const EMITTERS = ['components/editor/CanvasAnnotationLayer.tsx']
 const READERS = [
-  'src/contexts/CanvasAnnotationProvider.tsx',
-  'src/components/editor/AnnotationCaptureMenu.tsx',
-  'src/components/editor/ServiceOverviewView.tsx',
-  'src/styles/utilities.css',
+  'contexts/CanvasAnnotationProvider.tsx',
+  'components/editor/AnnotationCaptureMenu.tsx',
+  'components/editor/ServiceOverviewView.tsx',
+  'styles/utilities.css',
 ]
 
 test('every reader of the annotation canvas asks for the attribute it emits', () => {
-  const source = (path) =>
-    readFileSync(resolve(process.cwd(), path), 'utf8')
-
+  // Read through `appSource`, which throws by name where a plain read hands
+  // back an ENOENT: a file this list names that the pinned release no longer
+  // ships is the silent-tool failure below arriving from upstream, and it
+  // should say so rather than look like a missing directory.
   for (const path of EMITTERS) {
     assert.match(
-      source(path),
+      appSource(path),
       new RegExp(`${ATTRIBUTE}=`),
       `${path} no longer emits ${ATTRIBUTE}; every selector below is now dead`,
     )
   }
   for (const path of READERS) {
     assert.ok(
-      source(path).includes(`[${ATTRIBUTE}]`),
+      appSource(path).includes(`[${ATTRIBUTE}]`),
       `${path} queries an attribute nothing emits`,
     )
   }
@@ -209,7 +221,7 @@ test('every reader of the annotation canvas asks for the attribute it emits', ()
   // The failure that shipped: no reader may hold the swept spelling.
   for (const path of [...EMITTERS, ...READERS]) {
     assert.ok(
-      !source(path).includes('data-canvas-annotation-lane'),
+      !appSource(path).includes('data-canvas-annotation-lane'),
       `${path} calls the rendering layer a lane`,
     )
   }

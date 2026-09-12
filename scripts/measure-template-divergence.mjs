@@ -56,16 +56,27 @@ const DEFAULT_REF = 'template/upstream-main'
 const git = (...args) =>
   execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 28 }).trim()
 
-/** Ordered: the first predicate that matches wins, so `src/lib` beats `src other`. */
+/**
+ * Ordered: the first predicate that matches wins.
+ *
+ * The eight `src/…` buckets are gone with `src/` itself. That was not a
+ * cosmetic edit — a path matching no bucket is out of scope entirely, for the
+ * tally AND for `--enrollable`, so while `deployment/` had no bucket this
+ * reporter silently measured nothing about the one tree of this repository's
+ * own code that can still diverge from the template. It reported a short list
+ * and looked healthy.
+ *
+ * `deployment/` is here as ONE bucket rather than the eight the application
+ * had, because it is ten files rather than six hundred, and because the
+ * question it answers is different in kind. A file under `src/` was a copy of
+ * a template file and the interesting number was how far it had drifted. A
+ * file under `deployment/` has no counterpart upstream by construction — this
+ * is the deployment's own code — so what this reporter can say about it is
+ * only ever "the template has nothing here", which is the expected answer and
+ * the reason the bucket is small.
+ */
 export const BUCKETS = [
-  ['src/components', (p) => p.startsWith('src/components/')],
-  ['src/lib', (p) => p.startsWith('src/lib/')],
-  ['src/hooks', (p) => p.startsWith('src/hooks/')],
-  ['src/styles', (p) => p.startsWith('src/styles/')],
-  ['src/contexts', (p) => p.startsWith('src/contexts/')],
-  ['src/types', (p) => p.startsWith('src/types/')],
-  ['src/data', (p) => p.startsWith('src/data/')],
-  ['src (other)', (p) => p.startsWith('src/')],
+  ['deployment', (p) => p.startsWith('deployment/')],
   ['docs', (p) => p.startsWith('docs/')],
   ['scripts', (p) => p.startsWith('scripts/')],
   ['hooks', (p) => p.startsWith('hooks/')],
@@ -74,6 +85,9 @@ export const BUCKETS = [
 
 export const inScope = (path) =>
   !path.startsWith('supabase/') &&
+  // The application is a dependency now, not a tree to compare. Measuring
+  // divergence against it would compare the package to itself.
+  !path.startsWith('node_modules/') &&
   !path.startsWith('dist/') &&
   !path.startsWith('.playwright-mcp/') &&
   !path.startsWith('.claude/') &&

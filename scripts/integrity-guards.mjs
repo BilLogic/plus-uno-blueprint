@@ -21,11 +21,24 @@
  */
 import { readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { APP_SOURCE_ROOT, appSource } from './app-source.mjs'
 
 const REPO_ROOT = resolve(new URL('..', import.meta.url).pathname)
 
 export const MIGRATIONS_DIR = 'supabase/migrations'
-export const STATUS_PATH = 'src/lib/entityStatus.ts'
+
+/**
+ * Where the app declares its status vocabulary.
+ *
+ * Inside the installed package, because the application is not in this
+ * repository any more. The comparison below is the one that gained the most
+ * from that move: it used to hold a migration against a file sitting beside
+ * it, and now holds this deployment's database against the application this
+ * deployment actually runs. A pin bump that adds a status the domain does not
+ * admit is a save that fails on a legal choice, and it fails here first.
+ */
+const STATUS_IN_APP = 'lib/entityStatus.ts'
+export const STATUS_PATH = `${APP_SOURCE_ROOT}/${STATUS_IN_APP}`
 
 /** The migration that adds the composite key and the policy pair. */
 export const GUARD_MIGRATION =
@@ -72,7 +85,14 @@ export function statusesInDomain(root = REPO_ROOT) {
 
 /** The statuses `ENTITY_STATUS` offers, which is what the panel renders. */
 export function statusesInCode(root = REPO_ROOT) {
-  const source = readFileSync(resolve(root, STATUS_PATH), 'utf8')
+  // The real tree reads through `appSource`, whose error names the package and
+  // the install rather than surfacing a bare ENOENT — a missing file there is
+  // almost always an install that has not run. A test root is a throwaway tree
+  // holding this one file at the same relative path, so it is read directly.
+  const source =
+    root === REPO_ROOT
+      ? appSource(STATUS_IN_APP)
+      : readFileSync(resolve(root, STATUS_PATH), 'utf8')
   const block = /export const ENTITY_STATUS = \[([^\]]*)\]/.exec(source)
   if (!block) {
     throw new Error(

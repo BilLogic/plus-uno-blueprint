@@ -1,7 +1,7 @@
 /**
  * `BLUEPRINT_CONTRACT`, as a value, for the checks that hold it to reality.
  *
- * The contract lives in `src/lib/blueprintContract.ts` and must stay
+ * The contract lives in `deployment/lib/blueprintContract.ts` and must stay
  * dependency-free — uno-bot compiles that module inside a Worker. So the
  * checkers cannot import it as TypeScript and had been re-deriving it with
  * one bespoke regexp each. That is its own hazard: a regexp that stops
@@ -14,7 +14,12 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-export const CONTRACT_PATH = 'src/lib/blueprintContract.ts'
+// The contract is this DEPLOYMENT's file, not the application's. It moved with
+// the rest of this repository's own modules when the application left for the
+// installed package: the constants in it are the ones uno-bot vendors from
+// THIS repository, so they have to keep living here, where a change to them is
+// a change this deployment made and can be held to its own migrations.
+export const CONTRACT_PATH = 'deployment/lib/blueprintContract.ts'
 
 const REPO_ROOT = resolve(new URL('..', import.meta.url).pathname)
 const OPENING = 'export const BLUEPRINT_CONTRACT = '

@@ -1,7 +1,7 @@
 ---
 audience: agents
 summary: Query recipes and service-key notes for agents that read the blueprint's database directly rather than through the portal — the supplement to blueprint.md, never a restatement of it.
-sources: src/lib/blueprintContract.ts, docs/engineering/access-and-security.md
+sources: deployment/lib/blueprintContract.ts, docs/engineering/access-and-security.md
 ---
 
 # Direct access to the blueprint
@@ -21,7 +21,7 @@ GET /rest/v1/resources?select=id,cell_id,cell_touchpoint_id,kind,name,url,featur
 ```
 
 Edges embed through their constraint names — the strings PostgREST resolves,
-which `src/lib/blueprintContract.ts` declares and `check:contract:live` probes:
+which `deployment/lib/blueprintContract.ts` declares and `check:contract:live` probes:
 
 ```
 GET /rest/v1/cell_dependencies?select=kind,name,source:cells!cell_dependencies_source_cell_id_fkey(id,content),target:cells!cell_dependencies_target_cell_id_fkey(id,content)

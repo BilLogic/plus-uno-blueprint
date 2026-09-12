@@ -18,6 +18,7 @@ claims:
   - src/components/blueprint/EntityTitleAffordance.tsx
   - src/components/blueprint/Eyebrow.tsx
   - src/components/blueprint/FeaturedResources.tsx
+  - src/components/blueprint/RegistryLink.tsx
   - src/components/blueprint/LaneHeaderAffordance.tsx
   - src/components/blueprint/LanePanel.tsx
   - src/components/blueprint/NotionPropertyRow.tsx

@@ -2,12 +2,13 @@
  * #146 — the words a person reads on screen match the words in the schema.
  *
  * Identifier drift between the app and the database is structurally impossible
- * here: `src/types/database.ts` is generated from the schema, so every table
- * and column name reaches TypeScript by machine and `tsc` fails if the app
- * disagrees. Everything that broke in the 2026-08 rename sat in the places the
- * generator cannot reach, and this is the fourth of them — the one no other
- * ticket covers. Nothing asserts that a button says "lane" when the table says
- * `lanes`. It is true today because the rename was done carefully by hand.
+ * here: the application's `types/database.ts` is generated from the schema,
+ * so every table and column name reaches TypeScript by machine and `tsc`
+ * fails if the app disagrees. Everything that broke in the 2026-08 rename sat
+ * in the places the generator cannot reach, and this is the fourth of them —
+ * the one no other ticket covers. Nothing asserts that a button says "lane"
+ * when the table says `lanes`. It is true today because the rename was done
+ * carefully by hand.
  *
  * SUBJECT: JSX text nodes, the props that reach a reader — `aria-label`,
  * `title`, `placeholder`, `alt`, `label` — and, since #635, the MESSAGE a
@@ -18,11 +19,11 @@
  * different check with a different exemption list.
  *
  * IF THIS PRODUCES A FALSE POSITIVE, NARROW THE SUBJECT — NEVER THE WORD LIST.
- * Fewer prop names, fewer node kinds. `src/lib/tokenDiscipline.test.ts` states
- * the reason: a pattern narrowed to dodge a real case reads, to the next
- * person, as a rule that never covered it. Dropping `layer` from the word list
- * to silence one legitimate use converts this into a rule that never covered
- * `layer` at all.
+ * Fewer prop names, fewer node kinds. The application's
+ * `lib/tokenDiscipline.test.ts` states the reason: a pattern narrowed to dodge
+ * a real case reads, to the next person, as a rule that never covered it.
+ * Dropping `layer` from the word list to silence one legitimate use converts
+ * this into a rule that never covered `layer` at all.
  *
  * IT SHIPS WITH ZERO EXEMPTIONS, and that is an outcome to protect rather than
  * an accident. `derived layer` was the one term that would have forced a
@@ -39,8 +40,9 @@
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { sourceFiles } from '../../src/lib/tokenModel.ts'
+import { join, resolve } from 'node:path'
+import { sourceFiles, stripComments } from '@/lib/tokenModel.ts'
+import { deploymentSourceFiles } from '../app-source.mjs'
 import { RETIRED_COPY_WORDS } from '../retired-vocabulary.mjs'
 
 /** The props whose string value a person reads. */
@@ -65,7 +67,7 @@ const JSX_TEXT = />([^<>{}]+)</g
  *
  * The two subjects above read `.tsx` only, and a `.tsx` file is where the
  * RENDERING lives. Copy that originates in a plain `.ts` module was invisible
- * to all of it — `src/lib/authoringErrors.ts` said "That column is not part of
+ * to all of it — `lib/authoringErrors.ts` said "That column is not part of
  * this version yet" and "Two columns ended up in the same position", on screen,
  * for as long as this guard has existed. The guard's own header called those
  * words "enforced as retired copy", which was true of JSX and not of that file.
@@ -77,7 +79,8 @@ const JSX_TEXT = />([^<>{}]+)</g
  * within a week. A non-rendering module hands a reader one kind of string and
  * it is almost always a message: an error, a warning, a refusal. So the
  * subject is a quoted string bound with `:` or `=` to one of `MESSAGE_NAMES`,
- * in any `.ts` or `.tsx` under `src/`.
+ * in any `.ts` or `.tsx` of either source root — the application's, in the
+ * installed package, and this deployment's own `deployment/`.
  *
  * WHAT THAT DELIBERATELY MISSES — written down because a guard whose blind
  * spot is recorded is worth more than one that claims to catch everything, and
@@ -97,8 +100,8 @@ const JSX_TEXT = />([^<>{}]+)</g
  *      developer-facing catalogues alike (`dev/arrowSituationCatalog.ts` is
  *      twelve legitimate uses of "column" about arrow geometry), and no
  *      name-list separates the two audiences. Widening to them is a decision
- *      about who `src/dev/` and `src/lib/agent/` are written for, and that is
- *      a bigger question than this one.
+ *      about who the application's `dev/` and `lib/agent/` are written for,
+ *      and that is a bigger question than this one.
  *   3. A string passed positionally — `toast('…')`, `new Error('…')`. There is
  *      no name to read, and `writeBoundaryContract.test.ts` already forbids the
  *      second from reaching a reader.
@@ -139,8 +142,41 @@ const PATTERNS = RETIRED_COPY_WORDS.map((word) => ({
   pattern: new RegExp(`\\b${word.replace(/\s+/g, '\\s+')}\\b`, 'i'),
 }))
 
+/**
+ * Every module a reader-facing string can come out of, from BOTH source roots.
+ *
+ * `sourceFiles()` walks the application, and the application is the installed
+ * package now — the same walk it always was, one repository further away, and
+ * the module that defines it is the one whose docstring records the sampling
+ * gap that bit the last guard, so it is still reused rather than reimplemented.
+ *
+ * What the move added is the second root. This deployment's own modules carry
+ * copy of exactly the kind this guard is about — `deployment/content/` is the
+ * text of the cover deck — and `sourceFiles()` cannot see them: they are not
+ * under the package's `src`. Walking only the package would have quietly
+ * narrowed the subject to the half of the tree this repository does not write.
+ * `deploymentSourceFiles` refuses an empty walk, so a `deployment/` that went
+ * missing fails here instead of reading as a deployment with no copy in it.
+ *
+ * Comments are stripped on both sides, with the package's own `stripComments`,
+ * because a comment naming a retired word is not copy and the two roots have to
+ * be read by one rule.
+ */
+export function copyBearingSources() {
+  const ours = deploymentSourceFiles(
+    (path) => /\.tsx?$/.test(path) && !path.includes('.test.'),
+  )
+  return [
+    ...sourceFiles(),
+    ...ours.map((file) => ({
+      file,
+      code: stripComments(readFileSync(resolve(process.cwd(), file), 'utf8')),
+    })),
+  ]
+}
+
 /** Every reader-facing string in the app, with where it came from. */
-export function readerFacingStrings(files = sourceFiles()) {
+export function readerFacingStrings(files = copyBearingSources()) {
   const out = []
   for (const { file, code } of files) {
     for (const match of code.matchAll(MESSAGE_VALUE)) {
@@ -169,7 +205,16 @@ export function offenders(strings = readerFacingStrings()) {
 }
 
 test('no retired spelling reaches a reader', () => {
-  const found = offenders()
+  // Both roots, and there is something in each. A walk that found no modules
+  // would report a clean tree in exactly the voice of a clean tree — the same
+  // argument the figure count below makes, and the one that matters most now
+  // that one of the two roots is a directory inside `node_modules`.
+  const strings = readerFacingStrings()
+  assert.ok(
+    strings.length > 100,
+    `only ${strings.length} reader-facing string(s) were read — an empty walk is not a pass`,
+  )
+  const found = offenders(strings)
   assert.deepEqual(
     found,
     [],

@@ -3,8 +3,10 @@
  * Every assembled component is claimed by exactly one composition doc.
  *
  * `docs/guidelines/composition/*.md` each declare a `claims:` list in their
- * frontmatter. This walks `src/components/{blueprint,editor,cover,mobile}`
- * and holds the two sides to each other in both directions:
+ * frontmatter. This walks the application's
+ * `components/{blueprint,editor,cover,mobile}` — inside the package this
+ * deployment imports the application from — and holds the two sides to each
+ * other in both directions:
  *
  *   - a source file no doc claims fails, and is named
  *   - a claim pointing at a file that no longer exists fails, and names both
@@ -36,15 +38,53 @@ import { fileURLToPath } from 'node:url'
 
 export const REPO_ROOT = resolve(new URL('..', import.meta.url).pathname)
 
-/** The directories whose files a composition doc has to claim. */
+/**
+ * The directories whose files a composition doc has to claim.
+ *
+ * They are inside the package now. This deployment reads the application out of
+ * `agentic-service-blueprinting`, and `docs/guidelines/composition/` is this
+ * repository's own writing ABOUT that application — so the check spans the
+ * boundary, and that is what makes it worth keeping rather than a reason to
+ * retire it. A composition doc that describes a component the pinned release no
+ * longer ships is documentation gone quietly wrong, and the pin bump that did
+ * it is exactly when someone should hear about it.
+ *
+ * What the check CANNOT do any more is be satisfied by editing the component.
+ * An unclaimed file upstream is a doc to write here or a ticket to file there,
+ * never a rename. That is a narrower set of remedies, not a weaker check.
+ *
+ * Still relative, and still joined to the root `sweep` is given, so the test
+ * can prove the failing cases against a throwaway tree the way it always has.
+ */
+const APP = 'node_modules/agentic-service-blueprinting/src'
 export const SOURCE_DIRS = [
-  'src/components/blueprint',
-  'src/components/editor',
-  'src/components/cover',
-  'src/components/mobile',
+  `${APP}/components/blueprint`,
+  `${APP}/components/editor`,
+  `${APP}/components/cover`,
+  `${APP}/components/mobile`,
 ]
 
 const isTest = (name) => /\.test\.[cm]?[jt]sx?$/.test(name)
+
+/**
+ * A walked path as a composition doc spells it.
+ *
+ * A `claims:` entry names `src/components/editor/AgentDock.tsx`, and it is
+ * right to: that is the file's path inside the application, which is what the
+ * doc is about and what it will still be called after the next pin bump. Where
+ * this repository happens to read the application from — a directory inside
+ * `node_modules`, hoisted or nested or symlinked depending on the install — is
+ * an installation detail, and writing it into a hundred frontmatter lines would
+ * be pinning every composition doc to the shape of somebody's node_modules.
+ *
+ * So the walk normalises instead. The package prefix comes off, and both sides
+ * of the comparison speak the application's own vocabulary.
+ */
+const APP_PREFIX = 'node_modules/agentic-service-blueprinting/'
+const asClaimed = (path) =>
+  path.startsWith(APP_PREFIX) ? path.slice(APP_PREFIX.length) : path
+/** The inverse: a claimed path back to where it is actually read from. */
+const onDisk = (claim) => (claim.startsWith('src/') ? `${APP_PREFIX}${claim}` : claim)
 
 function walk(abs, root, out = []) {
   for (const entry of readdirSync(abs, { withFileTypes: true }).sort((a, b) =>
@@ -52,7 +92,7 @@ function walk(abs, root, out = []) {
   )) {
     const full = join(abs, entry.name)
     if (entry.isDirectory()) walk(full, root, out)
-    else if (!isTest(entry.name)) out.push(relative(root, full))
+    else if (!isTest(entry.name)) out.push(asClaimed(relative(root, full)))
   }
   return out
 }
@@ -118,7 +158,11 @@ export function sweep(root = REPO_ROOT) {
       problems.push(`${docPath} declares no \`claims:\` list — every composition doc claims the files it documents`)
     }
     for (const claim of claims) {
-      if (!existsSync(join(root, claim))) {
+      // A claim spells the application's own path (`src/components/…`), so it
+      // is resolved back through the package the same way the walk normalised
+      // out of it — see `asClaimed`. `onDisk` keeps the two directions using
+      // one definition of where the application is.
+      if (!existsSync(join(root, onDisk(claim)))) {
         problems.push(`${docPath} claims ${claim}, which no longer exists — drop the claim or restore the file`)
         continue
       }

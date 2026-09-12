@@ -18,6 +18,7 @@ claims:
   - src/components/editor/CreateSliceSheet.tsx
   - src/components/editor/CreateVersionDialog.tsx
   - src/components/editor/DeleteStructureDialog.tsx
+  - src/components/editor/SlideRemovalDialog.tsx
   - src/components/editor/SessionChangesSheet.tsx
   - src/components/editor/WriteFailureNotices.tsx
 last-reviewed: 2026-08-25

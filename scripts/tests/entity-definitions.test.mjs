@@ -17,8 +17,16 @@
  * Neither guard is a snapshot of today's tree. The first reads the kind union
  * from `EntityDetailContext` rather than a list written here, so a seventh
  * entity kind fails until it defines itself. The second reads every
- * `<Tooltip>` element in `src`, so the next one is in the subject whatever
- * file it is written in.
+ * `<Tooltip>` element the deployment ships, so the next one is in the subject
+ * whatever file it is written in.
+ *
+ * Both subjects moved when this repository stopped holding the application.
+ * The union, the definitions and every anchor are the application's and are
+ * read out of the installed package; the tooltip walk covers that package's
+ * source AND this deployment's own `deployment/` root, because a definition
+ * put behind a tooltip is as unreachable on a phone whichever root it is
+ * written in. Neither walk can be empty — see `scripts/app-source.mjs` for
+ * why an empty walk is the failure these guards are most exposed to now.
  *
  * Both are proved to go red, in the shape `scripts/tests/rls-posture.test.mjs`
  * argues for: a check that is green against this tree could equally be a check
@@ -26,11 +34,19 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { readFileSync, readdirSync, statSync } from 'node:fs'
-import { join, relative, resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import {
+  APP_SOURCE_ROOT,
+  appSource,
+  appSourceFiles,
+  deploymentSourceFiles,
+} from '../app-source.mjs'
 
 const ROOT = resolve(new URL('../..', import.meta.url).pathname)
-const SRC = resolve(ROOT, 'src')
+
+/** One of the application's files, by the path the walks below report. */
+const app = (relative) => `${APP_SOURCE_ROOT}/${relative}`
 
 /* --------------------------------------------------------------- the tree */
 
@@ -41,49 +57,29 @@ export function stripComments(source) {
     .replace(/(^|[^:])\/\/.*$/gm, '$1')
 }
 
-function walk(dir) {
-  return readdirSync(dir).flatMap((entry) => {
-    const path = join(dir, entry)
-    // A vanished entry is skipped — see `appSources` for whose file it is and
-    // why it vanishes mid-walk.
-    let directory
-    try {
-      directory = statSync(path).isDirectory()
-    } catch {
-      return []
-    }
-    if (directory) return walk(path)
-    if (!/\.tsx?$/.test(entry)) return []
-    return [path]
-  })
-}
+/** A TypeScript source, in either root. */
+const IS_TYPESCRIPT = (path) => /\.tsx?$/.test(path)
 
 /**
- * Every TypeScript source under `src`, comments stripped.
+ * Every TypeScript source the deployment ships, comments stripped: the
+ * application's, out of the installed package, and this deployment's own.
  *
- * A file listed by the walk and gone by the time it is read is SKIPPED, not
- * thrown on. `harness-claims.test.mjs` writes a probe component into
- * `src/components/cover/` and deletes it again to prove the claim checker goes
- * red, and vitest runs files in parallel — so this walk really does see a path
- * that no longer exists. The subject is every file that IS there.
+ * Both through `scripts/app-source.mjs`, which refuses an empty result. The
+ * application's root is inside `node_modules` now, and a tooltip rule walking
+ * a root that is not there finds no offender for the same reason it finds no
+ * file — which is a green light, not a clean tree.
  */
-export function appSources() {
-  return walk(SRC)
-    .map((path) => {
-      try {
-        return {
-          file: relative(ROOT, path).split('\\').join('/'),
-          code: stripComments(readFileSync(path, 'utf8')),
-        }
-      } catch {
-        return null
-      }
-    })
-    .filter((one) => one !== null)
+export function uiSources() {
+  return [...appSourceFiles(IS_TYPESCRIPT), ...deploymentSourceFiles(IS_TYPESCRIPT)]
+    .map((file) => ({
+      file,
+      code: stripComments(readFileSync(resolve(ROOT, file), 'utf8')),
+    }))
     .sort((a, b) => a.file.localeCompare(b.file))
 }
 
-const read = (path) => stripComments(readFileSync(resolve(ROOT, path), 'utf8'))
+/** One named file of the application, comments stripped. */
+const readApp = (relative) => stripComments(appSource(relative))
 
 /* ------------------------------------- 1. every kind defines itself */
 
@@ -144,11 +140,11 @@ export function kindsWithoutDefinition(kinds, definitions) {
  * the identity bar, and the title is a name and nothing else.
  */
 const ANCHORS = {
-  'src/components/blueprint/EntityHeader.tsx': "service, phase and scenario — the identity bar's kind badge",
-  'src/components/blueprint/ScenarioTitleBadge.tsx': 'phase and scenario — the frame and panel labels',
-  'src/components/blueprint/PathLabelBadge.tsx': 'path — the band, column and cell label',
-  'src/components/blueprint/LaneHeaderAffordance.tsx': 'lane — the row header',
-  'src/components/blueprint/StepHeaderAffordance.tsx': 'step — the column header',
+  [app('components/blueprint/EntityHeader.tsx')]: "service, phase and scenario — the identity bar's kind badge",
+  [app('components/blueprint/ScenarioTitleBadge.tsx')]: 'phase and scenario — the frame and panel labels',
+  [app('components/blueprint/PathLabelBadge.tsx')]: 'path — the band, column and cell label',
+  [app('components/blueprint/LaneHeaderAffordance.tsx')]: 'lane — the row header',
+  [app('components/blueprint/StepHeaderAffordance.tsx')]: 'step — the column header',
 }
 
 /** An anchor that renders no definition popover — a label back to saying nothing. */
@@ -177,7 +173,7 @@ export function popoversWithoutKind(sources) {
 }
 
 test('every entity kind a panel opens on defines itself', () => {
-  const kinds = entityDetailKinds(read('src/contexts/EntityDetailContext.tsx'))
+  const kinds = entityDetailKinds(readApp('contexts/EntityDetailContext.tsx'))
   // The extraction, asserted before its result is trusted: a regex that found
   // nothing would pass this test as loudly as a tree that is complete.
   assert.deepEqual(
@@ -185,7 +181,7 @@ test('every entity kind a panel opens on defines itself', () => {
     ['lane', 'phase', 'scenario', 'service', 'step'],
     'EntityDetailKind was not read — the union changed shape, so this guard is reading nothing',
   )
-  const definitions = entityKindDefinitions(read('src/lib/panelTerms.ts'))
+  const definitions = entityKindDefinitions(readApp('lib/panelTerms.ts'))
   assert.ok(
     Object.keys(definitions).length >= 6,
     `ENTITY_KIND_DEFINITIONS was not read — found ${Object.keys(definitions).length} entries`,
@@ -204,7 +200,7 @@ test('every entity kind a panel opens on defines itself', () => {
 })
 
 test('every label on the board that names a kind carries its definition', () => {
-  const sources = appSources()
+  const sources = uiSources()
   const missing = [...anchorsWithoutPopover(sources), ...popoversWithoutKind(sources)]
   assert.deepEqual(
     missing,
@@ -226,24 +222,26 @@ test('the definition check goes red on a kind that only names itself', () => {
 })
 
 test('the anchor check goes red on a label that stops explaining itself', () => {
+  // The fixture's paths are the ANCHORS' own keys: this check is about a named
+  // anchor that stopped explaining itself, so the file it plants has to BE one.
   const planted = [
     {
-      file: 'src/components/blueprint/EntityHeader.tsx',
+      file: app('components/blueprint/EntityHeader.tsx'),
       code: '<Badge>{term.label}</Badge>',
     },
     {
-      file: 'src/components/blueprint/PathLabelBadge.tsx',
+      file: app('components/blueprint/PathLabelBadge.tsx'),
       code: '<EntityDefinitionPopover description={d}>{badge}</EntityDefinitionPopover>',
     },
   ]
   assert.deepEqual(anchorsWithoutPopover(planted), [
-    'src/components/blueprint/EntityHeader.tsx renders no <EntityDefinitionPopover> — service, phase and scenario — the identity bar\'s kind badge',
-    'src/components/blueprint/ScenarioTitleBadge.tsx is gone — phase and scenario — the frame and panel labels has nowhere to hang its definition',
-    'src/components/blueprint/LaneHeaderAffordance.tsx is gone — lane — the row header has nowhere to hang its definition',
-    'src/components/blueprint/StepHeaderAffordance.tsx is gone — step — the column header has nowhere to hang its definition',
+    `${app('components/blueprint/EntityHeader.tsx')} renders no <EntityDefinitionPopover> — service, phase and scenario — the identity bar's kind badge`,
+    `${app('components/blueprint/ScenarioTitleBadge.tsx')} is gone — phase and scenario — the frame and panel labels has nowhere to hang its definition`,
+    `${app('components/blueprint/LaneHeaderAffordance.tsx')} is gone — lane — the row header has nowhere to hang its definition`,
+    `${app('components/blueprint/StepHeaderAffordance.tsx')} is gone — step — the column header has nowhere to hang its definition`,
   ])
   assert.deepEqual(popoversWithoutKind(planted), [
-    'src/components/blueprint/PathLabelBadge.tsx — <EntityDefinitionPopover> with no kind=',
+    `${app('components/blueprint/PathLabelBadge.tsx')} — <EntityDefinitionPopover> with no kind=`,
   ])
 })
 
@@ -307,7 +305,7 @@ export function definitionsOnTooltips(blocks) {
 }
 
 test('no definition is on a tooltip', () => {
-  const blocks = tooltipBlocks(appSources())
+  const blocks = tooltipBlocks(uiSources())
   /*
     The extraction, asserted before its result is trusted — and asserted as an
     INVARIANT rather than a count.
@@ -322,7 +320,7 @@ test('no definition is on a tooltip', () => {
   */
   const files = new Set(blocks.map((block) => block.file))
   assert.ok(
-    files.has('src/components/editor/IconTooltip.tsx'),
+    files.has(app('components/editor/IconTooltip.tsx')),
     'the extraction found no <Tooltip> in IconTooltip.tsx, which is nothing but one — it is reading the wrong shape',
   )
   assert.ok(
@@ -386,12 +384,21 @@ test('the tooltip check leaves an icon-only control’s label alone', () => {
 })
 
 test('the tree the tooltip check reads is the tree, not a handful of files', () => {
-  const sources = appSources()
-  assert.ok(sources.length > 200, `only ${sources.length} source files found under src`)
+  const sources = uiSources()
+  assert.ok(
+    sources.length > 200,
+    `only ${sources.length} source files found — the application is read out of ` +
+      `${APP_SOURCE_ROOT}, so a short count means a missing or partial install`,
+  )
   for (const root of ['components/blueprint/', 'components/editor/', 'components/ui/', 'lib/']) {
     assert.ok(
-      sources.some((one) => one.file.startsWith(`src/${root}`)),
-      `src/${root} is not in the subject`,
+      sources.some((one) => one.file.startsWith(`${APP_SOURCE_ROOT}/${root}`)),
+      `${APP_SOURCE_ROOT}/${root} is not in the subject`,
     )
   }
+  // The deployment's own root is the half that no package release restores.
+  assert.ok(
+    sources.some((one) => one.file.startsWith('deployment/')),
+    'the deployment’s own source is not in the subject',
+  )
 })

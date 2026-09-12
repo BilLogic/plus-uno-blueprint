@@ -1,12 +1,15 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import { test } from 'vitest'
 
+import { schemaDeclaration } from '../agent-account.mjs'
 import {
   functionsInFile,
   tablesInFile,
   typesDrift,
 } from '../database-types.mjs'
+
+const REPO_ROOT = process.cwd()
 
 /*
  * The comparison behind `check:database-types:live`.
@@ -198,8 +201,29 @@ test('a function only one side has is a finding, in either direction', () => {
   )
 })
 
-test('the real types file parses, and carries more than the fixture', () => {
-  const source = readFileSync('src/types/database.ts', 'utf8')
+test('the real declaration parses, is this deployment’s, and carries more than the fixture', () => {
+  // The subject of the live check, resolved the one way this repository
+  // resolves it. It is `deployment/types/database.ts` — this deployment's own
+  // statement of its own schema, and NOT the package's, which describes the
+  // template's database and disagreed with this one thirteen times.
+  //
+  // The owner assertion is why this test is worth its lines. Nothing imports
+  // the declaration: the application is typechecked against the package's copy,
+  // as it must be, and no deployment module types a row. A file nothing imports
+  // is a file a later cleanup deletes — and deleting this one does not break a
+  // build, it silently falls back to the package's and takes the live check red
+  // for a reason that reads like drift. This turns that deletion into a red
+  // `npm test` that names what went missing.
+  const declaration = schemaDeclaration(REPO_ROOT, (path) => existsSync(path))
+  assert.equal(
+    declaration.owner,
+    'deployment',
+    `the schema declaration resolved to the ${declaration.owner}'s copy at ` +
+      `${declaration.path}. This deployment keeps its own at ` +
+      `deployment/types/database.ts; if it is gone, restore it rather than ` +
+      `letting the package's stand in for it.`,
+  )
+  const source = readFileSync(declaration.path, 'utf8')
   const tables = tablesInFile(source)
   const functions = functionsInFile(source)
   // Not a census — a floor. The file described thirteen functions while the

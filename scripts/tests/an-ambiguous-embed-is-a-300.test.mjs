@@ -20,6 +20,13 @@
  * rather than with rows" — and hints it correctly. The knowledge was in the
  * repository; nothing enforced it. This is the enforcement.
  *
+ * WHERE THE QUERIES ARE. In the APPLICATION, which is the installed package
+ * this deployment reads the app out of, and in this deployment's own source
+ * beside it. The ambiguity is a fact about THIS database's foreign keys, so an
+ * unhinted embed shipped by the package is a 300 served to this deployment's
+ * readers — the finding is worth having here even though the fix is a pin or
+ * an upstream ticket rather than an edit.
+ *
  * WHAT THIS CAN AND CANNOT SEE. The pairs below were read from production's
  * `pg_constraint`, not inferred: the static replay in `migration-replay.mjs`
  * records a constraint as `{table, name}` with no target and no columns, so
@@ -33,8 +40,9 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { readFileSync, readdirSync, statSync } from 'node:fs'
-import { join, relative, resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { appSource, appSourceFiles, deploymentSourceFiles } from '../app-source.mjs'
 
 const REPO_ROOT = process.cwd()
 
@@ -52,14 +60,16 @@ const AMBIGUOUS = [
   },
 ]
 
-function sourceFiles(dir) {
-  const found = []
-  for (const entry of readdirSync(dir)) {
-    const path = join(dir, entry)
-    if (statSync(path).isDirectory()) found.push(...sourceFiles(path))
-    else if (/\.tsx?$/.test(entry) && !/\.test\.tsx?$/.test(entry)) found.push(path)
-  }
-  return found
+/**
+ * Every file that may hold a query, from both roots.
+ *
+ * Both readers refuse an empty result. This check reports a finding per
+ * unhinted embed, so a walk that reached no file finds nothing and reads as a
+ * codebase whose every embed names its foreign key.
+ */
+function sourceFiles() {
+  const wanted = (path) => /\.tsx?$/.test(path) && !/\.test\.tsx?$/.test(path)
+  return [...appSourceFiles(wanted), ...deploymentSourceFiles(wanted)]
 }
 
 /**
@@ -139,14 +149,15 @@ export function unresolvableEmbeds(select, pairs, root = 'root') {
 
 test('no select embeds a multiply-reachable table without its key', () => {
   const findings = []
-  for (const file of sourceFiles(resolve(REPO_ROOT, 'src'))) {
-    for (const { root, select } of selectsWithRoot(readFileSync(file, 'utf8'))) {
+  for (const file of sourceFiles()) {
+    const source = readFileSync(resolve(REPO_ROOT, file), 'utf8')
+    for (const { root, select } of selectsWithRoot(source)) {
       for (const embed of unresolvableEmbeds(select, AMBIGUOUS, root)) {
         const pair = AMBIGUOUS.find(
           (entry) => entry.source === embed.parent && entry.target === embed.target,
         )
         findings.push(
-          `${relative(REPO_ROOT, file)}: ${embed.text} under ${root} — ` +
+          `${file}: ${embed.text} under ${root} — ` +
             `${pair.source} reaches ${pair.target} through ${pair.keys.join(' and ')}`,
         )
       }
@@ -181,7 +192,11 @@ test('the same embed is legal from a parent with one key', () => {
 })
 
 test('the live query this was written for is hinted', () => {
-  const source = readFileSync(resolve(REPO_ROOT, 'src/hooks/useStepSpec.ts'), 'utf8')
+  // The hook belongs to the application, so it is read out of the package —
+  // through the helper that says which file is missing and from where, since a
+  // hook that cannot be read holds no queries and would take the floor below
+  // with it.
+  const source = appSource('hooks/useStepSpec.ts')
   const frames = selectsWithRoot(source).filter(({ select }) => select.includes('frame'))
   assert.ok(frames.length > 0, 'the storyboard frames query went missing')
   for (const { root, select } of frames) {

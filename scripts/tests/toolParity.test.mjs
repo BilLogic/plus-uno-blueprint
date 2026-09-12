@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
+import { appSource } from '../app-source.mjs'
 
 /**
  * The eval harness must run against the app's tool surface. The spec
@@ -37,9 +38,15 @@ function setMembers(source, name) {
 }
 
 // Specs and rosters live in specs.ts (pure data); dispatch stays in
-// registry.ts. The parity checks read each from where it lives.
-const specs = read('src/lib/agent/tools/specs.ts')
-const registry = read('src/lib/agent/tools/registry.ts')
+// registry.ts. The parity checks read each from where it lives — and the two
+// sides now live in different repositories: the tool surface belongs to the
+// APPLICATION, which this deployment imports out of the installed package,
+// while the harness that has to match it is this deployment's own script.
+// That is what the check was always about; it is only now literally true.
+// `appSource` refuses a missing package file by name, because an unreadable
+// specs.ts would otherwise parse as a tool surface with nothing in it.
+const specs = appSource('lib/agent/tools/specs.ts')
+const registry = appSource('lib/agent/tools/registry.ts')
 const harness = read('scripts/agent-harness/run.mjs')
 const cases = read('scripts/agent-harness/cases.mjs')
 
@@ -48,8 +55,9 @@ test('harness imports the app tool specs instead of forking them', () => {
   // rosters from the bundle — including REFERENCE_NAMES, so the harness
   // offers exactly the reference list the app offers.
   assert.ok(
-    harness.includes('src/lib/agent/tools/specs.ts'),
-    'run.mjs no longer bundles src/lib/agent/tools/specs.ts',
+    harness.includes("resolve(APP_SOURCE, 'lib/agent/tools/specs.ts')"),
+    'run.mjs no longer bundles the application’s lib/agent/tools/specs.ts out ' +
+      'of the installed package',
   )
   assert.match(
     harness,
@@ -192,21 +200,87 @@ const TOOL_SPECS = (await import('@/lib/agent/tools/specs')).TOOL_SPECS
  * string, `s(args, 'x')` for an optional one, and `args.x` / `args['x']` for
  * everything typed by hand.
  */
+function argKeysRead(body) {
+  return [
+    ...body.matchAll(
+      /(?:need|s)\(args, '([a-z_]+)'\)|args\.([a-z_]+)|args\['([a-z_]+)'\]/g,
+    ),
+  ].map((m) => m[1] ?? m[2] ?? m[3])
+}
+
+/**
+ * Helpers that read the argument bag on a case's behalf, as `name -> keys`.
+ *
+ * A case does not have to read `args` in its own body. The application pulls
+ * the shared ones out — `readScope` reads `service` for every tool that scopes
+ * a read, `listBlueprintArgs` reads the six filters for both the live
+ * dispatcher and the no-database trial — so that what an argument MEANS is
+ * decided once. A reader that looked only inside the `case` arms would see
+ * those ten keys as unread and report that the model's words are thrown away,
+ * about handlers that read every one of them. So a call to one of these counts
+ * as reading what it reads.
+ *
+ * Matched on the parameter list rather than on a list of helper names: a
+ * seventh helper written tomorrow is followed tomorrow.
+ */
+function argKeysByHelper(source) {
+  const helpers = new Map()
+  for (const mark of source.matchAll(
+    /^(?:export )?(?:async )?function ([A-Za-z0-9_]+)\(([^)]*)\)/gm,
+  )) {
+    if (!/\bargs\b/.test(mark[2])) continue
+    const start = mark.index
+    const end = source.indexOf('\n}', start)
+    const body = source.slice(start, end === -1 ? source.length : end)
+    // A function holding `case '…':` arms is a DISPATCHER, not a helper. Both
+    // of registry.ts's take the bag, and reading one as a helper would credit
+    // whichever case called it with every key the whole switch reads.
+    if (/case '[a-z_]+':/.test(body)) continue
+    helpers.set(mark[1], new Set(argKeysRead(body)))
+  }
+  return helpers
+}
+
+/**
+ * The argument keys read for each tool name, UNIONED over every arm that
+ * answers it.
+ *
+ * A tool name appears in two switches: the live dispatcher and the
+ * no-database trial that answers from the bundled sample. Keeping only one
+ * arm per name — which is what building the map from pairs did — let the
+ * trial's arm stand in for the real one, and the trial deliberately reads
+ * less: it has no services, so it ignores `service` and every scoped read
+ * looked like a handler throwing the model's word away. An argument either
+ * arm reads is an argument the handler reads.
+ */
 function argKeysByCase(source) {
+  const helpers = argKeysByHelper(source)
   const marks = [...source.matchAll(/case '([a-z_]+)':/g)]
-  return new Map(
-    marks.map((mark, index) => {
-      const start = mark.index + mark[0].length
-      const end = index + 1 < marks.length ? marks[index + 1].index : source.length
-      const body = source.slice(start, end)
-      const keys = [
-        ...body.matchAll(
-          /(?:need|s)\(args, '([a-z_]+)'\)|args\.([a-z_]+)|args\['([a-z_]+)'\]/g,
-        ),
-      ].map((m) => m[1] ?? m[2] ?? m[3])
-      return [mark[1], new Set(keys)]
-    }),
-  )
+  const byName = new Map()
+  marks.forEach((mark, index) => {
+    const start = mark.index + mark[0].length
+    // The LAST case ends where its function does — at the first closing brace
+    // in the first column. Running it to the end of the file instead swallows
+    // the helpers declared below the dispatcher, and credited the last tool in
+    // the switch with every argument they read.
+    const tail = source.slice(start)
+    const rest = tail.search(/\n\}/)
+    const end =
+      index + 1 < marks.length
+        ? marks[index + 1].index
+        : start + (rest === -1 ? tail.length : rest)
+    const body = source.slice(start, end)
+    const keys = byName.get(mark[1]) ?? new Set()
+    for (const key of argKeysRead(body)) keys.add(key)
+    for (const [name, delegated] of helpers) {
+      // The helper has to be handed the bag — a call that passes something
+      // else is not this case reading these keys.
+      if (!new RegExp(`\\b${name}\\([^)]*\\bargs\\b`).test(body)) continue
+      for (const key of delegated) keys.add(key)
+    }
+    byName.set(mark[1], keys)
+  })
+  return byName
 }
 
 /**
@@ -225,16 +299,17 @@ function argKeysByCase(source) {
 const ACCEPTED_ALIASES = [
   {
     tool: 'create_slice',
-    alias: 'slice_type',
-    now: 'kind',
+    alias: 'description',
+    now: 'summary',
     because:
-      'the column is slices.kind, and nothing in the pinned template names slice_type any more',
+      'the schema advertised `description` while the handler read `summary` (#272), so a ' +
+      'model taught the old wire is still holding the word that used to be dropped',
   },
   {
     tool: 'update_slice',
-    alias: 'slice_type',
-    now: 'kind',
-    because: 'same rename, same tool pair',
+    alias: 'description',
+    now: 'summary',
+    because: 'same mismatch, same tool pair',
   },
 ]
 

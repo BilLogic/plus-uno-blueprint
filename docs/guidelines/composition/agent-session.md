@@ -9,6 +9,7 @@ claims:
   - src/components/editor/AdminSessionFields.tsx
   - src/components/editor/AgentProviderFields.tsx
   - src/components/editor/AgentSettingsFields.tsx
+  - src/components/editor/AgentTrialBanner.tsx
   - src/components/editor/DevPortal.tsx
   - src/components/mobile/MobileAgentFab.tsx
   - src/components/mobile/MobileAgentSheet.tsx

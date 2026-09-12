@@ -1,7 +1,7 @@
 # The cross-repo forcing function: uno-bot (the "le goat" Slack bot) reads
 # this app's database, and schema changes here have twice broken its reads
 # SILENTLY (renamed slices column, re-shaped findings column — each returned
-# empty for weeks). src/lib/blueprintContract.ts is the canonical copy of every
+# empty for weeks). deployment/lib/blueprintContract.ts is the canonical copy of every
 # constant both sides agree on; these three jobs are what hold it to reality.
 #
 #   contract  — the contract against the migrations in this repo. No network,
@@ -35,7 +35,7 @@ on:
     branches: [main]
     paths:
       - "supabase/migrations/**"
-      - "src/lib/blueprintContract.ts"
+      - "deployment/lib/blueprintContract.ts"
   schedule:
     # Daily, after the bot's nightly embed backfill (07:00 UTC).
     - cron: "30 7 * * *"

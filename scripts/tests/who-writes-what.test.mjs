@@ -46,6 +46,7 @@ import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { appSource } from '../app-source.mjs'
 import { declaredTools } from '../check-write-surface.mjs'
 import { PACKAGE } from '../template-pin.mjs'
 
@@ -177,7 +178,14 @@ test('a write tool that names no record is not this file’s business', () => {
 // The repository
 // ---------------------------------------------------------------------------
 
-const ROSTER = declaredTools(read('src/lib/agent/tools/specs.ts'), 'WRITE_TOOL_NAMES')
+// The roster is the APPLICATION's, and the application is the installed
+// package rather than a directory here — the same package whose CONTEXT.md
+// rule 3 reads the table out of. So both halves of this check now come from
+// upstream and the thing being held is this deployment's own enforcement of
+// them. `appSource` names a missing specs.ts rather than letting an
+// unreadable roster read as a roster with no write tools in it, which would
+// make rules 1 and 2 pass on nothing.
+const ROSTER = declaredTools(appSource('lib/agent/tools/specs.ts'), 'WRITE_TOOL_NAMES')
 
 test('every tool the ownership table credits is one the agent has', () => {
   const unreal = creditedButUnreal(RECORD_OWNERS, ROSTER)

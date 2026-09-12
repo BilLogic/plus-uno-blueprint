@@ -24,8 +24,10 @@ import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { appSource } from '../app-source.mjs'
 
 const REPO_ROOT = process.cwd()
+/** A file of THIS repository: the migration, the replay baseline. */
 const read = (path) => readFileSync(resolve(REPO_ROOT, path), 'utf8')
 
 const MIGRATION =
@@ -120,15 +122,49 @@ test('it asserts a post-condition, not a census', () => {
   )
 })
 
+/**
+ * A sentence claiming that leaving an argument out is what saves a column.
+ *
+ * A SHAPE RATHER THAN THE ONE SENTENCE THAT SHIPPED. "Omitting leaves the
+ * column alone" is the wording this file was written about; the claim is what
+ * is wrong with it, and the next writer will phrase it their own way.
+ */
+export const OMISSION_PROTECTS = /omit\w*[^.]{0,80}(?:leaves|protects?|preserves?|keeps)/i
+
 test('the wrapper no longer says an omitted argument is what protects the column', () => {
   // The comment this replaces reasoned that omitting `name` rather than
   // sending null "leaves the column alone". It does not: the argument defaults
   // to null, so the two calls are the same call by the time the function sees
   // them. A comment that states the opposite of what the database does is what
   // sent the last reader looking in the wrong place.
-  const rpc = read('src/lib/authoringRpc.ts')
+  //
+  // THE CITATION MOVED OUT OF THE COMMENT AND INTO THIS TEST. The wrapper is
+  // the APPLICATION's and the application is the installed package now, so the
+  // comment is a file two repositories share — and a shared file cites no
+  // migration filename, because `20260909050000` is an address in this
+  // deployment's database and in nothing of the template's. The pairing is
+  // therefore performed here rather than asserted as a string: the app's
+  // wrapper claims nothing about omission, and THIS repository's function is
+  // what actually makes an omitted argument survive.
+  const rpc = appSource('lib/authoringRpc.ts')
   const body = rpc.match(/export function setCellDependency\(([\s\S]*?)\n\}/)?.[0] ?? ''
   assert.notEqual(body, '', 'setCellDependency is gone')
-  assert.doesNotMatch(body, /Omitting leaves the column alone/)
-  assert.match(body, /20260909050000/, 'the comment does not name the migration that makes the claim true')
+  assert.doesNotMatch(body, OMISSION_PROTECTS)
+
+  assert.match(
+    conflictClause(read(MIGRATION)),
+    /name = coalesce\(excluded\.name, public\.cell_dependencies\.name\)/,
+    'the wrapper is quiet about omission because the database handles it — and here it does not',
+  )
+
+  // Red, both ways: the pattern finds the sentence that shipped, and it finds
+  // the same claim in somebody else's words.
+  assert.match(
+    body.replace(
+      'The badge on the arrow',
+      'Omitting leaves the column alone. The badge on the arrow',
+    ),
+    OMISSION_PROTECTS,
+  )
+  assert.match('// omitting the note keeps whatever was there', OMISSION_PROTECTS)
 })

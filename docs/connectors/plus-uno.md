@@ -15,8 +15,8 @@ This is an **instance integration, not harness.** The
 
 ## The canonical home is here
 
-`src/lib/blueprintContract.ts` is the canonical copy of every constant both
-sides must agree on, and the bot vendors it. Not the other way round: two
+`deployment/lib/blueprintContract.ts` is the canonical copy of every constant
+both sides must agree on, and the bot vendors it. Not the other way round: two
 coordination bugs shipped before that file existed — a renamed slices column and
 a re-shaped `findings` column — and **each made a bot read return empty for
 weeks** while both sides looked healthy.
@@ -32,6 +32,21 @@ was made. See below.
 
 Keep that module **dependency-free** — the bot compiles it in a Worker context
 with no access to app imports.
+
+### The bot resolves it by path, and the path moved
+
+The bot's `scripts/sync-blueprint-contract.mjs` builds its source path from a
+checkout of this repository plus a literal `src/lib/blueprintContract.ts`. That
+is where the contract sat while this repository held a copy of the whole
+application; it now reads the application out of the package and keeps only its
+own root, so the contract is `deployment/lib/blueprintContract.ts` and the path
+the bot resolves names nothing.
+
+**The bot's own change, not this repository's.** The sync fails loudly rather
+than quietly — an absent source is a non-zero exit, which is the behaviour that
+script was deliberately given — so the bot's `--check` gate and its deploy stay
+red until its literal is repointed at the new path. Nothing here can fix that,
+and nothing here should: the fix is one line in the bot's repository.
 
 ### The breadcrumb label, and why flipping one is a two-part change
 
@@ -271,7 +286,7 @@ of that would be wrong with nothing to announce it.
 `docs/agents/blueprint.md` is the blueprint's account of itself for every
 agent (#260): a hand-written core — retrieval, absence, what a status
 licenses, how paths relate to the main route — and two rendered sections, the
-entity vocabulary from `src/lib/panelTerms.ts` and the schema from
+entity vocabulary from the package's `src/lib/panelTerms.ts` and the schema from
 `pg_description`. It is the file to vendor beside the contract; the harness
 should read it rather than carry its own description of the tables.
 `npm run check:agent-account` holds it to its sources in the same live job as
@@ -289,9 +304,16 @@ where an operator looks.
 ## The eight coupling points in app code
 
 The in-code comments are the only signal a reader gets while inside a file, so
-they stay. They point here rather than each explaining the relationship:
+they stay. They point here rather than each explaining the relationship.
 
-- `src/lib/blueprintContract.ts` — the contract itself
+One of the eight is this deployment's, and it is the one the bot reads:
+
+- `deployment/lib/blueprintContract.ts` — the contract itself
+
+The other seven are the application's, which this deployment no longer holds a
+copy of. Their paths below are relative to the package root — read them under
+`node_modules/agentic-service-blueprinting/`, and change them upstream:
+
 - `src/lib/urlViewState.ts` — the param names
 - `src/lib/openCellStore.ts` — the share link the bot builds
 - `src/hooks/useCellDeepLink.ts` — the receiving end of it
