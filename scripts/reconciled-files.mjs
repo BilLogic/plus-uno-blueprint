@@ -96,7 +96,58 @@
  * because it is no longer here. A new entry is a file this repository gains
  * that the template also has and that both agree should not drift — which in
  * practice means another shared script, or another piece of the build. Adding
- * one is still a one-line append under its own reasoning.
+ * one is still a one-line append under its own reasoning — and the append is
+ * the last step, not the first. The section below is what comes before it.
+ *
+ * ── THE BYTE-IDENTICAL FILES THAT ARE STILL NOT ON THIS LIST ──────────────
+ *
+ * Seven paths this repository holds are byte-identical to the pinned
+ * template's copy today and are not enrolled. Identical-and-unenrolled reads
+ * like a list seven lines short, and the cost of that reading is that the
+ * seven get proposed again every time somebody measures. So the reasoning is
+ * written down here rather than rediscovered.
+ *
+ * Byte-identity is only the FIRST of the two promises an entry makes. The
+ * second is the citation rule above, and `check:reconciled` holds every
+ * enrolled file to both. Six of the seven cite a `docs/` path, so enrolling
+ * any of them reddens the gate on the day it is added rather than on some
+ * later day somebody edits it. That is not an argument against the rule: a
+ * file that is byte-identical AND cites a repo-local path carries the same
+ * address in both repositories, where it resolves in at most one of them, so
+ * the citation has to come out of both copies — the template's change to make
+ * — before the enrolment is available at all.
+ *
+ *   - `scripts/check-target-schema.mjs` sends a reader to
+ *     `docs/connectors/supabase/database.md`, which the template has and this
+ *     repository does not, and to `npm run check:target`, which this
+ *     deployment does not define. Both are already dead here; enrolling it
+ *     would freeze them dead.
+ *   - `scripts/generate-agent-account.mjs` names `docs/agents/blueprint.md`
+ *     and `docs/reference/agent-account-baseline.json` — the second exists
+ *     here and not upstream — and not in prose: those are the paths it writes
+ *     to. Nothing about them can be reworded, so this one is not a citation to
+ *     remove but a difference to live with.
+ *   - `scripts/check-glossary-only.mjs`, `scripts/check-negation-ratchet.mjs`
+ *     and `scripts/swept-docs.mjs` each name the `docs/adr/` TREE rather than
+ *     a decision inside it, and that tree exists on both sides, so the address
+ *     is the one kind that does resolve twice. The scan refuses it anyway: the
+ *     pattern that catches `ADR 3` cannot tell it from the folder it lives in.
+ *     The gate is the gate, and these three wait on a narrower scan or a
+ *     rephrased sentence — either of which is one change, made upstream.
+ *   - `scripts/tests/the-router-is-a-router.test.mjs` writes `docs/a.md` and
+ *     `docs/t.md` into throwaway repositories under a temp directory. They
+ *     address nothing in either repository, which makes this the one finding
+ *     here that is a false positive — and a false positive the gate fails on
+ *     just the same.
+ *
+ * The seventh, `public/favicon.svg`, cites nothing and would pass. It stays
+ * off for the other reason, the one asked of every candidate: whether this
+ * deployment has cause to diverge later. It does. The favicon is identity
+ * rather than behaviour, and `index.html` beside it already diverges on
+ * exactly that — `<title>PLUS</title>` against the template's — so the icon in
+ * the browser tab is the next thing to become this deployment's own. Enrolling
+ * it would route a branding change through the template, which is the one
+ * place it does not belong.
  */
 
 export const RECONCILED_FILES = [

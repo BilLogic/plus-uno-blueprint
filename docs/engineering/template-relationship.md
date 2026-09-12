@@ -136,6 +136,12 @@ shared files whose code already matches and whose comments do not, separating
 the ones a citation rules out at any wording from the ones that are genuinely a
 wording apart.
 
+Matching bytes is not on its own a reason to enrol. Seven paths here are already
+byte-identical to the template's copy and stay off the list — six because they
+cite a `docs/` path, one because it is this deployment's branding.
+`scripts/reconciled-files.mjs` argues each of them, and that is the place to
+read before proposing any of the seven again.
+
 ## What the retired machinery was for
 
 Three mechanisms were removed once the import landed. A reader finding their
