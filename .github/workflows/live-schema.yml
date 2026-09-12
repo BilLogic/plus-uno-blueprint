@@ -1,0 +1,113 @@
+# The half of the schema guards that can see production.
+#
+# Three checks in this repository sweep `pg_catalog` itself, and until this
+# workflow existed all three ran when somebody remembered. That is how a
+# retired name could survive in the database: `check:identifiers` replays the
+# migration FILES on every pull request, so a rename written down and never
+# applied passes it, and `check:identifiers:live` — the half that asks the
+# catalog — ran nowhere. `stakeholders.parent_id` and `agent_sessions.user_id`
+# sat in production until a schema account disagreed with the database and a
+# person noticed.
+#
+# WHY NIGHTLY AND NOT ON EVERY PULL REQUEST. Not timidity about flaky networks:
+# a credential. These three need a direct `postgres://` string, password and
+# all, because no PostgREST role reaches `pg_catalog` or `information_schema`.
+# A same-repo pull request is handed this repository's secrets AND supplies the
+# workflow file that will read them, so a privileged credential in a
+# pull-request job is one any branch author can print. A scheduled run on
+# `main` runs the workflow that was reviewed and merged, and has no such hole.
+# `scripts/check-live-coverage.mjs` asserts the rule rather than trusting this
+# comment — it fails if any pull-request workflow so much as names the
+# variable.
+#
+# The other reason is that per-pull-request would be asking the wrong question
+# anyway. The subject here is PRODUCTION, and a pull request does not change
+# it. What changes it is an apply, and an apply is a thing a person does; a
+# daily sweep bounds how long a divergence can live at one day, which is the
+# promise this workflow makes and the only one it makes.
+#
+# WHAT MAKES IT REPORT. A failed scheduled run notifies the repository owner,
+# which is the "somewhere a person will read it" a nightly needs. An UNARMED
+# run — no secret set — is green, and green is the failure mode this whole
+# arrangement exists to avoid, so it does not pass quietly: the announce step
+# raises a `::warning::` per check and writes a job-summary line naming what
+# went unverified and what to set. Every pull request prints the same list from
+# the same source, so the absence is visible where people actually look.
+#
+# THIS WORKFLOW IS THIS DEPLOYMENT'S OWN. It is not a shared file and not
+# enrolled in the drift gate: it names this deployment's database and this
+# deployment's secret.
+name: live-schema
+
+on:
+  schedule:
+    # After the bot's nightly embed backfill and the probe that follows it, so
+    # a red morning has one obvious order to read in.
+    - cron: "45 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-schema
+  cancel-in-progress: false
+
+jobs:
+  catalog:
+    name: the database still says what the files say
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Read once, here, so every step below asks about the same thing and the
+      # `if:` conditions can test it without naming the secret again.
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      # `workflow_dispatch` takes a ref, and a ref can be a branch. Running
+      # this workflow's privileged job from an arbitrary branch would hand the
+      # credential to whatever that branch's copy of this file says to do with
+      # it, which is the exact hole the schedule avoids. Refusing loudly beats
+      # a job condition, which would skip in silence.
+      - name: A privileged job runs main's copy of this workflow or none
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::live-schema carries a privileged database credential and runs only on main. Re-run it with main selected."
+          exit 1
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Before anything else, and whatever happens after: say out loud which of
+      # these checks this run can actually perform. It reads no credential —
+      # only whether one is present — and it never fails the build.
+      - name: Say which of these checks had a credential
+        run: node scripts/check-live-coverage.mjs --announce scheduled
+
+      - run: npm ci
+
+      # `psql` is what reaches the catalog; the runner image ships it. Asserted
+      # rather than assumed, because its absence would surface as three
+      # identical ENOENT failures with nothing naming the cause.
+      - name: psql is on the runner
+        if: env.SUPABASE_DB_URL != ''
+        run: psql --version
+
+      # Each check runs even if the one before it failed. Three findings in one
+      # morning is a better report than the first of three.
+      - name: No name this series retired survives in the database
+        if: ${{ !cancelled() && env.SUPABASE_DB_URL != '' }}
+        run: npm run check:identifiers:live
+
+      - name: The posture the migrations describe is the posture production holds
+        if: ${{ !cancelled() && env.SUPABASE_DB_URL != '' }}
+        run: npm run check:rls-posture:live
+
+      - name: The database is still a runtime superset of the compiled types
+        if: ${{ !cancelled() && env.SUPABASE_DB_URL != '' }}
+        run: npm run check:database-types:live
