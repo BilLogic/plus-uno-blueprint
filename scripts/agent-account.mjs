@@ -7,12 +7,13 @@
  * route. The generated sections say what the code and the catalog already
  * say, and are RENDERED from them rather than written a third time:
  *
- *   vocabulary   from `ENTITY_KIND_DEFINITIONS` in src/lib/panelTerms.ts —
- *                the six kinds the board defines for a reader, read off the
- *                source text
+ *   vocabulary   from `ENTITY_KIND_DEFINITIONS` in the application's
+ *                `lib/panelTerms.ts` — the six kinds the board defines for a
+ *                reader, read off the source text
  *   schema       from `public.schema_comments()` (pg_description, live) laid
- *                over the column inventory in src/types/database.ts, so an
- *                undescribed column shows as a gap rather than vanishing
+ *                over the column inventory in the reading repository's
+ *                `types/database.ts`, so an undescribed column shows as a gap
+ *                rather than vanishing
  *
  * Two numbers ratchet against docs/reference/agent-account-baseline.json:
  * column-comment coverage, which may only rise, and the count of

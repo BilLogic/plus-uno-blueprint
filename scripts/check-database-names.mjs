@@ -2,9 +2,11 @@
 /**
  * #145 Check B — retired database names inside application string literals.
  *
- * This is the class no compiler reaches. `src/types/database.ts` is generated
- * from the schema by `npm run supabase:types`, so every table and column name
- * arrives in TypeScript by machine and `tsc` fails if the app disagrees. That
+ * This is the class no compiler reaches. `deployment/types/database.ts` is this
+ * deployment's own statement of its schema, so every table and column name
+ * arrives in TypeScript as a declaration and `tsc` fails if the app disagrees.
+ * `npm run check:database-types:live` is what holds that declaration to the
+ * database it describes, column by column and argument by argument. That
  * is why the 2026-08 vocabulary refactor looked clean: the part a compiler can
  * see WAS clean. A relation named inside a string is opaque to all of it.
  *

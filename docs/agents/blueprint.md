@@ -1,7 +1,7 @@
 ---
 audience: agents
 summary: What this blueprint is, how to retrieve from it, what absence and status mean, and how paths relate to a scenario's main route — the hand-written core — followed by the vocabulary and the schema, rendered from the code and the catalog.
-sources: src/lib/panelTerms.ts, src/types/database.ts, public.schema_comments(), src/lib/blueprintContract.ts, scripts/generate-agent-account.mjs
+sources: the package's src/lib/panelTerms.ts, deployment/types/database.ts, public.schema_comments(), deployment/lib/blueprintContract.ts, scripts/generate-agent-account.mjs
 ---
 
 # The blueprint, for agents
@@ -120,12 +120,12 @@ kinds the board defines for a reader who has never seen one.
 ## The schema, as the catalog describes it
 
 Rendered from `pg_description` through `public.schema_comments()`, laid over
-the column inventory in `src/types/database.ts`. A dash is a column nobody has
+the column inventory in `deployment/types/database.ts`. A dash is a column nobody has
 described yet; the coverage ratchets upward in
 `docs/reference/agent-account-baseline.json`. Renaming a column and rewriting
 its description are the same migration.
 
-<!-- generated:schema from public.schema_comments() and src/types/database.ts — edit the migration, then npm run agent-account -->
+<!-- generated:schema from public.schema_comments() and deployment/types/database.ts — edit the migration, then npm run agent-account -->
 
 ### `agent_messages`
 Transcript events of an agent session, ordered by seq. Payload mirrors the app's TranscriptEvent.

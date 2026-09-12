@@ -162,7 +162,7 @@ live session until refresh (the provider refreshes once per boot).
 This section supersedes `supabase/DATABASE.md`. The ERD is
 `docs/reference/erd.mmd`; the DDL snapshot is
 `supabase/schema.reference.sql`; generated types are
-`src/types/database.ts`.
+`deployment/types/database.ts`.
 
 **Core hierarchy** — `services` → `phases` (ordered, optional
 `loops_to_phase_id`) → `scenarios` (`layout`: `stacked` / `merged` —
@@ -433,7 +433,7 @@ is untouched. Migrations are applied with
 row inside the same transaction. Neither `supabase db reset` nor `db push`
 works here — see
 [ADR 0009](../adr/0009-the-migration-series-is-a-narrative.md). After any
-schema change REGENERATE `src/types/database.ts` rather than editing it — its
+schema change REGENERATE `deployment/types/database.ts` rather than editing it — its
 header names the generator that works here and the three hand-applied layers to
 put back — and check the result with
 `SUPABASE_DB_URL=… npm run check:database-types:live`, which compares the file

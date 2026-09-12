@@ -72,7 +72,7 @@
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { BLUEPRINT_CONTRACT } from './blueprintContract.mjs'
+import { BLUEPRINT_CONTRACT, CONTRACT_PATH } from './blueprintContract.mjs'
 import { RETIRED_IDENTIFIER_EXEMPTIONS } from './check-retired-identifiers.mjs'
 import { replayMigrations } from './migration-replay.mjs'
 import { erdFindings, erdValueSets } from './erd-value-sets.mjs'
@@ -787,7 +787,7 @@ async function main() {
 
   if (outcome.failures.length > 0) {
     console.error(
-      `\n${outcome.failures.length} disagreement(s) between src/lib/blueprintContract.ts ` +
+      `\n${outcome.failures.length} disagreement(s) between ${CONTRACT_PATH} ` +
         `and the live database. Fix whichever side is wrong, in one window — the ` +
         `bot vendors this file. docs/connectors/plus-uno.md`,
     )

@@ -23,7 +23,7 @@
  *
  * Run: node scripts/check-bot-contract-probe.mjs   (also: npm run check:bot-probe)
  */
-import { BLUEPRINT_CONTRACT } from './blueprintContract.mjs'
+import { BLUEPRINT_CONTRACT, CONTRACT_PATH } from './blueprintContract.mjs'
 
 // The production Worker. The bot's first host, on its first Cloudflare
 // account, still answers with a build that stopped being deployed, and its
@@ -193,7 +193,7 @@ function fail(messages) {
   }
   console.error(
     'bot repo: PLUS-UNO/plus-vibe-coding-starting-kit/agents/uno-bot · ' +
-      'contract: src/lib/blueprintContract.ts · docs/connectors/plus-uno.md',
+      `contract: ${CONTRACT_PATH} · docs/connectors/plus-uno.md`,
   )
   process.exitCode = 1
 }

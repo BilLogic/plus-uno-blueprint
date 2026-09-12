@@ -110,7 +110,7 @@ detail).
   from another checkout: `npm run supabase:stop` (or
   `supabase stop --project-id <other>`), then start again.
 - **Types don't match the schema** (TS errors on columns you can see in
-  the dashboard) — **edit `src/types/database.ts` by hand.** Both
+  the dashboard) — **edit `deployment/types/database.ts` by hand.** Both
   generator scripts redirect with `>`, which truncates the file before
   the CLI runs; if the CLI then fails — no link, no Docker, no network —
   the types are gone and the diff is the whole file. The hand edit is a

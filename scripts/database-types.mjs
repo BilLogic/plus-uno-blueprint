@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Does `src/types/database.ts` still describe the database?
+ * Does this deployment's `types/database.ts` still describe the database?
  *
  * That file is the app's only account of the schema, and for a year it was
  * maintained BY HAND, because the two documented generators both need
