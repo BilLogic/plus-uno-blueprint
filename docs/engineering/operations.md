@@ -110,11 +110,12 @@ detail).
   from another checkout: `npm run supabase:stop` (or
   `supabase stop --project-id <other>`), then start again.
 - **Types don't match the schema** (TS errors on columns you can see in
-  the dashboard) — **edit `deployment/types/database.ts` by hand.** Both
-  generator scripts redirect with `>`, which truncates the file before
-  the CLI runs; if the CLI then fails — no link, no Docker, no network —
-  the types are gone and the diff is the whole file. The hand edit is a
-  few lines and the type is reviewed like any other code.
+  the dashboard) — **regenerate `deployment/types/database.ts`** through
+  the Supabase connector, then put its three hand-applied layers back.
+  Neither CLI path works here and the npm scripts that wrapped them left
+  with `src/`; the procedure, and what to do when
+  `check:database-types:live` goes red, are in
+  [access-and-security](access-and-security.md#regenerating-deploymenttypesdatabasets).
 - **Local data looks wrong / half-migrated** — `npm run supabase:reset`
   cannot rebuild this schema. 157 of the 844 migrations replay against
   an empty database and fail, because the board is imported data and no

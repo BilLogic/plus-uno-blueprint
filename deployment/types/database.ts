@@ -81,10 +81,11 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * it had — or stops compiling. Nothing else in this file is hand-written; if a
  * fourth layer appears, it belongs in this list or it does not belong at all.
  *
- * Regenerate after schema changes:
- *   npm run supabase:types           (needs a linked project)
- *   npm run supabase:types:local     (needs Docker)
- *   or the Supabase connector's type generator, as above
+ * Regenerate after schema changes through the Supabase connector's type
+ * generator, as above. The two npm scripts that used to be offered here,
+ * `supabase:types` (needs a linked project) and `supabase:types:local` (needs
+ * Docker), wrote to `src/types/database.ts` and left with it: they are the
+ * template's scripts and this repository defines neither.
  *
  * `scripts/check-database-names.mjs` rests its argument on this file arriving
  * by machine. As of this change it does again.
@@ -1533,7 +1534,7 @@ export type SlideImage = Database['public']['Tables']['slide_images']['Row']
  * `slide_images` is not a column and PostgREST only returns it when a read
  * asks for the embed, which is why it is optional and why it is written here
  * rather than emitted: the generator describes the TABLE, and this is the
- * shape `useSlice` and `replaceSlides` actually hold. Layer 2 of the four the
+ * shape `useSlice` and `replaceSlides` actually hold. Layer 2 of the three the
  * header lists.
  */
 export type Slide = Database['public']['Tables']['slides']['Row'] & {

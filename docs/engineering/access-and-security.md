@@ -433,15 +433,54 @@ is untouched. Migrations are applied with
 row inside the same transaction. Neither `supabase db reset` nor `db push`
 works here — see
 [ADR 0009](../adr/0009-the-migration-series-is-a-narrative.md). After any
-schema change REGENERATE `deployment/types/database.ts` rather than editing it — its
-header names the generator that works here and the three hand-applied layers to
-put back — and check the result with
+schema change REGENERATE `deployment/types/database.ts` rather than editing it,
+then check the result with
 `SUPABASE_DB_URL=… npm run check:database-types:live`, which compares the file
 to `information_schema` and `pg_catalog` column by column and argument by
 argument. Editing it to match is what this document used to say, and a year of
 careful hand edits still left eight columns missing and two foreign-key names
 spelling a relation that had been renamed. Refresh
-`supabase/schema.reference.sql` too if the DDL shape moved. New RPCs must follow the house pattern: SECURITY DEFINER,
+`supabase/schema.reference.sql` too if the DDL shape moved.
+
+### Regenerating `deployment/types/database.ts`
+
+The file is GENERATED, and one generator works here: the Supabase connector's
+type generator. Neither CLI path does — `--linked` wants a project this
+machine's CLI account cannot reach, and the `--local` and `--db-url` forms want
+Docker, which is not installed. The two `supabase:types` npm scripts that
+wrapped them wrote to `src/types/database.ts` and left with it when this
+deployment stopped holding the application, so they are the template's scripts
+and not this repository's.
+
+Three layers go back on by hand after every regeneration, and they are the whole
+of what is not the generator's: the narrowed column types (`paths.kind` to
+`PathKind`, the two `status` columns to `EntityStatus`), the row aliases at the
+foot of the file, and the `DEFAULT NULL` arguments widened to `?: T | null`. The
+file's own header argues each one and is the place to read before running the
+generator. The argument stays there rather than being copied here, because a
+fourth layer appearing is a change to that list and not to this document.
+
+Nothing imports the file, by design. It is not a module the application compiles
+against — the application is read out of the package and typechecked against the
+copy shipped with it — it is this deployment's DECLARATION of its own schema,
+read by this check and by `npm run agent-account` through `schemaDeclaration`.
+`scripts/tests/database-types.test.mjs` asserts the resolved owner is
+`deployment`, so deleting the file for having no importers fails `npm test`
+rather than silently falling back to the package's declaration.
+
+**When `check:database-types:live` goes red**, regenerate through the connector,
+put the three layers back, and run the check again. Do not patch the file to
+satisfy it. A hand-patched file agrees with the database and disagrees with the
+generator, so the next regeneration reverts the patch and the disagreement comes
+back as a type error somewhere unrelated — and a patch is how two foreign-key
+names went on naming a relation a migration had renamed. If the check is red
+because a migration is applied to production ahead of the code that reads it,
+the file has to describe the far side of that apply and no generator can be run
+against a database that has not been changed yet: make the edit, and name it in
+the header as an edit the next regeneration emits, the way the header already
+names two.
+
+New RPCs must follow the house pattern: SECURITY DEFINER,
 pinned `search_path`, `EXECUTE` revoked from `public`/`anon`, and the
 `is_service_account()` guard first in the body.
 
