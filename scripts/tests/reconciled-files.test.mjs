@@ -27,7 +27,7 @@ test('an empty allowlist has nothing to fail on, and reads nothing', () => {
   assert.deepEqual(auditReconciled({ files: [], readInstance: refuse, readAsb: refuse }), [])
 })
 
-test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), the viewport/layout convergence (#323 slices S0–S5), the asb 1.5.0 adopt, the display flags (#326 S1), the asb 1.5.1 adopt (#324 S1+S2), the cell-detail context (#324 S1), the touchpoint-cell face (#325 S6), the #391 phase-B storyboard rename, the #403 identical-by-history sweep, the cell-selection builders (#405), the blueprint resolver (#326 S4), and the entity-detail provider (#324, #396 Q31)', () => {
+test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), the viewport/layout convergence (#323 slices S0–S5), the asb 1.5.0 adopt, the display flags (#326 S1), the asb 1.5.1 adopt (#324 S1+S2), the cell-detail context (#324 S1), the touchpoint-cell face (#325 S6), the #391 phase-B storyboard rename, the #403 identical-by-history sweep, the cell-selection builders (#405), the blueprint resolver (#326 S4), the entity-detail provider (#324, #396 Q31), and the two router checks that now read their numbers from scripts/repo-config.mjs', () => {
   // #319 shipped the gate EMPTY; #351 enrolled the first files — the shared
   // arrow-routing geometry — #357 enrolled the entity panel editors asb
   // ported back out of uno, and #323's slice S0 swept every remaining
@@ -624,6 +624,8 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/tokenModel.ts',
     'src/lib/versionValidation.ts',
     'src/lib/overviewPathFilters.ts',
+    'scripts/check-pointers.mjs',
+    'scripts/check-router-budget.mjs',
   ])
 })
 
