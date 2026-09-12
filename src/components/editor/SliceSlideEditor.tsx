@@ -202,7 +202,7 @@ export function SliceSlideEditor({
               {/* The grip names the gesture — a row that merely *is*
                   draggable looks exactly like one that is not. */}
               <GripVertical
-                className="size-3 shrink-0 text-muted-foreground/50"
+                className="size-3 shrink-0 text-tertiary-foreground"
                 aria-hidden
               />
               <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-foreground px-1 text-xs font-medium text-contrast">
@@ -260,7 +260,7 @@ export function SliceSlideEditor({
                   )}
                 >
                   <GripVertical
-                    className="size-3 shrink-0 text-muted-foreground/50"
+                    className="size-3 shrink-0 text-tertiary-foreground"
                     aria-hidden
                   />
                   <span className="shrink-0 text-muted-foreground">
@@ -268,7 +268,7 @@ export function SliceSlideEditor({
                   </span>
                   {/* The cell's words, not the tail of its key. `070110` is
                       an address; nobody recognises their content by address. */}
-                  <span className="min-w-0 flex-1 truncate text-xs text-foreground/80">
+                  <span className="min-w-0 flex-1 truncate text-xs text-foreground">
                     {describeCell(cell).label}
                   </span>
                   <IconTooltip label="Take this cell out of the slide">

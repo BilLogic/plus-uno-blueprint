@@ -174,6 +174,7 @@ import {
 } from '@/lib/agent/settings'
 import { AgentSettingsFields } from '@/components/editor/AgentSettingsFields'
 import { cn } from '@/lib/utils'
+import { Eyebrow } from '@/components/blueprint/Eyebrow'
 
 /**
  * Case-insensitive subsequence match — the same forgiving filter the tag
@@ -303,13 +304,13 @@ function SessionRow({
     >
       {/* No per-row glyph: a column of identical ✦ marks says nothing the
           SESSIONS header hasn't already said. */}
-      <span className="min-w-0 flex-1 truncate text-sm text-sidebar-foreground/85 group-hover/session:text-sidebar-accent-foreground">
+      <span className="min-w-0 flex-1 truncate text-sm text-foreground group-hover/session:text-sidebar-accent-foreground">
         {session.title}
       </span>
       {changeCount > 0 ? (
         <ChangeCount
           count={changeCount}
-          className="text-sidebar-foreground/50"
+          className="text-tertiary-foreground"
         />
       ) : null}
     </button>
@@ -393,9 +394,9 @@ function AgentSessionsView({
             aria-label="Filter sessions"
           />
         ) : (
-          <p className="min-w-0 flex-1 truncate pl-1 text-xs font-medium tracking-wider text-sidebar-foreground/60 uppercase">
+          <Eyebrow className="min-w-0 flex-1 truncate pl-1">
             Sessions
-          </p>
+          </Eyebrow>
         )}
         <IconTooltip label="Filter sessions by name" side="bottom">
           <Button
@@ -534,10 +535,10 @@ type ToolEvent = Extract<TranscriptEvent, { kind: 'tool' }>
 function ToolDetail({ label, body }: { label: string; body: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+      <Eyebrow>
         {label}
-      </p>
-      <pre className="mt-0.5 max-h-40 overflow-auto rounded-md bg-muted px-2 py-1.5 font-mono text-xs leading-snug whitespace-pre-wrap text-foreground/80">
+      </Eyebrow>
+      <pre className="mt-0.5 max-h-40 overflow-auto rounded-md bg-muted px-2 py-1.5 font-mono text-xs leading-snug whitespace-pre-wrap text-foreground">
         {body}
       </pre>
     </div>
@@ -653,7 +654,7 @@ function TranscriptRow({
         <Message>
           <MessageContent>
             <Bubble variant="ghost">
-              <BubbleContent className="text-foreground/90">
+              <BubbleContent className="text-foreground">
                 <AgentMarkdown text={event.text} />
               </BubbleContent>
             </Bubble>
@@ -1422,7 +1423,7 @@ export function AgentSettingsRailButton() {
                   <button
                     type="button"
                     aria-label="Sign in and agent settings"
-                    className="flex size-9 items-center justify-center rounded-md text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+                    className="flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
                   >
                     <Settings className="size-4" aria-hidden />
                   </button>

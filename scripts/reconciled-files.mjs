@@ -2060,4 +2060,25 @@ export const RECONCILED_FILES = [
   // file's behaviour moved.
   'src/components/blueprint/optionSelect.test.tsx',
   'src/lib/overviewLayout.ts',
+
+  // The type guards, and the primitive one of them points at. The rules they
+  // hold — ink is a named rung, 400 is the working weight and 600 is headings
+  // only, an eyebrow has one spelling — are the template's, so the guard that
+  // enforces them is too: a deployment that wrote its own would be free to
+  // soften it, which is the failure this whole set exists to prevent.
+  //
+  // `classList.ts` is the reader all three are written with, because a type
+  // rule is almost never about one utility and a quoted-string search is
+  // defeated the moment a class is split across `cn()` arguments. Its own
+  // test does NOT enrol: it proves the reader using strings lifted from the
+  // tree it ships with, and this deployment's forked surfaces spell those
+  // strings differently. A test anchored to another repository's call sites
+  // is not a promise this one can keep.
+  'src/lib/classList.ts',
+  'src/lib/typeWeight.ts',
+  'src/lib/typeWeight.test.ts',
+  'src/lib/typeInk.ts',
+  'src/lib/typeInk.test.ts',
+  'src/components/labelVocabulary.test.ts',
+  'src/components/blueprint/Eyebrow.tsx',
 ]

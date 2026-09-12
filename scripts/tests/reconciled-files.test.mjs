@@ -606,6 +606,13 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/agent/tools/referenceRegistry.test.ts',
     'src/components/blueprint/optionSelect.test.tsx',
     'src/lib/overviewLayout.ts',
+    'src/lib/classList.ts',
+    'src/lib/typeWeight.ts',
+    'src/lib/typeWeight.test.ts',
+    'src/lib/typeInk.ts',
+    'src/lib/typeInk.test.ts',
+    'src/components/labelVocabulary.test.ts',
+    'src/components/blueprint/Eyebrow.tsx',
   ])
 })
 

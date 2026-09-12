@@ -193,7 +193,7 @@ function NoteField({
       <span className="text-xs font-medium text-muted-foreground">
         {DEPENDENCY_EDIT_TEXT.noteLabel}
         {DEPENDENCY_EDIT_TEXT.noteOptional ? (
-          <span className="font-normal text-muted-foreground/70"> · optional</span>
+          <span className="font-normal text-muted-foreground"> · optional</span>
         ) : null}
       </span>
       <Input
