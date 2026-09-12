@@ -15,6 +15,7 @@ import { ENTITY_HEADER_HOLD_KEY } from '@/components/blueprint/EntityHeader'
 import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useShellBooting } from '@/contexts/shellBootStore'
+import { Eyebrow } from '@/components/blueprint/Eyebrow'
 
 /**
  * The top-bar path control: desktop reads and
@@ -99,9 +100,9 @@ export function PathSelectorMenu({ options }: { options: PathOption[] }) {
                 same word and the same explanation, reachable on hover, focus
                 and tap. */}
             <EntityDefinitionPopover kind="path" side="left">
-              <span className="flex w-fit px-2 pb-1 pt-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
+              <Eyebrow className="flex w-fit px-2 pb-1 pt-0.5 outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
                 Path
-              </span>
+              </Eyebrow>
             </EntityDefinitionPopover>
             <ul className="flex flex-col gap-0.5">
               {options.map((option) => {

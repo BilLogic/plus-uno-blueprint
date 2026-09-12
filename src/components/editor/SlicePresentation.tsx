@@ -211,10 +211,10 @@ export function SlicePresentation({
           data-presentation-stage=""
         >
           <div className="max-w-sm text-center">
-            <p className="text-2xl font-semibold">
+            <h2 className="text-2xl font-semibold">
               <span aria-hidden>▶ </span>
               {detail.slice.title}
-            </p>
+            </h2>
             <p className="mt-3 text-sm text-muted-foreground">
               This slice has no slides yet.
             </p>
@@ -262,7 +262,7 @@ export function SlicePresentation({
 
           <div className="min-w-0 flex-1 overflow-y-auto px-2">
             <div className="flex min-h-full flex-col items-center justify-center gap-4 py-4 text-center">
-              <p className="font-mono text-xs font-medium tracking-[0.2em] text-muted-foreground/70 tabular-nums uppercase">
+              <p className="font-mono text-xs font-medium tracking-[0.2em] text-muted-foreground tabular-nums uppercase">
                 Slide {clampedSlide + 1} of {slideCount}
               </p>
               {stageMedia.length > 0 ? (
@@ -467,7 +467,7 @@ function PresentationFilmstrip({
                         aria-label={cellSnippet(cell)}
                         className={cn(
                           // size-10 squares, exactly the raw buttons' hit area.
-                          'size-10 shrink-0 rounded-md border font-mono text-xs font-semibold tabular-nums',
+                          'size-10 shrink-0 rounded-md border font-mono text-xs font-medium tabular-nums',
                           active
                             ? 'border-foreground bg-foreground text-contrast hover:bg-foreground hover:text-contrast dark:hover:bg-foreground'
                             : 'border-border bg-muted text-muted-foreground hover:bg-accent hover:text-foreground dark:hover:bg-accent',

@@ -62,6 +62,7 @@ import {
 import { IconTooltip } from '@/components/editor/IconTooltip'
 import { getBlueprintFillStyle } from '@/lib/pathColorTheme'
 import { cn } from '@/lib/utils'
+import { Eyebrow } from '@/components/blueprint/Eyebrow'
 
 type DraftPen = {
   type: 'pen'
@@ -485,9 +486,9 @@ function ShapeStyleBar({
           data-annotation-chrome=""
           onMouseDown={(e) => e.preventDefault()}
         >
-          <div className="mb-1.5 text-xs font-semibold tracking-wide text-(--foreground-annotation-chrome-tertiary) uppercase">
+          <Eyebrow className="mb-1.5 block text-(--foreground-annotation-chrome-tertiary)">
             Fill
-          </div>
+          </Eyebrow>
           <div className="flex flex-wrap items-center gap-1.5">
             <ColorSwatch
               empty
@@ -551,9 +552,9 @@ function ShapeStyleBar({
           onMouseDown={(e) => e.preventDefault()}
         >
           <div className="mb-1.5 flex items-center justify-between gap-3">
-            <span className="text-xs font-semibold tracking-wide text-(--foreground-annotation-chrome-tertiary) uppercase">
+            <Eyebrow className="text-(--foreground-annotation-chrome-tertiary)">
               Stroke
-            </span>
+            </Eyebrow>
             {shape.color ? (
               <div className="flex items-center gap-0.5">
                 {ANNOTATION_STROKE_WIDTHS.map((width) => (
@@ -666,9 +667,9 @@ function StickyStyleBar({
           data-annotation-chrome=""
           onMouseDown={(e) => e.preventDefault()}
         >
-          <div className="mb-1.5 text-xs font-semibold tracking-wide text-(--foreground-annotation-chrome-tertiary) uppercase">
+          <Eyebrow className="mb-1.5 block text-(--foreground-annotation-chrome-tertiary)">
             Color
-          </div>
+          </Eyebrow>
           <div className="flex flex-wrap items-center gap-1.5">
             {ANNOTATION_STICKY_SWATCHES.map((swatch) => (
               <ColorSwatch
@@ -835,9 +836,9 @@ function TextStyleBar({
           data-annotation-chrome=""
           onMouseDown={(e) => e.preventDefault()}
         >
-          <div className="mb-1.5 text-xs font-semibold tracking-wide text-(--foreground-annotation-chrome-tertiary) uppercase">
+          <Eyebrow className="mb-1.5 block text-(--foreground-annotation-chrome-tertiary)">
             Color
-          </div>
+          </Eyebrow>
           <div className="flex flex-wrap items-center gap-1.5">
             {ANNOTATION_STROKE_SWATCHES.map((swatch) => (
               <ColorSwatch
@@ -1209,11 +1210,11 @@ function StickyAnnotationNode({
           placeholder="Sticky note…"
           readOnly={!editing}
           className={cn(
-            'size-full resize-none border-0 font-sans leading-snug text-annotation-plate-foreground outline-none placeholder:text-annotation-plate-foreground/45',
+            'size-full resize-none border-0 font-sans leading-snug text-annotation-plate-foreground outline-none placeholder:text-(--foreground-annotation-chrome-tertiary)',
             editing || selected
               ? 'pointer-events-auto cursor-text'
               : 'pointer-events-none cursor-inherit',
-            annotation.bold && 'font-bold',
+            annotation.bold && 'font-medium',
             annotation.strike && 'line-through',
           )}
           style={{
@@ -1329,7 +1330,7 @@ function TextAnnotationNode({
               'w-full resize-none px-1.5 py-1 font-sans leading-snug outline-none',
               'pointer-events-auto cursor-text',
               textAlignClass,
-              annotation.bold && 'font-bold',
+              annotation.bold && 'font-medium',
               annotation.strike && 'line-through',
               showChrome
                 ? 'border-0 bg-transparent text-inherit'
@@ -1349,7 +1350,7 @@ function TextAnnotationNode({
             className={cn(
               'max-w-full px-1.5 py-1 whitespace-pre-wrap font-sans leading-snug',
               textAlignClass,
-              annotation.bold && 'font-bold',
+              annotation.bold && 'font-medium',
               annotation.strike && 'line-through',
             )}
           >

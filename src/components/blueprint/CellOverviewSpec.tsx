@@ -26,7 +26,7 @@ function SpecSection({
         {title}
       </h3>
       {text !== undefined ? (
-        <p className="whitespace-pre-wrap text-sm font-normal text-foreground/80">{text}</p>
+        <p className="whitespace-pre-wrap text-sm font-normal text-foreground">{text}</p>
       ) : null}
       {children}
     </section>
@@ -76,7 +76,7 @@ export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
         <SpecSection title="Value proposition">
           <ul className="flex flex-col gap-1">
             {valueProps.map((entry, index) => (
-              <li key={index} className="text-sm leading-snug text-foreground/80">
+              <li key={index} className="text-sm leading-snug text-foreground">
                 <span className="font-medium text-foreground">{entry.for}</span>
                 {entry.for && entry.value ? ' — ' : ''}
                 {entry.value}
