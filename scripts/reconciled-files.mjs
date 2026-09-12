@@ -65,28 +65,30 @@
  * `check:reconciled` enforces this over everything on this list, whatever the
  * extension.
  *
- * ── ONE ENTRY IS ENROLLED AND CURRENTLY FAILING, ON PURPOSE ──────────────
+ * ── THE TWO SUITES THAT REACHED FOR `src/`, AND WHY BOTH STAYED ──────────
  *
- * The two suites that reached for `src/` are fixed. Both now start where the
- * build resolves the application, and the second imports its client half
- * through `@/…` rather than up two directories, which is what the module
- * header here asked for and what v1.43.0 delivered. Neither was unenrolled to
- * get there, which was the point of writing the cause down rather than the
- * hole.
+ * Both of the shared suites here were written where the repository running
+ * them also HELD the application, and a deployment does not. Neither was
+ * unenrolled to get past that; in both cases the cause went upstream and the
+ * entry stayed, at the same bytes.
  *
- * One test inside `scripts/tests/one-badge-one-size.test.mjs` is red here and
- * is a DIFFERENT defect, arriving with the same release that fixed the first.
- * It builds a throwaway tree, symlinks THIS REPOSITORY into it as
- * `node_modules/agentic-service-blueprinting`, and asserts the walk finds the
- * same files through the mounted copy as through the direct one. That premise
- * holds only where the repository running the suite HOLDS the application: in
- * a deployment the mounted copy is this repository, which has no `src`, so the
- * resolver refuses — correctly, and on a tree the test built. Every other test
- * in the file passes, including the real walk over the real application.
+ * `authoring-log.test.mjs` reached up two directories for its client half and
+ * now imports it through `@/…`, which resolves the application wherever the
+ * build resolves it.
  *
- * The subject it wants is the tree that holds the application, not the tree
- * that runs the test, and the file already computes it. It stays enrolled and
- * unedited: same bytes, and the fix is upstream's to make.
+ * `one-badge-one-size.test.mjs` builds a throwaway tree, mounts the package
+ * into it as `node_modules/agentic-service-blueprinting`, and asserts the walk
+ * finds the same files through the mounted copy as through the direct one. It
+ * used to mount the root the suite was run FROM — the same directory in a
+ * repository that keeps its own `src`, and in a deployment a root with no
+ * application in it at all, which the resolver refused on a tree the test had
+ * just built. It now mounts the directory the application's `src` actually
+ * sits in, so what gets staged is an application either way, and it asserts
+ * that premise rather than assuming it.
+ *
+ * That is the shape the header above argues for: where a shared file is wrong
+ * about a deployment, the fix is the template's to make and the enrolment is
+ * what carries the question there.
  *
  * ── HOW THIS LIST GROWS NOW ───────────────────────────────────────────────
  *
@@ -157,14 +159,16 @@ export const RECONCILED_FILES = [
   // deployment wrote named two issue numbers, and a rule about call sites does
   // not need an address to be true.
   //
-  // ONE TEST RED — not the walk, which is fixed: a self-test that mounts
-  // this repository as the package. See the module header.
+  // Its staged self-test mounts the directory the application sits in rather
+  // than the root the suite ran from, so it stages an application in a
+  // deployment too. See the module header.
   'scripts/tests/one-badge-one-size.test.mjs',
 
   // The authoring log's own suite, adopted with the log itself when the change
   // log went upstream.
   //
-  // Green again since v1.43.0 — it imports its client half through `@/…`.
+  // It imports its client half through `@/…`, so it finds the application
+  // where the build resolves it rather than where this repository keeps it.
   'scripts/tests/authoring-log.test.mjs',
 
   // ── Two data files ──
