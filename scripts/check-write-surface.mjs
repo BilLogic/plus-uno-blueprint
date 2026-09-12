@@ -361,11 +361,12 @@ export function retiredMentions(lines) {
  * package in both directions: a sixth document that starts teaching the wrong
  * enum fails here, and so does an entry left behind after a pin bump fixes one.
  *
- * Why here and not in `scripts/check-template-quarantine.mjs`: that guard
- * inspects MERGE COMMITS, asking whether a template merge touched a file this
- * instance owns. It has no notion of installed package content and would never
- * run on the event that matters — a lockfile pin bump, which is not a merge
- * from the template at all.
+ * Why here and not alongside the byte-identity gate in
+ * `scripts/check-reconciled-files.mjs`: that gate asks whether two copies of
+ * ONE path still agree. This list is not a copy of anything — it names
+ * documents inside the package from a document outside it, and the event that
+ * breaks it is a pin bump changing what those documents say, which leaves
+ * every byte on both sides of the gate exactly where it was.
  */
 
 /** The package-relative reference paths the supersession block lists. */

@@ -135,17 +135,16 @@ The contract:
   absent, so it gated nothing, and by the time that was noticed the drift
   had inverted — a vocabulary rename had landed in the vendored copy and a
   sync would have reverted it.
-- **Instance code still merges, not installs.** This repo and
-  `agentic-service-blueprinting` **share history** (the graft in #105), so
-  upstream *code* changes arrive as an ordinary `git merge template/main`.
-  A handful of paths must never arrive that way — this instance's
-  migrations, its blueprint data, its generated database types, its agent
-  persona — and `npm run check:template-quarantine`
-  (`scripts/template-quarantine.json`, CI:
-  `.github/workflows/template-quarantine.yml`) fails the merge that takes
-  the package's version of one. The rulebook is no longer among the files
-  that merge; it installs — except `src/lib/agent/canvas-adapter.md`, which
-  is instance-owned and quarantined alongside `role.md`.
+- **Nothing here merges any more.** The rulebook was the first thing to
+  arrive by install rather than by copy, and now the whole application does:
+  it is the pinned dependency, unpacked into `node_modules/`, which git does
+  not track and no upstream change can write through. This repository's own
+  trees — its migrations, its seeds, its Supabase settings and `deployment/` —
+  are not reachable from the package at all, so there is nothing left for a
+  merge guard to guard. `docs/engineering/template-relationship.md` records
+  what the old one was for. The one reference this deployment still owns is
+  `deployment/agent/canvas-adapter.md`, and what holds it is
+  `npm run check:write-surface`, not a path list.
 - Adding a reference means adding it upstream, bumping the pin, and
   updating `referenceNames.ts` — `read.ts` asserts the record matches the
   name list at module init, so a miss fails the first test that touches
