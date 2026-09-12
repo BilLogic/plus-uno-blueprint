@@ -206,11 +206,17 @@ jobs:
       # from asb's copy. It reads the same installed package
       # `node_modules/agentic-service-blueprinting` that check:write-surface
       # above does, so it belongs here in `gates`, after `npm ci`, and needs no
-      # database. Unlike measure-template-divergence — which only REPORTS, over
-      # a local `template` remote that CI never has — this gate stands on the
-      # lockfile-pinned copy that `npm ci` guarantees is present. It lands EMPTY
-      # (zero entries, a trivial pass); each reconciliation ticket enrols its
-      # file with a one-line append to the allowlist.
+      # database.
+      #
+      # The import flip did not retire this. It emptied most of it: 507 of the
+      # 522 enrolled paths were under `src/`, and those files left the
+      # repository, which is what the enrolments were for. The fifteen that
+      # remain are files this repository still holds — six of them the build's
+      # own configuration, which since the flip carries the seam itself: where
+      # `@/…` and `~/…` resolve, what `tsc` compiles, what vitest collects.
+      # Identical text serving a repository with a deployment root and one
+      # without is exactly the thing a local edit breaks quietly, so this is
+      # worth MORE after the flip than before it.
       - run: npm run check:reconciled
 
       # The cross-repository duplicate sweep (#364, story 8). Its sibling above

@@ -2,17 +2,25 @@
 /**
  * The byte-identity drift gate over the reconciled set (#319, parent #304).
  *
- * `scripts/measure-template-divergence.mjs` REPORTS how far this deployment
- * has drifted from the template; it fails on nothing, because divergence is
- * expected and moving. This is its opposite over a named subset: the files in
- * `scripts/reconciled-files.mjs` are DECLARED reconciled, and for those the
- * only acceptable divergence is zero. A reconciled file that stops being
- * byte-identical to asb's copy — either side moving — fails CI.
+ * `scripts/enrollable-candidates.mjs` REPORTS which shared file could join the
+ * set next; it fails on nothing, because a file differing from the template is
+ * the ordinary case. This is the opposite question over the files already on
+ * the list: they are DECLARED reconciled, and for those the only acceptable
+ * divergence is zero. A reconciled file that stops being byte-identical to
+ * asb's copy — either side moving — fails CI.
  *
- * It lands EMPTY: the allowlist has no entries, so there is nothing to compare
- * and the gate exits 0 without even needing asb present. Every later
- * reconciliation ticket enrols its file(s) with a one-line append to that
- * allowlist.
+ * WHAT IT GUARDS NOW. It began as the road to the import flip: each enrolment
+ * was a file proved identical so that it could be deleted and imported
+ * instead, and at its peak it held 522 of them. That worked, and 507 of those
+ * files left this repository. Drift is not prevented for them any more — it is
+ * impossible, because there is one copy. What is left is the set the flip
+ * could not dissolve: fifteen files this repository still HOLDS and still
+ * shares, most of them the build's own configuration, where two copies
+ * genuinely exist and can still disagree. `scripts/reconciled-files.mjs`
+ * argues each group.
+ *
+ * An empty allowlist is still a trivial pass, exiting 0 without needing asb
+ * present. It will not be empty again.
  *
  * asb is the pinned git dependency `agentic-service-blueprinting` (see
  * package.json / the lockfile), installed to
@@ -21,8 +29,9 @@
  * `gates` job AFTER `npm ci`. Byte-identity is measured against that pinned
  * version, so "reconciled" means "identical to asb at the pinned tag"; a pin
  * bump that moves asb's copy is exactly the drift this is meant to catch. The
- * local `template` git remote the divergence reporter uses is a sibling
- * checkout that is never present in CI, so it is the wrong source for a gate.
+ * installed package is the right source precisely because it is what the
+ * deployment runs: a sibling checkout on somebody's disk is a template nobody
+ * is deployed against.
  *
  * When the allowlist is non-empty but the package is not installed, it fails
  * the way the divergence reporter fails on an asb tree it cannot read: loudly,
