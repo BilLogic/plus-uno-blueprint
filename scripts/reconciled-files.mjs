@@ -2108,4 +2108,11 @@ export const RECONCILED_FILES = [
   // the dead one is gone. Its header keeps the template's shorter telling of
   // the same bug.
   'src/lib/versionValidation.ts',
+
+  // `overviewPathFilters.ts` was one byte from this list: the template's copy
+  // ended without a newline, which no editor on this side can preserve. Fixed
+  // upstream, along with a test over that tree, and adopted here with the
+  // sentence the template words better — an option is a path IDENTITY,
+  // `kind:name`, which is what the function actually collects.
+  'src/lib/overviewPathFilters.ts',
 ]
