@@ -2101,4 +2101,11 @@ export const RECONCILED_FILES = [
   'src/lib/agent/tools/format.ts',
   'src/lib/agent/tools/search.ts',
   'src/lib/tokenModel.ts',
+
+  // `versionValidation.ts` held a second copy of the path-kind labels that
+  // nothing imported — every caller reads the one in `pathKindTheme.ts`. Two
+  // maps of the same three words is the drift this gate exists to catch, and
+  // the dead one is gone. Its header keeps the template's shorter telling of
+  // the same bug.
+  'src/lib/versionValidation.ts',
 ]
