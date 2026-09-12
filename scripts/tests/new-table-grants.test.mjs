@@ -183,3 +183,35 @@ revoke insert, update, delete, truncate on public.real_one from anon;`
   assert.deepEqual([...relationsRevoked(prose)], ['real_one'])
   assert.deepEqual(findings([{ name: '20260830140000_x.sql', sql: prose }]), [])
 })
+
+test('a relation in another schema is skipped, not renamed', () => {
+  // The near-miss this rule could not see. The schema qualifier was optional
+  // in the pattern and discarded, so `semantic_search.chunk_embeddings` came
+  // back as a relation called `semantic_search` — a name no migration has
+  // ever created, which no revoke could ever clear. It is outside the rule
+  // rather than inside it and misspelled: the grants this check collects are
+  // the ones the platform hands `anon` on relations created in `public`, and
+  // `semantic_search` is RLS-sealed and reached only through definer
+  // functions.
+  const sql = `create table if not exists semantic_search.chunk_embeddings (
+  source text not null,
+  model  text not null
+);
+create table public.kept (id uuid primary key);
+revoke insert, update, delete, truncate on public.kept from anon;`
+
+  assert.deepEqual(relationsCreated(sql), ['kept'])
+  assert.deepEqual(findings([{ name: '20260912200000_x.sql', sql }]), [])
+})
+
+test('a revoke in another schema does not cover a public relation of the same name', () => {
+  // The same fix pointed the other way. Both halves read the qualifier, so a
+  // revoke on `semantic_search.kept` cannot be credited to `public.kept`.
+  const sql = `create table public.kept (id uuid primary key);
+revoke insert, update, delete, truncate on semantic_search.kept from anon;`
+
+  assert.deepEqual([...relationsRevoked(sql)], [])
+  assert.deepEqual(findings([{ name: '20260912200000_x.sql', sql }]), [
+    { file: '20260912200000_x.sql', relation: 'kept' },
+  ])
+})
