@@ -65,28 +65,28 @@
  * `check:reconciled` enforces this over everything on this list, whatever the
  * extension.
  *
- * ── TWO ENTRIES ARE ENROLLED AND CURRENTLY FAILING, ON PURPOSE ────────────
+ * ── ONE ENTRY IS ENROLLED AND CURRENTLY FAILING, ON PURPOSE ──────────────
  *
- * `scripts/tests/one-badge-one-size.test.mjs` and
- * `scripts/tests/authoring-log.test.mjs` both reach for `src/`: the first
- * walks it and reads `src/components/ui/badge.tsx`, the second imports
- * `../../src/lib/authoringLog.ts`. Both subjects are the application's and are
- * now inside the package, so both suites fail here with ENOENT.
+ * The two suites that reached for `src/` are fixed. Both now start where the
+ * build resolves the application, and the second imports its client half
+ * through `@/…` rather than up two directories, which is what the module
+ * header here asked for and what v1.43.0 delivered. Neither was unenrolled to
+ * get there, which was the point of writing the cause down rather than the
+ * hole.
  *
- * They stay on this list. Unenrolling a file to make a suite green is the one
- * move this gate exists to prevent, and neither file has drifted — both are
- * still byte-identical to the template's copy, which is the only thing this
- * list asserts. What has happened is that the template has not yet been taught
- * that a repository running these checks might not hold the application, and
- * that is an upstream change: the two paths want resolving the way
- * `vite.config.ts` already resolves the application's root — `./src` if it
- * exists, else the package's — or, for the second, importing through `@/…`,
- * which the vitest aliases already answer in both repositories. Same bytes,
- * different behaviour by what is on disk, which is the pattern the build files
- * above already follow.
+ * One test inside `scripts/tests/one-badge-one-size.test.mjs` is red here and
+ * is a DIFFERENT defect, arriving with the same release that fixed the first.
+ * It builds a throwaway tree, symlinks THIS REPOSITORY into it as
+ * `node_modules/agentic-service-blueprinting`, and asserts the walk finds the
+ * same files through the mounted copy as through the direct one. That premise
+ * holds only where the repository running the suite HOLDS the application: in
+ * a deployment the mounted copy is this repository, which has no `src`, so the
+ * resolver refuses — correctly, and on a tree the test built. Every other test
+ * in the file passes, including the real walk over the real application.
  *
- * Until that lands upstream and arrives with a pin, these two are a known red
- * with a named cause, which is a better state than a gate with two holes in it.
+ * The subject it wants is the tree that holds the application, not the tree
+ * that runs the test, and the file already computes it. It stays enrolled and
+ * unedited: same bytes, and the fix is upstream's to make.
  *
  * ── HOW THIS LIST GROWS NOW ───────────────────────────────────────────────
  *
@@ -157,14 +157,14 @@ export const RECONCILED_FILES = [
   // deployment wrote named two issue numbers, and a rule about call sites does
   // not need an address to be true.
   //
-  // KNOWN RED since the flip — it walks `src`. See the module header.
+  // ONE TEST RED — not the walk, which is fixed: a self-test that mounts
+  // this repository as the package. See the module header.
   'scripts/tests/one-badge-one-size.test.mjs',
 
   // The authoring log's own suite, adopted with the log itself when the change
   // log went upstream.
   //
-  // KNOWN RED since the flip — it imports `../../src/lib/authoringLog.ts`. See
-  // the module header.
+  // Green again since v1.43.0 — it imports its client half through `@/…`.
   'scripts/tests/authoring-log.test.mjs',
 
   // ── Two data files ──

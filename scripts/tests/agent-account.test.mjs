@@ -5,7 +5,7 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import {
   classifyRelation,
   coverage,
@@ -26,8 +26,22 @@ import { credentials } from '../generate-agent-account.mjs'
 
 const ROOT = new URL('../..', import.meta.url).pathname
 
+/**
+ * The two real sources, asked for the way the generator asks for them.
+ *
+ * Neither is at a path this repository can spell. This deployment reads the
+ * application out of the package, so `src/lib/panelTerms.ts` and
+ * `src/types/database.ts` are not here — and the two functions under test are
+ * exactly the ones that answer where each source lives, so the assertions
+ * below go through them rather than around them. In a tree that keeps its own
+ * `src` they answer that instead, and these tests read the same files they
+ * always did.
+ */
+const VOCABULARY = vocabularySource(ROOT.replace(/\/$/, ''), existsSync)
+const DECLARATION = schemaDeclaration(ROOT.replace(/\/$/, ''), existsSync)
+
 test('the six entity kinds are read off panelTerms.ts as written', () => {
-  const kinds = entityKinds(readFileSync(`${ROOT}src/lib/panelTerms.ts`, 'utf8'))
+  const kinds = entityKinds(readFileSync(VOCABULARY.path, 'utf8'))
   assert.deepEqual(
     kinds.map((k) => k.kind),
     ['service', 'phase', 'scenario', 'path', 'step', 'lane'],
@@ -37,7 +51,7 @@ test('the six entity kinds are read off panelTerms.ts as written', () => {
 })
 
 test('every relation with a Row type is a column inventory', () => {
-  const columns = tableColumns(readFileSync(`${ROOT}src/types/database.ts`, 'utf8'))
+  const columns = tableColumns(readFileSync(DECLARATION.path, 'utf8'))
   assert.ok(columns.get('paths').includes('kind'))
   assert.ok(columns.get('evidence_counts'), 'views carry a Row too')
   assert.equal(columns.has('search_blueprint'), false, 'a function has no Row')
