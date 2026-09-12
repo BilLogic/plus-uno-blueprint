@@ -76,31 +76,6 @@ function componentFiles() {
   return [...appSourceFiles(component), ...deploymentSourceFiles(component)]
 }
 
-/**
- * The `<Name …>` element starting at `index`, and everything it contains.
- *
- * Brace depth decides where the opening tag ends; tag depth decides where the
- * element does. A `>` inside `{a > b}` closes nothing, and a nested
- * `<DefinitionPopover>` would otherwise be closed by its child's tag.
- */
-function elementAt(source, index, name) {
-  let depth = 0
-  let open = index + name.length + 1
-  for (; open < source.length; open++) {
-    const char = source[open]
-    if (char === '{') depth += 1
-    else if (char === '}') depth -= 1
-    else if (char === '>' && depth === 0) break
-  }
-  if (source[open - 1] === '/') return { tag: source.slice(index, open + 1), body: '' }
-  const closing = `</${name}>`
-  const end = source.indexOf(closing, open)
-  return {
-    tag: source.slice(index, open + 1),
-    body: end === -1 ? source.slice(open + 1) : source.slice(open + 1, end),
-  }
-}
-
 /** Where each component in `source` is declared, in order. */
 function components(source) {
   return [...source.matchAll(/^(?:export )?function (\w+)/gm)].map((match) => ({
@@ -158,7 +133,19 @@ export function definitionsNotOnABadge(source) {
 }
 
 test('every definition in the app hangs off a badge', () => {
-  const files = componentFiles().filter((path) => path !== CARD_MODULE)
+  const walked = componentFiles()
+  // The walk found FILES; this is what says it found the APPLICATION. Both
+  // readers already refuse an EMPTY result, which catches a root that is not
+  // there — it does not catch a root that exists and holds something else, and
+  // a tree with no `DefinitionCard.tsx` in it is not the tree this check is
+  // about however many components it has. Taken from the template, which added
+  // it after the same walk went quiet in a deployment.
+  assert.ok(
+    walked.includes(CARD_MODULE),
+    `${CARD_MODULE} is not among the ${walked.length} files walked, so this ` +
+      `is not the application`,
+  )
+  const files = walked.filter((path) => path !== CARD_MODULE)
 
   const found = []
   for (const path of files) {
