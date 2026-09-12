@@ -41,4 +41,18 @@ export const unoDeploymentConfig: DeploymentConfig = {
     'Set Goals Edge Case': 3,
     'Update Goals Edge Case': 4,
   },
+  agent: {
+    // This database carries `search_blueprint`, so the tool is real here. The
+    // one index it holds is named exactly as the database records it: a
+    // question embedded with any other model, or any other size, is refused
+    // rather than ranked as noise.
+    //
+    // Only a person holding a Google key has their question embedded; the
+    // keyword and structural arms answer for everyone else, which is what the
+    // in-app agent had before meaning search reached it at all.
+    search: {
+      enabled: true,
+      indexes: [{ provider: 'google', model: 'gemini-embedding-001', dimensions: 768 }],
+    },
+  },
 }

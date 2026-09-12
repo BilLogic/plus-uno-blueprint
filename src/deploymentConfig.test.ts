@@ -6,6 +6,7 @@ import {
   resolveDeploymentConfig,
   type DeploymentConfig,
 } from './deploymentConfig'
+import { unoDeploymentConfig } from './deployment'
 
 // The deployment seam has two contracts here, not one. The template's is that
 // a sparse overlay resolves against the defaults and that no config at all
@@ -30,6 +31,27 @@ describe("this deployment's default config", () => {
     // the three to disagree.
     expect(asbDefaultConfig.brand?.accent).toBe(BRAND.accent)
     expect(resolveDeploymentConfig().brand.accent).toBe(BRAND.accent)
+  })
+})
+
+describe("this deployment's search index", () => {
+  it('names the one model its database was embedded with', () => {
+    // The database refuses a question embedded with any other model, so this
+    // list is a statement of fact about the index rather than a preference.
+    // If the index is ever re-embedded, this is the line that has to move with
+    // it — and a search that suddenly refuses everything is what a stale line
+    // here looks like from the outside.
+    const search = unoDeploymentConfig.agent?.search
+    expect(search?.enabled).toBe(true)
+    expect(search?.indexes).toEqual([
+      { provider: 'google', model: 'gemini-embedding-001', dimensions: 768 },
+    ])
+  })
+
+  it('survives the resolve, so the agent is offered the tool', () => {
+    const resolved = resolveDeploymentConfig(unoDeploymentConfig)
+    expect(resolved.agent?.search?.enabled).toBe(true)
+    expect(resolved.agent?.search?.indexes).toHaveLength(1)
   })
 })
 
