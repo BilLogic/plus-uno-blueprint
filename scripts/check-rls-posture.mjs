@@ -128,7 +128,7 @@ export const RLS_POSTURE_EXEMPTIONS = [
   {
     identifier: 'public.agent_sessions',
     because:
-      'gated per user, not per tier: canAgent in SupabaseProvider.tsx admits every authenticated session, so a viewer owning their own conversations IS the design — the substitute gate is owns_agent_session(user_id), asserted below',
+      'gated per user, not per tier: canAgent in SupabaseProvider.tsx admits every authenticated session, so a viewer owning their own conversations IS the design — the substitute gate is owns_agent_session(created_by), asserted below',
   },
   {
     identifier: 'public.agent_messages',

@@ -149,10 +149,10 @@ One canvas-agent conversation. Ledger entries reference it via agentSessionId (c
 | Column | Meaning |
 |---|---|
 | `created_at` | — |
+| `created_by` | Who owns this conversation. NULL means the row predates ownership (2026-08-28); those are readable by service accounts only and no new row may be NULL. |
 | `id` | — |
 | `title` | — |
 | `updated_at` | — |
-| `user_id` | Who owns this conversation. NULL means the row predates ownership (2026-08-28); those are readable by service accounts only and no new row may be NULL. |
 
 ### `audit_findings`
 Audit / whatif / import-sweep outputs. Written by skills (IDE service key or canvas authenticated agent); humans triage by status. Prefixed on 2026-08-30 because the bare word `findings` gave a reader no clue which process produces the rows; the CONCEPT is still a finding everywhere else.
@@ -477,7 +477,7 @@ Deployment-level cast list: one pool of actors a lane picks from, unique by name
 | `aliases` | — |
 | `created_at` | — |
 | `updated_at` | — |
-| `parent_id` | The party this one is part of. Design's four sub-teams point at Design, so "what does Design own?" rolls them up while a lane can still name the specific one. |
+| `part_of_id` | The actor this one is part of, or null when it is not part of another. Exactly one level: an actor that is part of something is part of nothing further. A lane still names the specific actor; this is what lets a reader roll those up. |
 
 ### `steps`
 Blueprint column (journey step) scoped to a service scenario

@@ -82,7 +82,7 @@ erDiagram
   %% each has an OWNER instead (CONTEXT.md). Four of the five are authored by a
   %% person, which is what both nouns got wrong.
   services           ||--o{ stakeholders : "the cast"
-  stakeholders       |o--o| stakeholders : "parent_id, teams contain people"
+  stakeholders       |o--o| stakeholders : "part_of_id, teams contain people"
   stakeholders       |o--o{ lanes : "lanes.stakeholder_id, NULLABLE"
   stakeholders       |o--o{ slices : "slices.stakeholder_id"
 
@@ -245,7 +245,7 @@ erDiagram
   stakeholders {
     uuid id PK
     uuid service_id FK
-    uuid parent_id FK "self-reference: a team contains its people"
+    uuid part_of_id FK "self-reference: an actor is part of another, one level"
     text name
     text kind "recipient | staff | partner | provider | team"
     text note

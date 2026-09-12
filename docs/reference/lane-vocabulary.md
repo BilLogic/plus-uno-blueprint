@@ -14,7 +14,8 @@ the closed list"**. This is that list.
 > `owner_team` was empty on every lane. Four migrations on 2026-08-21 executed
 > it — two of them citing this file by name — so read the reasoning as the
 > record of a decision, not as a plan. What shipped: `20260821280000` gave
-> `stakeholders` its `parent_id`; `20260821290000` filled `owner_team` by the
+> `stakeholders` its parent link, named `parent_id` there and `part_of_id`
+> since `20260912210000`; `20260821290000` filled `owner_team` by the
 > rule below (158 lanes) and installed the trigger that enforces it;
 > `20260821300000` added the `team` kind and moved the ten teams onto it;
 > `20260821320000` wrote `perceived_owner` on the Reporting-an-Issue cells;
@@ -39,7 +40,7 @@ labels*. This one names the teams a lane can be owned by.
 
 Teams and stakeholders were drafted as two separate lists. They are not — a
 party is a party. **`public.stakeholders` already exists** — `id`,
-`service_id`, `name`, `kind`, `note`, `aliases`, plus the `parent_id` and
+`service_id`, `name`, `kind`, `note`, `aliases`, plus the `part_of_id` and
 `updated_at` it has since gained (`useValueAudiences` reads two of those
 columns: `name, aliases`) — so this was one table gaining a parent link, not a
 new one being invented.
@@ -80,8 +81,9 @@ owns one. (`20260821380000` then narrowed that in practice, NULLing the three
 outsider-owned lanes; the constraint still allows it.)
 
 The registry's missing **parent link** — the one that makes Instructional Design
-roll up to Design — shipped as `stakeholders.parent_id` in `20260821280000`,
-asserted at exactly four sub-teams, one level deep. Plan `2026-08-20-009` is
+roll up to Design — shipped in `20260821280000` as `stakeholders.parent_id`
+and renamed `part_of_id` by `20260912210000`, asserted at exactly four
+sub-teams, one level deep. Plan `2026-08-20-009` is
 `status: completed`.
 
 ---
