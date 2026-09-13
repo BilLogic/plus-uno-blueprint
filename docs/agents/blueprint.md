@@ -438,11 +438,11 @@ The ordered set of images a slide shows once an author has picked. Empty with sl
 
 | Column | Meaning |
 |---|---|
-| `cell_id` | Show this cited cell's frame, whatever that frame later becomes. Cascades away with the cell. |
 | `id` | — |
-| `image_url` | Show this uploaded image. It JOINS the slide's set; it never replaces the cited cells' frames. |
-| `position` | The order a reader meets the images in. An order, not an index: dropping a member leaves the others where they were. |
 | `slide_id` | — |
+| `position` | The order a reader meets the images in. An order, not an index: dropping a member leaves the others where they were. |
+| `cell_id` | Show this cited cell's frame, whatever that frame later becomes. Cascades away with the cell. |
+| `image_url` | Show this uploaded image. It JOINS the slide's set; it never replaces the cited cells' frames. |
 
 ### `slides`
 One slide of a slice. It shows an ordered set of images — every cited cell's frame while shows_all_images is true, and exactly the rows in slide_images once an author has picked — and carries the words written over them. Empty cell_ids = a title-only divider slide. The retired table name is not repeated here: a comment is a swept prose surface, and CONTEXT.md's rename map is where the old name is recorded.
