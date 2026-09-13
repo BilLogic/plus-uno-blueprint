@@ -174,7 +174,10 @@ function announce(context, env) {
     }
     const how =
       `set ${check.missing.join(' and ')} as ` +
-      (check.secrecy === 'privileged' ? 'a repository SECRET' : 'a repository VARIABLE') +
+      (check.secrecy === 'privileged'
+        ? 'a repository SECRET holding the Session pooler connection string, not the ' +
+          'Direct connection, whose IPv6-only host a GitHub runner cannot reach'
+        : 'a repository VARIABLE') +
       ' (Settings → Secrets and variables → Actions)'
     const said = `\`${check.script}\` verified NOTHING: ${check.missing.join(' and ')} unset. Unverified: ${check.unverified}. To turn it on, ${how}.`
     lines.push(`- ⚠️ ${said}`)

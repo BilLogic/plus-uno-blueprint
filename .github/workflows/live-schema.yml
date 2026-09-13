@@ -10,8 +10,16 @@
 # person noticed.
 #
 # WHY NIGHTLY AND NOT ON EVERY PULL REQUEST. Not timidity about flaky networks:
-# a credential. These three need a direct `postgres://` string, password and
-# all, because no PostgREST role reaches `pg_catalog` or `information_schema`.
+# a credential. These three need a `postgres://` string, password and all,
+# because no PostgREST role reaches `pg_catalog` or `information_schema`.
+#
+# The SECRET HOLDS THE SESSION POOLER STRING, not Supabase's "Direct
+# connection". The direct host is IPv6-only and GitHub runners have no IPv6
+# route, so a secret holding it arms this job and then fails all three checks
+# with `Network is unreachable` — a red run that looks like a credential
+# problem and is a routing one. The session pooler (port 5432, username
+# `postgres.<project-ref>`) is IPv4 and keeps session semantics; the
+# transaction pooler (6543) does not.
 # A same-repo pull request is handed this repository's secrets AND supplies the
 # workflow file that will read them, so a privileged credential in a
 # pull-request job is one any branch author can print. A scheduled run on

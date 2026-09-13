@@ -38,10 +38,18 @@
  *                   repository VARIABLES, and every check on this tier
  *                   already runs on every pull request.
  *
- *   `privileged`  — a direct `postgres://` connection string, password and
- *                   all. `pg_catalog`, `information_schema` and
+ *   `privileged`  — a `postgres://` connection string, password and all.
+ *                   `pg_catalog`, `information_schema` and
  *                   `supabase_migrations` are reachable through no PostgREST
- *                   role, so the catalog checks have no other route. This is
+ *                   role, so the catalog checks have no other route. It must
+ *                   be the SESSION POOLER string, not what Supabase's
+ *                   dashboard calls the "Direct connection": that host
+ *                   resolves to IPv6 only, a GitHub runner has no IPv6 route,
+ *                   and a run armed with it fails every check with `Network
+ *                   is unreachable` before it asks anything. The session
+ *                   pooler is IPv4 and session-mode, so the catalog is just
+ *                   as reachable; the transaction pooler is not a substitute,
+ *                   because it drops the session state psql relies on. This is
  *                   a repository SECRET and it may never be named by a
  *                   workflow that `pull_request` can trigger: a same-repo
  *                   pull request gets the repository's secrets AND supplies
