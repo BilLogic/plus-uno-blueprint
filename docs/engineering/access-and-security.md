@@ -121,14 +121,23 @@ are server-side:
    holding a documented exemption that must prove its substitute gate,
    no table-level UPDATE for `authenticated` anywhere, every UPDATE-able
    column named in `PANEL_COLUMNS`, and no primary or foreign key
-   UPDATE-able outside `IDENTITY_GRANTS`. It needs `SUPABASE_DB_URL`, so
-   like `check:contract:live` and `check:identifiers:live` it is
-   manual — a privileged database credential does not belong in this
-   repository's CI. `scripts/tests/rls-posture.test.mjs` is what runs on
+   UPDATE-able outside `IDENTITY_GRANTS`. It needs `SUPABASE_DB_URL`, a
+   direct `postgres://` credential, so — like `check:identifiers:live`
+   and `check:database-types:live` — it runs **nightly** in
+   `.github/workflows/live-schema.yml` and in no workflow a pull request
+   can trigger. That is not squeamishness about secrets: a same-repo pull
+   request is handed this repository's secrets *and* supplies the
+   workflow file that reads them. The reasoning per check is
+   [ADR 0017](../adr/0017-a-check-that-cannot-see-its-subject-says-so.md),
+   and the nightly is armed by setting `SUPABASE_DB_URL` as a repository
+   secret; until it is, it says every day that it verified nothing.
+
+   `scripts/tests/rls-posture.test.mjs` is what runs on
    every PR, and it exists because green against production and green
    against nothing look the same: it shows the check going RED on each
    shape it exists for, including a table granting a column outside its
-   panel's set and a table granting a foreign key.
+   panel's set and a table granting a foreign key. It is not a
+   substitute — it never asks production anything.
 
 5. **A check on the front door.** `npm run check:auth-posture` asks
    GoTrue whether a stranger can mint an `authenticated` token: public
@@ -140,13 +149,10 @@ are server-side:
    It is the one live posture check that needs no privileged
    credential. GoTrue publishes its configuration to the anon key, and
    the anon key already ships in the deployed bundle, so this check is
-   not condemned to be manual the way `check:rls-posture:live` is. It
-   runs in `gates.yml` from repository variables.
-
-   It is **advisory there** (`continue-on-error`) only because it is
-   currently red and a hard failure would block every pull request on a
-   dashboard toggle no contributor can reach. That line comes out when
-   #60 closes; the workflow says so where it sits.
+   not held to a nightly the way `check:rls-posture:live` is. It runs in
+   `gates.yml` from repository variables, on every pull request, and it
+   fails the build: `continue-on-error` came out with #60, which is what
+   its own note said to do.
 
    `mailer_autoconfirm` is deliberately not asserted. Requiring email
    confirmation raises the cost of self-provisioning to owning a
@@ -468,6 +474,12 @@ read by this check and by `npm run agent-account` through `schemaDeclaration`.
 `scripts/tests/database-types.test.mjs` asserts the resolved owner is
 `deployment`, so deleting the file for having no importers fails `npm test`
 rather than silently falling back to the package's declaration.
+
+That check also runs nightly against production in
+`.github/workflows/live-schema.yml`, so a regeneration forgotten on the day is
+found the next morning rather than by a read that fails — provided the
+`SUPABASE_DB_URL` repository secret is set, which the nightly reports on every
+run.
 
 **When `check:database-types:live` goes red**, regenerate through the connector,
 put the three layers back, and run the check again. Do not patch the file to

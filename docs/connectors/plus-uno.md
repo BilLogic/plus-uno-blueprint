@@ -175,7 +175,7 @@ to the contract is a constant that gets checked.
 |---|---|---|---|
 | `contract` | the migrations in this repo | every pull request, and pushes to `main` | nothing |
 | `probe` | uno-bot's live reads, via `/health/blueprint` | pushes to `main`, nightly at 07:30 UTC | nothing |
-| `live` | the database itself | not yet — see below | a project URL and anon key |
+| `live` | the database itself | pushes to `main`, nightly at 07:30 UTC — and `gates` runs the same check on every pull request | a project URL and anon key, both set |
 
 **`contract`** is `npm run check:contract` — `scripts/tests/blueprintContract.test.mjs`.
 It holds every declared name to the SQL that produces it: RPC parameters and
@@ -240,13 +240,40 @@ It never passes without seeing its subject. Missing credentials, an unreachable
 host, a wrong key and an empty result set are each a non-zero exit — a guard
 that exits clean when it cannot see what it guards is the failure this replaces.
 
-### Turning `live` on, and what it still will not reach
+### What `live` runs on, and what it still will not reach
 
-The job is gated on a repository **variable**, not a secret. The anon key is
-publishable — it ships inside the deployed app bundle — but this repo
-deliberately keeps it and the project URL out of git, so nothing in CI can find
-them today and the job is skipped. Set `SUPABASE_URL` and `SUPABASE_ANON_KEY` as
-repository variables and it runs. Locally it reads `.env.local`.
+The credentials are repository **variables**, not secrets. The anon key is
+publishable — it ships inside the deployed app bundle — and this repo keeps it
+and the project URL out of git, so they are set in Actions instead:
+`SUPABASE_URL` and `SUPABASE_ANON_KEY`. Locally the check reads `.env.local`.
+
+Both have been set since 2026-08-26, and this job's condition went on testing
+for them for a fortnight after that — a grey "skipped" in the checks table with
+nothing saying whether it meant *not applicable here* or *never wired up*. The
+condition is now event only: a missing variable fails the step, because the
+check refuses to pass without seeing its subject.
+
+`gates.yml` runs `check:contract:live` on every pull request as well, so this
+job is the push-and-nightly pass over `main` rather than the only one.
+
+### The half of the schema guards that a pull request cannot run
+
+Three checks sweep the catalog itself and need a direct `postgres://`
+credential, because `pg_catalog`, `information_schema` and
+`supabase_migrations` are reachable through no PostgREST role:
+`check:identifiers:live`, `check:rls-posture:live` and
+`check:database-types:live`. They run nightly in
+`.github/workflows/live-schema.yml` and in no workflow a pull request can
+trigger — a same-repo pull request is handed this repository's secrets *and*
+supplies the workflow that reads them.
+
+That workflow is armed by one repository **secret**, `SUPABASE_DB_URL`. Until
+it is set it runs, verifies nothing, and says so: a warning per check naming
+what went unverified and what to set. Every pull request prints the same list.
+The reasoning, per check, is
+[ADR 0017](../adr/0017-a-check-that-cannot-see-its-subject-says-so.md); the
+list itself is `scripts/live-checks.mjs`, and `npm run check:live-coverage`
+fails if the workflows and that list come to disagree.
 
 Two things stay out of reach of the anon role, and therefore out of CI:
 

@@ -18,11 +18,15 @@
 #               semantic_search.blueprint_chunks_src on 2026-08-17 with NO
 #               migration, so no static check could have seen it, and a human
 #               found it two days later with pg_get_viewdef. It needs a project
-#               URL and an anon key, which this repo deliberately does not
-#               commit, so the job does not run until they are set as
-#               repository variables — see docs/connectors/plus-uno.md. Its
-#               absence is visible here as a job that does not appear, never as
-#               a green check that verified nothing.
+#               URL and an anon key. Both are repository VARIABLES now — the
+#               anon key ships inside the deployed bundle, so it is publishable
+#               rather than secret — and the job has run since they were set.
+#               `gates.yml` runs the same check on every pull request; this one
+#               is the push-and-nightly pass over main.
+#
+# The three jobs are declared in scripts/live-checks.mjs alongside every other
+# check that asks a live subject, and `npm run check:live-coverage` fails if
+# this file and that declaration come to disagree.
 #
 # No secrets in `contract` or `probe`: /health/blueprint is unauthenticated by
 # design — it returns only per-probe booleans (table names are public-read
@@ -72,11 +76,17 @@ jobs:
 
   live:
     runs-on: ubuntu-latest
-    # Unset today, so this job is skipped and says so by not existing. Setting
-    # both turns it on: the anon key is publishable — it ships in the app
-    # bundle — so these are repository VARIABLES, not secrets, and the check
-    # stays as secret-free as the probe beside it.
-    if: ${{ vars.SUPABASE_URL != '' && github.event_name != 'pull_request' }}
+    # A pull request is covered by `gates.yml`, which runs this same check on
+    # every one of them; what is left for this job is push and schedule.
+    #
+    # The `vars.SUPABASE_URL != ''` half of this condition is gone. It was
+    # written when the variables were unset and it outlived them by a fortnight,
+    # during which a person reading the checks table saw a grey "skipped" with
+    # nothing saying whether that meant "not applicable" or "never wired up" —
+    # the same silence, one level down, that this repository keeps meeting. A
+    # missing variable now fails the step, loudly, because the check refuses to
+    # pass without seeing its subject.
+    if: github.event_name != 'pull_request'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

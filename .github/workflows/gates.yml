@@ -64,12 +64,14 @@ jobs:
       # The vocabulary guards (#145, #146). Both are static and neither needs a
       # database, which is the only reason they can be required checks.
       #
-      # `check:identifiers` runs the STATIC half only. Its live half sweeps
-      # pg_catalog over a direct connection and stays out of CI on purpose —
-      # this repository's standing rule is that a privileged database
-      # credential never belongs in its workflows. `npm run
-      # check:identifiers:live` is the manual counterpart, alongside
-      # `check:contract:live`.
+      # `check:identifiers` runs the STATIC half only, and the static half reads
+      # the migration FILES. A name retired in those files and still alive in
+      # production passes it — which is exactly what happened to
+      # `stakeholders.parent_id` and `agent_sessions.user_id`. The half that
+      # asks `pg_catalog` needs a direct `postgres://` credential, so it may not
+      # run in any workflow a pull request can trigger; it runs nightly in
+      # `live-schema.yml` instead, and the last step of this job prints what
+      # that costs this pull request rather than leaving it unsaid.
       #
       # The copy guard and the rename-map agreement test are vitest suites, so
       # `npm test` above already runs them; `npm run check:copy` exists for
@@ -243,3 +245,22 @@ jobs:
       # two checks above, it belongs in `gates` after `npm ci`, needs no
       # database, no credential and no network, and can be a required check.
       - run: npm run check:duplicate-meaning
+
+      # Which live checks this repository has, where each runs, and whether the
+      # workflows agree (#648). Static — two file reads — so it is a required
+      # check like the ones above, and what it guards is a property no reviewer
+      # reliably holds: that no workflow reachable from a pull request names a
+      # privileged database credential. A same-repo pull request is handed this
+      # repository's secrets and supplies the workflow that reads them.
+      - run: npm run check:live-coverage
+
+      # And the sentence the whole ticket is about. A green checks table says
+      # nothing about what it did not look at, so this job ends by saying it: a
+      # `::warning::` and a job-summary line for every live check that did NOT
+      # run here, naming what went unverified and where it is covered instead.
+      # It never fails the build — it is a statement, not a gate — and it runs
+      # even when a step above has already failed, because a failed run is
+      # exactly when a reader most needs to know what was never examined.
+      - name: Say what this pull request did not verify about the live database
+        if: ${{ !cancelled() }}
+        run: node scripts/check-live-coverage.mjs --announce pull-request

@@ -28,7 +28,7 @@ deleted ADR is a decision nobody can find the reasoning for.
 
 ## The set
 
-Decisions about the template's code, and about how a deployment consumes the template, are recorded in the template. Fourteen of the records below are pointers to it: each keeps its number here so a citation still lands, and names the template's record by repository and number, because the two repositories number independently. Two, 0007 and 0009, are about this deployment alone and are recorded here in full. A new decision about this deployment alone is recorded here; anything else is recorded in the template.
+Decisions about the template's code, and about how a deployment consumes the template, are recorded in the template. Fourteen of the records below are pointers to it: each keeps its number here so a citation still lands, and names the template's record by repository and number, because the two repositories number independently. Three, 0007, 0009 and 0017, are about this deployment alone and are recorded here in full. A new decision about this deployment alone is recorded here; anything else is recorded in the template.
 
 | # | Decision |
 |---|---|
@@ -48,3 +48,4 @@ Decisions about the template's code, and about how a deployment consumes the tem
 | [0014](0014-a-service-owns-its-journey-and-shares-the-catalog.md) | A service owns its journey and shares the catalog (touchpoints + stakeholders, deployment-level) — in the template as [0003](https://github.com/BilLogic/agentic-service-blueprinting/blob/main/docs/adr/0003-a-service-owns-its-journey-and-shares-the-catalog.md) |
 | [0015](0015-the-template-owns-the-agent.md) | The template owns the agent; a deployment configures it like the UI (uno, the prototype, bakes its agent into the canonical default) — in the template as [0021](https://github.com/BilLogic/agentic-service-blueprinting/blob/main/docs/adr/0021-the-template-owns-the-agent.md) |
 | [0016](0016-the-history-tier-is-retired.md) | The history tier is retired; the queue is issues and durable decisions are ADRs — in the template as [0009](https://github.com/BilLogic/agentic-service-blueprinting/blob/main/docs/adr/0009-the-queue-is-issues-and-a-durable-decision-is-an-adr.md) |
+| [0017](0017-a-check-that-cannot-see-its-subject-says-so.md) | A check that cannot see its subject says so — the live checks are answered one at a time, and a skip is announced |

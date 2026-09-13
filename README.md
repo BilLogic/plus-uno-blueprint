@@ -83,6 +83,7 @@ frontmatter `summary`, and a doc without one fails the index build.
 | `npm run typecheck` | the type-check; `npm run build` runs it and bundles |
 | `npm run check:harness` | every assembled component is claimed by one composition doc |
 | `npm run check:reconciled` | every shared file is still byte-identical to the template's copy |
+| `npm run check:live-coverage` | every check that asks the database declares where CI runs it, and no pull-request workflow names a privileged credential ([ADR 0017](docs/adr/0017-a-check-that-cannot-see-its-subject-says-so.md)) |
 | `npm run docs:index` | regenerate `INDEX.md` after a doc move |
 | `npm run supabase:start` / `:stop` | local Supabase lifecycle (`:reset` cannot rebuild this schema — [ADR 0009](docs/adr/0009-the-migration-series-is-a-narrative.md)) |
 | `npm run apply:pending -- --from=<version>` | what is written and not applied (add `--apply` to write) |
