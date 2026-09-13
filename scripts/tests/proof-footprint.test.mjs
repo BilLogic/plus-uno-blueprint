@@ -187,3 +187,41 @@ test('the rename proof in the series takes the content route', () => {
   assert.equal(footprint.derivesFromContent, true)
   assert.equal(footprint.restoresContent, true)
 })
+
+/**
+ * The third way: a block that rolls itself back.
+ *
+ * It builds its own fixture, reads it back out of `public.cells`, and ends by
+ * raising a sentinel it catches by message, so nothing it touched survives.
+ */
+const ROLLS_ITSELF_BACK = `
+do $do$
+declare v_cell uuid; v_frame text; msg text;
+begin
+  begin
+    insert into public.cells (id) values (gen_random_uuid()) returning id into v_cell;
+    perform public.sync_cell_touchpoints(v_cell, array['ZZ Probe A']);
+    select frame into v_frame from public.cells where id = v_cell;
+    raise exception using errcode = 'P0001', message = 'fixture rollback';
+  exception when others then
+    get stacked diagnostics msg = message_text;
+    if msg <> 'fixture rollback' then raise; end if;
+  end;
+end
+$do$;
+`
+
+test('a block that raises its own sentinel and catches it gives everything back', () => {
+  assert.deepEqual(findings([{ name: 'x.sql', sql: ROLLS_ITSELF_BACK }]), [])
+  assert.equal(blockFootprint(ROLLS_ITSELF_BACK).borrows, true)
+})
+
+test('a block that swallows every error is not a rollback', () => {
+  const swallows = ROLLS_ITSELF_BACK.replace(
+    "if msg <> 'fixture rollback' then raise; end if;",
+    'null;',
+  )
+  const found = findings([{ name: 'x.sql', sql: swallows }])
+  assert.equal(found.length, 1)
+  assert.match(found[0].reason, /keeps no copy/)
+})
