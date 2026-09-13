@@ -33,6 +33,16 @@
  * A rule that only knew the snapshot shape flagged that block, which is a
  * false positive on the safer of the two designs.
  *
+ * ── A third: the block never commits what it touched ─────────────────────
+ *
+ * A proof that builds its fixture, calls the function, and then raises a
+ * sentinel exception it catches by message gives back EVERY row it touched,
+ * borrowed or not: the sub-transaction rolls back. It reads `public.cells`
+ * only to look at its own fixture, which is what made the borrow test fire
+ * on the featured-image proof. The route is recognised only when the raise
+ * and the catch name the same message, so a block that raises and swallows
+ * any error does not pass for one that rolls itself back.
+ *
  * Deliberately not a general-purpose SQL analyser. It knows one function by
  * name, because that is the one that syncs, and a second such function should
  * arrive here as a second entry rather than as a regex that guesses.
@@ -91,6 +101,7 @@ export function blockFootprint(block) {
     // sets up this shape is also an `update public.cells set content`, so a
     // looser test would let the block satisfy itself with the statement that
     // did the borrowing.
+    rollsBack: rollsItselfBack(body),
     restoresContent:
       /\bupdate\s+public\.cells\s+set\s+content\s*=\s*[a-z_][a-z0-9_]*\s+where\b/.test(
         body,
@@ -98,10 +109,23 @@ export function blockFootprint(block) {
   }
 }
 
-/** Whether a block that borrowed rows returns them, by either route. */
+/**
+ * Whether a block raises a sentinel exception and catches exactly that one.
+ *
+ * @param {string} body - The block, lower-cased.
+ * @returns {boolean} True when the raise and the catch name the same message.
+ */
+export function rollsItselfBack(body) {
+  const raised = /raise\s+exception\s+using\s+errcode\s*=\s*'p0001'\s*,\s*message\s*=\s*'([^']+)'/.exec(body)
+  if (!raised) return false
+  const message = raised[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`<>\\s*'${message}'\\s+then\\s+raise\\b`).test(body)
+}
+
+/** Whether a block that borrowed rows returns them, by any route. */
 export function returnsWhatItBorrowed(footprint) {
-  const { snapshots, restores, derivesFromContent, restoresContent } = footprint
-  return (snapshots && restores) || (derivesFromContent && restoresContent)
+  const { snapshots, restores, derivesFromContent, restoresContent, rollsBack } = footprint
+  return (snapshots && restores) || (derivesFromContent && restoresContent) || Boolean(rollsBack)
 }
 
 /** One finding per block that syncs against borrowed rows without returning them. */
