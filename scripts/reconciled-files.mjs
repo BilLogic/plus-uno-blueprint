@@ -37,7 +37,8 @@
  *     `always-loaded.mjs`, `authoring-archivers.mjs`, `check-pointers.mjs`,
  *     `check-router-budget.mjs`, `check-glossary-only.mjs`,
  *     `check-negation-ratchet.mjs`, `check-target-schema.mjs`,
- *     `generate-agent-account.mjs`, `swept-docs.mjs`, and four suites.
+ *     `generate-agent-account.mjs`, `swept-docs.mjs`, `unverified.mjs`, and four
+ *     suites.
  *     `scripts/` is the one tree the flip did not touch: it is not the
  *     application, so it did not move into the package, and where both
  *     repositories run the same check they still run two copies of it. This is
@@ -228,6 +229,14 @@ export const RECONCILED_FILES = [
   'scripts/generate-agent-account.mjs',
   'scripts/swept-docs.mjs',
   'scripts/tests/the-router-is-a-router.test.mjs',
+
+  // The register a check writes to when it looked at nothing and that is the
+  // right answer. It arrived with v1.44.2 and is enrolled the day it arrives,
+  // because it is imported by `generate-agent-account.mjs` above: the shared
+  // fence is closed under relative import, so a shared script's imports are
+  // shared too, or the promise the fence makes is only about the file that
+  // happens to be named.
+  'scripts/unverified.mjs',
 
   // ── Two data files ──
   //
