@@ -59,14 +59,13 @@
  *
  * Run: node scripts/check-pointers.mjs   (also: npm run check:pointers)
  */
-import { readFileSync, existsSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { ALWAYS_LOADED } from './always-loaded.mjs'
-import { appPackageRoot } from './app-source.mjs'
+import { ALWAYS_LOADED, TIER_NOUN } from './always-loaded.mjs'
+import { sweep as sweepSubject } from './sweep.mjs'
 
-export const REPO_ROOT = resolve(new URL('..', import.meta.url).pathname)
 
 /** The always-loaded routers. */
 export const SUBJECTS = ALWAYS_LOADED
@@ -91,8 +90,11 @@ export function sectionName(raw) {
   return raw.slice(0, cut === -1 ? undefined : cut).replace(/[.,]$/, '').trim() || null
 }
 
+/** A pointer into the application rather than into this tree. */
+const intoApplication = (rel) => /^src(?:\/|$)/.test(rel)
+
 /**
- * Where a pointer's first segment is looked for: this tree, or the application.
+ * The application under `root`, swept once per root.
  *
  * A router points at `src/lib/…` as readily as at `docs/…`, and `src` is not a
  * directory of this repository — it is the APPLICATION. In a deployment that
@@ -104,18 +106,55 @@ export function sectionName(raw) {
  * A TREE WITH NO APPLICATION ANYWHERE THROWS, rather than falling back to its
  * own root. The fallback was written first and was the same defect again: with
  * neither root present the pointer failed the place test, was dropped, and the
- * count went down by two in silence. `appPackageRoot` names both roots it
- * looked in. Nothing is asked of it for a pointer that is not into the
- * application, so a fixture tree with no `src/…` pointer in it never reaches
- * this.
+ * count went down by two in silence. The `app` subject refuses that tree and
+ * names both places it looked. Nothing is asked of it for a pointer that is not
+ * into the application, so a fixture tree with no `src/…` pointer in it never
+ * reaches this.
+ *
+ * MEMOISED PER ROOT, because a router carries several application pointers and
+ * the answer is one listing: the same files, read once, whichever pointer asks.
  */
-function placeOf(root, rel) {
-  return /^src(?:\/|$)/.test(rel) ? appPackageRoot(root) : root
+const applications = new Map()
+function application(root) {
+  if (!applications.has(root)) applications.set(root, sweepSubject({ subject: 'app', root }))
+  return applications.get(root)
+}
+
+/**
+ * This repository's prose under `root`, swept once per root.
+ *
+ * The routers are prose — `AGENTS.md` is a root document — and so is nearly
+ * everything a pointer aims at, so the `docs` subject is what hands this check
+ * its bytes: a document that went away between the listing and the read comes
+ * back null, which is the one case this file used to have no answer for on the
+ * non-application side and a `readFileSync` would have thrown over.
+ *
+ * MEMOISED PER ROOT for the reason the application is: several reads, one walk.
+ */
+const proseTrees = new Map()
+function prose(root, io) {
+  if (!proseTrees.has(root)) proseTrees.set(root, sweepSubject({ subject: 'docs', root, io }))
+  return proseTrees.get(root)
+}
+
+/**
+ * Does a pointer resolve to something?
+ *
+ * The application answers for itself, out of the files it swept rather than off
+ * the disk: a `src/…` path is reported at that path wherever the file physically
+ * is, and the overlay is what decides which layer a resident comes from. A
+ * DIRECTORY pointer — `src/lib/agent/skill/` — resolves when the listing holds a
+ * file under it, which is what a folder full of files is.
+ */
+function pointerResolves(root, rel) {
+  if (!intoApplication(rel)) return existsSync(join(root, rel))
+  const { files } = application(root)
+  return rel.endsWith('/') ? files.some((path) => path.startsWith(rel)) : files.includes(rel)
 }
 
 /** A pointer names a PLACE: its first path segment is a real top-level entry. */
 function isRepoRelative(root, rel) {
-  return existsSync(join(placeOf(root, rel), rel.split('/')[0]))
+  return existsSync(join(root, rel.split('/')[0]))
 }
 
 const stripFences = (text) => text.replace(/```[\s\S]*?```/g, '')
@@ -127,7 +166,7 @@ const stripFences = (text) => text.replace(/```[\s\S]*?```/g, '')
  * bare-filename and glob cases live, and they are the ones a re-implementation
  * in a test would get wrong.
  */
-export function pointersIn(text, root = REPO_ROOT) {
+export function pointersIn(text, root = process.cwd()) {
   const out = []
   for (const match of stripFences(text).matchAll(POINTER)) {
     const rel = match[1]
@@ -206,22 +245,28 @@ export function headingExists(fileText, heading) {
     )
 }
 
-export function sweep(root = REPO_ROOT, subjects = SUBJECTS) {
+export function sweep(root = process.cwd(), subjects = SUBJECTS, io) {
   const failures = []
   let pointers = 0
   let triggers = 0
   for (const rel of subjects) {
-    const text = readFileSync(join(root, rel), 'utf8')
+    const text = prose(root, io).read(rel)
+    // The routers are a fixed list, not a listing: one that is not there is a
+    // fact about the tree, and a run over the rest would pass it in green.
+    if (text === null) throw new Error(`no ${rel} under ${prose(root, io).base}: the ${TIER_NOUN} lost a file`)
     for (const pointer of pointersIn(text, root)) {
       pointers += 1
-      const abs = join(placeOf(root, pointer.rel), pointer.rel)
-      if (!existsSync(abs)) {
+      if (!pointerResolves(root, pointer.rel)) {
         failures.push(`${rel}: pointer to \`${pointer.rel}\` does not resolve — no such file`)
         continue
       }
       // A directory pointer names a folder; there is no file to look for a heading in.
       if (pointer.rel.endsWith('/')) continue
-      if (pointer.section && !headingExists(readFileSync(abs, 'utf8'), pointer.section)) {
+      const target = intoApplication(pointer.rel)
+        ? application(root).read(pointer.rel)
+        : prose(root, io).read(pointer.rel)
+      if (target === null) continue // gone between the listing and the read
+      if (pointer.section && !headingExists(target, pointer.section)) {
         failures.push(
           `${rel}: pointer to \`${pointer.rel}\` § ${pointer.section} — no heading starts with that`,
         )

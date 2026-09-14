@@ -1,21 +1,20 @@
 /**
  * A deployment's agent-facing account of the schema — the pure half.
  *
- * `docs/agents/blueprint.md` has two kinds of section. The hand-written core
+ * The agent-account document has two kinds of section. The hand-written core
  * says what the catalog cannot: how to read a cell, what absence means, what
  * a status licenses an agent to say, how paths relate to a scenario's main
  * route. The generated sections say what the code and the catalog already
  * say, and are RENDERED from them rather than written a third time:
  *
- *   vocabulary   from `ENTITY_KIND_DEFINITIONS` in the application's
- *                `lib/panelTerms.ts` — the six kinds the board defines for a
- *                reader, read off the source text
+ *   vocabulary   from `ENTITY_KIND_DEFINITIONS` in src/lib/panelTerms.ts —
+ *                the six kinds the board defines for a reader, read off the
+ *                source text
  *   schema       from `public.schema_comments()` (pg_description, live) laid
- *                over the column inventory in the reading repository's
- *                `types/database.ts`, so an undescribed column shows as a gap
- *                rather than vanishing
+ *                over the column inventory in src/types/database.ts, so an
+ *                undescribed column shows as a gap rather than vanishing
  *
- * Two numbers ratchet against docs/reference/agent-account-baseline.json:
+ * Two numbers ratchet against the baseline `repo-config.mjs` names:
  * column-comment coverage, which may only rise, and the count of
  * prohibitions in the hand-written core, which may only fall. Instructions
  * phrased as what to do are what an agent can act on; "never X" leaves it
@@ -351,16 +350,23 @@ const marker = (name) => ({
 /**
  * The document with the named generated section replaced by `body`.
  *
+ * `path` is only for the failure to quote, and is a description until a
+ * caller has a better one: the document sits wherever the running
+ * repository's `repo-config.mjs` puts it, and the two trees do not agree, so
+ * a message that spelled either would send the other's reader nowhere. Same
+ * argument, same shape, as `interface-schema-map.mjs`.
+ *
  * @param {string} doc
  * @param {string} name
  * @param {string} body
+ * @param {string} [path]
  */
-export function splice(doc, name, body) {
+export function splice(doc, name, body, path = 'the agent-account document') {
   const { open, close } = marker(name)
   const start = open.exec(doc)
   const end = doc.indexOf(close)
   if (!start || end === -1 || end < start.index) {
-    throw new Error(`docs/agents/blueprint.md has no <!-- generated:${name} --> … ${close} section`)
+    throw new Error(`${path} has no <!-- generated:${name} --> … ${close} section`)
   }
   const head = doc.slice(0, start.index + start[0].length)
   return `${head}\n\n${body.trim()}\n\n${doc.slice(end)}`
@@ -423,7 +429,8 @@ export function ratchetFailures(current, baseline) {
   if (now > was || current.prohibitions < baseline.prohibitions) {
     failures.push(
       `the baseline is stale — coverage ${current.columnComments.described}/${current.columnComments.of}, ` +
-        `prohibitions ${current.prohibitions}, better than recorded. Re-record: npm run agent-account -- --record`,
+        `prohibitions ${current.prohibitions}, better than recorded. Re-record it: ` +
+        `node scripts/generate-agent-account.mjs --record`,
     )
   }
   return failures
@@ -438,6 +445,11 @@ export function ratchetFailures(current, baseline) {
  * is writing the baseline they ask for; judging it against the one it
  * replaces failed the very command those failures prescribe.
  *
+ * `paths` is only for the failures to quote. The document and the baseline
+ * sit wherever the running repository's `repo-config.mjs` puts them, and the
+ * two trees do not agree, so a message that spelled either would be right in
+ * one repository and send the other's reader nowhere.
+ *
  * @param {{
  *   doc: string,
  *   kinds: { kind: string, label: string, definition: string }[],
@@ -445,18 +457,33 @@ export function ratchetFailures(current, baseline) {
  *   baseline: { columnComments: { described: number, of: number }, prohibitions: number } | null,
  *   check: boolean,
  *   record?: boolean,
+ *   paths?: { document: string, baseline: string },
  * }} input
  * @returns {{ next: string, current: { columnComments: { described: number, of: number }, prohibitions: number }, failures: string[] }}
  */
-export function evaluate({ doc, kinds, sources, baseline, check, record = false }) {
-  const next = splice(splice(doc, 'vocabulary', renderVocabulary(kinds)), 'schema', renderSchema(sources))
+export function evaluate({
+  doc,
+  kinds,
+  sources,
+  baseline,
+  check,
+  record = false,
+  paths = { document: 'the agent-account document', baseline: 'the ratchet baseline' },
+}) {
+  const next = splice(
+    splice(doc, 'vocabulary', renderVocabulary(kinds), paths.document),
+    'schema',
+    renderSchema(sources),
+    paths.document,
+  )
   const current = { columnComments: coverage(sources), prohibitions: prohibitionCount(handWritten(next)) }
   const failures = []
   if (check && next !== doc) {
     failures.push(
-      'docs/agents/blueprint.md is not what its sources render — the vocabulary, the catalog or ' +
-        'this database changed and the account did not. Run: npm run agent-account. It renders only ' +
-        'what this database confirmed, so it moves the document toward the database it talks to.',
+      `${paths.document} is not what its sources render — the vocabulary, the catalog or ` +
+        'this database changed and the account did not. Run it by path, because the npm alias is ' +
+        'each repository\'s own: node scripts/generate-agent-account.mjs. It renders only what this ' +
+        'database confirmed, so it moves the document toward the database it talks to.',
     )
   }
   if (record) return { next, current, failures }
@@ -464,7 +491,7 @@ export function evaluate({ doc, kinds, sources, baseline, check, record = false 
     failures.push(...ratchetFailures(current, baseline))
   } else {
     failures.push(
-      'docs/reference/agent-account-baseline.json does not exist — record it: npm run agent-account -- --record',
+      `${paths.baseline} does not exist — record it: node scripts/generate-agent-account.mjs --record`,
     )
   }
   return { next, current, failures }
