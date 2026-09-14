@@ -14,9 +14,13 @@
  * agent receives in its tool result, so both name the same thresholds.
  * `pathColorPins` hand-picks slots for the paths this board draws side by side,
  * where the hash would put two of them too close to follow — colour and dash
- * are read from the one slot, so the pair cannot drift.
+ * are read from the one slot, so the pair cannot drift. `agent.references` is
+ * the two documents this deployment serves its own agent, which used to be a
+ * pre-import call in `bootstrap.ts` and are ordinary configuration now.
  */
 import type { DeploymentConfig } from 'agentic-service-blueprinting'
+import blueprintAccount from '../docs/agents/blueprint.md?raw'
+import canvasAdapter from '~/agent/canvas-adapter.md?raw'
 import { coverContent } from './content/coverContent'
 import { SAMPLE_NAV } from './data/sampleNav'
 
@@ -58,6 +62,33 @@ export const unoDeploymentConfig: DeploymentConfig = {
     'Update Goals Edge Case': 4,
   },
   agent: {
+    /**
+     * The documents this deployment serves its own agent, laid over the
+     * template's per name when one is served.
+     *
+     * `blueprint` is a name the template does not serve, so it is an
+     * ADDITIONAL reference, listed to the model right after the canvas
+     * adapter: the generated account of this database's own schema.
+     * `npm run agent-account` renders it from the connected database and
+     * `check:agent-account` holds it to its sources.
+     *
+     * `canvas-adapter` is a name the template DOES serve, so this replaces
+     * that document and adds no name. The template's adapter is spliced into
+     * every system prompt; the reason this deployment replaces it is in the
+     * override's own header, and the two surface rows inside it are rendered
+     * from the session's roster rather than written out here.
+     *
+     * Both were registered from `bootstrap.ts` before the application's
+     * modules evaluated, because the template built its reference vocabulary
+     * at module scope. It reads them when a document is served now, so the
+     * ordering rule is gone and these are configuration like everything else
+     * in this file. The `?raw` imports are the host's to hold, which is why
+     * they sit at the top of this module.
+     */
+    references: {
+      blueprint: blueprintAccount,
+      'canvas-adapter': canvasAdapter,
+    },
     // This database carries `search_blueprint`, so the tool is real here. The
     // index it holds is named exactly as the database records it: a question
     // embedded with any other model, or any other size, is refused rather than

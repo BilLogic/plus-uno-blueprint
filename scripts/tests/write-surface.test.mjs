@@ -3,13 +3,21 @@
  * The served-adapter guard's matchers, and the manifest it grades.
  *
  * The guard exists because a list of identifiers wearing prose reads like
- * prose: `deployment/agent/canvas-adapter.md` names every write tool and every
- * read tool and calls each row "the FULL surface", and the agent reads that
- * sentence as permission. Upstream's copy of that row named five tools that
- * have never existed here and omitted thirty-three that do (#115).
+ * prose: `deployment/agent/canvas-adapter.md` used to name every write tool
+ * and every read tool and call each row "the FULL surface", and the agent
+ * reads that sentence as permission. Upstream's copy of that row named five
+ * tools that have never existed here and omitted thirty-three that do (#115).
+ *
+ * THE LISTS ARE GONE. The application renders those two rows from the roster
+ * of the session the document is served to, so the surface a row states is the
+ * surface that session has and the drift class closes. What the guard holds
+ * now is that this override still carries the placeholders rather than a list
+ * of its own, that the placeholders are the ones the application substitutes,
+ * and — the assertion everything else depends on — that the wiring still
+ * carries this file to the prompt rather than the package's.
  *
  * Two halves, both tested here. The MATCHERS decide what the document and the
- * declarations say, and each way they could quietly say the wrong thing is
+ * application say, and each way they could quietly say the wrong thing is
  * pinned below with the bug it catches. The MANIFEST — the real repository —
  * is graded at the end, so this suite fails the same way `npm run
  * check:write-surface` does rather than only proving the parser works.
@@ -24,16 +32,16 @@ import {
   RETIRED_KINDS,
   adapterImport,
   compare,
-  declaredTools,
   differences,
   documentedKinds,
-  documentedTools,
   enforcedKinds,
   latestMigratedKinds,
   listDifferences,
+  placeholderTokens,
   retiredMentions,
   scannableAdapter,
   supersededPaths,
+  surfaceRowFaults,
   wiringFaults,
 } from '../check-write-surface.mjs'
 
@@ -51,71 +59,101 @@ const PACKAGE = 'node_modules/agentic-service-blueprinting'
 const APP = `${PACKAGE}/src`
 
 // ---------------------------------------------------------------------------
-// The surface rows
+// The surface rows, and the set diff the dependency vocabulary still uses
 // ---------------------------------------------------------------------------
 
-test('differences names a tool the document leaves out', () => {
-  // The bug: the agent reads "that is the FULL write surface" and refuses to
-  // call a tool it actually has. Thirty-three of ours were missing upstream.
-  const diff = differences(['create_step'], ['create_step', 'create_lane'])
-  assert.deepEqual(diff.undocumented, ['create_lane'])
-  assert.deepEqual(diff.unknown, [])
+const TOKENS = { read: '{{read_tools}}', write: '{{write_tools}}' }
+
+const RENDERED = [
+  '| Edit IR JSON | call write tools: {{write_tools}} — plus `ui_command`\'s few commands marked "[changes data]". That is the FULL write surface; nothing else writes. |',
+  '| Read the blueprint | call read tools: {{read_tools}} — none of them move the user\'s canvas. That is the FULL read surface; nothing else reads. |',
+].join('\n')
+
+test('a document whose rows are rendered reports no fault', () => {
+  assert.deepEqual(surfaceRowFaults(RENDERED, TOKENS), [])
 })
 
-test('differences names a tool the document invents', () => {
-  // The bug: #115 exactly — the pinned row says `add_step`, and an agent that
-  // trusts it spends a round calling a tool that does not exist.
-  const diff = differences(['add_step', 'create_lane'], ['create_step', 'create_lane'])
-  assert.deepEqual(diff.unknown, ['add_step'])
-  assert.deepEqual(diff.undocumented, ['create_step'])
+test('a row that names a tool by hand is the old defect returning', () => {
+  // THE regression this replaced a list comparison with. A hand-written name
+  // is a second statement of the roster, and the second statement is what
+  // carried a retiring alias into every system prompt for a release.
+  const row = RENDERED.replace(
+    'call write tools: {{write_tools}}',
+    'call write tools: {{write_tools}}, `create_step`',
+  )
+  const faults = surfaceRowFaults(row, TOKENS).map((fault) => fault.problem)
+  assert.equal(faults.length, 1)
+  assert.match(faults[0], /names create_step by hand/)
 })
 
-test('differences names a tool the document lists twice', () => {
-  // The bug: a set comparison alone passes a row that says `upsert_cell`
-  // twice, and a duplicated name is how a row grows out of an edit conflict.
-  const diff = differences(['upsert_cell', 'upsert_cell'], ['upsert_cell'])
-  assert.deepEqual(diff.duplicated, ['upsert_cell'])
-  assert.deepEqual(diff.undocumented, [])
-  assert.deepEqual(diff.unknown, [])
+test('only the part before the em dash counts', () => {
+  // The bug reading the whole line would cause: `ui_command` sits past the
+  // dash on the write row and is NOT a write tool, so a whole-line matcher
+  // fails a correctly rendered document — which is how a guard gets disabled.
+  assert.ok(RENDERED.includes('`ui_command`'))
+  assert.deepEqual(surfaceRowFaults(RENDERED, TOKENS), [])
 })
 
-test('a surface row stops at the em dash', () => {
-  // The bug: the write row's prose continues past the list with `ui_command`,
-  // which is NOT a write tool. Reading the whole line would report it as a
-  // documented write and hide a real omission behind a spurious one.
-  const row =
-    '| Edit IR JSON | call write tools: `create_step`, `create_lane` — plus `ui_command`\'s few commands marked "[changes data]". That is the FULL write surface; nothing else writes. |'
-  assert.deepEqual(documentedTools(row, 'That is the FULL write surface'), [
-    'create_step',
-    'create_lane',
-  ])
+test('a row that lost its placeholder fails', () => {
+  // The bug: somebody replaces the placeholder with the list it rendered to
+  // once, and the document is frozen at one session's roster forever after.
+  const row = RENDERED.replace('{{read_tools}}', 'the reads')
+  const faults = surfaceRowFaults(row, TOKENS).map((fault) => fault.problem)
+  assert.equal(faults.length, 1)
+  assert.match(faults[0], /read row does not carry \{\{read_tools\}\}/)
 })
 
 test('a missing surface row is a failure, not an empty list', () => {
-  // The bug: a renamed or deleted row would otherwise compare [] against the
-  // roster and report every tool as undocumented — noise that reads as a
-  // parser fault and gets the check disabled.
+  // The bug: a renamed or deleted row would otherwise report nothing at all —
+  // a document with no surface mapping in it, passing green.
+  const faults = surfaceRowFaults('# nothing here\n', TOKENS).map((fault) => fault.problem)
+  assert.equal(faults.length, 2)
+  assert.match(faults[0], /no "That is the FULL write surface" row at all/)
+})
+
+test('the placeholder tokens are read out of the application, not spelled here', () => {
+  const source = [
+    "export const READ_TOOLS_PLACEHOLDER = '{{read_tools}}'",
+    "export const WRITE_TOOLS_PLACEHOLDER = '{{write_tools}}'",
+  ].join('\n')
+  assert.deepEqual(placeholderTokens(source), TOKENS)
+})
+
+test('an application that renamed a placeholder refuses the run', () => {
+  // The bug a spelled-here copy would cause: the application substitutes a
+  // token this file no longer uses, the override reaches the model with `{{`
+  // still in it, and the check that should have said so compares two
+  // hard-coded strings and passes.
   assert.throws(
-    () => documentedTools('# nothing here\n', 'That is the FULL read surface'),
-    /no "That is the FULL read surface" row found/,
+    () => placeholderTokens("export const WRITE_TOOLS_PLACEHOLDER = '{{write_tools}}'"),
+    /no longer exports READ_TOOLS_PLACEHOLDER/,
   )
 })
 
-test('declaredTools reads a roster out of specs.ts without a build step', () => {
-  const source = [
-    "export const READ_TOOL_NAMES = new Set([",
-    "  'get_cell',",
-    "  'list_findings',",
-    "])",
-    '',
-    'export const WRITE_TOOL_NAMES = new Set([',
-    "  'upsert_cell',",
-    '])',
-  ].join('\n')
-  assert.deepEqual(declaredTools(source, 'READ_TOOL_NAMES'), ['get_cell', 'list_findings'])
-  // The bug a non-lazy match would cause: `READ_TOOL_NAMES` swallowing every
-  // set after it, so the write roster's names count as reads too.
-  assert.deepEqual(declaredTools(source, 'WRITE_TOOL_NAMES'), ['upsert_cell'])
+test('differences names a value the document leaves out', () => {
+  // Now the dependency vocabulary's matcher, not the surface rows'. The bug:
+  // the constraint accepts a kind the override does not state, so the agent
+  // never writes one.
+  const diff = differences(['leads_to'], ['leads_to', 'enables'])
+  assert.deepEqual(diff.undocumented, ['enables'])
+  assert.deepEqual(diff.unknown, [])
+})
+
+test('differences names a value the document invents', () => {
+  // The bug: the override states a kind the constraint refuses, and every
+  // write the agent attempts with it is rejected.
+  const diff = differences(['trigger', 'enables'], ['leads_to', 'enables'])
+  assert.deepEqual(diff.unknown, ['trigger'])
+  assert.deepEqual(diff.undocumented, ['leads_to'])
+})
+
+test('differences names a value the document lists twice', () => {
+  // The bug: a set comparison alone passes a bullet that says `enables`
+  // twice, and a duplicate is how a line grows out of an edit conflict.
+  const diff = differences(['enables', 'enables'], ['enables'])
+  assert.deepEqual(diff.duplicated, ['enables'])
+  assert.deepEqual(diff.undocumented, [])
+  assert.deepEqual(diff.unknown, [])
 })
 
 // ---------------------------------------------------------------------------
@@ -123,21 +161,30 @@ test('declaredTools reads a roster out of specs.ts without a build step', () => 
 // ---------------------------------------------------------------------------
 
 const WIRED = {
-  // The prompt reads the LOADER's record. The override reaches that record by
-  // registration (`deployment.ts`), so `get_reference` and the prompt serve
-  // one document rather than two copies that can drift.
+  // The prompt reads the LOADER's record, through the same call
+  // `get_reference` makes and against the same roster. The override reaches
+  // that record as configuration (`deployment.ts`, `agent.references`), so the
+  // tool and the prompt serve one document rather than two copies that can
+  // drift — and one rendering of its surface rows rather than two.
   loop: [
-    "import { REFERENCE_DOCS } from '@/lib/agent/tools/referenceDocs'",
-    'export function buildSystem(note) {',
-    "  return [ROLE, REFERENCE_DOCS['canvas-adapter'], note].join(\"\")",
+    "import { readReference } from '@/lib/agent/tools/references'",
+    'export function buildSystem(note, skill, roster) {',
+    "  return [ROLE, readReference('canvas-adapter', roster), note].join(\"\")",
     '}',
   ].join('\n'),
-  docs: [
+  config: [
     "import canvasAdapter from '~/agent/canvas-adapter.md?raw'",
-    'export const REFERENCE_DOCS = {',
-    "  'canvas-adapter': canvasAdapter,",
+    'export const unoDeploymentConfig = {',
+    '  agent: {',
+    '    references: {',
+    "      'canvas-adapter': canvasAdapter,",
+    '    },',
+    '  },',
     '}',
   ].join('\n'),
+  // The loader's own line: a deployment's document wins for a name both sides
+  // have. Without it the override is supplied and the template's is served.
+  references: "const doc = Object.hasOwn(deployment, name) ? deployment[name] : TEMPLATE[name]",
   harness: "const adapterDoc = readFileSync(resolve(ROOT, 'deployment/agent/canvas-adapter.md'))",
 }
 
@@ -150,15 +197,15 @@ test('a pin bump that reinstates the package adapter in loop.ts fails', () => {
   // still passes when this happens: the override is still correct, still
   // audited, and no longer read by anything.
   const loop = WIRED.loop.replace(
-    "REFERENCE_DOCS['canvas-adapter']",
+    "readReference('canvas-adapter', roster)",
     'packageAdapter',
   ).replace(
-    "import { REFERENCE_DOCS } from '@/lib/agent/tools/referenceDocs'",
+    "import { readReference } from '@/lib/agent/tools/references'",
     "import packageAdapter from 'agentic-service-blueprinting/references/canvas-adapter.md?raw'",
   )
   const faults = wiringFaults({ ...WIRED, loop }).map((fault) => fault.problem)
   assert.equal(faults.length, 2)
-  assert.match(faults[0], /does not splice REFERENCE_DOCS/)
+  assert.match(faults[0], /does not splice readReference/)
   assert.match(faults[1], /still imports 'agentic-service-blueprinting/)
 })
 
@@ -176,20 +223,42 @@ test('reading the record without splicing it fails', () => {
   // The bug an import-only check misses: the read survives a refactor that
   // drops the value from the prompt, and the prompt loses its rulebook
   // entirely without a single unresolved reference.
-  const loop = WIRED.loop.replace("REFERENCE_DOCS['canvas-adapter'], note", 'note')
+  const loop = WIRED.loop.replace("readReference('canvas-adapter', roster), note", 'note')
   const faults = wiringFaults({ ...WIRED, loop })
   assert.equal(faults.length, 1)
-  assert.match(faults[0].problem, /does not splice REFERENCE_DOCS/)
+  assert.match(faults[0].problem, /does not splice readReference/)
 })
 
-test('get_reference serving something other than the imported override fails', () => {
-  // The bug: the prompt gets the override and `get_reference('canvas-adapter')`
-  // hands the agent a different document, so the agent can be told two
+test('supplying something other than the imported override fails', () => {
+  // The bug: the config imports the override and hands the loader a different
+  // document, so the prompt and `get_reference` can tell the agent two
   // incompatible things about its own tools in one session.
-  const docs = WIRED.docs.replace("'canvas-adapter': canvasAdapter", "'canvas-adapter': somethingElse")
-  const faults = wiringFaults({ ...WIRED, docs })
+  const config = WIRED.config.replace(
+    "'canvas-adapter': canvasAdapter",
+    "'canvas-adapter': somethingElse",
+  )
+  const faults = wiringFaults({ ...WIRED, config })
   assert.equal(faults.length, 1)
-  assert.match(faults[0].problem, /registers 'canvas-adapter' as something other than/)
+  assert.match(faults[0].problem, /supplies 'canvas-adapter' as something other than/)
+})
+
+test('naming the document outside agent.references fails', () => {
+  // The bug the move to configuration introduced: the key is spelled, the
+  // import resolves, nothing is unresolved — and a key outside that block is
+  // read by nothing, so the template's adapter is what the agent gets.
+  const config = WIRED.config.replace('    references: {\n', '    somewhereElse: {\n')
+  const faults = wiringFaults({ ...WIRED, config })
+  assert.equal(faults.length, 1)
+  assert.match(faults[0].problem, /not on `agent.references`/)
+})
+
+test('a loader that stopped preferring the deployment document fails', () => {
+  // The bug: the field is supplied and read, and the loader hands back the
+  // template's copy for a name both have — the override audited, correct, and
+  // never served.
+  const faults = wiringFaults({ ...WIRED, references: 'const doc = TEMPLATE[name]' })
+  assert.equal(faults.length, 1)
+  assert.match(faults[0].problem, /no longer prefers a deployment's document/)
 })
 
 test('the eval harness reading a different adapter fails', () => {
@@ -337,8 +406,7 @@ function liveResult() {
 test('this repository passes its own guard', () => {
   const result = liveResult()
   assert.deepEqual(result.wiring, [])
-  assert.deepEqual(result.write, { undocumented: [], unknown: [], duplicated: [] })
-  assert.deepEqual(result.read, { undocumented: [], unknown: [], duplicated: [] })
+  assert.deepEqual(result.rows, [])
   assert.equal(result.snapshotDrift, null)
   assert.deepEqual(result.kinds, { undocumented: [], unknown: [], duplicated: [] })
   assert.deepEqual(result.retired, [])
@@ -351,40 +419,39 @@ test('the override is the file the app serves, and the package copy still differ
   // override is doing work — a pin bump that converges upstream fails here and
   // asks for that decision instead of leaving a redundant file behind.
   //
-  // The anchor was `add_step` — a phantom write tool the package adapter named
-  // and this app lacked. asb v1.0.0 retired it, converged the package
-  // adapter's structure onto this one, and moved its served references to
-  // `leads_to` / `enables` (which emptied the supersession list), then the
-  // stakeholder and evidence tools. The anchor after that was
-  // `search_blueprint`, on the reasoning that ranked search needs pgvector a
-  // portable core cannot carry.
+  // The anchor has moved four times, and each move is a reason for the
+  // override that stopped being one. It was `add_step`, a phantom write tool
+  // the package adapter named and this app lacked; then `search_blueprint`, on
+  // the reasoning that ranked search needs pgvector a portable core cannot
+  // carry; then `list_scenarios`, on the reasoning that the package named a
+  // tool this app did not have; then the package's read-row HEDGE about
+  // `search_blueprint` — correct upstream, noise here, since this database
+  // carries the function always and an agent told to doubt a tool it has is an
+  // agent that will decline to use it.
   //
-  // THAT REASON IS GONE TOO, and so is the one after it. The template ships
-  // `search_blueprint` — switched off by default, built by the deployment that
-  // has the index — and the rosters have converged. The anchor then moved to
-  // `list_scenarios`, on the reasoning that the package named a tool "this app
-  // does not have at all". Since the import flip that sentence cannot be true
-  // of anything: this app IS the package's registry, so the two can no longer
-  // disagree about which tools exist. `check:write-surface` proves it on every
-  // run by holding both rows to WRITE_TOOL_NAMES and READ_TOOL_NAMES.
+  // ALL FOUR ARE GONE, and the last two went together. This app IS the
+  // package's registry, so the two cannot disagree about which tools exist;
+  // and the rows no longer name tools at all, so there is no hedge left in
+  // either copy to differ about. `check:write-surface` proves that on every
+  // run by holding both rows to the placeholders instead of to a list.
   //
-  // What still keeps the override is not a roster difference but an AUDIENCE
-  // one, and it is the more durable kind. The package's adapter is written for
-  // every deployment at once, so its read row hedges: `search_blueprint` comes
-  // with "not every deployment has it; if it is not in your tool list it does
-  // not exist here". That hedge is correct upstream and is noise here — this
-  // deployment's database carries the function, always, and an agent told to
-  // doubt a tool it definitely has is an agent that will decline to use it.
-  // The override states the surface flatly instead.
+  // What still keeps the override is what this DATABASE has and the
+  // template's does not, plus one structural dependency:
   //
-  // And one structural dependency: `## Superseded package references` is a
-  // heading `scripts/check-write-surface.mjs` uses to BOUND its retired-
-  // spelling scan of the rest of this file. The package's copy has no such
-  // heading, so serving it would silently unbound that scan.
+  //   - `cell_dependencies.kind` is `leads_to` | `enables` here, enforced by a
+  //     CHECK constraint, and the override states the enforced pair as a
+  //     bullet. The package's adapter names the semantics in prose and states
+  //     no enum, because the pair is not the same promise in every deployment.
+  //     `documentedKinds` reads that bullet; a copy without it is a rulebook
+  //     that never tells the agent which two values a write may carry.
+  //   - `## Superseded package references` is a heading
+  //     `scripts/check-write-surface.mjs` uses to BOUND its retired-spelling
+  //     scan of the rest of this file. The package's copy has no such heading,
+  //     so serving it would silently unbound that scan.
   //
-  // Both anchors are asserted. When the package stops hedging AND grows the
-  // heading, this trips, and deleting the override becomes the right thing to
-  // do rather than the convenient one.
+  // Both are asserted from both sides. When the package grows the enum bullet
+  // AND the heading, this trips, and deleting the override becomes the right
+  // thing to do rather than the convenient one.
   const ours = read(ADAPTER)
   const theirs = read(join(PACKAGE, 'references/canvas-adapter.md'))
   assert.notEqual(ours, theirs)
@@ -395,41 +462,55 @@ test('the override is the file the app serves, and the package copy still differ
     'the override lost the heading check-write-surface.mjs bounds its scan with',
   )
   assert.match(
+    ours,
+    /^- `cell_dependencies\.kind`:/m,
+    'the override lost the enum bullet documentedKinds reads',
+  )
+  assert.doesNotMatch(
     theirs,
-    /not every deployment has it/,
-    'the package adapter stopped hedging about search_blueprint. If it has also ' +
-      'grown a "Superseded package references" heading, the last two reasons this ' +
+    /^## Superseded package references$/m,
+    'the package adapter grew the heading that bounds the retired-spelling scan. If it ' +
+      'has also grown a cell_dependencies.kind enum bullet, the last two reasons this ' +
       'override exists are gone — delete it and serve the package copy.',
   )
-  // The hedge is what this deployment does not want, and the reason is real:
-  // its config turns the tool on, so the agent always has it.
-  assert.doesNotMatch(ours, /not every deployment has it/)
+  assert.doesNotMatch(
+    theirs,
+    /^- `cell_dependencies\.kind`:/m,
+    'the package adapter now states the dependency-kind enum. If it has also grown the ' +
+      '"Superseded package references" heading, the last two reasons this override ' +
+      'exists are gone — delete it and serve the package copy.',
+  )
+  // And the one config field the override's own header claims as this
+  // deployment's: ranked search is on here, so the agent always has the tool.
   assert.match(read('deployment/deployment.ts'), /search:\s*\{\s*\n?\s*enabled: true/)
 })
 
-test('every declared tool is on exactly one surface', () => {
-  // specs.ts asserts this at module init; asserted again here because the
-  // init throw only fires once something imports specs.ts, and this check runs
-  // on files. The bug: a new tool is declared, classified nowhere, and so is
-  // absent from both "FULL surface" rows — #115's shape, reintroduced one tool
-  // at a time.
-  const specs = read(`${APP}/lib/agent/tools/specs.ts`)
-  const declared = [...specs.matchAll(/^ {4}name: '([a-z_]+)',$/gm)].map(([, name]) => name)
-  const rosters = ['READ_TOOL_NAMES', 'INTERFACE_TOOL_NAMES', 'WRITE_TOOL_NAMES'].map((name) => [
-    name,
-    declaredTools(specs, name),
-  ])
-
-  assert.ok(declared.length > 40, `only ${declared.length} tool declarations parsed`)
-  for (const name of declared) {
-    const homes = rosters.filter(([, names]) => names.includes(name)).map(([roster]) => roster)
-    assert.equal(homes.length, 1, `${name} is on ${homes.length} surfaces: ${homes.join(', ')}`)
-  }
-  for (const [roster, names] of rosters) {
-    for (const name of names) {
-      assert.ok(declared.includes(name), `${roster} lists ${name}, which TOOL_SPECS does not declare`)
-    }
-  }
+test('a surface is a required field of a tool definition, not a roster to keep in step', () => {
+  // This used to read three name sets out of `specs.ts` and assert that every
+  // declared tool was on exactly one of them — the bug being a new tool
+  // classified nowhere, absent from both "FULL surface" rows, which is #115's
+  // shape reintroduced one tool at a time.
+  //
+  // The sets are gone. Each tool is one definition carrying its own `surface`,
+  // required by the type, so "on exactly one surface" is no longer a property
+  // anything can violate — a definition without one does not compile. What is
+  // worth holding is that the guarantee is still structural: a `surface` made
+  // optional, or a fourth value added to the union, would put the old defect
+  // class back and this file would have nothing to say about it.
+  const definition = read(`${APP}/lib/agent/tools/definition.ts`)
+  assert.match(
+    definition,
+    /^ {2}surface: ToolSurface$/m,
+    'surface is no longer a required field of ToolDefinition — a tool can be declared on no ' +
+      'surface again, and the adapter rows would render without it',
+  )
+  const union = /export type ToolSurface = ([^\n]+)/.exec(definition)
+  assert.ok(union, 'no ToolSurface union found — the reader can no longer see the surfaces')
+  assert.deepEqual(
+    [...union[1].matchAll(/'([a-z]+)'/g)].map(([, name]) => name).sort(),
+    ['interface', 'read', 'write'],
+    'the surfaces the canvas adapter states are no longer exactly read/interface/write',
+  )
 })
 
 test('the supersession list is the installed docs that actually teach the wrong enum', () => {

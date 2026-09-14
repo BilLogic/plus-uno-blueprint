@@ -19,7 +19,9 @@
  * `canvas-adapter.md` repeated it — so an agent following either wrote every
  * precondition edge backwards, into a column whose CHECK constraint is happy
  * to store it that way. Nothing failed; the graph was just wrong, and the
- * what-if trace that walks it inherited the error.
+ * what-if trace that walks it inherited the error. That sentence is where the
+ * third surface below is read: the tool's own description, wherever the
+ * application keeps it.
  *
  * A prose contradiction between three files is not something a type can catch,
  * so this is the mechanism. It is deliberately about DIRECTION rather than
@@ -43,8 +45,20 @@ const read = (path) => readFileSync(resolve(REPO_ROOT, path), 'utf8')
  *
  * Two of them moved when this repository stopped holding the application.
  * `canvas-adapter.md` is this deployment's own override of the package's copy
- * and sits in `deployment/`; `specs.ts` is the application's, read out of the
+ * and sits in `deployment/`; the third is the application's, read out of the
  * installed package. `CONTEXT.md` is this repository's and never moved.
+ *
+ * THE APPLICATION'S SURFACE IS THE CELL TOOLS' DEFINITION MODULE. It used to
+ * be `specs.ts`, which held every tool as a literal spec — name, arguments and
+ * the sentence a model reads — and that is where `create_cell_dependency`
+ * stated the direction. The application now writes one definition module per
+ * tool family under `lib/agent/tools/definitions/`, each carrying its own
+ * description beside its `args` and its `run`, and `specs.ts` is a projection
+ * of that list with no prose of its own. So the sentence a model actually
+ * reads about the two kinds is in `definitions/cells.ts`, and reading the
+ * projection would be reading a file that no longer says anything about
+ * direction — which this check would have reported as silence rather than as a
+ * move.
  *
  * The split makes the check worth MORE than it was. It used to hold three
  * neighbours to each other; it now holds the prompt this deployment splices
@@ -52,6 +66,8 @@ const read = (path) => readFileSync(resolve(REPO_ROOT, path), 'utf8')
  * repository's own vocabulary to one direction. A pin bump that inverted the
  * package's sentence would go red here.
  */
+const APP_SURFACE = 'lib/agent/tools/definitions/cells.ts'
+
 const TEACHING_SURFACES = [
   { path: 'CONTEXT.md', read: () => read('CONTEXT.md') },
   {
@@ -59,8 +75,8 @@ const TEACHING_SURFACES = [
     read: () => read('deployment/agent/canvas-adapter.md'),
   },
   {
-    path: `${APP_SOURCE_ROOT}/lib/agent/tools/specs.ts`,
-    read: () => appSource('lib/agent/tools/specs.ts'),
+    path: `${APP_SOURCE_ROOT}/${APP_SURFACE}`,
+    read: () => appSource(APP_SURFACE),
   },
 ]
 

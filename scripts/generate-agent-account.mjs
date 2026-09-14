@@ -43,8 +43,8 @@
  * is correct and it is now also visible. Same stance as
  * `check-target-schema.mjs`, which asks a live target whether it was
  * migrated. A deployment that has a database runs this against it and
- * registers the generated account through `registerReferenceDocs` or
- * `REFERENCE_NAMES_EXTRA`; the template's reference loader never imports that
+ * supplies the generated account as `agent.references.blueprint` on its
+ * deployment config; the template's reference loader never imports that
  * file by path.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
@@ -61,9 +61,10 @@ import {
 } from './agent-account.mjs'
 import { parseEnvFile } from './check-target-schema.mjs'
 import { repoConfig } from './repo-config.mjs'
-import { unverified } from './unverified.mjs'
+import { unverified } from './sweep.mjs'
 
-const REPO_ROOT = resolve(new URL('..', import.meta.url).pathname)
+/** The tree this script runs in: the working directory — never this file's location; `sweep.mjs` says why. */
+const REPO_ROOT = process.cwd()
 /** This repository's own two paths — see `repoConfig.agentAccount`. */
 const PATHS = repoConfig.agentAccount
 const DOC = resolve(REPO_ROOT, PATHS.document)

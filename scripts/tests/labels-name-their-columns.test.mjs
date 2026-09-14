@@ -24,6 +24,15 @@
  * It is element-shaped rather than a list of files, so a panel written next
  * week is inside the subject without anybody remembering to add it.
  *
+ * A PANEL LABEL IS NO LONGER ALWAYS A WORD IN JSX. The application keeps one
+ * descriptor per cell column in `lib/cellFields.ts` — the word above the field
+ * among them — and the cell panel's form, its read-only rows and the overview's
+ * spec blocks all render `field.label`. Seven words a reader still sees are
+ * therefore written in a list rather than in an element, and the scan finds an
+ * expression where they used to be. Both places are read here: the subject is
+ * the word a panel puts in front of a reader, and where it is spelled is the
+ * application's business.
+ *
  * The second half is the point of the ticket rather than a restatement of it:
  * every label this file maps has to name a column the schema actually has, so
  * a label cannot be "fixed" by pointing it at a word that is also not there.
@@ -68,7 +77,7 @@ import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { APP_SOURCE_ROOT, appPackageRoot, appSourceFiles, deploymentSourceFiles } from '../app-source.mjs'
+import { APP_SOURCE_ROOT, appPackageRoot, appSource, appSourceFiles, deploymentSourceFiles } from '../app-source.mjs'
 import { LABEL_COLUMNS } from '../interface-schema-map.mjs'
 import { replayMigrations } from '../migration-replay.mjs'
 
@@ -101,6 +110,20 @@ const LABEL_COMPONENTS = [
   'StringListField',
 ]
 
+/**
+ * The ones that still SPELL a word, and are therefore the ones a scan of the
+ * panels can be held to.
+ *
+ * `SpecSection` no longer does. It heads the three spec blocks of the cell
+ * panel's overview, and the panel now renders it once per cell field
+ * descriptor with `title={field.label}` — the word is in the descriptor, not in
+ * the JSX. It stays in the list above so a literal title written there
+ * tomorrow is still read; it is out of this one because requiring a literal
+ * from it would be requiring the mechanism it left. The word it draws is
+ * checked at its source, by `cellFieldLabels` below.
+ */
+const LITERAL_LABEL_COMPONENTS = LABEL_COMPONENTS.filter((name) => name !== 'SpecSection')
+
 const LABEL_ELEMENT = new RegExp(
   `<(${LABEL_COMPONENTS.join('|')})\\b([^>]*)>([^<{]*)`,
   'g',
@@ -110,8 +133,16 @@ const LABEL_ELEMENT = new RegExp(
   shape — #244 gave it the nine labels that stopped carrying definitions, and a
   prop-only reader saw a panel that had gone silent rather than one that had
   simply stopped explaining itself.
+
+  A SELF-CLOSING ELEMENT HAS NO CHILDREN, and reading its text as though it did
+  is how this walker started reporting source code as a label: the spec block's
+  `<SpecSection … text={text} />` lost its quoted title, so the prop reader
+  found nothing and the children reader swallowed everything after the tag up to
+  the next `<`. A label that is really a paragraph of TypeScript would then be
+  bound to a column, or a row deleted to make room for it.
 */
 const LABEL_PROP = /\b(label|term|title)\s*=\s*"([^"]*)"/
+const SELF_CLOSING = /\/\s*$/
 
 /**
  * Every file a panel can be written in, from both source roots.
@@ -134,18 +165,95 @@ export function panelSources() {
     .sort((a, b) => a.file.localeCompare(b.file))
 }
 
-/** Every panel label in the app, with where it is written. */
+/** Every panel label SPELLED in the app's JSX, with where it is written. */
 export function panelLabels(sources) {
   const out = []
   for (const { file, code } of sources) {
     for (const element of code.matchAll(LABEL_ELEMENT)) {
-      const prop = LABEL_PROP.exec(element[2])
-      const children = element[3]?.trim()
+      const attributes = element[2]
+      const prop = LABEL_PROP.exec(attributes)
+      const children = SELF_CLOSING.test(attributes) ? '' : element[3]?.trim()
       const label = prop ? prop[2] : children
       if (label) out.push({ file, component: element[1], label })
     }
   }
   return out
+}
+
+/* ------------------------------ 1a. and the labels the panel no longer spells */
+
+/**
+ * THE CELL PANEL'S LABELS ARE DESCRIPTORS NOW, and this is the reader that
+ * still sees them.
+ *
+ * The cell panel used to spell its seven words into JSX — Content, Summary,
+ * Status, Owner, Perceived owner, Function, Form, Value proposition — and a
+ * scan of `.tsx` was the only thing that knew it said them. The application
+ * now keeps one descriptor per cell column in `lib/cellFields.ts`, carrying
+ * the word a person sees above the field, and the panel's form, its read-only
+ * rows and the overview's spec blocks all render `field.label`. So the scan
+ * finds `{field.label}` where seven words used to be.
+ *
+ * NOT READING THEM WOULD HAVE COST BOTH RULES AT ONCE, and silently in the
+ * worse direction: rule 1 would have had nothing to say about seven labels a
+ * reader still sees, and rule 2 would have called their seven rows fossils and
+ * invited somebody to delete the map's cell half. So the subject follows the
+ * word: a descriptor with an `editor` is a field some panel labels, and its
+ * `label` is a panel label exactly as a JSX prop is.
+ *
+ * It is read as text rather than imported because this repository holds no
+ * TypeScript loader for the application's modules, and a list of one-line
+ * properties needs none.
+ */
+const CELL_FIELDS_FILE = 'lib/cellFields.ts'
+
+/** Every cell field descriptor, as `{ key, label, editable }`; null when the list is gone. */
+export function cellFieldDescriptors(source) {
+  const list = /export const CELL_FIELDS = \[([\s\S]*?)\n\] as const satisfies/.exec(source)
+  if (!list) return null
+  return list[1]
+    .split(/\n {2}\{\n/)
+    .slice(1)
+    .map((chunk) => ({
+      key: /^ {4}key: '([^']+)',$/m.exec(chunk)?.[1] ?? '',
+      label: /^ {4}label: '([^']*)',$/m.exec(chunk)?.[1] ?? '',
+      editable: /^ {4}editor: \{/m.test(chunk),
+    }))
+}
+
+/**
+ * The cell field labels, in `panelLabels` shape so one rule judges both.
+ *
+ * A list this reader cannot find is this half of the subject gone, said with
+ * the path — not an interface with no cell labels in it.
+ */
+export function cellFieldLabels(source = appSource(CELL_FIELDS_FILE)) {
+  const descriptors = cellFieldDescriptors(source)
+  assert.ok(
+    descriptors,
+    `no \`CELL_FIELDS\` list in ${APP_SOURCE_ROOT}/${CELL_FIELDS_FILE}: the cell panel's ` +
+      'labels are the descriptors in that list, so a reader that cannot find it has lost ' +
+      'seven labels a reader still sees — which is not an interface that stopped saying them',
+  )
+  return descriptors
+    .filter((descriptor) => descriptor.editable && descriptor.label)
+    .map((descriptor) => ({
+      file: `${APP_SOURCE_ROOT}/${CELL_FIELDS_FILE}`,
+      component: 'CellFieldDescriptor',
+      label: descriptor.label,
+    }))
+}
+
+/** Panels that render a descriptor's label instead of spelling one. */
+export function panelsRenderingDescriptorLabels(sources) {
+  return sources
+    .filter(({ code }) => /cellFields'/.test(code) && /\bfield\.label\b/.test(code))
+    .map(({ file }) => file)
+}
+
+/** Every word a panel puts in front of a reader, from both places one can be written. */
+export function everyPanelLabel() {
+  return [...panelLabels(panelSources()), ...cellFieldLabels()]
 }
 
 /* -------------------------------------------------- 1. the retired labels */
@@ -176,16 +284,30 @@ export function labelsThatNameNothing(labels) {
 }
 
 test('no panel label says a word the schema has never heard', () => {
-  const labels = panelLabels(panelSources())
+  const sources = panelSources()
+  const labels = everyPanelLabel()
   // The extraction, asserted before its result is trusted: a walker that found
   // no labels would pass exactly as loudly as an interface that is clean.
   assert.ok(labels.length > 15, `only ${labels.length} panel labels found — the extraction is wrong`)
-  for (const component of LABEL_COMPONENTS) {
+  for (const component of LITERAL_LABEL_COMPONENTS) {
     assert.ok(
       labels.some((one) => one.component === component),
       `no <${component}> label was found — either it is gone or the extraction missed it`,
     )
   }
+  // And the other half of the subject, which a JSX scan cannot see: the
+  // descriptors, and at least one panel that renders one instead of a word.
+  assert.ok(
+    labels.filter((one) => one.component === 'CellFieldDescriptor').length >= 6,
+    'almost no cell field labels were read — the descriptor reader is wrong, and the ' +
+      'cell panel is the half of the interface it is the only reader of',
+  )
+  assert.ok(
+    panelsRenderingDescriptorLabels(sources).length > 0,
+    'no panel renders `field.label` from the cell field list. Either the labels moved ' +
+      'back into JSX — in which case the scan above is the only reader needed — or the ' +
+      'descriptor reader is now watching a list nothing renders',
+  )
   const found = labelsThatNameNothing(labels)
   assert.deepEqual(
     found,
@@ -220,6 +342,65 @@ test('the label check goes red on each of the four, and leaves their neighbours 
     'Columns',
     'Applies when',
   ])
+})
+
+test('a self-closing element has no children, and its source is not a label', () => {
+  // The shape that put a paragraph of TypeScript into this walker's output: a
+  // section whose title arrives as an expression, self-closed, with code behind
+  // it. Beside it the same element with a quoted title, which must still read.
+  const planted = [
+    {
+      file: `${APP_SOURCE_ROOT}/components/blueprint/Planted.tsx`,
+      code: [
+        '<SpecSection key={field.key} title={field.label} text={text} />]',
+        '  })',
+        '  if (sections.length === 0) return null',
+        '<SpecSection title="Value proposition" text={valueText} />',
+        '<PanelSectionLabel>Position</PanelSectionLabel>',
+      ].join('\n'),
+    },
+  ]
+  assert.deepEqual(panelLabels(planted).map((one) => one.label), [
+    'Value proposition',
+    'Position',
+  ])
+})
+
+test('the descriptor reader takes the label off every editable field, and nothing else', () => {
+  const planted = [
+    'export const CELL_FIELDS = [',
+    '  {',
+    "    key: 'id',",
+    "    label: 'Id',",
+    '    required: true,',
+    '  },',
+    '  {',
+    "    key: 'content',",
+    "    label: 'Content',",
+    "    editor: { control: 'input' },",
+    '  },',
+    '  {',
+    "    key: 'value_props',",
+    "    label: 'Value',",
+    "    editor: { control: 'valueProps' },",
+    '  },',
+    '] as const satisfies readonly AnyCellField[]',
+  ].join('\n')
+  // `Id` has no editor: no panel labels it, so it is no row of this map.
+  assert.deepEqual(cellFieldLabels(planted).map((one) => one.label), ['Content', 'Value'])
+  // And a descriptor that relapsed to a retired word is caught by the same rule
+  // that catches a JSX label — which is the point of reading both in one shape.
+  assert.deepEqual(
+    labelsThatNameNothing(cellFieldLabels(planted)).map((one) => one.split('"')[1]),
+    ['Value'],
+  )
+})
+
+test('a cell field list nobody can find is a refusal, not an empty interface', () => {
+  assert.throws(
+    () => cellFieldLabels('export const SOMETHING_ELSE = []'),
+    /no `CELL_FIELDS` list/,
+  )
 })
 
 /* ------------------------------------------ 1b. and the figures that draw them */
@@ -431,7 +612,7 @@ export function labelsMissingFromMap(labels, map = LABEL_COLUMNS) {
 }
 
 test('every panel label is a word the map binds to the schema', () => {
-  const found = labelsMissingFromMap(panelLabels(panelSources()))
+  const found = labelsMissingFromMap(everyPanelLabel())
   assert.deepEqual(
     found,
     [],
@@ -472,7 +653,7 @@ export function rowsNoPanelSays(labels, map = LABEL_COLUMNS) {
 }
 
 test('every row of the map is a label some panel still says', () => {
-  const found = rowsNoPanelSays(panelLabels(panelSources()))
+  const found = rowsNoPanelSays(everyPanelLabel())
   assert.deepEqual(
     found,
     [],

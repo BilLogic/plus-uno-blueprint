@@ -22,7 +22,7 @@
  * repository still HOLDS and still shares, where two copies genuinely exist
  * and can still disagree.
  *
- * There are twenty-one, and they fall into three groups.
+ * There are twenty-two, and they fall into three groups.
  *
  *   - **The build's own configuration.** `vite.config.ts`, `tsconfig.json`,
  *     `tsconfig.app.json`, `tsconfig.node.json`, `eslint.config.js`,
@@ -37,13 +37,17 @@
  *     `always-loaded.mjs`, `authoring-archivers.mjs`, `check-pointers.mjs`,
  *     `check-router-budget.mjs`, `check-glossary-only.mjs`,
  *     `check-negation-ratchet.mjs`, `check-target-schema.mjs`,
- *     `generate-agent-account.mjs`, `swept-docs.mjs`, `unverified.mjs`, and four
- *     suites.
+ *     `agent-account.mjs`, `generate-agent-account.mjs`, `sweep.mjs`,
+ *     `seed-list.mjs`, and two suites.
  *     `scripts/` is the one tree the flip did not touch: it is not the
  *     application, so it did not move into the package, and where both
  *     repositories run the same check they still run two copies of it. This is
- *     also the group that grows: the last six arrived together, when the
- *     addresses that had kept them off came out of both copies.
+ *     also the group that grows, and it is the group with a failure this list
+ *     cannot see for itself: a release that publishes a shared script this tree
+ *     does not hold moves no byte here and turns no gate below red.
+ *     `npm run check:shared-scripts` is the other direction — it reads the
+ *     template's own published list out of the installed package and fails on a
+ *     path we do not hold, do not hold identically, or hold and never enrolled.
  *   - **Two data files.** `public/step-visual-placeholder.svg`, whose NAME is
  *     written into fourteen applied migrations so only the copy inside it is
  *     shareable, and `docs/agents/triage-labels.md`, which maps the five
@@ -202,12 +206,33 @@ export const RECONCILED_FILES = [
   // deployment too. See the module header.
   'scripts/tests/one-badge-one-size.test.mjs',
 
-  // The authoring log's own suite, adopted with the log itself when the change
-  // log went upstream.
+  // ── The one file taken at the release's bytes and NOT enrolled ──
   //
-  // It imports its client half through `@/…`, so it finds the application
-  // where the build resolves it rather than where this repository keeps it.
-  'scripts/tests/authoring-log.test.mjs',
+  // `scripts/tests/authoring-log.test.mjs` is held byte-identical to the
+  // pinned release and is deliberately off this list, which is the one
+  // combination the header above says to write the reasoning for rather than
+  // leave to be rediscovered.
+  //
+  // It was enrolled, and the release that moved `archivingFunctionsIn` onto the
+  // sweep rewrote it. The new text spells its fixture series
+  // `21000101000000_one.sql` / `21000102000000_two.sql` — a made-up pair, not
+  // migrations either repository has — and `check:reconciled`'s citation rule
+  // is line-based over bytes and cannot tell a fixture from an address. It is
+  // right not to: the two repositories do not share a migration series, so a
+  // migration filename in a file read from both sides resolves in at most one
+  // of them.
+  //
+  // This is the same defect as the router suite's `docs/a.md`, which the
+  // template respelled under `notes/` for exactly this reason — so the remedy
+  // is upstream's and the entry comes back the day the fixture is spelled
+  // somewhere no tree claims. Until then the bytes are the release's and the
+  // promise this list makes about them is not, which is the honest state to be
+  // in rather than a weakened rule.
+  //
+  // `authoring-archivers.mjs` above, which that release rewrote in the same
+  // change, cites nothing and stays enrolled. The two move together on bytes
+  // and apart on enrolment.
+
 
   // ── The six that used to name a `docs/` path ──
   //
@@ -227,16 +252,35 @@ export const RECONCILED_FILES = [
   'scripts/check-negation-ratchet.mjs',
   'scripts/check-target-schema.mjs',
   'scripts/generate-agent-account.mjs',
-  'scripts/swept-docs.mjs',
   'scripts/tests/the-router-is-a-router.test.mjs',
 
-  // The register a check writes to when it looked at nothing and that is the
-  // right answer. It arrived with v1.44.2 and is enrolled the day it arrives,
-  // because it is imported by `generate-agent-account.mjs` above: the shared
-  // fence is closed under relative import, so a shared script's imports are
-  // shared too, or the promise the fence makes is only about the file that
-  // happens to be named.
-  'scripts/unverified.mjs',
+  // The account generator's whole LOGIC, and the failures it words for a reader
+  // in either tree. The template's fence is closed under relative import for
+  // exactly this file: `generate-agent-account.mjs` was enrolled and every line
+  // it runs lives here, so a message naming a document only one repository has
+  // sat behind a green guard for a release.
+  'scripts/agent-account.mjs',
+
+  // The sweep, and the module it asks where a deployment's seed is.
+  //
+  // These two are why the nine entries above them changed at all. `sweep.mjs`
+  // answers "give me the files for this subject" for eight subjects — the
+  // application, the prose, the scripts, the migrations, the reference surface,
+  // the package's reference documents, a deployment's seed and the commit — so
+  // a check names one and contains only its judgement. No shared script
+  // resolves a root from its own location any more; they read the working
+  // directory, which is what lets one file serve two repositories without
+  // either of them being the one it was written in.
+  //
+  // `swept-docs.mjs` and `unverified.mjs` were on this list and are not any
+  // more, and neither was unenrolled: the template DELETED both. The swept set
+  // is the sweep's `docs` subject now and the skip-said-out-loud register is
+  // its last section, so there is no copy on the other side for a byte-identity
+  // gate to compare against. This repository still holds its own
+  // `swept-docs.mjs`, because four of its own checks still read it; what it no
+  // longer is, is shared.
+  'scripts/sweep.mjs',
+  'scripts/seed-list.mjs',
 
   // ── Two data files ──
   //

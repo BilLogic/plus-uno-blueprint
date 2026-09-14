@@ -5,21 +5,32 @@ import assert from 'node:assert/strict'
 import { appSource } from '../app-source.mjs'
 
 /**
- * The eval harness must run against the app's tool surface. The spec
- * DECLARATIONS are now one-sourced — run.mjs bundles specs.ts with rolldown
- * at startup and imports TOOL_SPECS / WRITE_TOOL_NAMES /
- * MOBILE_READ_TOOL_NAMES — so the old "did the hand-copied fork drift"
- * check is replaced by a check that the import wiring still exists and no
- * fork has crept back in.
+ * The eval harness must run against the app's tool surface.
+ *
+ * HOW THE SURFACE IS DECLARED NOW. Every tool is one definition module under
+ * `lib/agent/tools/definitions/` — its name, its surface ('read' | 'interface'
+ * | 'write'), its zod `args`, where it may run, and its `run`. `specs.ts` is a
+ * single line projecting that list (`TOOL_DEFINITIONS.map(toolSpec)`), the
+ * session roster derives from it, and `registry.ts` is a lookup rather than a
+ * switch. There is no literal spec array to parse and no `WRITE_TOOL_NAMES` set
+ * to read the names out of, so this file DERIVES both — the roster and each
+ * tool's surface — from the definition list it imports, the way the
+ * application derives them itself.
+ *
+ * What that leaves for a test. Inside the application, a schema and its handler
+ * are one object with one typed `run`, so the compiler now holds them together
+ * and the argument-parity checks this file used to make over `registry.ts`'s
+ * switch have no subject. What no compiler sees is THIS repository's harness:
+ * `scripts/agent-harness/run.mjs` runs its own tool implementations (the app's
+ * cannot load from Node), reads the argument bag by hand, and can go on
+ * answering a tool the application has retired. That is what is checked here,
+ * and it is why this deployment's copy of this file is not the template's.
  *
  * `cases.mjs` keeps its own WRITES set (it cannot import from run.mjs
  * without a cycle), and that list is the dangerous one: a name missing
  * from it makes a "no writes happened" trace check PASS, so drift there
  * hides itself instead of failing loudly. Hence a test rather than a
  * comment asking humans to remember.
- *
- * Deliberately text-parsed: `registry.ts` imports supabase-js and Vite
- * `?raw` markdown, so it cannot be loaded from Node without a bundler.
  */
 // The runner copies test files into a temp dir, so paths resolve from the
 // working directory (npm test runs at the repo root), not from import.meta.
@@ -37,101 +48,158 @@ function setMembers(source, name) {
   return new Set([...body.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]))
 }
 
-// Specs and rosters live in specs.ts (pure data); dispatch stays in
-// registry.ts. The parity checks read each from where it lives — and the two
-// sides now live in different repositories: the tool surface belongs to the
-// APPLICATION, which this deployment imports out of the installed package,
-// while the harness that has to match it is this deployment's own script.
-// That is what the check was always about; it is only now literally true.
-// `appSource` refuses a missing package file by name, because an unreadable
-// specs.ts would otherwise parse as a tool surface with nothing in it.
+/**
+ * The declarations are IMPORTED, not parsed. The definition list is the one
+ * statement of what a tool is, and `specs.ts` loads in Node once vitest has
+ * resolved the `@/…` alias and Vite's `?raw` imports for it — so the roster,
+ * each tool's surface and each tool's argument names are read from the objects
+ * the app hands its providers rather than from a regex over their source.
+ *
+ * The two files are still read as TEXT as well, and only for the questions
+ * that are about their SHAPE: that the spec table declares no tool of its own
+ * and the dispatcher switches on no name. Those are the old layout, and the
+ * check that it stays gone cannot be made against the value.
+ *
+ * The two sides now live in different repositories: the tool surface belongs
+ * to the APPLICATION, which this deployment imports out of the installed
+ * package, while the harness that has to match it is this deployment's own
+ * script. That is what this check was always about; it is only now literally
+ * true. `appSource` refuses a missing package file by name, because an
+ * unreadable specs.ts would otherwise parse as a tool surface with nothing in
+ * it.
+ */
+const TOOL_DEFINITIONS = (await import('@/lib/agent/tools/definitions')).TOOL_DEFINITIONS
+const TOOL_SPECS = (await import('@/lib/agent/tools/specs')).TOOL_SPECS
 const specs = appSource('lib/agent/tools/specs.ts')
 const registry = appSource('lib/agent/tools/registry.ts')
 const harness = read('scripts/agent-harness/run.mjs')
+const surfaceEntry = read('scripts/agent-harness/app-surface.entry.ts')
 const cases = read('scripts/agent-harness/cases.mjs')
 
+/** The write roster, derived from the definitions the way the app derives it. */
+const WRITE_TOOL_NAMES = new Set(
+  TOOL_DEFINITIONS.filter((tool) => tool.surface === 'write').map((tool) => tool.name),
+)
+/** Every tool's argument names, as its zod schema declares them. */
+const ARGS_OFFERED = new Map(
+  TOOL_DEFINITIONS.map((tool) => [tool.name, new Set(Object.keys(tool.args.shape))]),
+)
+
 test('harness imports the app tool specs instead of forking them', () => {
-  // The wiring: rolldown bundles specs.ts and the harness destructures the
-  // rosters from the bundle — including REFERENCE_NAMES, so the harness
-  // offers exactly the reference list the app offers.
+  // The wiring: rolldown bundles app-surface.entry.ts, the harness's own
+  // neighbour, and the runner destructures the declarations from the bundle.
+  // The entry exists because the four names the harness needs are no longer
+  // four exports of one module — it re-exports what the app states and derives
+  // what the app derives.
   assert.ok(
-    harness.includes("resolve(APP_SOURCE, 'lib/agent/tools/specs.ts')"),
-    'run.mjs no longer bundles the application’s lib/agent/tools/specs.ts out ' +
-      'of the installed package',
+    harness.includes("'app-surface.entry.ts'"),
+    'run.mjs no longer bundles app-surface.entry.ts, its neighbour',
+  )
+  assert.match(
+    surfaceEntry,
+    /export\s*\{\s*TOOL_SPECS\s*\}\s*from\s*'@\/lib\/agent\/tools\/specs'/,
+    'app-surface.entry.ts no longer re-exports TOOL_SPECS from the application’s specs.ts',
+  )
+  // The two rosters the harness gates on are DERIVED from the definitions —
+  // the surface and the availability each definition states — not listed.
+  assert.match(
+    surfaceEntry,
+    /WRITE_TOOL_NAMES = new Set\(\s*TOOL_DEFINITIONS\.filter\(\(tool\) => tool\.surface === 'write'\)/,
+    'app-surface.entry.ts no longer derives WRITE_TOOL_NAMES from the definitions',
+  )
+  assert.match(
+    surfaceEntry,
+    /MOBILE_READ_TOOL_NAMES = new Set\(\s*TOOL_DEFINITIONS\.filter\(\(tool\) => tool\.availability\.mobile\)/,
+    'app-surface.entry.ts no longer derives MOBILE_READ_TOOL_NAMES from the definitions',
+  )
+  // The reference list too, so the harness offers exactly the list the app
+  // offers.
+  assert.match(
+    surfaceEntry,
+    /export\s*\{\s*REFERENCE_NAMES\s*\}\s*from\s*'@\/lib\/agent\/tools\/referenceNames'/,
+    'app-surface.entry.ts no longer re-exports REFERENCE_NAMES from referenceNames.ts',
   )
   assert.match(
     harness,
     /\{\s*TOOL_SPECS,\s*WRITE_TOOL_NAMES,\s*MOBILE_READ_TOOL_NAMES,\s*REFERENCE_NAMES\s*\}/,
-    'run.mjs no longer imports TOOL_SPECS/WRITE_TOOL_NAMES/MOBILE_READ_TOOL_NAMES/REFERENCE_NAMES from the specs bundle',
+    'run.mjs no longer imports TOOL_SPECS/WRITE_TOOL_NAMES/MOBILE_READ_TOOL_NAMES/REFERENCE_NAMES from the bundled surface',
   )
   // And no fork crept back: a local spec array would re-declare tool
   // objects (`name: '...'` entries) and a local write set would shadow the
-  // imported roster.
-  assert.ok(
-    !/TOOL_SPECS\s*=\s*\[/.test(harness),
-    'run.mjs declares a local TOOL_SPECS array — the fork is back',
-  )
+  // derived roster.
+  for (const [file, source] of [
+    ['run.mjs', harness],
+    ['app-surface.entry.ts', surfaceEntry],
+  ]) {
+    assert.ok(
+      !/TOOL_SPECS\s*(?::[^=]*)?=\s*\[/.test(source),
+      `${file} declares a local TOOL_SPECS array — the fork is back`,
+    )
+    assert.ok(
+      !/^\s*\{\s*name: '[a-z_]+', description:/m.test(source),
+      `${file} contains inline tool-spec declarations — the fork is back`,
+    )
+  }
   assert.ok(
     !harness.includes('WRITE_TOOLS = new Set'),
     'run.mjs declares a local WRITE_TOOLS set — the fork is back',
   )
+  // The entry DERIVES its write set from the definitions (asserted above); a
+  // `new Set` of NAMES in the runner would be a fork of it.
   assert.ok(
-    !/^\s*\{\s*name: '[a-z_]+', description:/m.test(harness),
-    'run.mjs contains inline tool-spec declarations — the fork is back',
+    !/WRITE_TOOL_NAMES\s*=\s*new Set\(\[/.test(harness),
+    'run.mjs lists the write roster by name — the fork is back',
   )
 })
 
 test('cases.mjs WRITES agrees with the app write roster', () => {
-  const app = setMembers(specs, 'WRITE_TOOL_NAMES')
   const rubric = setMembers(cases, 'WRITES')
   // It must MATCH — more or less both break: a missing name makes
   // "zero writes" checks pass vacuously; an extra one fails them falsely.
   assert.deepEqual(
     [...rubric].sort(),
-    [...app].sort(),
-    'cases.mjs WRITES drifted from specs.ts WRITE_TOOL_NAMES',
+    [...WRITE_TOOL_NAMES].sort(),
+    'cases.mjs WRITES drifted from the write surface the definitions declare',
   )
 })
 
-test('every write tool is dispatchable', () => {
-  const app = setMembers(specs, 'WRITE_TOOL_NAMES')
-  for (const name of app) {
-    assert.ok(
-      registry.includes(`case '${name}':`),
-      `${name} is listed as a write tool but has no dispatch case`,
-    )
-  }
-})
-
-/** Every `name:` at the top level of the TOOL_SPECS array literal. */
-function specNames(source) {
-  const at = source.indexOf('TOOL_SPECS: ToolSpec[] = [')
-  assert.ok(at !== -1, 'TOOL_SPECS array not found')
-  const names = [
-    ...source.slice(at).matchAll(/^ {2}\{\n {4}name: '([a-z_]+)'/gm),
-  ].map((m) => m[1])
-  assert.ok(names.length > 0, 'no tool names parsed out of TOOL_SPECS')
-  return names
-}
-
 /**
- * The write roster had this check; the read half did not, so a renamed or
- * newly added READ tool could sit in specs.ts with no dispatch case and
- * fail only at runtime, in front of a user. Covering every spec — not just
- * the write roster — closes that and subsumes the check above.
+ * The layout the checks above read, held in place.
+ *
+ * A tool is one definition, so the spec table declares nothing and the
+ * dispatcher switches on nothing. Either shape coming back would not fail the
+ * checks here — it would make them read half a surface — so the absence is
+ * asserted rather than assumed.
  */
-test('every tool spec is dispatchable', () => {
-  for (const name of specNames(specs)) {
-    assert.ok(
-      registry.includes(`case '${name}':`),
-      `${name} is declared in TOOL_SPECS but has no dispatch case in registry.ts`,
-    )
+test('the spec table declares nothing and the dispatcher switches on nothing', () => {
+  assert.ok(
+    !/^\s*\{\s*name: '[a-z_]+'/m.test(specs),
+    'specs.ts holds an inline tool-spec literal again — a tool is one definition',
+  )
+  assert.ok(
+    !/\bcase '[a-z_]+':/.test(registry),
+    'registry.ts dispatches by switch case again — a tool is run from its definition',
+  )
+  assert.match(
+    specs,
+    /TOOL_SPECS: ToolSpec\[\] = TOOL_DEFINITIONS\.map\(toolSpec\)/,
+    'TOOL_SPECS is no longer a projection of the definition list',
+  )
+})
+
+test('the spec table is the definition list, projected', () => {
+  assert.deepEqual(
+    TOOL_SPECS.map((spec) => spec.name),
+    TOOL_DEFINITIONS.map((tool) => tool.name),
+  )
+  for (const spec of TOOL_SPECS) {
+    assert.equal(spec.parameters.type, 'object', `${spec.name} has no object schema`)
   }
 })
 
 /**
- * The harness runs its OWN tool implementations (registry.ts cannot load
- * from Node), and nothing checked that it covers the roster it imports. It
+ * The harness runs its OWN tool implementations (the app's dispatch cannot
+ * load from Node), and nothing checked that it covers the roster it imports. It
  * bit: renaming list_scenarios to list_blueprint rewrote the harness's case
  * LABEL and left it calling the old phases query, so the harness answered
  * list_blueprint with the pre-granularity shape and silently rehearsed a
@@ -139,89 +207,104 @@ test('every tool spec is dispatchable', () => {
  * to a generic dry-run response before this switch.
  */
 test('every read tool has a harness implementation', () => {
-  const writes = setMembers(specs, 'WRITE_TOOL_NAMES')
-  for (const name of specNames(specs)) {
-    if (writes.has(name)) continue
+  for (const tool of TOOL_DEFINITIONS) {
+    if (WRITE_TOOL_NAMES.has(tool.name)) continue
     assert.ok(
-      harness.includes(`case '${name}':`),
-      `${name} is a read tool with no case in scripts/agent-harness/run.mjs — the harness would throw on it`,
+      harness.includes(`case '${tool.name}':`),
+      `${tool.name} is a read tool with no case in scripts/agent-harness/run.mjs — the harness would throw on it`,
     )
   }
 })
 
 /**
- * The other direction: a dispatch case with no spec is dead code the model
- * can never reach — the residue a rename leaves when specs.ts moves on and
- * registry.ts keeps the old arm.
+ * The other direction: a harness case for a tool no definition declares is a
+ * rehearsal nobody can reach — the residue a retirement leaves when the
+ * application moves on and the harness keeps the old arm. `list_scenarios` was
+ * exactly that after `list_blueprint` took its place with a granularity
+ * argument, and an arm that answers a name the model is never offered looks
+ * like coverage while covering nothing.
  */
-test('every dispatch case has a tool spec', () => {
-  const declared = new Set(specNames(specs))
-  const dispatched = [...registry.matchAll(/case '([a-z_]+)':/g)].map(
-    (m) => m[1],
-  )
-  const orphans = dispatched.filter((name) => !declared.has(name))
+test('every harness case is a tool the app still declares', () => {
+  const declared = new Set(TOOL_DEFINITIONS.map((tool) => tool.name))
+  const answered = [...harness.matchAll(/case '([a-z_]+)':/g)].map((m) => m[1])
+  const orphans = answered.filter((name) => !declared.has(name))
   assert.deepEqual(
     orphans,
     [],
-    `registry.ts dispatches tools that no longer exist in TOOL_SPECS: ${orphans.join(', ')}`,
+    `run.mjs answers tools no definition declares: ${orphans.join(', ')}`,
   )
 })
 
 /**
- * The names on the wire, in both directions.
+ * ACCEPTED ALIASES — a name a caller may still send that the schema no longer
+ * advertises.
  *
- * A tool spec is a contract with a model. The model can only send the
- * properties the schema declares, and the handler can only read the keys it
- * asks for by name — nothing connects the two, and nothing fails when they
- * disagree. A handler reading a key the schema never offers gets `undefined`
- * on every call and reports success; a schema offering a property no handler
- * reads takes an argument from the model and throws it away. Both are silent,
- * and both look exactly like working software from the outside.
+ * A rename on this wire cannot be a swap. Anything pinned to an older
+ * description of these tools keeps sending the old word, and a handler that
+ * stopped reading it turns a working call into a refusal. So the schema moves
+ * first and the alias is accepted for a release.
  *
- * This is not hypothetical. The template's `create_slice` advertises
- * `description` and reads `summary`, so a model that fills in the field the
- * schema asked for writes an empty summary and is told the slice was created;
- * its `update_slice` keeps the old summary and reports the edit as done. That
- * is filed upstream — the point here is that no test on either side could see
- * it, because every test asserted about one file or the other.
+ * This file used to carry the alias list itself, as hand-written carve-outs
+ * exempting `create_slice.description` and `update_slice.description` from the
+ * argument checks below, because nothing in the application said an alias
+ * existed — the handler read the old key beside the new one and only a test
+ * could record why. A definition states its own `aliases` now, so the list is
+ * read from the tools instead of kept here, and the carve-outs are gone: there
+ * is nothing left to exempt and nothing to go stale.
  *
- * The declarations are IMPORTED rather than parsed: specs.ts is pure data and
- * loads in Node. registry.ts is still read as text, because it imports
- * supabase-js and Vite `?raw` markdown and cannot be loaded without a bundler.
+ * What is worth holding is that an alias still MEANS something: it must name
+ * an argument the schema offers, or it resolves to a key no handler reads, and
+ * it must not itself be advertised, or the schema is teaching the old word it
+ * was written to retire.
  */
-const TOOL_SPECS = (await import('@/lib/agent/tools/specs')).TOOL_SPECS
+test('every accepted alias names an argument the schema offers', () => {
+  const broken = []
+  for (const tool of TOOL_DEFINITIONS) {
+    const offered = ARGS_OFFERED.get(tool.name)
+    for (const [alias, name] of Object.entries(tool.aliases ?? {})) {
+      if (!offered.has(name)) broken.push(`${tool.name}.${alias} → ${name} (no such argument)`)
+      if (offered.has(alias)) broken.push(`${tool.name}.${alias} is advertised and aliased at once`)
+    }
+  }
+  assert.deepEqual(broken.sort(), [], `an alias points at nothing: ${broken.join(', ')}`)
+})
 
 /**
- * The argument keys a dispatch case reads.
+ * THE NAMES ON THE WIRE, on the harness's side.
  *
- * A case runs to the next `case '...':`, which covers both shapes registry.ts
- * uses — the braced block and the single-expression arm. The four forms it
- * looks for are the four the file uses: `need(args, 'x')` for a required
- * string, `s(args, 'x')` for an optional one, and `args.x` / `args['x']` for
- * everything typed by hand.
+ * A tool spec is a contract with a model. The model can only send the
+ * properties the schema declares, and a handler can only read the keys it asks
+ * for by name — nothing connects the two, and nothing fails when they
+ * disagree. A handler reading a key the schema never offers gets `undefined`
+ * on every call and reports success; both are silent, and both look exactly
+ * like working software from the outside.
+ *
+ * Inside the application that is now a type error: `run` receives the type its
+ * own zod schema infers. The harness gets no such help — it reads `args.kind`
+ * out of a plain object — and it is the harness that rehearses the agent this
+ * deployment ships, so a filter it reads under the wrong name comes back null
+ * on every call and the rehearsed read is quietly wider than the real one.
+ * That had happened: `list_blueprint` advertises `kind` and the harness read
+ * `args.path_type`, so every path-kind filter in the suite was a no-op.
+ *
+ * Only the ONE direction is checked. The harness deliberately reads less than
+ * the schema offers — it has no services, so it ignores `service` on every
+ * scoped read — and it answers writes with a single dry-run sentence before
+ * the switch, so the argument bag of a write is not read here at all.
  */
 function argKeysRead(body) {
-  return [
-    ...body.matchAll(
-      /(?:need|s)\(args, '([a-z_]+)'\)|args\.([a-z_]+)|args\['([a-z_]+)'\]/g,
-    ),
-  ].map((m) => m[1] ?? m[2] ?? m[3])
+  return [...body.matchAll(/args\.([a-z_]+)|args\['([a-z_]+)'\]/g)].map((m) => m[1] ?? m[2])
 }
 
 /**
  * Helpers that read the argument bag on a case's behalf, as `name -> keys`.
  *
- * A case does not have to read `args` in its own body. The application pulls
- * the shared ones out — `readScope` reads `service` for every tool that scopes
- * a read, `listBlueprintArgs` reads the six filters for both the live
- * dispatcher and the no-database trial — so that what an argument MEANS is
- * decided once. A reader that looked only inside the `case` arms would see
- * those ten keys as unread and report that the model's words are thrown away,
- * about handlers that read every one of them. So a call to one of these counts
- * as reading what it reads.
- *
- * Matched on the parameter list rather than on a list of helper names: a
- * seventh helper written tomorrow is followed tomorrow.
+ * A case does not have to read `args` in its own body: the harness pulls the
+ * portal reads out into `realListBlueprint` / `realSearchBlueprint`, which take
+ * the bag whole. A reader that looked only inside the `case` arms would miss
+ * every key they read — which is where the `path_type` drift above had been
+ * sitting. Matched on the parameter list rather than on a list of helper
+ * names, so a third helper written tomorrow is followed tomorrow.
  */
 function argKeysByHelper(source) {
   const helpers = new Map()
@@ -232,27 +315,16 @@ function argKeysByHelper(source) {
     const start = mark.index
     const end = source.indexOf('\n}', start)
     const body = source.slice(start, end === -1 ? source.length : end)
-    // A function holding `case '…':` arms is a DISPATCHER, not a helper. Both
-    // of registry.ts's take the bag, and reading one as a helper would credit
-    // whichever case called it with every key the whole switch reads.
+    // A function holding `case '…':` arms is the DISPATCHER, not a helper.
+    // Reading it as one would credit whichever case called it with every key
+    // the whole switch reads.
     if (/case '[a-z_]+':/.test(body)) continue
     helpers.set(mark[1], new Set(argKeysRead(body)))
   }
   return helpers
 }
 
-/**
- * The argument keys read for each tool name, UNIONED over every arm that
- * answers it.
- *
- * A tool name appears in two switches: the live dispatcher and the
- * no-database trial that answers from the bundled sample. Keeping only one
- * arm per name — which is what building the map from pairs did — let the
- * trial's arm stand in for the real one, and the trial deliberately reads
- * less: it has no services, so it ignores `service` and every scoped read
- * looked like a handler throwing the model's word away. An argument either
- * arm reads is an argument the handler reads.
- */
+/** The argument keys read for each tool name, over its arm and its helpers. */
 function argKeysByCase(source) {
   const helpers = argKeysByHelper(source)
   const marks = [...source.matchAll(/case '([a-z_]+)':/g)]
@@ -261,8 +333,8 @@ function argKeysByCase(source) {
     const start = mark.index + mark[0].length
     // The LAST case ends where its function does — at the first closing brace
     // in the first column. Running it to the end of the file instead swallows
-    // the helpers declared below the dispatcher, and credited the last tool in
-    // the switch with every argument they read.
+    // whatever is declared below the dispatcher, and credits the last tool in
+    // the switch with every argument that code reads.
     const tail = source.slice(start)
     const rest = tail.search(/\n\}/)
     const end =
@@ -283,90 +355,19 @@ function argKeysByCase(source) {
   return byName
 }
 
-/**
- * Argument names a handler still accepts and the schema no longer offers.
- *
- * A rename on this wire cannot be a swap. Anything pinned to an older
- * description of these tools keeps sending the old word, and a handler that
- * stopped reading it turns a working call into a refusal. So the schema moves
- * first and the handler keeps accepting both for a release.
- *
- * Every entry is asserted below to still be READ, so an alias whose handler
- * dropped it loses its exemption instead of leaving a carve-out behind for the
- * next rename to slip through. Deleting an entry is how the alias retires:
- * remove the fallback in registry.ts and the line here together.
- */
-const ACCEPTED_ALIASES = [
-  {
-    tool: 'create_slice',
-    alias: 'description',
-    now: 'summary',
-    because:
-      'the schema advertised `description` while the handler read `summary` (#272), so a ' +
-      'model taught the old wire is still holding the word that used to be dropped',
-  },
-  {
-    tool: 'update_slice',
-    alias: 'description',
-    now: 'summary',
-    because: 'same mismatch, same tool pair',
-  },
-]
-
-const isAlias = (tool, key) =>
-  ACCEPTED_ALIASES.some((entry) => entry.tool === tool && entry.alias === key)
-
-test('every accepted alias is still read, or it has stopped being one', () => {
-  const read = argKeysByCase(registry)
-  const dead = ACCEPTED_ALIASES.filter(
-    (entry) => !read.get(entry.tool)?.has(entry.alias),
-  ).map((entry) => `${entry.tool}.${entry.alias}`)
-  assert.deepEqual(
-    dead,
-    [],
-    `Exempted as an accepted alias but no longer read by registry.ts: ${dead.join(', ')}. ` +
-      'The alias has retired — delete the entry rather than leaving a dead carve-out.',
-  )
-})
-
-test('every argument a handler reads is one the schema offers', () => {
-  const declared = new Map(
-    TOOL_SPECS.map((spec) => [
-      spec.name,
-      new Set(Object.keys(spec.parameters?.properties ?? {})),
-    ]),
-  )
+test('every argument the harness reads is one the schema offers', () => {
   const undeclared = []
-  for (const [name, keys] of argKeysByCase(registry)) {
-    const offered = declared.get(name)
-    // A case with no spec is the previous test's failure, not this one's.
+  for (const [name, keys] of argKeysByCase(harness)) {
+    const offered = ARGS_OFFERED.get(name)
+    // A case with no definition is the previous test's failure, not this one's.
     if (!offered) continue
     for (const key of keys) {
-      if (offered.has(key) || isAlias(name, key)) continue
-      undeclared.push(`${name}.${key}`)
+      if (!offered.has(key)) undeclared.push(`${name}.${key}`)
     }
   }
   assert.deepEqual(
     undeclared.sort(),
     [],
-    `registry.ts reads arguments no model can send, so they are always undefined: ${undeclared.join(', ')}`,
-  )
-})
-
-test('every argument the schema offers is one a handler reads', () => {
-  const read = argKeysByCase(registry)
-  const ignored = []
-  for (const spec of TOOL_SPECS) {
-    const keys = read.get(spec.name)
-    // Tools dispatched elsewhere are out of this file's reach.
-    if (!keys) continue
-    for (const key of Object.keys(spec.parameters?.properties ?? {})) {
-      if (!keys.has(key)) ignored.push(`${spec.name}.${key}`)
-    }
-  }
-  assert.deepEqual(
-    ignored.sort(),
-    [],
-    `TOOL_SPECS offers arguments registry.ts never reads, so a model filling them in is ignored: ${ignored.join(', ')}`,
+    `scripts/agent-harness/run.mjs reads arguments no model can send, so they are always undefined: ${undeclared.join(', ')}`,
   )
 })

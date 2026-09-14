@@ -1,25 +1,31 @@
 /**
- * Everything this deployment has to settle BEFORE the application's modules
+ * The one thing this deployment has to settle BEFORE the application's modules
  * evaluate — its own module, so that it does.
  *
  * `main.tsx` names this file on the line above the application's import. ES
  * modules evaluate depth-first in source order, so naming it there is what
- * guarantees it has run. Nothing below relies on that being remembered: both
- * seams freeze on first read and throw on a late call, so getting the order
+ * guarantees it has run. Nothing below relies on that being remembered: the
+ * seam freezes on first read and throws on a late call, so getting the order
  * wrong raises an error that names the fix rather than running quietly on the
- * template's defaults.
+ * template's default.
  *
  * It imports from `agentic-service-blueprinting/bootstrap` and NOT from the
  * package root. The root export reaches `App`, and evaluating `App` is the
- * exact thing these two calls have to precede; the bootstrap entry's import
- * graph is held empty of the application for that reason.
+ * exact thing this call has to precede; the bootstrap entry's import graph is
+ * held empty of the application for that reason.
+ *
+ * THIS FILE USED TO CARRY A SECOND CALL, and the release that removed it is
+ * the reason the file is now one line long. The agent's reference documents
+ * were registered here, through a `registerReferenceDocs` seam, because the
+ * template assembled the reference record, the vocabulary naming it and the
+ * `get_reference` description quoting that vocabulary all at module scope — so
+ * a document handed over at render time would have been served by a tool that
+ * never mentioned it. The template now reads its references when a document is
+ * SERVED rather than when its modules evaluate, which removes the ordering
+ * rule entirely, and the seam with it. Both documents are ordinary
+ * configuration now, on `agent.references` in `deployment.ts`.
  */
-import {
-  configureStorageNamespace,
-  registerReferenceDocs,
-} from 'agentic-service-blueprinting/bootstrap'
-import blueprintAccount from '../docs/agents/blueprint.md?raw'
-import canvasAdapter from '~/agent/canvas-adapter.md?raw'
+import { configureStorageNamespace } from 'agentic-service-blueprinting/bootstrap'
 
 /**
  * FIRST, AND BEFORE ANYTHING READS STORAGE.
@@ -38,24 +44,3 @@ import canvasAdapter from '~/agent/canvas-adapter.md?raw'
  * abandons them.
  */
 configureStorageNamespace('uno-')
-
-/**
- * This deployment's reference documents, registered before the vocabulary that
- * names them is built.
- *
- * The record the agent serves, the vocabulary that names it, and the
- * `get_reference` tool description that quotes that vocabulary to the model are
- * all assembled at module scope. A document handed over at render time would be
- * served by a tool that never mentions it, which is why this is a call and not
- * a `DeploymentConfig` field.
- */
-registerReferenceDocs({
-  // The generated account of this deployment's schema, served to the agent as
-  // the `blueprint` reference. `npm run agent-account` renders it from the
-  // connected database; `check:agent-account` holds it to its sources.
-  blueprint: blueprintAccount,
-  // This deployment's canvas adapter REPLACES the template's: the template's
-  // copy names a tool registry this app does not have. A key the template
-  // already serves is replaced and adds no name, so the vocabulary is unchanged.
-  'canvas-adapter': canvasAdapter,
-})

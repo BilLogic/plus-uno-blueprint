@@ -18,7 +18,7 @@ import { resolve } from 'node:path'
 import { rolesInConstraint } from '../lane-roles.mjs'
 import {
   ERD_PATH,
-  SPECS_PATH,
+  FILTER_PATH,
   rolesInErdRoster,
   rolesInToolSpec,
   rosterClaims,
@@ -71,13 +71,16 @@ test('the roster reader throws rather than reporting an empty vocabulary', () =>
 
 /* ----------------------------------------------------- the tool-spec reader */
 
-test('the tool-spec reader reads the pipe list, wrapped or on one line', () => {
+test('the filter reader reads the pipe list, wrapped or on one line', () => {
+  // The call-wrapper shape: a description built by a helper, over several
+  // lines. How long the string is has nothing to do with what the model is
+  // told, so the reader has to accept it either way.
   const wrapped = [
-    'const SERVICE_SCOPE_PARAM = str(',
+    'const SERVICE_SCOPE_DESCRIPTION = str(',
     "  'Optional. Which service to search.',",
     ')',
     '',
-    'const LANE_ROLE_FILTER_PARAM = str(',
+    'const LANE_ROLE_FILTER_DESCRIPTION = str(',
     "  'kept_role | listed_role | third_role',",
     ')',
   ].join('\n')
@@ -87,7 +90,7 @@ test('the tool-spec reader reads the pipe list, wrapped or on one line', () => {
     values: ['kept_role', 'listed_role', 'third_role'],
   })
 
-  const inline = "const LANE_ROLE_FILTER_PARAM = str('kept_role | listed_role')\n"
+  const inline = "const LANE_ROLE_FILTER_DESCRIPTION = 'kept_role | listed_role'\n"
   assert.deepEqual(rolesInToolSpec(inline), {
     line: 1,
     derived: false,
@@ -95,18 +98,30 @@ test('the tool-spec reader reads the pipe list, wrapped or on one line', () => {
   })
 })
 
+test('the roster is read out of the sentence that carries it, not the whole sentence', () => {
+  // A hand-written description is prose with a list at the end. Splitting the
+  // whole sentence on `|` would make "Optional. Restrict ... one of: kept_role"
+  // the first role and report it as one the constraint refuses — a real
+  // failure named after the wrong thing.
+  const sentence =
+    'export const LANE_ROLE_FILTER_DESCRIPTION =\n' +
+    "  'Optional. Restrict to lanes with this role, one of: kept_role | listed_role'\n"
+  assert.deepEqual(rolesInToolSpec(sentence).values, ['kept_role', 'listed_role'])
+})
+
 test('a roster derived from CANONICAL_LANE_ROLES is agreement, not a second list', () => {
   // The shape the package ships, and the one that makes drift impossible: there
   // is no second statement to fall behind, and the one statement there is is
   // already held to the constraint by lane-roles.test.mjs. The reader says so
   // rather than pretending to compare, and reports the live set it was handed.
-  const derived = [
-    'export const LANE_ROLE_FILTER_PARAM = str(',
-    '  `Optional. Restrict to lanes with this role, one of: ${CANONICAL_LANE_ROLES.join(\' | \')}`,',
-    ')',
-    '',
-  ].join('\n')
-  assert.deepEqual(rolesInToolSpec(derived, 'specs.ts', ['kept_role', 'listed_role']), {
+  //
+  // A template literal, so the reader has to find the END of the template
+  // rather than the first quote inside its `${...}` — the interpolation itself
+  // contains `' | '`.
+  const derived =
+    'export const LANE_ROLE_FILTER_DESCRIPTION = `Optional. Restrict to lanes with this ' +
+    "role, one of: ${CANONICAL_LANE_ROLES.join(' | ')}`\n"
+  assert.deepEqual(rolesInToolSpec(derived, 'blueprint.ts', ['kept_role', 'listed_role']), {
     line: 1,
     derived: true,
     values: ['kept_role', 'listed_role'],
@@ -116,17 +131,30 @@ test('a roster derived from CANONICAL_LANE_ROLES is agreement, not a second list
 test('a roster written out by hand again is compared the old way', () => {
   // The regression this arm still guards. If anyone replaces the derivation
   // with a literal, the duplication is back and so is the comparison.
-  const restated = "export const LANE_ROLE_FILTER_PARAM = str('kept_role | listed_role')\n"
-  assert.deepEqual(rolesInToolSpec(restated, 'specs.ts', ['ignored']), {
+  const restated = "export const LANE_ROLE_FILTER_DESCRIPTION = 'kept_role | listed_role'\n"
+  assert.deepEqual(rolesInToolSpec(restated, 'blueprint.ts', ['ignored']), {
     line: 1,
     derived: false,
     values: ['kept_role', 'listed_role'],
   })
 })
 
-test('the tool-spec reader throws rather than reporting an empty vocabulary', () => {
-  assert.throws(() => rolesInToolSpec('const OTHER = str(\'a | b\')\n'), /no longer declares/)
-  assert.throws(() => rolesInToolSpec("const LANE_ROLE_FILTER_PARAM = str('')\n"), /names no lane role/)
+test('the filter reader throws rather than reporting an empty vocabulary', () => {
+  assert.throws(() => rolesInToolSpec("const OTHER = 'a | b'\n"), /no longer declares/)
+  assert.throws(
+    () => rolesInToolSpec("const LANE_ROLE_FILTER_DESCRIPTION = ''\n"),
+    /names no lane role/,
+  )
+  // Initialised from something this reader cannot see through. Refusing is the
+  // whole point: a reader that guessed would compare an empty set and pass.
+  assert.throws(
+    () => rolesInToolSpec('const LANE_ROLE_FILTER_DESCRIPTION = SOMETHING_ELSE\n'),
+    /neither a string literal nor a call taking one/,
+  )
+  assert.throws(
+    () => rolesInToolSpec('const LANE_ROLE_FILTER_DESCRIPTION = describe(ROLES)\n'),
+    /neither derives its roster/,
+  )
 })
 
 /* ------------------------------------------------------- equality, both ways */
@@ -206,7 +234,7 @@ test('the two documents this check reads are the two it names', () => {
   const claims = rosterClaims(ROOT)
   assert.deepEqual(
     claims.map((claim) => claim.file),
-    [ERD_PATH, SPECS_PATH],
+    [ERD_PATH, FILTER_PATH],
   )
   for (const claim of claims) {
     const source = readFileSync(resolve(ROOT, claim.file), 'utf8').split('\n')

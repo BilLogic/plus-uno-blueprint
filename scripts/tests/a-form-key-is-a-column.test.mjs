@@ -28,7 +28,21 @@
  *    saves to; every key must be a column of that table, spelled in camelCase.
  *    The panel→table map below is a declaration of the subject — which table a
  *    form edits is a fact this file has to be told — not a list of pardons.
- *    The two keys that carry a `Text` suffix are named with their reason.
+ *    `suffix` is how a key that genuinely cannot be spelled as its column names
+ *    the column anyway, with its reason beside it.
+ *
+ *    THE CELL PANEL'S FORM IS HALF DERIVED NOW, and this file reads both
+ *    halves. Its state is `CellEdits & { placement }`: the second half is
+ *    spelled in the panel and judged exactly as before, and the first is a
+ *    mapped type over the cell field descriptors in `lib/cellFields.ts`. That
+ *    is where the two keys that used to carry a `Text` suffix went — the form
+ *    is keyed by column now, so nothing has to spell `function` or `form` as an
+ *    identifier at all. A derived half cannot be read by counting keys in a
+ *    type literal, so it is read at its source: every descriptor in the list is
+ *    held to a column of `cells`, and the two type lines that tie the list's
+ *    keys to the generated row are asserted, because the derivation is what
+ *    makes the per-key parse unnecessary. Drop either line and the list is free
+ *    to name a column the schema does not have again.
  *
  * 2. THE ASSIGNMENT SITE. `description: cell.summary` is a column changing its
  *    name on the way into the app, and it is the exact shape every renamed
@@ -58,7 +72,9 @@ const DATABASE_TYPES = 'types/database.ts'
 /**
  * Which table each editor form writes, by its path inside the application's
  * source. `nested` names a key whose value is itself a form for another table;
- * `suffix` names the two keys that could not be spelled as their column.
+ * `suffix` names any key that could not be spelled as its column, of which
+ * there are currently none; `derives` names the types a form intersects and the
+ * module each is derived from, whose keys are judged at that source instead.
  */
 export const EDITOR_FORMS = [
   {
@@ -66,10 +82,11 @@ export const EDITOR_FORMS = [
     type: 'FormState',
     table: 'cells',
     nested: { placement: 'cell_touchpoints' },
-    // `function` and `form` are column names this app cannot use as bare
-    // identifiers without shadowing the keyword and the element — so the form
-    // key carries a suffix, and this is where that decision is written down.
-    suffix: { functionText: 'function', formText: 'form' },
+    // `CellEdits` is a mapped type over the cell field descriptors, so its keys
+    // are columns by construction rather than by inspection. The list itself is
+    // the subject of `the cell form's derived half is keyed by the cells row`
+    // below; what is left to read here is the one key the panel still spells.
+    derives: { CellEdits: 'lib/cellFields.ts' },
   },
   {
     file: 'lib/touchpointMutations.ts',
@@ -121,12 +138,24 @@ export function tableColumns(source) {
   return tables
 }
 
-/** The keys of `type NAME = { … }` in `source`, top level only. */
-export function typeKeys(source, name) {
-  const start = source.indexOf(`type ${name} = {`)
-  if (start === -1) return null
+/**
+ * `type NAME = A & B & { … }` in `source`, as the types it intersects and the
+ * keys it spells itself — top level only, and null when there is no such type.
+ *
+ * The intersection prefix is read rather than tolerated: a form that pulls half
+ * its keys from a derived type says so in its own declaration, and a reader
+ * that only knew how to parse `type NAME = {` reported such a form as a type it
+ * could not find — which is the shape of "no subject", not of a clean form.
+ */
+export function typeShape(source, name) {
+  const declaration = new RegExp(`type ${name} =\\s*((?:\\w+\\s*&\\s*)*)\\{`).exec(source)
+  if (!declaration) return null
+  const derives = declaration[1]
+    .split('&')
+    .map((part) => part.trim())
+    .filter(Boolean)
   let depth = 0
-  let i = source.indexOf('{', start)
+  let i = declaration.index + declaration[0].length - 1
   const open = i
   for (; i < source.length; i++) {
     if (source[i] === '{') depth += 1
@@ -143,15 +172,35 @@ export function typeKeys(source, name) {
     }
     level += (line.match(/\{/g) ?? []).length - (line.match(/\}/g) ?? []).length
   }
-  return keys
+  return { derives, keys }
+}
+
+/** The keys `type NAME` spells itself, or null when there is no such type. */
+export function typeKeys(source, name) {
+  return typeShape(source, name)?.keys ?? null
 }
 
 const snake = (key) => key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`)
 
-/** Form keys that name no column of the table they write. */
+/**
+ * Form keys that name no column of the table they write — and, before that, a
+ * form whose declaration this file cannot account for.
+ *
+ * A type it cannot find is a finding, and so is a type that intersects
+ * something `derives` does not name: the keys of an unaccounted-for half are
+ * read by nobody, which is the silent pass this whole file exists to prevent.
+ */
 export function keysThatAreNotColumns(form, source, tables) {
-  const keys = typeKeys(source, form.type)
-  if (!keys) return [`${form.file}: no \`type ${form.type}\` to read`]
+  const shape = typeShape(source, form.type)
+  if (!shape) return [`${form.file}: no \`type ${form.type}\` to read`]
+  const unaccounted = shape.derives.filter((name) => !form.derives?.[name])
+  if (unaccounted.length > 0) {
+    return [
+      `${form.file} ${form.type} intersects ${unaccounted.join(', ')}, which nothing ` +
+        `reads: name the type in EDITOR_FORMS.derives with the module its keys come from`,
+    ]
+  }
+  const keys = shape.keys
   const targets = [form.table].flat().map((t) => tables.get(t))
   if (targets.some((t) => !t)) return [`${form.file}: table not in ${DATABASE_TYPES}`]
   return keys.flatMap((key) => {
@@ -160,6 +209,32 @@ export function keysThatAreNotColumns(form, source, tables) {
     if (targets.some((t) => t.has(column))) return []
     return [`${form.file} ${form.type}.${key} — no column \`${column}\` on ${[form.table].flat().join('/')}`]
   })
+}
+
+/* ------------------------------------------ the cell form's derived half */
+
+/** Where the cell field list lives inside the application's source. */
+export const CELL_FIELDS_FILE = 'lib/cellFields.ts'
+
+/**
+ * The cell field descriptors, as `{ key, label, editable }`.
+ *
+ * Read out of the `CELL_FIELDS` literal rather than imported, because this
+ * repository holds no TypeScript loader for the application's modules and a
+ * list of one-line properties does not need one. Null when the literal is not
+ * there — the caller says so with the path, rather than judging an empty list.
+ */
+export function cellFieldDescriptors(source) {
+  const list = /export const CELL_FIELDS = \[([\s\S]*?)\n\] as const satisfies/.exec(source)
+  if (!list) return null
+  return list[1]
+    .split(/\n {2}\{\n/)
+    .slice(1)
+    .map((chunk) => ({
+      key: /^ {4}key: '([^']+)',$/m.exec(chunk)?.[1] ?? '',
+      label: /^ {4}label: '([^']*)',$/m.exec(chunk)?.[1] ?? '',
+      editable: /^ {4}editor: \{/m.test(chunk),
+    }))
 }
 
 /**
@@ -236,6 +311,73 @@ test('every editor form key is a column of the table it writes', () => {
     `A form key names the column it writes (#261). Rename the key, or if the ` +
       `column genuinely cannot be spelled, say why in EDITOR_FORMS.suffix:\n${found.join('\n')}`,
   )
+})
+
+test("the cell form's derived half is keyed by the cells row", () => {
+  // `CellEdits` is not a type literal anybody can count keys in, so the claim
+  // is made where the keys are decided: one descriptor per column, each named
+  // as the schema names it, and two type lines that make a descriptor for a
+  // column `cells` does not have a compile error rather than a finding here.
+  const fields = appSource(CELL_FIELDS_FILE)
+  const descriptors = cellFieldDescriptors(fields)
+  assert.ok(
+    descriptors,
+    `no \`CELL_FIELDS\` list in ${CELL_FIELDS_FILE}: the cell form's keys come from ` +
+      'that list, so a reader that cannot find it has no subject — not a clean form',
+  )
+  assert.ok(
+    descriptors.length > 8,
+    `only ${descriptors.length} cell field descriptors parsed — the reader is wrong`,
+  )
+  assert.ok(
+    descriptors.some((descriptor) => descriptor.editable),
+    'no descriptor carries an `editor` — the form is derived from the editable ones, ' +
+      'so a list with none is a reader that stopped seeing them',
+  )
+
+  // Every descriptor names a column, editable or not: the list drives the board
+  // select as well as the form, and a key that is not a column would be a
+  // select that fails at runtime rather than a form key nobody can save.
+  const columns = tableColumns(appSource(DATABASE_TYPES)).get('cells')
+  assert.ok(columns, `cells is not in ${DATABASE_TYPES}`)
+  const strays = descriptors
+    .filter((descriptor) => !columns.has(descriptor.key))
+    .map((descriptor) => `${CELL_FIELDS_FILE} CELL_FIELDS.${descriptor.key || '(unparsed)'} — no such column on cells`)
+  assert.deepEqual(
+    strays,
+    [],
+    `A cell field descriptor names something cells does not have:\n${strays.join('\n')}`,
+  )
+
+  // And the derivation itself, which is what excuses the per-key parse. The
+  // first line keys the list against the generated row; the second and third
+  // carry that key through to the form's state.
+  assert.match(fields, /export type CellRow = Database\['public'\]\['Tables'\]\['cells'\]\['Row'\]/)
+  assert.match(fields, /export type CellFieldKey = keyof CellRow & keyof BlueprintCell/)
+  assert.match(fields, /export type CellEditKey = EditableCellField\['key'\]/)
+  assert.match(fields, /export type CellEdits = \{ \[K in CellEditKey\]: CellEditValue<K> \}/)
+})
+
+test('the descriptor reader goes red on a list that has drifted', () => {
+  const planted = [
+    'export const CELL_FIELDS = [',
+    '  {',
+    "    key: 'content',",
+    "    label: 'Content',",
+    "    editor: { control: 'input' },",
+    '  },',
+    '  {',
+    "    key: 'description',",
+    "    label: 'Description',",
+    '  },',
+    '] as const satisfies readonly AnyCellField[]',
+  ].join('\n')
+  assert.deepEqual(cellFieldDescriptors(planted), [
+    { key: 'content', label: 'Content', editable: true },
+    { key: 'description', label: 'Description', editable: false },
+  ])
+  // And a file with no list at all reads as absent rather than as empty.
+  assert.equal(cellFieldDescriptors('export const CELL_FIELDS = []'), null)
 })
 
 test('no column arrives in the app under a name the schema retired', () => {

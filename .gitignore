@@ -33,3 +33,12 @@ dist-ssr
 # The types generators write here first, so a failed run cannot truncate the
 # committed file.
 .database.ts.tmp
+
+# The browser render walk. `render-walk-output/` is everything one run writes —
+# a screenshot per view, plus Playwright's own traces — and CI uploads it whole.
+# `.render-walk-staged/` is the published walk copied out of the installed
+# package on every run, because neither loader will compile a TypeScript file
+# under node_modules; `scripts/render-walk.mjs` says why at length. Both are
+# rewritten from scratch each run and neither is ever authored here.
+render-walk-output
+.render-walk-staged
