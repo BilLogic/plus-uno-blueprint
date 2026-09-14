@@ -212,6 +212,59 @@ direction reversed, and then the fork closed.
 Cite the audit as history. Do not cite "the template scrub" as the thing that
 will handle a coupling.
 
+## The offline board is two fields
+
+A build made with `VITE_SUPABASE_URL` empty still has to draw something, and
+what it draws is `DeploymentConfig.sample` — two fields, both REPLACED rather
+than merged:
+
+| Field | This deployment's | What it is |
+|---|---|---|
+| `sample.nav` | `deployment/data/sampleNav.ts` | the phases and scenarios, hand-authored |
+| `sample.blueprints` | `deployment/data/sampleBlueprints.ts` | the lanes, steps, cells, edges, placements and resources behind them — **generated** |
+
+Because the kit replaces rather than merges, supplying only the nav is worse
+than supplying neither: this deployment's rows land over the template's content
+registry, which is keyed by the template's scenario ids and answers none of
+ours, and every scenario opens an empty canvas. That was this repository's state
+until the board was exported, and it is why `npm run check:render-walk` used to
+announce a skip instead of opening a browser.
+
+The kit generates both halves from a Service Blueprint IR. **This deployment has
+no IR** — its board arrived as an import made elsewhere ([ADR
+0009](../adr/0009-the-migration-series-is-a-narrative.md)) and its cell prose
+lives in the live database and in no file here — so the content half is exported
+from the database instead:
+
+```sh
+npm run export:sample-board    # rewrite deployment/data/sampleBlueprints.ts
+npm run check:sample-board     # …or just ask whether it is still current
+```
+
+It reads through **the public read surface and nothing else**: `VITE_SUPABASE_URL`
+and `VITE_SUPABASE_ANON_KEY`, the same two public values the deployed bundle
+already carries, so CI needs no new secret and a row RLS hides from anon is a
+row the file does not carry. Never edit the file by hand — its header says so,
+and the next export would silently take the edit back.
+
+`check:sample-board` is deliberately not a gate. The database moves whenever
+somebody authors a cell, and a required check that goes red because a colleague
+edited a board is a check people learn to ignore. The honest instrument is this
+freshness note, refreshed when the board is re-exported:
+
+> **Last exported 2026-09-14**: 17 scenarios, 33 paths, 269 lanes, 188 steps,
+> 933 cells, 428 dependencies, 322 touchpoint placements, 600 resources. Every
+> table the shape needs was readable as anon; nothing was withheld. The file is
+> ~1.4 MB and adds ~140 kB gzipped to the bundle, which is the price of a board
+> that renders with no database.
+
+`npm run check:render-walk` is what proves it: it builds with the Supabase
+variables empty, previews the result and drives Chromium over every phase,
+scenario, path and layout, failing on a console error. `scripts/render-walk.mjs`
+keeps a precondition in front of it — if the two halves ever stop sharing an id,
+the walk says so through the `unverified` register rather than failing as though
+the application were broken.
+
 ## What is genuinely this deployment's
 
 "Coupled" no longer means what it meant when this repository held its own copy
@@ -243,6 +296,7 @@ why that is the intent:
 | `scripts/apply_pending_goal_setting_migrations.mjs` — a hardcoded Supabase project ref | Unguarded on purpose. It is this deployment's project; a script naming anyone else's would be the defect |
 | `docs/`, `scripts/` | This repository's own writing and its own checks, including several that reach into the package to hold the docs to the release |
 | `public/touchpoint-logos/` | Stock logos for well-known tools. Unguarded, and nothing about them is this deployment's but the choosing |
+| `deployment/data/sampleBlueprints.ts` — the offline board's content, exported from the live database | `deployment/data/sampleBlueprints.test.ts`, which holds the registry to every scenario `sampleNav.ts` names, and `check:render-walk`, which opens all of it in a browser |
 
 One thing this list does **not** have a guard for: the application coming back.
 `APP_SOURCE_ROOTS` in `scripts/app-source.mjs` prefers a local `src` over the

@@ -85,6 +85,8 @@ frontmatter `summary`, and a doc without one fails the index build.
 | `npm run check:reconciled` | every shared file is still byte-identical to the template's copy |
 | `npm run check:database-types-superset` | `deployment/types/database.ts` describes every column the template's application reads, on every table this project built |
 | `npm run check:live-coverage` | every check that asks the database declares where CI runs it, and no pull-request workflow names a privileged credential ([ADR 0017](docs/adr/0017-a-check-that-cannot-see-its-subject-says-so.md)) |
+| `npm run export:sample-board` | re-export this deployment's board into `deployment/data/sampleBlueprints.ts`, through the public read surface (`check:sample-board` asks whether it is current) |
+| `npm run check:render-walk` | drive a browser over every phase, scenario, path and layout of the board a no-database build serves |
 | `npm run docs:index` | regenerate `INDEX.md` after a doc move |
 | `npm run supabase:start` / `:stop` | local Supabase lifecycle (`:reset` cannot rebuild this schema — [ADR 0009](docs/adr/0009-the-migration-series-is-a-narrative.md)) |
 | `npm run apply:pending -- --from=<version>` | what is written and not applied (add `--apply` to write) |

@@ -92,19 +92,19 @@ jobs:
       #
       # Both halves of the board are config fields since v1.44.10 —
       # `sample.nav` and `sample.blueprints` — and this deployment supplies
-      # both. The content half is EMPTY, because the registry's generator takes
-      # a Service Blueprint IR and this deployment has never had one;
-      # `deployment/data/sampleBlueprints.ts` carries that reason and the
-      # command that fills it. So a no-database build still shows this
-      # deployment's phase and scenario rows over an empty canvas.
-      # `check:render-walk` says so through the `unverified` register and exits
-      # 0 — the skip is announced, not swallowed — which means the self-test
-      # below cannot be asserted: an injected console error cannot fail a walk
-      # that never opened a page.
+      # both. The content half is an EXPORT of its live board, taken through the
+      # public read surface by `npm run export:sample-board` and committed, so a
+      # no-database build draws the real thing and `walks` is true. Nothing here
+      # runs that export and nothing here needs a credential for it: the file is
+      # in the tree by the time this checkout happens.
       #
-      # So the question is asked out loud here instead of being assumed either
-      # way. The moment content for one scenario is registered, `walks` turns
-      # true, the self-test starts running, and nothing in this file changes.
+      # The question is still asked out loud rather than assumed. If the two
+      # halves ever stop sharing an id — a bad export, a nav moved past it —
+      # `check:render-walk` says so through the `unverified` register and exits
+      # 0, the skip announced rather than swallowed, and the self-test below
+      # cannot be asserted: an injected console error cannot fail a walk that
+      # never opened a page. So it is skipped in that case and only in that
+      # case, and nothing in this file has to change either way.
       - name: Is there a board this build serves with no database
         id: board
         run: |

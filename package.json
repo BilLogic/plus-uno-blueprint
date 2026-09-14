@@ -51,6 +51,8 @@
     "check:reconciled": "node scripts/check-reconciled-files.mjs",
     "check:shared-scripts": "node scripts/check-shared-scripts.mjs",
     "check:database-types-superset": "node node_modules/agentic-service-blueprinting/scripts/check-database-types-superset.mjs deployment/types/database.ts",
+    "export:sample-board": "node scripts/export-sample-board.mjs",
+    "check:sample-board": "node scripts/export-sample-board.mjs --check",
     "check:render-walk": "node scripts/render-walk.mjs",
     "check:live-coverage": "node scripts/check-live-coverage.mjs",
     "check:duplicate-meaning": "node scripts/check-duplicate-meaning.mjs",

@@ -21,7 +21,11 @@
  *    a `LaneChip` is the same offence in `deployment/lib` as in the package.
  *    Neither `docs/adr` nor `supabase/migrations` is in the subject, because
  *    both are DATED RECORDS of what was decided and applied on a day, and
- *    rewriting a record is worse than the word it removes. The living docs —
+ *    rewriting a record is worse than the word it removes. Nor is the offline
+ *    board's export, for the same argument one step further: its words are the
+ *    service's own — PLUS really ships escalation chips — it is regenerated
+ *    from the database on every run, and there is no edit that would satisfy
+ *    this check for longer than one export. The living docs —
  *    `docs/guidelines`, `docs/reference` — were swept by hand with this
  *    change and are held by review, not by this file.
  *
@@ -66,6 +70,7 @@ import {
   APP_SOURCE_ROOT,
   appSourceFiles,
   deploymentSourceFiles,
+  isGeneratedDeploymentContent,
 } from '../app-source.mjs'
 
 const ROOT = resolve(new URL('../..', import.meta.url).pathname)
@@ -104,8 +109,17 @@ export function commentsOnly(source) {
   return out.join('')
 }
 
-/** A TypeScript source or a stylesheet, in either root. */
-const IS_DESIGN_SOURCE = (path) => /\.(tsx?|css)$/.test(path)
+/**
+ * A TypeScript source or a stylesheet, in either root — and not a file that is
+ * generated CONTENT rather than code.
+ *
+ * The one such file is the offline board's export, whose thousand cells are the
+ * service's own prose and whose words include "escalation chips", a feature
+ * PLUS really has. `scripts/app-source.mjs` carries why that is outside this
+ * subject rather than an offence to rename.
+ */
+const IS_DESIGN_SOURCE = (path) =>
+  /\.(tsx?|css)$/.test(path) && !isGeneratedDeploymentContent(path)
 
 /**
  * Every TypeScript and stylesheet file in the subject, split into its two
