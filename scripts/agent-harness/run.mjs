@@ -12,19 +12,19 @@
  *
  * One-sourced vs mirrored (be honest about which is which):
  * - ONE-SOURCED: the tool specs and rosters (TOOL_SPECS, WRITE_TOOL_NAMES,
- *   MOBILE_READ_TOOL_NAMES) are IMPORTED from the application's
- *   lib/agent/tools/specs.ts, in the installed package
- *   — rolldown bundles it at startup, so the harness offers byte-identical
- *   declarations to the app's. Likewise role.md, canvas-adapter.md and the
- *   skill files are the SAME FILES the app loads (`?raw` there,
- *   readFileSync here), resolved out of the installed
- *   agentic-service-blueprinting package. No copies, so no drift.
+ *   MOBILE_READ_TOOL_NAMES) come from app-surface.entry.ts beside this file,
+ *   which re-exports the application's spec table and derives the rosters
+ *   from its tool definitions — rolldown bundles that entry at startup, so
+ *   the harness offers byte-identical declarations to the app's. Likewise
+ *   role.md, canvas-adapter.md and the skill files are the SAME FILES the
+ *   app loads (`?raw` there, readFileSync here), resolved out of the
+ *   installed agentic-service-blueprinting package. No copies, so no drift.
  * - MIRRORED BY HAND: the system-prompt ASSEMBLY (buildSystem + the tier /
  *   mobile injections), the Gemini provider glue, the batch limiter and
  *   the round cap follow the application's lib/agent/loop.ts and its
  *   lib/agent/providers/google.ts by copy — edit both sides together. The
- *   tool RESULT texts below are harness-local mocks of registry.ts
- *   behavior, not the real wrappers.
+ *   tool RESULT texts below are harness-local mocks of what the app's tool
+ *   definitions do, not the real wrappers.
  *
  * Usage:
  *   node scripts/agent-harness/run.mjs             # full suite, Gemini
@@ -187,21 +187,48 @@ function buildSystem(skillId, contextNote) {
 // ---------------------------------------------------------------------------
 // Tools — real reads, dry-run writes, per-case mocks
 //
-// The spec DECLARATIONS are one-sourced: specs.ts is deliberately kept
-// node-loadable (its only imports are a type and the leaf referenceNames
-// module) except for being TypeScript, so rolldown — already in the tree
-// via rolldown-vite — bundles it to plain ESM at startup and the harness
-// imports the exact objects the app hands its providers. Only the tool
+// The spec DECLARATIONS are one-sourced: rolldown — already in the tree via
+// rolldown-vite — bundles app-surface.entry.ts, this file's neighbour, at
+// startup, and the harness imports the exact objects the app hands its
+// providers. The entry exists because the declarations are no longer one
+// node-loadable module: every tool is a definition under
+// `lib/agent/tools/definitions/`, `specs.ts` is a projection of that list, and
+// the rosters are derived from it — see the entry's own header. Only the tool
 // IMPLEMENTATIONS below (real reads, dry-run writes, mocks) are
 // harness-local.
 // ---------------------------------------------------------------------------
-async function loadToolSpecs() {
+const APP_SURFACE_ENTRY = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  'app-surface.entry.ts',
+)
+
+/**
+ * Vite's `?raw` import and its asset imports, for the bundler that is not
+ * Vite. A tool definition carries its `run` beside its schema, so the spec
+ * table now reaches the readers and the readers reach the reference documents
+ * the app imports as text; the deployment config beside them names the cover's
+ * figures. Without these, the bundle fails on the first `.md?raw` it meets.
+ */
+const RAW_SUFFIX = '?raw'
+const ASSET = /\.(?:svg|png|jpe?g|gif|webp|woff2?)$/
+const viteImports = {
+  name: 'vite-imports',
+  load(id) {
+    if (id.endsWith(RAW_SUFFIX))
+      return `export default ${JSON.stringify(readFileSync(id.slice(0, -RAW_SUFFIX.length), 'utf8'))}`
+    if (ASSET.test(id)) return `export default ${JSON.stringify(id)}`
+    return null
+  },
+}
+
+async function loadAppSurface() {
   const { rolldown } = await import('rolldown')
   const bundle = await rolldown({
-    input: resolve(APP_SOURCE, 'lib/agent/tools/specs.ts'),
+    input: APP_SURFACE_ENTRY,
     // Honor the `@/*` alias, which points at the application's source — the
     // installed package's, since this deployment has no `src/` of its own.
     resolve: { alias: { '@': APP_SOURCE } },
+    plugins: [viteImports],
     logLevel: 'silent',
   })
   const { output } = await bundle.generate({ format: 'esm' })
@@ -211,7 +238,7 @@ async function loadToolSpecs() {
   )
 }
 const { TOOL_SPECS, WRITE_TOOL_NAMES, MOBILE_READ_TOOL_NAMES, REFERENCE_NAMES } =
-  await loadToolSpecs()
+  await loadAppSurface()
 
 // `ui_command` is interface-only EXCEPT the commands the live list marks
 // "[changes data]" — the app asks the registry (agentUiCommandMutates);
@@ -270,7 +297,7 @@ async function realListBlueprint(args) {
     match_count: Math.min(Number(args.limit) || 200, 500),
     filter_phase: args.phase ?? null,
     filter_scenario: args.scenario ?? null,
-    filter_path_kind: args.path_type ?? null,
+    filter_path_kind: args.kind ?? null,
     filter_lane_role: args.lane_role ?? null,
   })
   return renderPortalRows(rows, 'Nothing at that granularity within those filters.', false)
@@ -283,7 +310,7 @@ async function realSearchBlueprint(args) {
     match_count: Math.min(Number(args.limit) || 15, 100),
     filter_phase: args.phase ?? null,
     filter_scenario: args.scenario ?? null,
-    filter_path_kind: args.path_type ?? null,
+    filter_path_kind: args.kind ?? null,
     filter_lane_role: args.lane_role ?? null,
   })
   return renderPortalRows(
@@ -437,7 +464,7 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       // failed, and retries (observed: doubled create_lane).
       record.result =
         name === 'create_finding'
-          ? `Recorded ${args.severity ?? 'warn'} finding for ${args.check_name ?? '?'}. run_id ${args.run_id ?? `00000000-0000-4000-8000-00000000d${dryCounter}`}; reuse it for the rest of this run. NOTE: this is a rehearsal environment — reads will not show this change; do NOT re-read to verify or retry this write.`
+          ? `Recorded ${args.severity ?? 'warn'} finding for ${args.check_key ?? '?'}. run_id ${args.run_id ?? `00000000-0000-4000-8000-00000000d${dryCounter}`}; reuse it for the rest of this run. NOTE: this is a rehearsal environment — reads will not show this change; do NOT re-read to verify or retry this write.`
           : `Done (${name} accepted, ref dry-${dryCounter}). NOTE: this is a rehearsal environment — reads will not show this change; do NOT re-read to verify or retry this write.`
       return record.result
     }
@@ -445,15 +472,13 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       case 'get_reference':
         record.result = readFileSync(referencePath(String(args.name).replace(/[^a-z-]/g, '')), 'utf8')
         return record.result
+      // `list_blueprint` takes the levels it reads as `granularity`, so the
+      // orientation read the retired `list_scenarios` stood for is this call
+      // with `granularity: ['phase','scenario']` — the model's own argument,
+      // passed through. The alias case that answered the old name is gone with
+      // the tool: a case for a name no definition declares is a rehearsal of
+      // an agent the app does not run.
       case 'list_blueprint': record.result = await realListBlueprint(args); return record.result
-      // The alias the app keeps for a release: `list_blueprint` at the two
-      // orientation levels, same read and same text. Answered by the same
-      // function for that reason — the harness's own pre-rename phases query
-      // is what made it rehearse a different agent than the app runs, so it
-      // is gone rather than kept beside this.
-      case 'list_scenarios':
-        record.result = await realListBlueprint({ ...args, granularity: ['phase', 'scenario'] })
-        return record.result
       case 'search_blueprint': record.result = await realSearchBlueprint(args); return record.result
       case 'get_blueprint': record.result = await realGetBlueprint(args.scenario_id); return record.result
       case 'list_lanes': {
@@ -472,8 +497,9 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
         return record.result
       }
       case 'list_references':
-        // The app's own REFERENCE_NAMES, re-exported from specs.ts and
-        // bundled with the tool declarations — one list, not two.
+        // The app's own REFERENCE_NAMES, re-exported through
+        // app-surface.entry.ts and bundled with the tool declarations — one
+        // list, not two.
         record.result = [...REFERENCE_NAMES]
           .map((name) => `- ${name}`)
           .sort()
