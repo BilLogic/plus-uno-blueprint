@@ -1,14 +1,14 @@
-import type { NavItem } from '@/types/nav'
+import type { NavItem } from 'agentic-service-blueprinting'
 
 /**
  * The board this deployment shows before its own arrives.
  *
- * It lives here rather than in `@/types/nav` because it is a deployment's
- * CONTENT, not part of the navigation model: every repository built on this
- * kit ships a different one, and a module of types and pure helpers that
- * carries one repository's phases cannot be shared with the next. The kit
- * reads it through `DeploymentConfig.sample.nav`, which is what makes it
- * replaceable rather than baked in.
+ * It lives here rather than beside `NavItem` in the package because it is a
+ * deployment's CONTENT, not part of the navigation model: every repository
+ * built on this kit ships a different one, and a module of types and pure
+ * helpers that carries one repository's phases cannot be shared with the
+ * next. The kit reads it through `DeploymentConfig.sample.nav`, which is what
+ * makes it replaceable rather than baked in.
  */
 const PRE_SESSION_ID = 'a0000000-0000-4000-8000-000000000103'
 const IN_SESSION_ID = 'a0000000-0000-4000-8000-000000000104'
