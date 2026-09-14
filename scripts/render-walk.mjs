@@ -48,6 +48,13 @@
  * the environment variables the package's README documents
  * (`RENDER_WALK_PORT`, `RENDER_WALK_INJECT_CONSOLE_ERROR`) all still work.
  *
+ * `RENDER_WALK_PORT` is no longer the way to avoid a collision, though, and
+ * since v1.44.13 it is worth not reaching for: the runner picks a free port
+ * itself and SETS that variable, so two checkouts walking at once take 4173 and
+ * 4174 and neither waits. Naming one pins it, and a pinned port that something
+ * else already holds is refused by name rather than stepped past — which is why
+ * nothing in this repository sets it, in a workflow or anywhere else.
+ *
  * Run: node scripts/render-walk.mjs   (also: npm run check:render-walk)
  */
 import { spawnSync } from 'node:child_process'
