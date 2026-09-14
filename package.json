@@ -50,6 +50,7 @@
     "check:write-surface": "node scripts/check-write-surface.mjs",
     "check:reconciled": "node scripts/check-reconciled-files.mjs",
     "check:shared-scripts": "node scripts/check-shared-scripts.mjs",
+    "check:render-walk": "node scripts/render-walk.mjs",
     "check:live-coverage": "node scripts/check-live-coverage.mjs",
     "check:duplicate-meaning": "node scripts/check-duplicate-meaning.mjs",
     "check:copy": "vitest run scripts/tests/retired-copy.test.mjs",
@@ -83,6 +84,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.62.0",
     "@tailwindcss/vite": "^4.3.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",

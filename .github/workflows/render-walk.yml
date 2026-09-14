@@ -1,0 +1,151 @@
+# The one guard that opens this application in a browser.
+#
+# Every check in `gates` reads a file, a schema or a module graph. This builds
+# the distribution with no database configured, previews it, and drives Chromium
+# over every phase, scenario, path and layout the board offers, failing on a
+# console error or a page error and filing one screenshot per view. The walk is
+# the template's — `render-walk/` inside the pinned package, a published path —
+# and `scripts/render-walk.mjs` is how this repository runs it; that file carries
+# the two reasons it exists, at length.
+#
+# WHY ITS OWN WORKFLOW rather than a step in `gates`. It needs a browser and the
+# system libraries around it, and it is minutes rather than seconds, so putting
+# it in `gates` would make every typo wait for Chromium. Splitting it also means
+# a red walk names itself in the checks table instead of hiding inside a job
+# called typecheck · lint · test · build.
+#
+# `pull_request`, never `pull_request_target`, for the reason `gates.yml` gives:
+# a fork's run gets a read-only token and no secrets, and it checks out
+# untrusted code.
+#
+# NO CREDENTIAL IS NAMED HERE, and that is load-bearing rather than incidental.
+# The walk is over a build made with the Supabase variables explicitly EMPTY:
+# `isSupabaseConfigured()` reads `VITE_SUPABASE_URL` at build time and Vite bakes
+# the value into `dist`, so a build with real values would have the walk
+# measuring somebody's rows instead of a sample board. The walk refuses that run
+# anyway — its first assertion is that the app shows its `sample data` badge —
+# but the intent belongs where a reader sees it.
+name: render-walk
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: render-walk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  render-walk:
+    name: the board renders in a browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The browser, cached on the version that decides where it is looked for.
+      # Playwright resolves its browsers by a build number tied to the package
+      # version, so a key on the runner's OS alone would serve a Chromium the
+      # installed Playwright will not use and the install below would download
+      # another one on every run. The version comes from the LOCK file rather
+      # than package.json: the lock is what `npm ci` installed.
+      - name: The Playwright version this lock file installs
+        run: |
+          echo "PLAYWRIGHT_VERSION=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")" \
+            >> "$GITHUB_ENV"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT_VERSION }}
+      # Chromium only — one engine, because this walk is about whether the app
+      # renders at all, not about engine differences. `--with-deps` is the
+      # system libraries the runner lacks, and it runs apt on every run: the
+      # cache saves the browser DOWNLOAD, not the dependency install.
+      - run: npx playwright install --with-deps chromium
+
+      # NO DATABASE, stated rather than merely left unset. This is the line that
+      # decides which of the two worlds the walk measures, and it is the same
+      # line the template's own job carries.
+      - name: Build the distribution in no-database mode
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ''
+          VITE_SUPABASE_ANON_KEY: ''
+
+      # WHETHER THERE IS A BOARD TO WALK AT ALL, asked once and answered for the
+      # two steps below.
+      #
+      # `sample.nav` is a config field and the blueprint CONTENT behind it is
+      # not, so this deployment's no-database build shows its own phase and
+      # scenario rows over an empty canvas. `check:render-walk` says so through
+      # the `unverified` register and exits 0 — the skip is announced, not
+      # swallowed — which means the self-test below cannot be asserted: an
+      # injected console error cannot fail a walk that never opened a page.
+      #
+      # So the question is asked out loud here instead of being assumed either
+      # way. The moment content for one scenario is registered, `walks` turns
+      # true, the self-test starts running, and nothing in this file changes.
+      - name: Is there a board this build serves with no database
+        id: board
+        run: |
+          set -euo pipefail
+          walks=$(node --input-type=module -e "
+            import { servesASampleBoard } from './scripts/render-walk.mjs'
+            process.stdout.write(servesASampleBoard(process.cwd()) ? 'true' : 'false')
+          ")
+          echo "walks=$walks" >> "$GITHUB_OUTPUT"
+          echo "the build serves a board with no database: $walks"
+
+      # The guard, watched failing, BEFORE it is trusted. A walk that reports no
+      # console errors looks identical whether the app is clean or the listener
+      # was never wired up — so one error is injected into every page and a zero
+      # exit is the failure.
+      - name: A console error fails the walk
+        if: steps.board.outputs.walks == 'true'
+        run: |
+          set -euo pipefail
+          if RENDER_WALK_INJECT_CONSOLE_ERROR=1 npm run check:render-walk; then
+            echo "FAIL: an injected console error did not fail the walk" >&2
+            exit 1
+          fi
+          echo "ok: the walk refused a page that logged an error"
+
+      # The walk itself. It runs unconditionally, because the skip is a
+      # statement this job is supposed to carry: a run that prints what it could
+      # not verify is the point of the `unverified` register, and gating this
+      # step on the answer above would hide the sentence the register exists to
+      # show.
+      - name: Walk every view of the board, and drag an annotation
+        run: npm run check:render-walk
+
+      # One screenshot per view, kept whichever way the walk went. The failures
+      # this job CANNOT assert — a chip that lost its tint, a colour that is
+      # wrong rather than absent — are read off these by a person, so they are
+      # the deliverable of a green run as much as of a red one. `if: always()`
+      # because a red walk is when they are read most, and it uploads whatever
+      # the runs left behind, a failing run's trace included.
+      #
+      # `warn` rather than `error`: `if: always()` also runs this after a failed
+      # build, and after a run that skipped, neither of which produces an output
+      # directory at all. `error` there turns one real failure into two red
+      # steps and points the reader at the upload rather than at the cause.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: render-walk-screenshots
+          path: render-walk-output/**
+          if-no-files-found: warn
