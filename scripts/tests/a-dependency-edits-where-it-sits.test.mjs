@@ -230,6 +230,29 @@ function codeOf(source) {
   return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
 }
 
+/**
+ * Where the application defines the cell tools.
+ *
+ * One module per tool family under `definitions/`, each tool a call to
+ * `defineWriteTool`/`defineReadTool` with its name, its zod `args` and its
+ * `run`. `create_cell_dependency` is a cell tool, so it is here.
+ */
+const CELL_TOOLS = 'lib/agent/tools/definitions/cells.ts'
+
+/**
+ * The `create_cell_dependency` definition, and nothing else.
+ *
+ * Found by the name the model calls — which is the tool's identity and the
+ * one thing a rename of the surrounding constant cannot move — and taken to
+ * the end of the definition, the first `})` at the start of a line. Empty
+ * when the name is not there at all, which the caller asserts against rather
+ * than parsing on.
+ */
+export function cellDependencyDefinition(source) {
+  const match = source.match(/name: 'create_cell_dependency',[\s\S]*?\n\}\)/)
+  return match ? match[0] : ''
+}
+
 /** Every `setCellDependency(client, { … })` argument object in `source`. */
 export function setCellDependencyArguments(source) {
   return [...source.matchAll(/setCellDependency\(\s*client,\s*\{([\s\S]*?)\n\s*\}\)/g)].map(
@@ -290,17 +313,38 @@ test('neither the editor nor the agent tool writes name any more', () => {
     'a call site still supplies the retired column',
   )
 
-  const registry = appSource('lib/agent/tools/registry.ts')
-  const call = registry.match(/case 'create_cell_dependency': \{[\s\S]*?\n      \}/)?.[0] ?? ''
-  assert.notEqual(call, '', 'create_cell_dependency is gone from the registry')
-  assert.match(call, /note: s\(args, 'label'\) \?\? null/)
-  assert.doesNotMatch(call, /name: s\(args, 'label'\)/)
+  // THE AGENT TOOL IS ONE DEFINITION MODULE, not a branch of a switch. It was
+  // a `case 'create_cell_dependency':` in `registry.ts`, which built the
+  // wrapper's argument object out of the raw call — `note: s(args, 'label')`.
+  // The application now writes each tool as a definition carrying its own
+  // name, arguments and `run`, so the mapping from the published argument to
+  // the column happens inside that `run` and `registry.ts` is a lookup with no
+  // argument objects in it at all. Reading the registry would read a file that
+  // no longer mentions this tool — the same green-over-nothing this file's
+  // other readers refuse — so the subject is the definition, found by the name
+  // the model calls rather than by the shape of the dispatch around it.
+  const definition = cellDependencyDefinition(appSource(CELL_TOOLS))
+  assert.notEqual(
+    definition,
+    '',
+    `create_cell_dependency is not defined in ${CELL_TOOLS}: the tool the ` +
+      'migration exists for has no definition, which is this half of the check ' +
+      'with no subject rather than a tool that stopped writing the column',
+  )
+  // The wrapper is handed the NOTE, and the published argument is what feeds it.
+  assert.match(definition, /note: label \?\? null/)
+  assert.doesNotMatch(definition, /name: label/)
 
-  // The argument itself does NOT move: `specs.ts` is a pinned cross-repo
-  // contract and renaming an argument there without an upstream release is a
-  // skill telling a model to send something this app rejects.
-  assert.match(appSource('lib/agent/tools/specs.ts'), /label: str\(/)
+  // The argument itself does NOT move: the tool's own `args` are a pinned
+  // cross-repo contract, and renaming an argument there without an upstream
+  // release is a skill telling a model to send something this app rejects.
+  assert.match(definition, /label: arg\.optionalText\(/)
 
-  // Red.
-  assert.match(call.replace("note: s(args, 'label')", "name: s(args, 'label')"), /name: s\(args, 'label'\)/)
+  // Red, both ways: a reinstated write of the column, and a definition the
+  // reader failed to find.
+  assert.match(definition.replace('note: label ?? null', 'name: label ?? null'), /name: label/)
+  assert.equal(
+    cellDependencyDefinition(appSource(CELL_TOOLS).replace("name: 'create_cell_dependency',", '')),
+    '',
+  )
 })
