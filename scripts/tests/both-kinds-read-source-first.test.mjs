@@ -87,6 +87,11 @@ const TEACHING_SURFACES = [
  */
 const TARGET_FIRST = [
   /the target must already be true/i,
+  // The same inversion spelled for a READ tool, where the sentence is about
+  // "this cell" and so calls the far end "the other". The template's
+  // `list_cell_dependencies` shipped that wording past the matcher above, and
+  // the pattern was widened at the source; this copy takes the widening.
+  /the other must already be true/i,
   /target\s+must\s+exist\s+(?:first|before)/i,
   /enables[^.]{0,40}\btarget\s+enables\s+(?:the\s+)?source/i,
 ]
@@ -151,6 +156,13 @@ test('the matcher catches the sentence that shipped, and clears the fix', () => 
 
   assert.equal(offendingLines('x', shipped, TARGET_FIRST[0]).length, 1)
   assert.equal(offendingLines('x', fixed, TARGET_FIRST[0]).length, 0)
+
+  // The read tool's spelling of the same claim, which the first pattern does
+  // not see and the widened one does.
+  const listShipped =
+    '`leads_to` means this cell makes the other one happen; `enables` means the other must already be true'
+  assert.equal(offendingLines('x', listShipped, TARGET_FIRST[0]).length, 0)
+  assert.equal(offendingLines('x', listShipped, TARGET_FIRST[1]).length, 1)
 
   // And it is not a sweep for the word "target": the correct sentence uses it.
   assert.equal(

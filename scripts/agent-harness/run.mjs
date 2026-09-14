@@ -37,7 +37,26 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { viteImportsPlugin } from 'agentic-service-blueprinting/vite-imports'
 import { CASES } from './cases.mjs'
+
+/**
+ * VITE'S TEXT AND ASSET IMPORTS, TAKEN FROM THE PACKAGE RATHER THAN KEPT HERE.
+ *
+ * A tool definition carries its `run` beside its schema, so the spec table
+ * reaches the readers and the readers reach the eighteen reference documents
+ * the app imports as text; the deployment config beside them names the cover's
+ * figures. Without a loader for those two import forms the bundle below stops
+ * on the first `.md?raw` it meets.
+ *
+ * This harness used to answer that with ten lines of its own — the failure the
+ * template published `scripts/vite-imports.mjs` for in v1.44.10, and named this
+ * deployment as the reporter of. A copy of a loader is a copy that drifts from
+ * what the application actually imports, and the application's import forms are
+ * the package's to change. So the loader is now the package's, imported by
+ * package name through its `./vite-imports` subpath, which is the same module
+ * the template's own harness runs.
+ */
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 
@@ -202,25 +221,6 @@ const APP_SURFACE_ENTRY = resolve(
   'app-surface.entry.ts',
 )
 
-/**
- * Vite's `?raw` import and its asset imports, for the bundler that is not
- * Vite. A tool definition carries its `run` beside its schema, so the spec
- * table now reaches the readers and the readers reach the reference documents
- * the app imports as text; the deployment config beside them names the cover's
- * figures. Without these, the bundle fails on the first `.md?raw` it meets.
- */
-const RAW_SUFFIX = '?raw'
-const ASSET = /\.(?:svg|png|jpe?g|gif|webp|woff2?)$/
-const viteImports = {
-  name: 'vite-imports',
-  load(id) {
-    if (id.endsWith(RAW_SUFFIX))
-      return `export default ${JSON.stringify(readFileSync(id.slice(0, -RAW_SUFFIX.length), 'utf8'))}`
-    if (ASSET.test(id)) return `export default ${JSON.stringify(id)}`
-    return null
-  },
-}
-
 async function loadAppSurface() {
   const { rolldown } = await import('rolldown')
   const bundle = await rolldown({
@@ -228,7 +228,7 @@ async function loadAppSurface() {
     // Honor the `@/*` alias, which points at the application's source — the
     // installed package's, since this deployment has no `src/` of its own.
     resolve: { alias: { '@': APP_SOURCE } },
-    plugins: [viteImports],
+    plugins: [viteImportsPlugin()],
     logLevel: 'silent',
   })
   const { output } = await bundle.generate({ format: 'esm' })

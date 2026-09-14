@@ -9,7 +9,8 @@
  * `brand` names the product and the colour it is branded on. `cover` is the
  * landing page, whole: replaced, never merged, because a merged cover is a
  * cover half of which describes a service the reader is not looking at.
- * `sample.nav` is the board shown before a database answers. `cellBudget` is
+ * `sample.nav` and `sample.blueprints` are the two halves of the board
+ * shown before a database answers. `cellBudget` is
  * read by the length guidance a person sees under the Content field and the
  * agent receives in its tool result, so both name the same thresholds.
  * `pathColorPins` hand-picks slots for the paths this board draws side by side,
@@ -22,6 +23,7 @@ import type { DeploymentConfig } from 'agentic-service-blueprinting'
 import blueprintAccount from '../docs/agents/blueprint.md?raw'
 import canvasAdapter from '~/agent/canvas-adapter.md?raw'
 import { coverContent } from './content/coverContent'
+import { SAMPLE_BLUEPRINTS } from './data/sampleBlueprints'
 import { SAMPLE_NAV } from './data/sampleNav'
 
 export const unoDeploymentConfig: DeploymentConfig = {
@@ -49,7 +51,15 @@ export const unoDeploymentConfig: DeploymentConfig = {
     accent: '#85ECD5',
   },
   cover: coverContent,
-  sample: { nav: SAMPLE_NAV },
+  /**
+   * Both halves of the offline board, because the kit replaces each rather
+   * than merging it: the nav alone would draw this deployment's rows over the
+   * template's content registry, which is keyed by the template's scenario ids
+   * and answers none of ours. `SAMPLE_BLUEPRINTS` is empty for now and says
+   * why in its own header — the registry's generator takes an IR and this
+   * deployment has never had one.
+   */
+  sample: { nav: SAMPLE_NAV, blueprints: SAMPLE_BLUEPRINTS },
   cellBudget: {
     prose: { target: 80, warning: 100 },
     touchpointLabels: { target: 32, warning: 48 },
