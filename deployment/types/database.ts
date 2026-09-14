@@ -84,13 +84,14 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * it had — or stops compiling. Nothing else in this file is hand-written; if a
  * fourth layer appears, it belongs in this list or it does not belong at all.
  *
- * ONE THING THE GENERATOR EMITS AND THIS FILE HAS NEVER CARRIED: the trailing
+ * ONE THING THE GENERATOR EMITS AND THIS FILE DOES NOT KEEP: the trailing
  * helper block — `Tables<>`, `TablesInsert<>`, `TablesUpdate<>`, `Enums<>`,
- * `CompositeTypes<>` and `Constants`. Those helpers exist to be imported at a
- * call site and this file has no importers at all, which is the whole point of
- * it. Dropping them is not a fourth layer, because nothing is re-applied — but
- * leaving it unsaid would make the next regeneration look like a hundred lines
- * of drift. Drop it again.
+ * `CompositeTypes<>` and `Constants`. This file's lineage carried it once
+ * (`dad47c08`) and lost it at `b2e92a99`; it has not been back since. Those
+ * helpers exist to be imported at a call site and this file has no importers
+ * at all, which is the whole point of it. Dropping them is not a fourth layer,
+ * because nothing is re-applied — but leaving it unsaid would make the next
+ * regeneration look like a hundred lines of drift. Drop it again.
  *
  * Regenerate after schema changes through the Supabase connector's type
  * generator, as above. The two npm scripts that used to be offered here,
@@ -101,33 +102,29 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * `scripts/check-database-names.mjs` rests its argument on this file arriving
  * by machine. As of this change it does again.
  *
- * ONE ARRIVAL IN THIS REGENERATION, and no edits since it.
+ * WHAT THIS GENERATION HOLDS THAT THE LAST ONE DID NOT:
+ * `set_cell_featured_image(cell_id, image_url)` (20260913150000), the entry
+ * that takes the `Functions` map to fifty. It is the single disagreement that
+ * took the scheduled `live-schema` job red — the database held it and this
+ * file did not name it. It arrived in the generation like the other
+ * forty-nine, so it is not drift and does not belong in the list below.
  *
- *  - `set_cell_featured_image(cell_id, image_url)` (20260913150000) — the
- *    fiftieth entry in the `Functions` map, and the single disagreement that
- *    took the scheduled `live-schema` job red. The database held it and this
- *    file did not name it.
+ * DRIFT SINCE THIS GENERATION: nothing.
  *
- * The five edits the paragraph here used to list — `update_cell_dependency`,
- * `restore_cell_dependency` and `restore_cell_content`, `slides.caption`,
- * `slides.shows_all_images` with the `slide_images` table,
- * `stakeholders.part_of_id` and `agent_sessions.created_by` — came back out of
- * the generator unchanged on this run. They were hand-written ahead of it for
- * the reason such edits always are, and the reason is worth keeping even with
- * the list emptied: a migration in this repository's own series applies to
- * production before the code that reads it is merged, so this file has to
- * describe the schema on the far side of an apply that may not have happened
- * yet, and a generator cannot be run against a database that has not been
- * changed. Such an edit is never a fourth layer and is never re-applied — the
- * next regeneration emits it, and the entry goes with the run that proves it,
- * which is what has just happened to all five.
+ * That line is a list because a migration in this repository's own series
+ * applies to production before the code that reads it is merged, so this file
+ * sometimes has to describe the schema on the far side of an apply that may
+ * not have happened yet, and a generator cannot be run against a database that
+ * has not been changed. Such an edit is never a fourth layer and is never
+ * re-applied: the next regeneration emits it, and its entry goes with the run
+ * that proves it. This run did that to the five the list last held.
  *
- * KEEP THE LIST WHOLE, AND THE COUNT WITH IT. This is the only statement of
- * how far the file has travelled from its last generated state, so an edit
- * left out of it is invisible — which is exactly what happened twice: three
- * functions and two renames landed here while the paragraph went on saying
- * two. The list is empty of edits today; the next one to be written ahead of
- * its apply belongs in it the moment it is written.
+ * KEEP THE LIST WHOLE, AND THE COUNT WITH IT. That one line is the only
+ * statement of how far the file has travelled from its last generated state,
+ * so an edit left out of it is invisible — which is exactly what happened
+ * twice: three functions and two renames landed here while the paragraph went
+ * on saying two. It says nothing today; the next edit written ahead of its
+ * apply replaces that nothing the moment it is written.
  */
 
 export type Json =
