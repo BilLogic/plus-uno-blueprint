@@ -28,7 +28,7 @@ working account: how the arrangement behaves day to day.
 Through `package.json`:
 
 ```json
-"agentic-service-blueprinting": "github:BilLogic/agentic-service-blueprinting#v1.43.1"
+"agentic-service-blueprinting": "github:BilLogic/agentic-service-blueprinting#v1.44.9"
 ```
 
 A tag, never a branch, so a deployment always knows exactly which code it is
@@ -100,7 +100,7 @@ than failing. Four shapes, and each has one honest remedy:
 The one rule under all four: **upstream first, never sideways.** A change that
 lands only here cannot be released to anyone, and the next bump reverts it.
 
-## The fifteen files that are still two copies
+## The files that are still two copies
 
 Some files exist in both repositories because both need them on disk: the build
 cannot import its own configuration from a dependency it has not resolved yet,
@@ -136,11 +136,14 @@ shared files whose code already matches and whose comments do not, separating
 the ones a citation rules out at any wording from the ones that are genuinely a
 wording apart.
 
-Matching bytes is not on its own a reason to enrol. Seven paths here are already
-byte-identical to the template's copy and stay off the list — six because they
-cite a `docs/` path, one because it is this deployment's branding.
-`scripts/reconciled-files.mjs` argues each of them, and that is the place to
-read before proposing any of the seven again.
+Matching bytes is not on its own a reason to enrol. `public/favicon.svg` is
+byte-identical to the template's copy and stays off the list, because branding
+is the next thing this deployment has cause to diverge on and enrolling the icon
+would route that change through the template. Six paths that used to sit beside
+it are enrolled now — each cited a `docs/` path, and the template took the
+address out of both copies rather than either of us keeping a dead pointer.
+`scripts/reconciled-files.mjs` argues the one that stays off, and that is the
+place to read before proposing it again.
 
 ## What the retired machinery was for
 
@@ -156,8 +159,8 @@ mechanical step rather than a leap. 507 of those files then left this
 repository, and for them drift is no longer prevented — it is impossible, one
 copy. The list did not shrink because enrolments were withdrawn; it shrank
 because their subject was gone, which is what the enrolments were working
-toward. The fifteen that remain are the ones the flip could not dissolve, and
-the gate stayed with them.
+toward. The ones that remain are the ones the flip could
+not dissolve, and the gate stayed with them.
 
 **The template-quarantine guard** (`scripts/template-quarantine.json`, and the
 check that read it) inspected merge commits. Until the flip, upstream code arrived by
@@ -211,17 +214,35 @@ will handle a coupling.
 
 ## What is genuinely this deployment's
 
-Not a defect list any more — this is the layer, and it is supposed to be
-specific:
+"Coupled" no longer means what it meant when this repository held its own copy
+of the application. Since the import and the scripts' convergence there is no
+`src/` here at all: the application is read out of
+`node_modules/agentic-service-blueprinting`, this deployment's own modules live
+under `deployment/`, and the only place the two trees can still drift is the
+files both have to keep on disk. That drift is measured, never listed:
 
-| | |
+```sh
+npm run check:reconciled      # every shared file against the pinned template's bytes
+npm run check:shared-scripts  # every script the release publishes, held here and enrolled
+```
+
+Run them; do not quote them. What the last run showed, 2026-09-14 against
+`v1.44.9`: 22 reconciled files byte-identical, 11 published scripts all held
+here and enrolled, one repo-local import enrolled nowhere, nothing drifted.
+
+What is left that is genuinely this deployment's is identity and data, not
+application code. Each line says what guards it, or says that nothing does and
+why that is the intent:
+
+| What | Guard |
 |---|---|
-| `supabase/` | 884 migrations, the seeds and the project settings for one real database. The package ships a dummy backend. |
-| `deployment/` | The `DeploymentConfig`, the bootstrap, the cover content, the brand dials, `types/database.ts`, the canvas adapter, the uno-bot contract. |
-| `docs/`, `scripts/` | This repository's own writing and its own checks, including several that reach into the package to hold the docs to the release. |
-| `public/touchpoint-logos/` | Stock logos for well-known tools. |
-| `package.json` | `"name": "plus-service-hub"`. |
-| `scripts/apply_pending_goal_setting_migrations.mjs` | A hardcoded Supabase project ref — this deployment's, by design. |
+| `deployment/` — the `DeploymentConfig`, the bootstrap, the cover content, the brand dials, `types/database.ts`, the canvas adapter, the uno-bot contract | `deployment/deployment.test.ts`, which asserts the wordmark is `PLUS`: the template's `ORG_NAME` is the template's own name now, and would otherwise reach this deployment's chrome |
+| `supabase/` — the migrations, the seeds and the settings of one real database, where the package ships a dummy backend | `check:migration-syntax`, `check:database-names`, and `check:contract:live` against the database it actually has |
+| `package.json` — `"name": "plus-service-hub"`, and the pin | Unguarded on purpose. The name is what npm calls this deployment, and the pin is the whole subject of a bump rather than something to hold still |
+| `index.html` — `<title>PLUS</title>` — and `public/favicon.svg` beside it | Unguarded on purpose, and deliberately unenrolled: branding is the one change that must not route through the template |
+| `scripts/apply_pending_goal_setting_migrations.mjs` — a hardcoded Supabase project ref | Unguarded on purpose. It is this deployment's project; a script naming anyone else's would be the defect |
+| `docs/`, `scripts/` | This repository's own writing and its own checks, including several that reach into the package to hold the docs to the release |
+| `public/touchpoint-logos/` | Stock logos for well-known tools. Unguarded, and nothing about them is this deployment's but the choosing |
 
 One thing this list does **not** have a guard for: the application coming back.
 `APP_SOURCE_ROOTS` in `scripts/app-source.mjs` prefers a local `src` over the
