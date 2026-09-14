@@ -151,35 +151,49 @@ The contract:
   the tools.
 
 **The adapter is the one reference this instance overrides** (#115).
-`src/lib/agent/canvas-adapter.md` replaces the package's
-`references/canvas-adapter.md`; `loop.ts`, `read.ts` and the eval harness
-all resolve the override, and the package's copy reaches nothing. It is
-not a vendored fork — everything but the surface rows and the dependency
-vocabulary is upstream's text, kept structurally identical so the next pin
-bump diffs cleanly.
+`deployment/agent/canvas-adapter.md` replaces the package's
+`references/canvas-adapter.md`. It reaches the application as
+configuration — `agent.references['canvas-adapter']` in
+`deployment/deployment.ts` — and the reference loader lays it over the
+template's per name, so `loop.ts`, `get_reference` and the eval harness all
+read one document and the package's copy reaches nothing. It is not a
+vendored fork: everything but the dependency vocabulary and the
+supersession block is upstream's text, kept structurally identical so the
+next pin bump diffs cleanly.
 
-Why an override rather than a convergence: the adapter's two rows
-ENUMERATE TOOL NAMES and call each "the FULL surface", so a rulebook
-shared by two installations with different registries is wrong for at
-least one of them. The pinned copy named twelve tools this app lacks
-(`read_reference`, `list_scenarios`, `get_compare_diff`,
-`get_deletion_impact`, `record_finding`, `set_finding_status`, `add_step`,
-`add_lane`, `rename_path`, `set_cell_dependency`, `update_cell_content`,
-`update_cell_spec`) and omitted thirty-three it has, and said
-"trigger-vs-needs semantics" where this constraint is
+Why an override rather than a convergence: the adapter's two rows call each
+surface "the FULL surface", and the agent reads that as permission, so a
+rulebook shared by two installations with different registries is wrong for
+at least one of them. The pinned copy once named twelve tools this app
+lacked and omitted thirty-three it had, and said "trigger-vs-needs
+semantics" where this constraint is
 `check (kind in ('leads_to','enables'))` (migration
 `20260820180000_sets_off_becomes_leads_to.sql`).
 
+NEITHER HALF OF THAT ARGUMENT SURVIVES, and the override does. This app IS
+the package's registry now, so the two cannot disagree about which tools
+exist; and the two rows no longer enumerate anything — they are the
+placeholders `{{write_tools}}` and `{{read_tools}}`, filled from the roster
+of the session the document is served to, so what a row states is what that
+session can call. The drift class that produced #115 is closed by
+construction rather than by a check.
+
+What still keeps the override is what this DATABASE has: the
+`cell_dependencies.kind` pair its CHECK constraint enforces, the `position`
+column, `measure_deletion_impact`, and ranked search, which the package
+ships switched off.
+
 `npm run check:write-surface` (`scripts/check-write-surface.mjs`, in
-`gates`) is what keeps that true: the two rows against `WRITE_TOOL_NAMES`
-and `READ_TOOL_NAMES` in both directions, the enum against the live
-constraint, and — the assertion the rest depend on — that `loop.ts` still
-serves the override. Five INSTALLED references still teach the
-`trigger`/`needs` pair this database retired in `20260820110000`, and cannot
-be edited from here, so the override
-names them in a "Superseded package references" block and the check holds
-that list to what the package actually says, both ways. Do not fix any of
-this by re-vendoring the package.
+`gates`) is what keeps that true: both rows held to the placeholders rather
+than to a list — a hand-written tool name inside either row fails, because
+it is a second statement of the roster — the enum against the live
+constraint, and, the assertion the rest depend on, that `loop.ts` still
+splices the document the loader serves and that the loader still prefers
+this deployment's copy. No installed reference teaches the `trigger`/`needs`
+pair this database retired in `20260820110000` any more, so the override's
+"Superseded package references" block is empty; the check holds that list to
+what the package actually says, both ways, so a pin bump that reintroduces
+one fails here. Do not fix any of this by re-vendoring the package.
 
 Known follow-ups for the whole agent subsystem are tracked in
 `todos/021-pending-p2-agent-harness-review-followups.md`.

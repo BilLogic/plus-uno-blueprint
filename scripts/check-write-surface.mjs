@@ -10,50 +10,55 @@
  *
  *   1. THE WIRING — and this is the assertion that matters most.
  *      `src/lib/agent/loop.ts` splices the adapter's FULL text — read from
- *      the loader's record, not imported again — into every
- *      system prompt on every turn, and
- *      `src/deployment.ts` — the module `main.tsx` imports before the app,
- *      which registers this deployment's reference documents with the
- *      template's loader — serves it under the bare name `canvas-adapter`,
- *      replacing the template's copy. Both must resolve
- *      `src/lib/agent/canvas-adapter.md` and NOT
+ *      the loader's record, not imported again — into every system prompt on
+ *      every turn, and `deployment/deployment.ts` supplies it on
+ *      `agent.references['canvas-adapter']`, which the application's
+ *      reference loader lays over the template's per name. Both must resolve
+ *      `deployment/agent/canvas-adapter.md` and NOT
  *      `agentic-service-blueprinting/references/canvas-adapter.md`.
- *      Without this check the other three still pass while the app serves
+ *      Without this check the others still pass while the app serves
  *      the package's rulebook again: `npm update`, a pin bump, a merge
- *      that reverts one import line — the rows below would be audited,
+ *      that reverts one import line — the document below would be audited,
  *      correct, and unread.
  *
- *   2. THE WRITE ROW. The override names the write tools and then says
- *      "That is the FULL write surface; nothing else writes". The agent
- *      reads that sentence as permission: a tool missing from the list is
- *      a tool it believes it cannot call. `WRITE_TOOL_NAMES` in
- *      `src/lib/agent/tools/specs.ts` is the source of truth — the loop
- *      gates batch etiquette and the viewer refusal on it.
+ *   2. THE TWO SURFACE ROWS ARE RENDERED, NOT WRITTEN OUT. This used to be
+ *      two subjects and a list comparison: the override named the write tools
+ *      and then said "That is the FULL write surface; nothing else writes",
+ *      the read row did the same, and this check held both against
+ *      `WRITE_TOOL_NAMES` / `READ_TOOL_NAMES` in the application's `specs.ts`.
+ *      The agent reads those sentences as permission — a tool missing from
+ *      the list is one it believes it cannot call — so the lists had to agree
+ *      with the rosters, and two prose statements of one fact is what made
+ *      that a check rather than a convention.
  *
- *   3. THE READ ROW, the same way, against `READ_TOOL_NAMES`. Note that
- *      the read surface is NOT the complement of the write surface: the
- *      complement sweeps in `focus_cell`, `set_sidebar` and the rest of
- *      `INTERFACE_TOOL_NAMES`, which the read row's own sentence excludes
- *      ("none of them move the user's canvas"). specs.ts carries the
- *      classification and its reasoning.
+ *      The application withdrew the second statement. A served adapter's
+ *      surface rows are now PLACEHOLDERS, filled from the roster of the
+ *      session it is served to, so the rows cannot disagree with what that
+ *      session can call — and a deployment that narrows its roster narrows
+ *      its adapter with it, which no hand-written list could do. What is left
+ *      to check is that this override still carries the placeholders and has
+ *      not grown a list of its own back: a hand-written tool name inside
+ *      either row is the old defect returning, and a placeholder the
+ *      application has renamed is a row that reaches the model with `{{`
+ *      still in it. Both are read out of the application's own
+ *      `tools/references.ts`, so the names cannot drift apart.
  *
- *   4. THE DEPENDENCY VOCABULARY. `cell_dependencies.kind` accepts
- *      `leads_to` and `enables` here; the pinned package still teaches
- *      `trigger` / `needs`, an enum this database refuses. The override
- *      must state the enforced pair, and must not carry a retired
- *      spelling. An INSTALLED reference that does cannot be edited from
- *      this repository, so the override names it; this holds that list to
- *      what the installed package actually says, in both directions —
- *      the empty list included, once the package agrees (asb v1.0.0 did).
- *      See SUPERSESSION below. "What the installed package says" is only a
- *      fact while the installed package is the pinned one, so the run
- *      refuses first on an install behind the pin (#510).
+ *   3. THE DEPENDENCY VOCABULARY. `cell_dependencies.kind` accepts
+ *      `leads_to` and `enables` here. The override must state the enforced
+ *      pair, and must not carry a retired spelling — `trigger` / `needs` is
+ *      an enum this database refuses. An INSTALLED reference that teaches one
+ *      cannot be edited from this repository, so the override names it; this
+ *      holds that list to what the installed package actually says, in both
+ *      directions — the empty list included, which is where the pinned
+ *      package now is. See SUPERSESSION below. "What the installed package
+ *      says" is only a fact while the installed package is the pinned one, so
+ *      the run refuses first on an install behind the pin.
  *
  * Deliberately text-parsed, like upstream and like
- * `scripts/tests/toolParity.test.mjs`: specs.ts is TypeScript behind a
- * path alias, loop.ts imports supabase-js and referenceDocs.ts imports Vite
- * `?raw` markdown, and a check that needs a build step is a check that gets
- * skipped.
+ * `scripts/tests/toolParity.test.mjs`: the application's modules are
+ * TypeScript behind a path alias, `loop.ts` imports supabase-js and
+ * `deployment.ts` imports Vite `?raw` markdown, and a check that needs a
+ * build step is a check that gets skipped.
  *
  * Static, needs no database, runs in `gates`.
  *
@@ -76,21 +81,33 @@ const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url))
  * agent's vocabulary is still being built. Both moved into `deployment/` with
  * the rest of this repository's own code.
  *
- * `SPECS`, `LOOP`, `DOCS` and `VENDORED` are the APPLICATION's, and are read
- * out of the package. The check is more useful for the split, not less: it now
- * asserts that this deployment's override actually reaches the prompt of an
- * application it does not control, which is the wiring most likely to come
- * apart at a pin bump and the least likely to be noticed when it does — a
+ * `LOOP`, `REFERENCES`, `DOCS` and `VENDORED` are the APPLICATION's, and are
+ * read out of the package. The check is more useful for the split, not less:
+ * it now asserts that this deployment's override actually reaches the prompt
+ * of an application it does not control, which is the wiring most likely to
+ * come apart at a pin bump and the least likely to be noticed when it does — a
  * loop that stopped splicing the loader's record would serve the template's
  * rulebook with nothing on screen to say so.
  */
 const APP = 'node_modules/agentic-service-blueprinting/src'
 const ADAPTER = 'deployment/agent/canvas-adapter.md'
-const SPECS = `${APP}/lib/agent/tools/specs.ts`
 const LOOP = `${APP}/lib/agent/loop.ts`
 const DOCS = `${APP}/lib/agent/tools/referenceDocs.ts`
-/** Where this deployment registers its reference documents, adapter included. */
-const REGISTRATION = 'deployment/bootstrap.ts'
+/** The loader that lays a deployment's documents over the template's. */
+const REFERENCES = `${APP}/lib/agent/tools/references.ts`
+/** One module per group of tool definitions — where a write declares itself. */
+const DEFINITIONS = `${APP}/lib/agent/tools/definitions`
+/**
+ * Where this deployment supplies its reference documents, adapter included.
+ *
+ * It used to be `deployment/bootstrap.ts`, and the move is the release's, not
+ * a tidy-up: the application built its reference vocabulary at module scope,
+ * so a document handed over any later than the pre-import bootstrap would have
+ * been served by a tool that never mentioned it. It reads its references when
+ * a document is SERVED now, so the ordering rule is gone and the documents are
+ * ordinary configuration.
+ */
+const REGISTRATION = 'deployment/deployment.ts'
 /** The template's vendored skill references, which its loader imports. */
 const VENDORED = `${APP}/lib/agent/skill`
 const HARNESS = 'scripts/agent-harness/run.mjs'
@@ -141,19 +158,21 @@ export function adapterImport(source, { specifier }) {
  *
  * The app modules import by alias; the harness runs under Node and reads the
  * repo-relative path with `readFileSync`, so it is matched as a path string.
+ * `config` is this deployment's `DeploymentConfig` module, `references` the
+ * application's loader.
  */
-export function wiringFaults({ loop, docs, harness }) {
+export function wiringFaults({ loop, config, references, harness }) {
   const faults = []
 
   // The prompt reads the LOADER's record rather than importing a copy of its
-  // own. That is stricter than the import this used to require: the loader
-  // serves whatever `deployment.ts` registered, so `get_reference` and the
-  // prompt cannot disagree about what the adapter says. A second `?raw`
-  // import here is how they came apart before — the tool served the
-  // replacement while the prompt carried the template's.
-  if (!/buildSystem[\s\S]*?REFERENCE_DOCS\['canvas-adapter'\]/.test(loop)) {
+  // own, and reads it through the same call `get_reference` makes, against the
+  // same roster — so the two cannot disagree about what the adapter says OR
+  // about which tools its surface rows name. A second `?raw` import here is
+  // how they came apart before: the tool served the replacement while the
+  // prompt carried the template's.
+  if (!/buildSystem[\s\S]*?readReference\('canvas-adapter',\s*roster\)/.test(loop)) {
     faults.push({
-      problem: `${LOOP}'s buildSystem does not splice REFERENCE_DOCS['canvas-adapter'] — the prompt must carry the document the loader serves, not a second copy`,
+      problem: `${LOOP}'s buildSystem does not splice readReference('canvas-adapter', roster) — the prompt must carry the document the loader serves, rendered against the same roster, not a second copy`,
     })
   }
   if (adapterImport(loop, { specifier: OVERRIDE_SPECIFIER })) {
@@ -165,16 +184,28 @@ export function wiringFaults({ loop, docs, harness }) {
     faults.push({ problem: `${LOOP} still imports '${PACKAGE_ADAPTER}?raw'` })
   }
 
-  const docsBinding = adapterImport(docs, { specifier: OVERRIDE_SPECIFIER })
-  if (!docsBinding) {
+  const configBinding = adapterImport(config, { specifier: OVERRIDE_SPECIFIER })
+  if (!configBinding) {
     faults.push({ problem: `${REGISTRATION} does not import '${OVERRIDE_SPECIFIER}?raw'` })
-  } else if (!new RegExp(`'canvas-adapter':\\s*${docsBinding}\\b`).test(docs)) {
+  } else if (!new RegExp(`'canvas-adapter':\\s*${configBinding}\\b`).test(config)) {
     faults.push({
-      problem: `${REGISTRATION} registers 'canvas-adapter' as something other than ${docsBinding}`,
+      problem: `${REGISTRATION} supplies 'canvas-adapter' as something other than ${configBinding}`,
+    })
+  } else if (!/\breferences:\s*\{/.test(config)) {
+    faults.push({
+      problem: `${REGISTRATION} names the document but not on \`agent.references\` — a key outside that block is read by nothing`,
     })
   }
-  if (adapterImport(docs, { specifier: PACKAGE_ADAPTER })) {
+  if (adapterImport(config, { specifier: PACKAGE_ADAPTER })) {
     faults.push({ problem: `${REGISTRATION} still imports '${PACKAGE_ADAPTER}?raw'` })
+  }
+  // And the loader still lays a deployment's document OVER the template's per
+  // name. The config field is only a place to put bytes; this is the line that
+  // makes supplying `canvas-adapter` mean replacing the template's.
+  if (!/Object\.hasOwn\(deployment, name\)/.test(references)) {
+    faults.push({
+      problem: `${REFERENCES} no longer prefers a deployment's document over the template's for a name both have — the override would be supplied and not served`,
+    })
   }
 
   // The eval harness assembles the same prompt under Node. A harness reading
@@ -188,38 +219,113 @@ export function wiringFaults({ loop, docs, harness }) {
 }
 
 // ---------------------------------------------------------------------------
-// 2 & 3. The two surface rows
+// 2. The two surface rows, rendered rather than written out
 // ---------------------------------------------------------------------------
 
 /**
- * The tool names in a `new Set([...])` declared in specs.ts.
+ * The two placeholder tokens, read out of the application's reference loader.
  *
- * Read textually rather than imported, for the reason upstream gives: specs.ts
- * is TypeScript behind a path alias, and every consumer that wants the real
- * value already pays for a rollup bundle (`scripts/agent-harness/run.mjs`).
+ * Not spelled here. The loader substitutes these exact strings when it serves
+ * the adapter, so a rename upstream has to fail this check rather than leave
+ * this override reaching a model with `{{` still in it — and a check that
+ * spelled its own copy of the token would pass a document nothing fills.
+ *
+ * Read textually for the reason the rest of this file is: the loader is
+ * TypeScript behind a path alias and imports the application's own modules.
  */
-export function declaredTools(source, setName) {
-  const block = new RegExp(`export const ${setName} = new Set\\(\\[([\\s\\S]*?)^\\]\\)`, 'm').exec(
-    source,
-  )
-  if (!block) throw new Error(`no ${setName} set found in ${SPECS}`)
-  return [...block[1].matchAll(/'([a-z_]+)'/g)].map(([, name]) => name)
+export function placeholderTokens(source) {
+  const tokens = {}
+  for (const [key, constant] of [['read', 'READ_TOOLS_PLACEHOLDER'], ['write', 'WRITE_TOOLS_PLACEHOLDER']]) {
+    const found = new RegExp(`export const ${constant} = '([^']+)'`).exec(source)
+    if (!found) {
+      throw new Error(
+        `${REFERENCES} no longer exports ${constant}. The reader here can no longer see the ` +
+          'token the loader substitutes, so nothing is being compared. Fix the reader.',
+      )
+    }
+    tokens[key] = found[1]
+  }
+  return tokens
 }
 
 /**
- * The tool names one surface row lists.
+ * `{ problem }` for each way a surface row could stop being rendered.
  *
- * The row ends its list at an em dash — after it come `ui_command`'s
- * data-changing commands on the write row, and the "none of them move the
- * user's canvas" promise on the read row, so the dash is where the comparable
- * list stops on both.
+ * Two failures, and the first is the one this replaced a list comparison with.
+ * A row that carries its placeholder says what the session can call, whatever
+ * that is; a row that names tools is a second statement of the roster, which
+ * drifts from the first — the defect that had this override listing a retiring
+ * alias for a release. So a tool-shaped code span BEFORE the em dash is a
+ * fault, and the dash is where the comparable part of the row stops on both:
+ * after it come `ui_command`'s data-changing commands on the write row and the
+ * "none of them move the user's canvas" promise on the read row.
+ *
+ * The second is the token itself. A renamed placeholder is a row that reaches
+ * the model unfilled, and `placeholderTokens` above is what makes the two
+ * names one fact.
  */
-export function documentedTools(markdown, claim) {
-  const row = markdown.split('\n').find((line) => line.includes(claim))
-  if (!row) throw new Error(`no "${claim}" row found in ${ADAPTER}`)
-  const list = row.split('—')[0]
-  return [...list.matchAll(/`([a-z_]+)`/g)].map(([, name]) => name)
+export function surfaceRowFaults(markdown, tokens) {
+  const faults = []
+  for (const [surface, claim] of [
+    ['write', 'That is the FULL write surface'],
+    ['read', 'That is the FULL read surface'],
+  ]) {
+    const row = markdown.split('\n').find((line) => line.includes(claim))
+    if (!row) {
+      faults.push({ problem: `${ADAPTER} has no "${claim}" row at all` })
+      continue
+    }
+    const token = tokens[surface]
+    if (!row.includes(token)) {
+      faults.push({
+        problem: `${ADAPTER}'s ${surface} row does not carry ${token}, so the ${surface} tools it claims to state are whatever somebody last typed there`,
+      })
+    }
+    const named = [...row.split('—')[0].matchAll(/`([a-z][a-z_]*_[a-z_]+)`/g)].map(([, name]) => name)
+    for (const name of [...new Set(named)]) {
+      faults.push({
+        problem: `${ADAPTER}'s ${surface} row names ${name} by hand. The row is rendered from the session's roster; a name written here is a second statement of it that can only drift`,
+      })
+    }
+  }
+  return faults
 }
+
+/**
+ * The names of the tools that WRITE, read out of the application's definition
+ * modules.
+ *
+ * `WRITE_TOOL_NAMES` used to be a literal set in `specs.ts` and this read it
+ * from there. The set is gone: a write is now declared with
+ * `defineWriteTool`, which fixes the surface, the availability and the session
+ * attribution by construction, so the roster is not a list anybody maintains —
+ * it is which constructor a tool was declared with. That is a better subject
+ * than the list was, because a tool cannot be a write and be absent from it.
+ *
+ * Nothing in the four subjects above needs this any more, and it lives here
+ * anyway: `scripts/tests/who-writes-what.test.mjs` holds this deployment's
+ * record-ownership rows to the write surface, and a second parser of the
+ * application's tool modules is a second reader to drift from this one.
+ *
+ * @param sources The definition modules' text, in any order.
+ */
+export function writeToolNames(sources) {
+  const names = sources.flatMap((source) => [
+    ...source.matchAll(/defineWriteTool\(\{\s*\n\s*name: '([a-z_]+)'/g),
+  ].map(([, name]) => name))
+  if (names.length === 0) {
+    throw new Error(
+      `no defineWriteTool declarations found under ${DEFINITIONS}. The reader here can no ` +
+        'longer see which tools write, so a check over the write surface is running over ' +
+        'nothing. Fix the reader.',
+    )
+  }
+  return [...new Set(names)].sort()
+}
+
+// ---------------------------------------------------------------------------
+// 3. The dependency vocabulary
+// ---------------------------------------------------------------------------
 
 /** Names on one side and not the other, plus any the doc lists twice. */
 export function differences(documented, declared) {
@@ -231,10 +337,6 @@ export function differences(documented, declared) {
     duplicated: [...new Set(documented.filter((name, i) => documented.indexOf(name) !== i))],
   }
 }
-
-// ---------------------------------------------------------------------------
-// 4. The dependency vocabulary
-// ---------------------------------------------------------------------------
 
 /**
  * Retired spellings of `cell_dependencies.kind`, and what this database calls
@@ -395,22 +497,20 @@ export function listDifferences(claimed, actual) {
 
 export function compare({ read, referenceDocs, migrations }) {
   const adapter = read(ADAPTER)
-  const specs = read(SPECS)
+  const references = read(REFERENCES)
 
   const kinds = enforcedKinds(read(SCHEMA))
   const migrated = latestMigratedKinds(migrations)
   const documented = documentedKinds(adapter)
 
   return {
-    wiring: wiringFaults({ loop: read(LOOP), docs: read(REGISTRATION), harness: read(HARNESS) }),
-    write: differences(
-      documentedTools(adapter, 'That is the FULL write surface'),
-      declaredTools(specs, 'WRITE_TOOL_NAMES'),
-    ),
-    read: differences(
-      documentedTools(adapter, 'That is the FULL read surface'),
-      declaredTools(specs, 'READ_TOOL_NAMES'),
-    ),
+    wiring: wiringFaults({
+      loop: read(LOOP),
+      config: read(REGISTRATION),
+      references,
+      harness: read(HARNESS),
+    }),
+    rows: surfaceRowFaults(adapter, placeholderTokens(references)),
     snapshotDrift:
       [...kinds].sort().join(',') === [...migrated.kinds].sort().join(',')
         ? null
@@ -482,18 +582,7 @@ function main() {
         'the pinned package\'s rulebook reaching the agent again.',
     )
   }
-  for (const [surface, diff] of [['write', result.write], ['read', result.read]]) {
-    const roster = surface === 'write' ? 'WRITE_TOOL_NAMES' : 'READ_TOOL_NAMES'
-    for (const name of diff.undocumented) {
-      problems.push(`${name} is a ${surface} tool that ${ADAPTER} does not list`)
-    }
-    for (const name of diff.unknown) {
-      problems.push(`${ADAPTER}'s ${surface} row lists ${name}, which is not in ${roster}`)
-    }
-    for (const name of diff.duplicated) {
-      problems.push(`${ADAPTER}'s ${surface} row lists ${name} more than once`)
-    }
-  }
+  for (const { problem } of result.rows) problems.push(problem)
   if (result.snapshotDrift) {
     const { file, migrated, snapshot } = result.snapshotDrift
     problems.push(
@@ -525,9 +614,9 @@ function main() {
 
   if (problems.length === 0) {
     console.log(
-      `${ADAPTER} is what loop.ts and referenceDocs.ts serve; its surface rows are ` +
-        'exactly WRITE_TOOL_NAMES and READ_TOOL_NAMES; its dependency kinds are ' +
-        'the ones the constraint enforces',
+      `${ADAPTER} is the document loop.ts splices and get_reference serves; both of its ` +
+        "surface rows are rendered from the session's roster rather than written out; its " +
+        'dependency kinds are the ones the constraint enforces',
     )
     return
   }
@@ -535,7 +624,8 @@ function main() {
   for (const problem of problems) console.error(problem)
   console.error(
     `\nThe agent treats ${ADAPTER} as the rulebook and its surface rows as ` +
-      `permission. Fix the document, or the rosters in ${SPECS}, so the two agree.`,
+      'permission. Fix the document, or the wiring that carries it, so what the agent ' +
+      'reads is what the session can do.',
   )
   process.exit(1)
 }

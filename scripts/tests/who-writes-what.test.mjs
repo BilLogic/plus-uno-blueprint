@@ -6,9 +6,15 @@
  * nouns and lost both, because no one word was true of all four. What replaced
  * the noun is an OWNER per record, and that claim is not a preference: a
  * table's owner is whoever may CHANGE it, and the set of things that may
- * change it is `WRITE_TOOL_NAMES` — the same roster `check:write-surface`
- * already holds the served adapter against, read here through that guard's own
- * `declaredTools` rather than a second parser of the same file.
+ * change it is the tools declared with `defineWriteTool` — read here through
+ * `check:write-surface`'s own `writeToolNames` rather than a second parser of
+ * the application's tool modules.
+ *
+ * THAT ROSTER USED TO BE A LIST. `WRITE_TOOL_NAMES` was a literal set in the
+ * application's `specs.ts`, and a tool could be a write and be missing from
+ * it; a write is now declared with a constructor that fixes its surface, so
+ * which tools write is which constructor they were declared with and the
+ * roster cannot be short by one.
  *
  * Three rules:
  *
@@ -44,10 +50,10 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { appSource } from '../app-source.mjs'
-import { declaredTools } from '../check-write-surface.mjs'
+import { readFileSync, readdirSync } from 'node:fs'
+import { join, resolve } from 'node:path'
+import { appSourcePath } from '../app-source.mjs'
+import { writeToolNames } from '../check-write-surface.mjs'
 import { PACKAGE } from '../template-pin.mjs'
 
 // The runner copies test files into a temp dir, so paths resolve from the
@@ -180,12 +186,22 @@ test('a write tool that names no record is not this file’s business', () => {
 
 // The roster is the APPLICATION's, and the application is the installed
 // package rather than a directory here — the same package whose CONTEXT.md
-// rule 3 reads the table out of. So both halves of this check now come from
+// rule 3 reads the table out of. So both halves of this check come from
 // upstream and the thing being held is this deployment's own enforcement of
-// them. `appSource` names a missing specs.ts rather than letting an
-// unreadable roster read as a roster with no write tools in it, which would
-// make rules 1 and 2 pass on nothing.
-const ROSTER = declaredTools(appSource('lib/agent/tools/specs.ts'), 'WRITE_TOOL_NAMES')
+// them.
+//
+// `appSource` resolves the definitions folder the way the build resolves the
+// application, and `writeToolNames` refuses an empty answer rather than
+// letting an unreadable roster read as a roster with no write tools in it,
+// which would make rules 1 and 2 pass on nothing. Test modules are excluded:
+// a fixture inside one declares tools that no session is ever offered.
+const DEFINITIONS = appSourcePath('lib/agent/tools/definitions')
+const ROSTER = writeToolNames(
+  readdirSync(DEFINITIONS)
+    .filter((name) => name.endsWith('.ts') && !name.includes('.test.'))
+    .sort()
+    .map((name) => readFileSync(join(DEFINITIONS, name), 'utf8')),
+)
 
 test('every tool the ownership table credits is one the agent has', () => {
   const unreal = creditedButUnreal(RECORD_OWNERS, ROSTER)
