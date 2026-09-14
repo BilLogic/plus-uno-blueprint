@@ -39,6 +39,12 @@ test('the shipped allowlist is exactly the twenty-two files still shared after t
   // sets discards cardinality, so it passes on a list that enrols the same path
   // twice — which was a real defect once. The duplicate check below closes that
   // hole BESIDE this assertion rather than in place of it.
+  //
+  // THIS ASSERTION CANNOT SEE THE OTHER DIRECTION, and that is not a gap to
+  // close here. A release that publishes a shared script this repository does
+  // not hold leaves this list exactly as it was and every test in this file
+  // green; `scripts/tests/shared-scripts.test.mjs` is the suite that reads the
+  // template's own published list and fails on the difference.
   assert.deepEqual(RECONCILED_FILES, [
     'tsconfig.json',
     'tsconfig.app.json',
@@ -52,14 +58,14 @@ test('the shipped allowlist is exactly the twenty-two files still shared after t
     'scripts/check-pointers.mjs',
     'scripts/check-router-budget.mjs',
     'scripts/tests/one-badge-one-size.test.mjs',
-    'scripts/tests/authoring-log.test.mjs',
     'scripts/check-glossary-only.mjs',
     'scripts/check-negation-ratchet.mjs',
     'scripts/check-target-schema.mjs',
     'scripts/generate-agent-account.mjs',
-    'scripts/swept-docs.mjs',
     'scripts/tests/the-router-is-a-router.test.mjs',
-    'scripts/unverified.mjs',
+    'scripts/agent-account.mjs',
+    'scripts/sweep.mjs',
+    'scripts/seed-list.mjs',
     'public/step-visual-placeholder.svg',
     'docs/agents/triage-labels.md',
   ])

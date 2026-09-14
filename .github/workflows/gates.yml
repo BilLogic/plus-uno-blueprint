@@ -221,6 +221,24 @@ jobs:
       # worth MORE after the flip than before it.
       - run: npm run check:reconciled
 
+      # The OTHER direction of the same gate. `check:reconciled` above asks
+      # whether a file this repository DECLARED identical has drifted; this asks
+      # whether the template has started publishing a shared script this
+      # repository does not hold. The two fail on different events and neither
+      # implies the other: a release adding a file to its own shared list moves
+      # no byte here and turns no gate above red, so every check goes on passing
+      # while this deployment runs an older mechanism than the one it pins. That
+      # is exactly how it came to be running the generation of router checks that
+      # resolved a root from their own location, a release after the template
+      # stopped doing that.
+      #
+      # The list is the template's, read out of the installed package's own
+      # shared-script guard rather than copied here — a second copy is a list to
+      # forget to update, which is the failure this step exists to catch. So it
+      # reads `node_modules/agentic-service-blueprinting` like the two steps
+      # above, belongs here after `npm ci`, and needs no database.
+      - run: npm run check:shared-scripts
+
       # The cross-repository duplicate sweep (#364, story 8). Its sibling above
       # asks whether two declared-identical files still agree byte for byte;
       # this asks the opposite question about the files that will never be
