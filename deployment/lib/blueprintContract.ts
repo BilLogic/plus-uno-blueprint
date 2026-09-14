@@ -190,6 +190,11 @@ export const BLUEPRINT_CONTRACT = {
    * by the contract test, so a table added to one forces a role decision in
    * the other.
    *
+   * A role is declared for every column a consumer reads for what it MEANS,
+   * not only the three generic ones: `touchpoints.kind` is the facet the bot's
+   * registry filter matches on, and a filter spelled against a bare column
+   * name is the same second spelling this block exists to remove.
+   *
    * Additive by construction: `botDirectReadColumns` and `botReadTables` are
    * untouched, so a consumer that has not re-vendored keeps working.
    */
@@ -206,7 +211,9 @@ export const BLUEPRINT_CONTRACT = {
     resources: { name: 'name' },
     audit_findings: {},
     slices: { name: 'title' },
-    touchpoints: { name: 'name', prose: 'summary' },
+    // `kind` is the facet the registry sorts and filters touchpoints by — the
+    // one column besides name and prose the bot reads for its meaning.
+    touchpoints: { name: 'name', prose: 'summary', kind: 'kind' },
   },
 
   /**
