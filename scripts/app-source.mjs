@@ -157,6 +157,42 @@ export function appSourceFiles(predicate = () => true, subdirectory = '') {
 }
 
 /**
+ * The files under `deployment/` that are GENERATED CONTENT rather than code.
+ *
+ * `deployment/data/sampleBlueprints.ts` is an export of this deployment's live
+ * board — a thousand cells of somebody's authored prose, written by
+ * `scripts/export-sample-board.mjs` and rewritten whole on the next run. It is
+ * a `.ts` file because that is the shape `sample.blueprints` takes, and a guard
+ * that sweeps this deployment's source for a NAME or a WORD reads it as code
+ * and reports the service's own vocabulary as this codebase's.
+ *
+ * The exclusion is the same argument `docs/adr` and `supabase/migrations` get
+ * from those guards, one step further: not only would rewriting it falsify a
+ * record, there is no edit to make. The words are the database's, the file is
+ * regenerated from the database, and a check no tree can satisfy is a check
+ * that teaches people to edit generated files.
+ *
+ * EVERY prose or naming reader honours it, not just the one that noticed first:
+ * `scripts/tests/badge-and-tag.test.mjs`, `retired-copy.test.mjs`,
+ * `entity-definitions.test.mjs`, and `sweptFiles` in `scripts/scanned-files.mjs`
+ * — which is what the two whole-tree residue sweeps read. Applying the argument
+ * to one guard and not the others would leave the same unclearable red waiting
+ * for whichever cell says the wrong word next.
+ *
+ * It is NOT excluded from the type system, the bundler or the board's own
+ * tests: `npm run typecheck` compiles it and
+ * `deployment/data/sampleBlueprints.test.ts` holds it to the nav. What it is
+ * excluded from is prose and naming guards, which is where a subject of
+ * "source code" and a file of authored content part company.
+ */
+export const GENERATED_DEPLOYMENT_CONTENT = ['deployment/data/sampleBlueprints.ts']
+
+/** Whether a repo-relative path is one of those. */
+export function isGeneratedDeploymentContent(path) {
+  return GENERATED_DEPLOYMENT_CONTENT.includes(path)
+}
+
+/**
  * Every file under this deployment's OWN source root, and never an empty list.
  *
  * Same argument as above, for the checks whose subject is this repository's

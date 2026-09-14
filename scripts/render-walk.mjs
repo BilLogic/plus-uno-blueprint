@@ -25,26 +25,24 @@
  * ── WHAT DID NOT LEAVE, AND WHY THIS FILE STILL EXISTS ────────────────────
  *
  * The precondition. The walk is over a build made with the Supabase variables
- * cleared, so it needs an app that serves a BOARD with no database, and this
- * deployment still does not have one.
+ * cleared, so it needs an app that serves a BOARD with no database.
  *
  * v1.44.10 gave the missing half a config home — `sample.blueprints` beside
- * `sample.nav`, the two replaced rather than merged — and this deployment now
- * supplies both (`deployment/deployment.ts`). But the content is empty, and
- * `deployment/data/sampleBlueprints.ts` carries the reason at length: the
- * registry's generator takes a Service Blueprint IR, this deployment has never
- * had one, its board arrived as an import that happened elsewhere, and the cell
- * prose lives in the live database and nowhere this tree can read. Generating
- * it needs credentials no check here holds.
+ * `sample.nav`, the two replaced rather than merged — and this deployment
+ * supplies both (`deployment/deployment.ts`). The content half is no longer
+ * empty: `npm run export:sample-board` reads this deployment's own board
+ * through the public read surface and writes it to
+ * `deployment/data/sampleBlueprints.ts`, so a no-database build draws the real
+ * board and the walk opens every phase, scenario, path and layout of it.
  *
- * So a no-database build still draws this deployment's phase and scenario rows
- * over a registry that answers none of their ids, and the walk would fail on
- * the first board it asserts — a true failure about the seam, reported as if
- * the application were broken. That is a fact to STATE rather than a red to
- * collect: `unverified` from `sweep.mjs`, the same "a skip is said out loud"
- * mechanism every other check here uses. The reason prints on every run and
- * lands in the CI job's summary, and the day the registry is filled in this
- * stops printing it with no edit to this file.
+ * THE PRECONDITION STAYS ANYWAY, and it is not ceremony. A registry emptied by
+ * a bad export, or a nav whose ids have moved past it, would put this
+ * deployment's phase and scenario rows over a registry that answers none of
+ * them — and the walk would fail on the first board it asserts, a true failure
+ * about the seam reported as if the application were broken. That is a fact to
+ * STATE rather than a red to collect: `unverified` from `sweep.mjs`, the same
+ * "a skip is said out loud" mechanism every other check here uses. It prints
+ * nothing while the two halves agree, which is the state this repository is in.
  *
  * Arguments are passed through, so `npm run check:render-walk -- --headed` and
  * the environment variables the package's README documents
@@ -73,8 +71,22 @@ export const BLUEPRINTS = 'deployment/data/sampleBlueprints.ts'
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g
 
-/** Every id spelled in `text`, as a set. */
-const idsIn = (text) => new Set(text.match(UUID) ?? [])
+/**
+ * Every id spelled in `text`, in the order it first appears and without
+ * repeats.
+ *
+ * Reading the nav as TEXT is the trick this file has always played on it — the
+ * nav is a TypeScript module a plain Node script cannot import, and an id is
+ * the only thing anyone needs from it. `scripts/export-sample-board.mjs` needs
+ * the same thing for the same reason and takes it from here rather than
+ * spelling the regex a second time: two answers to "which ids does the nav
+ * name" is how the exporter and the gate would start disagreeing about the
+ * board they are both about.
+ */
+export const idsIn = (text) => [...new Set(text.match(UUID) ?? [])]
+
+/** The same ids, as a set — what the comparison below actually wants. */
+const idSetIn = (text) => new Set(idsIn(text))
 
 /**
  * Whether a build of this repository with no database serves a board the walk
@@ -102,7 +114,7 @@ export function servesASampleBoard(root) {
   const navPath = join(root, NAV)
   const contentPath = join(root, BLUEPRINTS)
   if (!existsSync(navPath) || !existsSync(contentPath)) return true
-  const declared = idsIn(readFileSync(navPath, 'utf8'))
+  const declared = idSetIn(readFileSync(navPath, 'utf8'))
   if (declared.size === 0) return true
   for (const id of idsIn(readFileSync(contentPath, 'utf8'))) {
     if (declared.has(id)) return true
@@ -126,11 +138,9 @@ function main() {
       'the browser render walk over this deployment’s own board',
       `${NAV} lists this deployment's phases and scenarios and ${BLUEPRINTS} registers content ` +
         'for none of them, so a build with no database configured serves nav rows and an empty ' +
-        "canvas. The registry's generator takes a Service Blueprint IR and this deployment has " +
-        'never had one — its board arrived as an import made elsewhere, and its cell prose lives ' +
-        `in the live database and in no file here. Fill ${BLUEPRINTS} from an export of that ` +
-        'board — the header there carries the command — or run the walk against a build that ' +
-        'has a database.',
+        `canvas. Re-export the board — \`npm run export:sample-board\`, which reads it through ` +
+        'the public read surface with the two VITE_SUPABASE_* values and no other credential — ' +
+        'and commit the result, or run the walk against a build that has a database.',
     )
     return
   }

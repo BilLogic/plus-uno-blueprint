@@ -41,6 +41,7 @@ import {
   appSource,
   appSourceFiles,
   deploymentSourceFiles,
+  isGeneratedDeploymentContent,
 } from '../app-source.mjs'
 
 const ROOT = resolve(new URL('../..', import.meta.url).pathname)
@@ -70,7 +71,11 @@ const IS_TYPESCRIPT = (path) => /\.tsx?$/.test(path)
  * file — which is a green light, not a clean tree.
  */
 export function uiSources() {
-  return [...appSourceFiles(IS_TYPESCRIPT), ...deploymentSourceFiles(IS_TYPESCRIPT)]
+  // The offline board's export is out: it is generated CONTENT rather than UI
+  // source, regenerated from the database on every run, so nothing in it is a
+  // definition this rule could ask anyone to change. See `app-source.mjs`.
+  const ourSource = (path) => IS_TYPESCRIPT(path) && !isGeneratedDeploymentContent(path)
+  return [...appSourceFiles(IS_TYPESCRIPT), ...deploymentSourceFiles(ourSource)]
     .map((file) => ({
       file,
       code: stripComments(readFileSync(resolve(ROOT, file), 'utf8')),

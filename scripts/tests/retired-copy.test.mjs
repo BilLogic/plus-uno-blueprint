@@ -42,7 +42,11 @@ import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { sourceFiles, stripComments } from '@/lib/tokenModel.ts'
-import { appPackageRoot, deploymentSourceFiles } from '../app-source.mjs'
+import {
+  appPackageRoot,
+  deploymentSourceFiles,
+  isGeneratedDeploymentContent,
+} from '../app-source.mjs'
 import { RETIRED_COPY_WORDS } from '../retired-vocabulary.mjs'
 
 /** The props whose string value a person reads. */
@@ -164,7 +168,15 @@ const PATTERNS = RETIRED_COPY_WORDS.map((word) => ({
  */
 export function copyBearingSources() {
   const ours = deploymentSourceFiles(
-    (path) => /\.tsx?$/.test(path) && !path.includes('.test.'),
+    (path) =>
+      /\.tsx?$/.test(path) &&
+      !path.includes('.test.') &&
+      // Generated CONTENT is not copy. The offline board's export is a
+      // thousand cells of the service's own prose, rewritten whole on every
+      // run, so a retired word found in it names something a person wrote in
+      // the database — and there is no edit here that survives the next
+      // export. `scripts/app-source.mjs` carries the argument.
+      !isGeneratedDeploymentContent(path),
   )
   return [
     ...sourceFiles(),

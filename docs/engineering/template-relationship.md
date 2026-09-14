@@ -1,6 +1,6 @@
 ---
 audience: developers
-summary: This repository is a deployment of the agentic-service-blueprinting template and imports it at a pinned tag — where the application actually lives, what `@/` and `~/` resolve to, what a version bump involves, what to do when the template changes something you depend on, and what the retired merge-era machinery was for.
+summary: This repository is a deployment of the agentic-service-blueprinting template and imports it at a pinned tag — where the application actually lives, what `@/` and `~/` resolve to, what a version bump involves, what to do when the template changes something you depend on, the offline board a no-database build draws and the command that re-exports it, and what the retired merge-era machinery was for.
 ---
 
 # The template relationship
@@ -212,6 +212,86 @@ direction reversed, and then the fork closed.
 Cite the audit as history. Do not cite "the template scrub" as the thing that
 will handle a coupling.
 
+## The offline board is two fields
+
+A build made with `VITE_SUPABASE_URL` empty still has to draw something, and
+what it draws is `DeploymentConfig.sample` — two fields, both REPLACED rather
+than merged:
+
+| Field | This deployment's | What it is |
+|---|---|---|
+| `sample.nav` | `deployment/data/sampleNav.ts` | the phases and scenarios, hand-authored |
+| `sample.blueprints` | `deployment/data/sampleBlueprints.ts` | the lanes, steps, cells, edges, placements and resources behind them — **generated** |
+
+Because the kit replaces rather than merges, supplying only the nav is worse
+than supplying neither: this deployment's rows land over the template's content
+registry, which is keyed by the template's scenario ids and answers none of
+ours, and every scenario opens an empty canvas. That was this repository's state
+until the board was exported, and it is why `npm run check:render-walk` used to
+announce a skip instead of opening a browser.
+
+The kit generates both halves from a Service Blueprint IR. **This deployment has
+no IR** — its board arrived as an import made elsewhere ([ADR
+0009](../adr/0009-the-migration-series-is-a-narrative.md)) and its cell prose
+lives in the live database and in no file here — so the content half is exported
+from the database instead:
+
+```sh
+npm run export:sample-board    # rewrite deployment/data/sampleBlueprints.ts
+npm run check:sample-board     # …or just ask whether it is still current
+```
+
+It reads through **the public read surface and nothing else**: `VITE_SUPABASE_URL`
+and `VITE_SUPABASE_ANON_KEY`, the same two public values the deployed bundle
+already carries, so CI needs no new secret and a row RLS hides from anon is a
+row the file does not carry. Never edit the file by hand — its header says so,
+and the next export would silently take the edit back.
+
+`check:sample-board` is deliberately not a gate. The database moves whenever
+somebody authors a cell, and a required check that goes red because a colleague
+edited a board is a check people learn to ignore. The honest instrument is this
+freshness note, refreshed when the board is re-exported:
+
+> **Last exported 2026-09-14**: 17 scenarios, 33 paths, 269 lanes, 188 steps,
+> 933 cells, 428 dependencies, 322 touchpoint placements, 600 resources — every
+> scenario the nav names, none of them empty.
+
+Three things the note deliberately does **not** claim, because nothing checked
+them:
+
+- **Not "nothing was withheld".** The exporter can see one absence and only one:
+  a scenario that came back with no path at all, which it names in a warning. A
+  policy that hides *some* cells, placements or resources inside a path hides
+  them from every shape of the question equally, so a board RLS has trimmed
+  looks exactly like a smaller board. What is checked is truncation — the cells
+  of every scenario are counted a second time as rows of their own and the run
+  refuses on a disagreement — because a row cap applies inside a 200 with no
+  error to notice.
+- **Not "only no-database builds pay for it".** `deployment/deployment.ts`
+  imports the registry statically, so the file ships in **every** build. It is
+  ~1.4 MB on disk and moves the main chunk from 2,137 kB to 3,107 kB raw and
+  638 kB to 776 kB gzipped — about +140 kB gzipped on every page load, including
+  production builds with a database, where nothing ever reads it. That is dead
+  weight and it is the shape of the seam rather than an oversight: `sample` is a
+  synchronous config field. A lazy loader would have to be offered upstream.
+- **Not "the board is self-contained".** Its *text* is. Its *pictures* are not:
+  432 cells carry a `frame` and 127 placements carry an icon, and every one of
+  those URLs points at this project's public Supabase storage bucket. A build
+  with no database still fetches its images over the network, and
+  `check:render-walk` drives Chromium over all of them. No new asset class is
+  mounted, though — these are the same images a database build shows, so the
+  decoded-memory budget in
+  [codebase-guide § Performance constraints](codebase-guide.md#performance-constraints)
+  is unchanged: at most 36 frames on one path and 194 across one scenario's
+  paths side by side, well under the 141-image case that set the 300px cap.
+
+`npm run check:render-walk` is what proves it: it builds with the Supabase
+variables empty, previews the result and drives Chromium over every phase,
+scenario, path and layout, failing on a console error. `scripts/render-walk.mjs`
+keeps a precondition in front of it — if the two halves ever stop sharing an id,
+the walk says so through the `unverified` register rather than failing as though
+the application were broken.
+
 ## What is genuinely this deployment's
 
 "Coupled" no longer means what it meant when this repository held its own copy
@@ -243,6 +323,7 @@ why that is the intent:
 | `scripts/apply_pending_goal_setting_migrations.mjs` — a hardcoded Supabase project ref | Unguarded on purpose. It is this deployment's project; a script naming anyone else's would be the defect |
 | `docs/`, `scripts/` | This repository's own writing and its own checks, including several that reach into the package to hold the docs to the release |
 | `public/touchpoint-logos/` | Stock logos for well-known tools. Unguarded, and nothing about them is this deployment's but the choosing |
+| `deployment/data/sampleBlueprints.ts` — the offline board's content, exported from the live database | `deployment/data/sampleBlueprints.test.ts`, which holds the registry to every scenario `sampleNav.ts` names, and `check:render-walk`, which opens all of it in a browser |
 
 One thing this list does **not** have a guard for: the application coming back.
 `APP_SOURCE_ROOTS` in `scripts/app-source.mjs` prefers a local `src` over the

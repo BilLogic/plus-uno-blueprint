@@ -122,6 +122,24 @@ export const LIVE_CHECKS = Object.freeze([
     unverified: 'whether the deployed bot still covers every read the contract declares',
   },
   {
+    key: 'sample-board',
+    script: 'check:sample-board',
+    subject: "the offline board committed here, against the live board it was exported from",
+    secrecy: 'publishable',
+    needs: ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'],
+    status: 'manual',
+    runsIn: [],
+    unverified:
+      'whether `deployment/data/sampleBlueprints.ts` still says what the database says. It stays ' +
+      'manual DELIBERATELY, and this is the one entry whose skip is the design rather than a gap: ' +
+      'the board moves whenever somebody authors a cell, so a required check over it would go red ' +
+      'because a colleague edited a scenario, and a gate that fails for that reason is a gate ' +
+      'people learn to click past. What CI does hold is that the committed board RENDERS — ' +
+      '`check:render-walk` opens every phase, scenario, path and layout of it in a browser on ' +
+      'every pull request. Its freshness is a person\'s call: run `npm run export:sample-board`, ' +
+      'commit the result, and move the dated note in docs/engineering/template-relationship.md',
+  },
+  {
     key: 'identifiers',
     script: 'check:identifiers:live',
     subject: 'pg_catalog itself — every object name, comment and function body',
