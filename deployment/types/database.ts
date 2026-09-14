@@ -35,14 +35,14 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * schema drift. `scripts/tests/database-types.test.mjs` asserts the resolved
  * owner is this deployment so that the deletion fails `npm test` instead.
  *
- * GENERATED, 2026-09-08, from the production project through the Supabase
- * connector. Every hand-edited block this file carried is gone: the two
+ * GENERATED, 2026-09-14, from the production project through the Supabase
+ * connector, by the same path as the first run. That first run, on 2026-09-08,
+ * is why every hand-edited block this file once carried is gone: the two
  * placement RPCs, the two rename RPCs, `touchpoints`, `cell_touchpoints`,
- * `resources`, `services.entity_examples` and the rest now read the way the
+ * `resources`, `services.entity_examples` and the rest read the way the
  * generator emits them, and the whole `Functions` map — forty-six entries
  * where the hand-maintained file had thirteen — arrived at once. It holds
- * forty-nine today; the three that arrived since are in the list below,
- * beside everything else that has.
+ * fifty today; what has arrived since is named in the list below.
  *
  * The hand edits were not wrong. `cells_layer_id_fkey` and `layers_path_id_fkey`
  * were, and they had survived a migration that renamed both constraints,
@@ -84,6 +84,14 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * it had — or stops compiling. Nothing else in this file is hand-written; if a
  * fourth layer appears, it belongs in this list or it does not belong at all.
  *
+ * ONE THING THE GENERATOR EMITS AND THIS FILE HAS NEVER CARRIED: the trailing
+ * helper block — `Tables<>`, `TablesInsert<>`, `TablesUpdate<>`, `Enums<>`,
+ * `CompositeTypes<>` and `Constants`. Those helpers exist to be imported at a
+ * call site and this file has no importers at all, which is the whole point of
+ * it. Dropping them is not a fourth layer, because nothing is re-applied — but
+ * leaving it unsaid would make the next regeneration look like a hundred lines
+ * of drift. Drop it again.
+ *
  * Regenerate after schema changes through the Supabase connector's type
  * generator, as above. The two npm scripts that used to be offered here,
  * `supabase:types` (needs a linked project) and `supabase:types:local` (needs
@@ -93,34 +101,33 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * `scripts/check-database-names.mjs` rests its argument on this file arriving
  * by machine. As of this change it does again.
  *
- * FIVE EDITS SINCE, each named here rather than hidden in a diff, and every
- * one the same kind of thing: a migration in this repository's own series
- * applies to production before the code that reads it is merged, so this file
- * has to describe the schema on the far side of an apply that may not have
- * happened yet. A generator cannot be run against a database that has not been
- * changed. None of them is a fourth layer and none may be re-applied: the next
- * regeneration through the connector emits all five, and this paragraph goes
- * with the run that proves it.
+ * ONE ARRIVAL IN THIS REGENERATION, and no edits since it.
+ *
+ *  - `set_cell_featured_image(cell_id, image_url)` (20260913150000) — the
+ *    fiftieth entry in the `Functions` map, and the single disagreement that
+ *    took the scheduled `live-schema` job red. The database held it and this
+ *    file did not name it.
+ *
+ * The five edits the paragraph here used to list — `update_cell_dependency`,
+ * `restore_cell_dependency` and `restore_cell_content`, `slides.caption`,
+ * `slides.shows_all_images` with the `slide_images` table,
+ * `stakeholders.part_of_id` and `agent_sessions.created_by` — came back out of
+ * the generator unchanged on this run. They were hand-written ahead of it for
+ * the reason such edits always are, and the reason is worth keeping even with
+ * the list emptied: a migration in this repository's own series applies to
+ * production before the code that reads it is merged, so this file has to
+ * describe the schema on the far side of an apply that may not have happened
+ * yet, and a generator cannot be run against a database that has not been
+ * changed. Such an edit is never a fourth layer and is never re-applied — the
+ * next regeneration emits it, and the entry goes with the run that proves it,
+ * which is what has just happened to all five.
  *
  * KEEP THE LIST WHOLE, AND THE COUNT WITH IT. This is the only statement of
  * how far the file has travelled from its last generated state, so an edit
  * left out of it is invisible — which is exactly what happened twice: three
  * functions and two renames landed here while the paragraph went on saying
- * two.
- *
- *  - `update_cell_dependency` (20260909030000), `restore_cell_dependency`
- *    (20260909070000) and `restore_cell_content` (20260909080000) — the three
- *    entries the `Functions` map has gained since it was generated.
- *  - `slides.narrative` is `slides.caption`, in the three shapes of `slides`
- *    (20260910020000).
- *  - `slides.shows_all_images` and the whole `slide_images` table
- *    (20260910030000). The `Slide` alias at the foot of the file carries the
- *    embedded members beside it, and that half IS layer 2 above — an embed is
- *    not a column and no generator has ever emitted one.
- *  - `stakeholders.parent_id` is `stakeholders.part_of_id`, and the foreign
- *    key beside it (20260912210000).
- *  - `agent_sessions.user_id` is `agent_sessions.created_by`, and its foreign
- *    key (20260912220000).
+ * two. The list is empty of edits today; the next one to be written ahead of
+ * its apply belongs in it the moment it is written.
  */
 
 export type Json =
@@ -1456,6 +1463,10 @@ export type Database = {
           source_cell_id: string
           target_cell_id: string
         }
+        Returns: Json
+      }
+      set_cell_featured_image: {
+        Args: { cell_id: string; image_url: string }
         Returns: Json
       }
       set_featured_resource: {
