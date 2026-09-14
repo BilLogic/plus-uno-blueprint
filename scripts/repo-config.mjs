@@ -69,6 +69,36 @@ export const repoConfig = {
   },
 
   /**
+   * Where this repository's composition documents live, and which of its own
+   * trees they claim (`check-harness-claims.mjs`).
+   *
+   * `documents` names the folder the PACKAGE publishes, not a folder of this
+   * deployment's choosing: the check lays this repository's composition folder
+   * over the package's, document for document, and one name has to address
+   * both layers. An installed package holding nothing at this name is reported
+   * as exactly that rather than as two hundred unclaimed files.
+   *
+   * `claimed` is empty, and that is a statement rather than a default. The
+   * files a composition document claims are ASSEMBLED files — the components
+   * that make up a surface a person can name — and since the import flip every
+   * one of them is the package's, under
+   * `src/components/{blueprint,editor,cover,mobile}`. What `deployment/` holds
+   * is the other kind: an entry point (`main.tsx`), the content, data, types
+   * and contract modules the config hands over, and a stylesheet of brand
+   * dials. None of them assembles a surface, so none of them is a file a
+   * composition document would claim, and this deployment keeps no composition
+   * folder at all — the package's documents are the whole set, read out of the
+   * install, and how many there are is the check's business rather than this
+   * comment's. A `deployment/components/` tree appearing here later is what
+   * would put a path on this list, together with a document of our own
+   * claiming it.
+   */
+  composition: {
+    documents: 'docs/guidelines/composition',
+    claimed: [],
+  },
+
+  /**
    * Where a glossary row that names a column belongs instead
    * (`check-glossary-only.mjs`), and a routing target below.
    */
@@ -91,19 +121,19 @@ export const repoConfig = {
       ['Run a mapping / audit / what-if / slicing session; where is the methodology specified?', 'docs/product/05-service-design-practice.md'],
       ['Ground product or UX decisions on blueprint evidence', 'docs/product/06-product-design-on-blueprints.md'],
       ['Why does the app look and feel this way?', 'docs/guidelines/overview.md'],
-      ['Match an existing surface’s visual style', 'docs/guidelines/overview.md (surface anatomy) → docs/guidelines/composition/'],
+      ['Match an existing surface’s visual style', 'docs/guidelines/overview.md (surface anatomy) → node_modules/agentic-service-blueprinting/docs/guidelines/composition/'],
       ['Which token do I use — and how do I add one?', 'docs/guidelines/foundations/tokens.md → the topic’s own foundation file'],
       ['Chart, band, severity or zoom-tier encodings', 'docs/guidelines/foundations/data-viz.md'],
       ['Which component or primitive do I reach for; empty/error-state anatomy', 'docs/guidelines/components/overview.md'],
-      ['What does a click / ⌘-click / tap / pinch DO, and why?', 'docs/guidelines/composition/canvas.md'],
-      ['What happens on a phone or tablet (as a spec)?', 'docs/guidelines/foundations/layout.md (the gate) → docs/guidelines/composition/mobile-shell.md'],
-      ['Working on a panel, the sidebar, compare, slices, the agent, a dialog', 'docs/guidelines/composition/overview.md'],
+      ['What does a click / ⌘-click / tap / pinch DO, and why?', 'node_modules/agentic-service-blueprinting/docs/guidelines/composition/canvas.md'],
+      ['What happens on a phone or tablet (as a spec)?', 'docs/guidelines/foundations/layout.md (the gate) → node_modules/agentic-service-blueprinting/docs/guidelines/composition/mobile-shell.md'],
+      ['Working on a panel, the sidebar, compare, slices, the agent, a dialog', 'node_modules/agentic-service-blueprinting/docs/guidelines/composition/overview.md'],
       ['Write UI copy, error text, or agent-voice wording', 'docs/guidelines/foundations/content-voice.md'],
       ['Accessibility bar: contrast, forced-colors, reduced motion, touch targets', 'docs/guidelines/foundations/accessibility.md'],
       ['Where does X live, how does it connect, which pattern do I copy?', 'docs/engineering/codebase-guide.md'],
-      ['Add a field to cells end-to-end (schema → RPC → panel UI)', 'docs/engineering/access-and-security.md → docs/engineering/codebase-guide.md → docs/guidelines/composition/entity-panels.md'],
+      ['Add a field to cells end-to-end (schema → RPC → panel UI)', 'docs/engineering/access-and-security.md → docs/engineering/codebase-guide.md → node_modules/agentic-service-blueprinting/docs/guidelines/composition/entity-panels.md'],
       ['Which user is my session / my agent; what writes are legitimate; how is access enforced?', 'AGENTS.md invariants → docs/engineering/access-and-security.md'],
-      ['Canvas gesture or camera misbehaving — intended vs implemented behavior', 'docs/guidelines/composition/canvas.md + docs/engineering/codebase-guide.md'],
+      ['Canvas gesture or camera misbehaving — intended vs implemented behavior', 'node_modules/agentic-service-blueprinting/docs/guidelines/composition/canvas.md + docs/engineering/codebase-guide.md'],
       ['How do the in-app agent and its rosters work?', 'docs/engineering/agent-system.md'],
       ['Add or change an agent tool; run the eval harness', 'docs/engineering/agent-tools.md'],
       ['Coding standards, the Supabase benchmark, tooling traps, how to run and write tests', 'docs/engineering/standards.md'],

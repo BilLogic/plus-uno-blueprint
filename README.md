@@ -57,8 +57,10 @@ else in the other. Name the decision instead.
 Two lanes, never mixed.
 
 - **Reference** — living, always true. `product/` (what the thing is and how to
-  read it), `guidelines/` (the design system: `foundations/`, `components/`,
-  `composition/`), `engineering/` (how the code works), `reference/` (fixed
+  read it), `guidelines/` (the design system: `foundations/` and `components/`;
+  the composition documents are the package's, at
+  `node_modules/agentic-service-blueprinting/docs/guidelines/composition/`),
+  `engineering/` (how the code works), `reference/` (fixed
   vocabularies and id maps), `adr/` (decisions that are surprising or hard to
   reverse), `connectors/` (everything crossing a repo boundary).
 - **The queue** — [GitHub Issues](https://github.com/BilLogic/plus-uno-blueprint/issues),

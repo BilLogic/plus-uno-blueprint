@@ -29,19 +29,19 @@ ideation, the brainstorms — is git history.
 | Run a mapping / audit / what-if / slicing session; where is the methodology specified? | docs/product/05-service-design-practice.md |
 | Ground product or UX decisions on blueprint evidence | docs/product/06-product-design-on-blueprints.md |
 | Why does the app look and feel this way? | docs/guidelines/overview.md |
-| Match an existing surface’s visual style | docs/guidelines/overview.md (surface anatomy) → docs/guidelines/composition/ |
+| Match an existing surface’s visual style | docs/guidelines/overview.md (surface anatomy) → node_modules/agentic-service-blueprinting/docs/guidelines/composition/ |
 | Which token do I use — and how do I add one? | docs/guidelines/foundations/tokens.md → the topic’s own foundation file |
 | Chart, band, severity or zoom-tier encodings | docs/guidelines/foundations/data-viz.md |
 | Which component or primitive do I reach for; empty/error-state anatomy | docs/guidelines/components/overview.md |
-| What does a click / ⌘-click / tap / pinch DO, and why? | docs/guidelines/composition/canvas.md |
-| What happens on a phone or tablet (as a spec)? | docs/guidelines/foundations/layout.md (the gate) → docs/guidelines/composition/mobile-shell.md |
-| Working on a panel, the sidebar, compare, slices, the agent, a dialog | docs/guidelines/composition/overview.md |
+| What does a click / ⌘-click / tap / pinch DO, and why? | node_modules/agentic-service-blueprinting/docs/guidelines/composition/canvas.md |
+| What happens on a phone or tablet (as a spec)? | docs/guidelines/foundations/layout.md (the gate) → node_modules/agentic-service-blueprinting/docs/guidelines/composition/mobile-shell.md |
+| Working on a panel, the sidebar, compare, slices, the agent, a dialog | node_modules/agentic-service-blueprinting/docs/guidelines/composition/overview.md |
 | Write UI copy, error text, or agent-voice wording | docs/guidelines/foundations/content-voice.md |
 | Accessibility bar: contrast, forced-colors, reduced motion, touch targets | docs/guidelines/foundations/accessibility.md |
 | Where does X live, how does it connect, which pattern do I copy? | docs/engineering/codebase-guide.md |
-| Add a field to cells end-to-end (schema → RPC → panel UI) | docs/engineering/access-and-security.md → docs/engineering/codebase-guide.md → docs/guidelines/composition/entity-panels.md |
+| Add a field to cells end-to-end (schema → RPC → panel UI) | docs/engineering/access-and-security.md → docs/engineering/codebase-guide.md → node_modules/agentic-service-blueprinting/docs/guidelines/composition/entity-panels.md |
 | Which user is my session / my agent; what writes are legitimate; how is access enforced? | AGENTS.md invariants → docs/engineering/access-and-security.md |
-| Canvas gesture or camera misbehaving — intended vs implemented behavior | docs/guidelines/composition/canvas.md + docs/engineering/codebase-guide.md |
+| Canvas gesture or camera misbehaving — intended vs implemented behavior | node_modules/agentic-service-blueprinting/docs/guidelines/composition/canvas.md + docs/engineering/codebase-guide.md |
 | How do the in-app agent and its rosters work? | docs/engineering/agent-system.md |
 | Add or change an agent tool; run the eval harness | docs/engineering/agent-tools.md |
 | Coding standards, the Supabase benchmark, tooling traps, how to run and write tests | docs/engineering/standards.md |
@@ -80,24 +80,14 @@ frontmatter. The queue does not live here.
 | docs/product/04-the-assistant-and-audits.md | everyone | What the in-app AI assistant is, what audits and findings are, why results can be trusted, and how to challenge them. |
 | docs/product/05-service-design-practice.md | service designers, practitioners | The four blueprint practices (map, audit, what-if, slice), the compare workflow, findings triage, and where each practice is specified. |
 | docs/product/06-product-design-on-blueprints.md | designers, product | Grounding product and design decisions on the blueprint — cells as evidence, slices to specs, touchpoint reasoning, audits as design-debt radar. |
-| docs/guidelines/components/overview.md | designers, developers | Which primitive to reach for, badges and segmented controls, and the empty/loading/error visual recipes — the 34 primitives under src/components/ui/. |
-| docs/guidelines/composition/agent-session.md | designers, developers | One conversation in two postures — the dock and the float, what survives a drag, where transcripts and settings live, the mobile sheet and fab, and the two limits the UI has to say out loud. |
-| docs/guidelines/composition/canvas.md | designers, developers | The board and the chrome around it — click grammar, canvas modes, panel-as-selection, camera behaviour, the phase-row height contract and the touch contract. |
-| docs/guidelines/composition/compare.md | designers, developers | The three compare arrangements over one shared axis, the merged view's per-slot membership encoding, the resizable panel's measurement contract, and the differences ledger's two grains. |
-| docs/guidelines/composition/cover-page.md | designers, developers | The shell's landing view — a content model supplied by the deployment, one navigating action, click-to-expand figures that never write or fetch, and one measure down the whole page. |
-| docs/guidelines/composition/dialogs-sheets-and-forms.md | designers, developers | The drawer/sheet posture contract (single owner), the create and delete dialogs, the slice sheet, the session-changes sheet, the shared image viewer, and the field primitives that keep a vocabulary from becoming free text. |
-| docs/guidelines/composition/entity-panels.md | designers, developers | One shell, six subjects — the drawer chrome every entity panel is made of, what the six panels share, where they legitimately differ, and the invariants a well-meaning edit breaks. |
-| docs/guidelines/composition/mobile-shell.md | designers, developers | The one forked surface — the phone's view-only, scenario-scoped canvas, its chrome, the single-select path control, and the non-goals that are decided rather than deferred. |
-| docs/guidelines/composition/overview.md | designers, developers | The nine assembled surfaces, why they are cut by name rather than by source folder, and the declared claim mapping the build enforces. |
-| docs/guidelines/composition/sidebar.md | designers, developers | The icon rail's two groups, the one disclosure vocabulary every twisty in the sidebar obeys, the slices section, where path selection went and what it kept, the single persisted width shared by all three surfaces, and the narrow-viewport posture where the panel floats over the canvas. |
-| docs/guidelines/composition/slice-view.md | designers, developers | The slice focus tab and its dim, presentation's dark subtree, the two editing surfaces that split by what they are good at, the set of images a slide shows, and slide mode. |
+| docs/guidelines/components/overview.md | designers, developers | Which primitive to reach for, badges and segmented controls, and the empty/loading/error visual recipes — the primitives under src/components/ui/. |
 | docs/guidelines/foundations/accessibility.md | designers | The accessibility bar — forced-colors restatements, reduced motion everywhere, the global focus catch-all, aria state on toggles, 44px targets, and plain screen-reader names. |
 | docs/guidelines/foundations/color.md | designers | The four color-token tiers, semantic-only consumption, the retune record behind the brand dials, dark mode as a class, the forced-colors stance, lane tints, the annotation chrome ink ladder, and the agent-ink precedent. |
 | docs/guidelines/foundations/content-voice.md | designers | UI copy rules, error and empty-state wording, the agent's honest voice, and the naming conventions the interface must keep straight. |
 | docs/guidelines/foundations/data-viz.md | designers | The encodings — compare bands, ledger, merged membership outlines, severity, the semantic-zoom blocks tier, path-type colors — and the rule that every encoding is tokenized and survives dark + forced-colors. |
 | docs/guidelines/foundations/elevation.md | designers | Flat by default — elevation is a lightness ladder, shadows are rare and tokenized, and the z-index bands are a short fixed map. |
 | docs/guidelines/foundations/iconography.md | designers | Lucide only, small glyphs on generous hit areas, and the rule that an icon carrying meaning always has a text name. |
-| docs/guidelines/foundations/layout.md | designers, developers | Width tokens and their one-home split, the shell's three columns, the two width gates (this doc owns them) — 768px where the shell forks and 900px where the sidebar starts overlaying — and the three semantic-zoom thresholds. |
+| docs/guidelines/foundations/layout.md | designers, developers | Width tokens and their one-home split, the shell's three columns, the one width gate (this doc owns it) — 768px, where the shell forks — and the three semantic-zoom thresholds. |
 | docs/guidelines/foundations/motion.md | designers | The motion vocabulary, the drift test that pins it, the reduced-motion policy, and the list of moments that deliberately do not animate. |
 | docs/guidelines/foundations/spacing.md | designers | The spacing and radius scale — Tailwind's default steps plus the handful of named app measures, and what it takes to write an arbitrary value instead. |
 | docs/guidelines/foundations/tokens.md | designers, developers | How a token gets a home — the four tiers, the one-home rule between theme.css and layoutTokens.ts, and what to do when a CSS-only value grows a runtime consumer. |

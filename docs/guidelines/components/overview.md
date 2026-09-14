@@ -1,16 +1,18 @@
 ---
 audience: designers, developers
-summary: Which primitive to reach for, badges and segmented controls, and the empty/loading/error visual recipes — the 34 primitives under src/components/ui/.
+summary: Which primitive to reach for, badges and segmented controls, and the empty/loading/error visual recipes — the primitives under src/components/ui/.
 sources: src/components/ui/, src/components/blueprint/BlueprintCellDetailPanel.tsx, src/components/mobile/MobileNavSheet.tsx, src/components/mobile/MobileAgentSheet.tsx, src/components/EditorErrorBoundary.tsx
 last-reviewed: 2026-08-25
 ---
 
 # Components
 
-`src/components/ui/` is the design system: 34 primitives, and the whole of what
-this folder documents. Anything assembled out of them is
-[composition](../composition/overview.md). The need→primitive map for agent-UX
-work, with every primitive named, is
+`src/components/ui/` is the design system — every primitive under it, and the
+whole of what this folder documents. Anything assembled out of them is
+composition, which the package documents: read its composition folder under
+`node_modules/agentic-service-blueprinting/docs/guidelines/composition/`,
+starting at `overview.md`. The need→primitive map for agent-UX work, with every
+primitive named, is
 [`docs/reference/ui-inventory.md`](../../reference/ui-inventory.md).
 
 ## The primitive inventory
@@ -50,9 +52,9 @@ house idiom. The Radix migration is finished: `asChild` has zero occurrences in
 The drawer/sheet **posture** contract — which posture a panel takes at which
 width, how it is keyed, what a surface switch inside an open drawer may do —
 sat here for months, and it is a composition rule wearing a components label.
-It has moved, single-owner claim intact, to
-[composition/dialogs-sheets-and-forms.md](../composition/dialogs-sheets-and-forms.md).
-This doc still owns *which primitive*; that one owns *what shape it takes*.
+It has moved, single-owner claim intact, to the package's
+`composition/dialogs-sheets-and-forms.md` (the folder named above). This doc
+still owns *which primitive*; that one owns *what shape it takes*.
 
 ## Badges and segmented controls
 

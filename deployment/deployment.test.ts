@@ -51,6 +51,23 @@ describe('this deployment', () => {
     expect(resolved.sample.nav.length).toBeGreaterThan(0)
   })
 
+  it('reaches its board through a loader that resolves to the registry', async () => {
+    // The board is behind a dynamic import so that a build with a database
+    // does not carry it, and the cost of that is a promise nobody awaits until
+    // first paint. A loader that REJECTS is not caught anywhere — the provider
+    // is the outermost element `App` renders — so it surfaces as a blank page
+    // with a console error and nothing else. That failure has no red in any
+    // other gate here, which is why it gets an assertion of its own.
+    const loader = resolved.sample.blueprints
+    expect(typeof loader).toBe('function')
+    const registry = await (loader as () => Promise<Record<string, unknown>>)()
+    expect(Object.keys(registry).length).toBeGreaterThan(0)
+    // WHICH scenarios it has to answer is `data/sampleBlueprints.test.ts`,
+    // which holds the registry to every scenario `sampleNav.ts` names. This
+    // one owns the seam the loader added: that the config's function resolves
+    // to that same registry rather than to nothing.
+  })
+
   it('pins the paths this board draws side by side', () => {
     // Distinct slots is the whole point — two paths sharing one would be the
     // hash collision the pins exist to prevent.
