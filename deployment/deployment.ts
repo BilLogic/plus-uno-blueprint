@@ -54,9 +54,9 @@ export const unoDeploymentConfig: DeploymentConfig = {
    * Both halves of the offline board, because the kit replaces each rather
    * than merging it: the nav alone would draw this deployment's rows over the
    * template's content registry, which is keyed by the template's scenario ids
-   * and answers none of ours. `SAMPLE_BLUEPRINTS` is an EXPORT of this
-   * deployment's live board, taken through the public read surface — the anon
-   * key the site itself ships — by `npm run export:sample-board`, because the
+   * and answers none of ours. `data/sampleBlueprints.ts` holds an EXPORT of
+   * this deployment's live board, taken through the public read surface — the
+   * anon key the site itself ships — by `npm run export:sample-board`, because the
    * kit's own generator takes an IR and this deployment has never had one. Its
    * header carries the command; the script's header carries the why.
    *
@@ -75,7 +75,8 @@ export const unoDeploymentConfig: DeploymentConfig = {
    */
   sample: {
     nav: SAMPLE_NAV,
-    blueprints: () => import('./data/sampleBlueprints').then((m) => m.SAMPLE_BLUEPRINTS),
+    blueprints: () =>
+      import('./data/sampleBlueprints').then((m) => m.SAMPLE_BLUEPRINTS),
   },
   cellBudget: {
     prose: { target: 80, warning: 100 },

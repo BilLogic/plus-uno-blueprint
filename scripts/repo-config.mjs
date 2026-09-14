@@ -87,8 +87,9 @@ export const repoConfig = {
    * and contract modules the config hands over, and a stylesheet of brand
    * dials. None of them assembles a surface, so none of them is a file a
    * composition document would claim, and this deployment keeps no composition
-   * folder at all — the package's ten documents are the whole set, read out of
-   * the install. A `deployment/components/` tree appearing here later is what
+   * folder at all — the package's documents are the whole set, read out of the
+   * install, and how many there are is the check's business rather than this
+   * comment's. A `deployment/components/` tree appearing here later is what
    * would put a path on this list, together with a document of our own
    * claiming it.
    */

@@ -33,16 +33,18 @@ judgement.
   [data-viz](foundations/data-viz.md),
   [accessibility](foundations/accessibility.md),
   [content-voice](foundations/content-voice.md).
-- **`components/`** — the 34 primitives under `src/components/ui/`.
+- **`components/`** — the primitives under `src/components/ui/`.
   [Which primitive for what](components/overview.md), and the state recipes.
 - **Composition** — everything assembled out of them: the files under
   `blueprint/`, `editor/`, `cover/` and `mobile/`, cut into nine nameable
   surfaces. Those documents are the package's and arrive with the application,
-  at `node_modules/agentic-service-blueprinting/docs/guidelines/composition/`
-  (start at `overview.md`); the claim for a file is written where the file
-  lives, so this deployment holds none of them. Every one of those files is
-  claimed by exactly one of them, and `npm run check:harness` reads both trees
-  and fails the build if that stops being true.
+  under `node_modules/agentic-service-blueprinting/docs/guidelines/` — **the
+  package's `guidelines/`, which every `composition/…` below names** — starting
+  at `composition/overview.md`. The claim for a file is written where the file
+  lives, so this deployment holds none of them. Every assembled file is claimed
+  by exactly one composition document, and `npm run check:harness` reads the
+  package's documents out of the install and fails the build if that stops
+  being true.
 
 Every fact has one owner doc; everything else links. Code owns values — these
 docs point at token files and components, they do not restate numbers.
@@ -54,8 +56,7 @@ docs point at token files and components, they do not restate numbers.
 **blocks tier** — flat blocks, counter-scaled phase labels — so the overview
 reads as a table of contents (journey length, density per phase) instead of a
 shrunken page. Signature: _the board that becomes a map at distance_. See
-[data-viz](foundations/data-viz.md) and the package's
-`node_modules/agentic-service-blueprinting/docs/guidelines/composition/canvas.md`.
+[data-viz](foundations/data-viz.md) and the package's `composition/canvas.md`.
 
 **Scenario detail.** The camera flies into one phase or scenario; phase badges
 carry the time-marker register (`01 · ARRIVAL`), cells open the detail panel on
@@ -79,9 +80,8 @@ the semantic layer re-derives per scope). Signature: _the slice dim_. See
 desktop, scoped to one scenario at a time — the drawer is the only way to
 move between them, a single-select path control replaces the PATHS
 checkboxes, and everything is view-only for every tier. Signature: _the
-scenario-scoped canvas_. The package's
-`node_modules/agentic-service-blueprinting/docs/guidelines/composition/mobile-shell.md`
-owns the whole contract.
+scenario-scoped canvas_. The package's `composition/mobile-shell.md` owns the
+whole contract.
 
 **The agent panel.** Docked to the sidebar or floating; a bottom sheet on
 mobile, entered through a floating action button. Its canvas annotations draw in a named, tokenized red ink no human

@@ -229,15 +229,15 @@ export const RECONCILED_FILES = [
   // The composition-claims check, and its suite. The claim for a file is
   // written where the file lives, so the documents that claim the assembled
   // surfaces moved into the package and the check that reads them became one
-  // file run in both trees: here it lays this repository's composition folder
-  // over the package's and sweeps the trees `composition.claimed` names, and
-  // in the template it is the same walk over the one layer that tree has. Both
-  // halves of that behaviour are ours to keep honest, so both are enrolled —
-  // this repository ran a fork of the check for as long as it held its own ten
-  // documents, and a fork is exactly what the enrolment now forbids.
+  // file run in both trees. Here the package's documents are the only layer —
+  // this repository keeps no composition folder — and what the check sweeps
+  // besides them is the trees `composition.claimed` names; in the template it
+  // is the same walk over the one layer that tree has. Both halves of that
+  // behaviour are ours to keep honest, so both are enrolled: this repository
+  // ran a fork of the check for as long as it held composition documents of
+  // its own, and a fork is exactly what the enrolment now forbids.
   'scripts/check-harness-claims.mjs',
   'scripts/tests/harness-claims.test.mjs',
-
 
   // ── The six that used to name a `docs/` path ──
   //

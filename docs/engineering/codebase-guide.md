@@ -35,9 +35,10 @@ reasoning lives in [`docs/adr/`](../adr/) and is linked from here.
 | `src/styles/` | Token tiers and board CSS — see [standards](standards.md#token-discipline). |
 
 What each of those component folders looks like *as a designed surface* is the
-package's composition documents, which arrive with the application at
-`node_modules/agentic-service-blueprinting/docs/guidelines/composition/`
-(start at `overview.md`). Every file under `blueprint/`, `editor/`, `cover/`
+package's composition documents, which arrive with the application under
+`node_modules/agentic-service-blueprinting/docs/guidelines/` — **the package's
+`guidelines/`, which every `composition/…` below names** — starting at
+`composition/overview.md`. Every file under `blueprint/`, `editor/`, `cover/`
 and `mobile/` is claimed by exactly one of them. This table says where code
 lives; those documents say what it is. `npm run check:harness` reads them out
 of the install and keeps the second half honest.
@@ -152,9 +153,8 @@ Reviewers keep re-teaching these; copy them instead.
   `src/components/blueprint/panelShell.tsx`: right-pinned inspector card on
   desktop, `Drawer` sheet on mobile. Which posture a given surface *should*
   use — drawer vs sheet vs panel, keying, snap points, handles — is owned by
-  the package's
-  `node_modules/agentic-service-blueprinting/docs/guidelines/composition/dialogs-sheets-and-forms.md`;
-  this doc only points at the implementation to copy.
+  the package's `composition/dialogs-sheets-and-forms.md`; this doc only points
+  at the implementation to copy.
 - **Need→primitive map** for agent-UX work →
   [`docs/reference/ui-inventory.md`](../reference/ui-inventory.md).
 
@@ -205,9 +205,8 @@ wraps annotation + selection providers) → the transform layer
   does, so it reads as a safeguard while guarding nothing.
 
 What each gesture is *supposed* to do — the click grammar, the touch contract —
-is owned by the package's
-`node_modules/agentic-service-blueprinting/docs/guidelines/composition/canvas.md`;
-this doc owns how it is implemented. Debug a gesture with both open.
+is owned by the package's `composition/canvas.md`; this doc owns how it is
+implemented. Debug a gesture with both open.
 
 ## Data flow
 
@@ -270,8 +269,7 @@ components (slice detail → scenario → blueprints) passes one key and shows
 exactly one skeleton for the whole chain, no restarts, no replayed fades.
 The board-shaped placeholders live in
 `src/components/editor/EditorLoadingSkeletons.tsx`, and the entity panels have
-their own shaped set (see the package's
-`node_modules/agentic-service-blueprinting/docs/guidelines/composition/entity-panels.md`).
+their own shaped set (see the package's `composition/entity-panels.md`).
 
 ## Performance constraints
 
