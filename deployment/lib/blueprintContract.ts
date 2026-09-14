@@ -9,6 +9,13 @@
  * and a re-shaped findings column each made a bot read return empty for
  * weeks); a drifted copy now fails the bot's --check sync instead.
  *
+ * Since 2026-09-14 the contract also names what its direct-read columns are
+ * FOR — `botDirectReadRoles` (the prose, position and name column of each
+ * table), `botTouchpointReadKeys` and `botFindingsTable` — so the Worker
+ * DERIVES its read strings from the contract instead of spelling `summary`,
+ * `position`, `name` and `audit_findings` a second time in its own source.
+ * Additive: the lists those roles point into are unchanged (#671).
+ *
  * Keep this module dependency-free: the bot compiles it in a Worker
  * context with no access to app imports.
  *
@@ -154,6 +161,76 @@ export const BLUEPRINT_CONTRACT = {
     // bot reads it for "where do we use X" (plus-uno#414). Placements stay out.
     touchpoints: ['id', 'name', 'kind', 'summary', 'url'],
   },
+
+  /**
+   * What each direct-read column is FOR, per table — the role a consumer needs
+   * by name rather than by spelling.
+   *
+   * `botDirectReadColumns` above says which columns the bot may select and
+   * nothing about what any of them means, so the bot spells the meanings by
+   * hand: `summary` wherever it wants a row's prose, `position` wherever it
+   * orders structural rows, `name` wherever it labels one. That is enough to
+   * CATCH a rename — the list would stop matching the live database and
+   * `check:contract:live` would say so — and not enough to FOLLOW one. Every
+   * rename in this file's history needed a matching edit in the bot, spelled
+   * a second time, in a Worker nobody type-checks against this schema.
+   *
+   * A role names the column that plays it, so the bot derives its read string
+   * from the contract instead of restating it, and a rename reaches the bot
+   * with the vendored copy. `slices` is the entry that shows why this is not
+   * cosmetic: its label column is `title`, not `name`, so the one generic
+   * read string the bot could have written was already wrong for one table.
+   *
+   * Only a role a table really HAS is declared. `audit_findings` declares none
+   * and says so with an empty entry rather than being left out: a finding is a
+   * verdict keyed to cells, with no label, no prose and no order of its own,
+   * and an entry present-and-empty is a decision recorded where the next
+   * reader looks. Every direct-read table has an entry for that reason —
+   * `botDirectReadRoles` and `botDirectReadColumns` carry the same keys, held
+   * by the contract test, so a table added to one forces a role decision in
+   * the other.
+   *
+   * Additive by construction: `botDirectReadColumns` and `botReadTables` are
+   * untouched, so a consumer that has not re-vendored keeps working.
+   */
+  botDirectReadRoles: {
+    phases: { name: 'name', prose: 'summary', position: 'position' },
+    scenarios: { name: 'name', prose: 'summary', position: 'position' },
+    steps: { name: 'name' },
+    paths: { name: 'name', prose: 'summary' },
+    lanes: { name: 'name' },
+    // No label of its own: a cell is addressed by the board position it sits
+    // in, and `content` is the authored body, not a name.
+    cells: { prose: 'summary' },
+    cell_dependencies: { name: 'name' },
+    resources: { name: 'name' },
+    audit_findings: {},
+    slices: { name: 'title' },
+    touchpoints: { name: 'name', prose: 'summary' },
+  },
+
+  /**
+   * The touchpoint read, whole — the ordered select list the bot sends for
+   * "where do we use X" (plus-uno#414), which it spells as a literal array.
+   *
+   * Top-level rather than a fourth role, because a role is ONE column playing
+   * ONE part and this is the whole projection: putting a list where the roles
+   * hold column names would break the shape the contract test asserts about
+   * them. It is a subset of `botDirectReadColumns.touchpoints` — equal to it
+   * today — and the test holds it to that, so the two cannot drift apart into
+   * a select the live column check never sees.
+   */
+  botTouchpointReadKeys: ['id', 'name', 'kind', 'summary', 'url'],
+
+  /**
+   * The table audit findings live in.
+   *
+   * It was `findings` until 20260830190000 and the bot spells the new name in
+   * its own source; naming it here means the next rename travels with the
+   * vendored contract instead of being a second edit someone has to remember.
+   * Held to `botReadTables` by the contract test.
+   */
+  botFindingsTable: 'audit_findings',
 
   /**
    * PostgREST embed-hint constraint names. These are the sharpest edge in the

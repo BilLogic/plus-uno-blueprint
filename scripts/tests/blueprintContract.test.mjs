@@ -336,6 +336,72 @@ test('every bot read is on the public read surface', () => {
   }
 })
 
+/**
+ * The roles, against the lists they point into.
+ *
+ * `botDirectReadRoles` exists so the bot can derive `summary`, `position`,
+ * `name` and the findings table from the contract rather than spelling them a
+ * second time in a Worker. That only holds while the two halves agree: a role
+ * naming a column its table does not publish would hand the bot a select
+ * PostgREST answers with 400, which every one of those call sites logs and
+ * swallows into an empty array — the silent-empty failure this whole contract
+ * was built out of. Nothing types a role against a list, so it is tested.
+ */
+test('every direct-read table has a role entry, and every role entry has a table', () => {
+  assert.deepEqual(
+    Object.keys(BLUEPRINT_CONTRACT.botDirectReadRoles).sort(),
+    Object.keys(BLUEPRINT_CONTRACT.botDirectReadColumns).sort(),
+    `botDirectReadRoles and botDirectReadColumns must carry the same tables. A table ` +
+      `added to the read list with no roles beside it leaves the bot spelling its ` +
+      `prose and position columns by hand again; a role entry for a table the bot ` +
+      `does not read names columns no live check selects. A table that genuinely has ` +
+      `no role declares an empty entry, as audit_findings does.`,
+  )
+})
+
+test('every declared role names a column that table publishes', () => {
+  for (const [table, roles] of Object.entries(BLUEPRINT_CONTRACT.botDirectReadRoles)) {
+    const published = new Set(BLUEPRINT_CONTRACT.botDirectReadColumns[table])
+    for (const [role, column] of Object.entries(roles)) {
+      assert.ok(
+        typeof column === 'string' && column !== '',
+        `botDirectReadRoles.${table}.${role} is not a column name`,
+      )
+      assert.ok(
+        published.has(column),
+        `botDirectReadRoles.${table}.${role} names "${column}", which is not in ` +
+          `botDirectReadColumns.${table} (${[...published].join(', ')}). The bot builds ` +
+          `its select from the role, so the column would never be requested — and the ` +
+          `live column check only selects what the LIST names, so nothing else would ` +
+          `notice. Add the column to the list, or point the role at the one that plays it.`,
+      )
+    }
+  }
+})
+
+test('the touchpoint read keys are all columns the touchpoints read publishes', () => {
+  const published = new Set(BLUEPRINT_CONTRACT.botDirectReadColumns.touchpoints)
+  for (const key of BLUEPRINT_CONTRACT.botTouchpointReadKeys) {
+    assert.ok(
+      published.has(key),
+      `botTouchpointReadKeys names "${key}", which botDirectReadColumns.touchpoints ` +
+        `does not (${[...published].join(', ')}). The keys are the select the bot sends; ` +
+        `the list is what check:contract:live selects against the live database. A key ` +
+        `outside the list is a column no live check has ever asked for.`,
+    )
+  }
+})
+
+test('the findings table is one the bot declares it reads', () => {
+  assert.ok(
+    contractValues('botReadTables').includes(BLUEPRINT_CONTRACT.botFindingsTable),
+    `botFindingsTable is "${BLUEPRINT_CONTRACT.botFindingsTable}" but botReadTables does ` +
+      `not list it, so no /health/blueprint probe key is derived for it and no anon ` +
+      `select is run against it. The table was renamed from "findings" once already ` +
+      `(20260830190000); naming it here is only worth it while the name is checked.`,
+  )
+})
+
 test('every declared RPC name was introduced by a migration', () => {
   for (const rpc of contractValues('rpcs')) {
     // `semantic_search.match_corpus_chunks` is schema-qualified in the
@@ -497,6 +563,18 @@ const COVERAGE = {
   botDirectReadColumns: {
     by: 'scripts/check-blueprint-contract.mjs',
     how: 'every column is selected live, per table, and a refused select is bisected to name it',
+  },
+  botDirectReadRoles: {
+    by: 'scripts/tests/blueprintContract.test.mjs',
+    how: 'every role names a column its table publishes, and the two halves carry the same tables',
+  },
+  botTouchpointReadKeys: {
+    by: 'scripts/tests/blueprintContract.test.mjs',
+    how: 'held to a subset of botDirectReadColumns.touchpoints, which is what the live check selects',
+  },
+  botFindingsTable: {
+    by: 'scripts/tests/blueprintContract.test.mjs',
+    how: 'asserted to be one of botReadTables, which is probed live and checked against the migrations',
   },
   fkConstraints: {
     by: 'scripts/check-blueprint-contract.mjs',
