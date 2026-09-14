@@ -1,30 +1,26 @@
 ---
 audience: designers, developers
-summary: Every word a panel puts in front of a reader and the name behind it — the alignment rule, the five labels that diverge and why each does, what the catalog says about each name, and why the subject is panel labels rather than words on screen.
+summary: Every word a panel puts in front of a reader and the name behind it — the five labels that diverge and why each does, what the catalog says about each name, and why the subject is panel labels rather than words on screen; the alignment rule itself is the sb kit's reference.
 sources: scripts/interface-schema-map.mjs, scripts/tests/labels-name-their-columns.test.mjs, supabase/migrations/
-last-reviewed: 2026-09-05
+last-reviewed: 2026-09-14
 ---
 
 # The interface→schema map
 
-Every word a panel puts in front of a reader, and the name behind it.
+This is what this deployment's panel labels are bound to, and nothing about the
+method. The alignment rule — when a label and a `table.column` count as the
+same word, and why a table of divergences alone cannot say that the rest are
+fine — is the sb kit's `references/interface-schema-map.md`, along with the
+complaint the map answers, of which
+[#171](https://github.com/BilLogic/plus-uno-blueprint/issues/171) is this
+repo's instance; nearest copy on disk is
+`node_modules/agentic-service-blueprinting/references/interface-schema-map.md`.
 `scripts/retired-vocabulary.mjs` records the words that **changed**; this
-records what every current word is **bound to**, the agreements included. A
-table of divergences alone cannot say that the rest are fine — "not listed"
-would mean both "aligned" and "nobody looked", and that ambiguity is the state
-[#171](https://github.com/BilLogic/plus-uno-blueprint/issues/171) was raised
-about: *"how come we have inconsistent naming from front and backend again
-(i.e., resources vs. links)?"* The complaint was never that the words differ.
-It was that no document said which of the differences were on purpose.
-
+records what every current word here is **bound to**, the agreements included.
 The interface word is a **panel label** — the `label`, `term` and `title` props
-of the five components that put a field's name in front of a reader. The schema
-word is a `table.column`, or a bare table where the label heads a whole
-relation rather than one field of it. The two **agree** when they are the same
-word once case, spaces and a foreign key's `_id` are set aside; singular and
-plural agree too, because the label over a relation names the thing and the
-table names the collection. Anything further apart than that owes the third
-column a reason.
+of the five components that put a field's name in front of a reader — and the
+schema word is a `table.column`, or a bare table where the label heads a whole
+relation rather than one field of it.
 
 ## The binding
 
