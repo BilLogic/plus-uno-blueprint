@@ -28,7 +28,7 @@ working account: how the arrangement behaves day to day.
 Through `package.json`:
 
 ```json
-"agentic-service-blueprinting": "github:BilLogic/agentic-service-blueprinting#v1.44.12"
+"agentic-service-blueprinting": "github:BilLogic/agentic-service-blueprinting#v1.44.13"
 ```
 
 A tag, never a branch, so a deployment always knows exactly which code it is
@@ -314,7 +314,7 @@ npm run check:shared-scripts  # every script the release publishes, held here an
 ```
 
 Run them; do not quote them. What the last run showed, 2026-09-14 against
-`v1.44.12`: 25 reconciled files byte-identical, 15 published scripts all held
+`v1.44.13`: 25 reconciled files byte-identical, 15 published scripts all held
 here and enrolled, one repo-local import enrolled nowhere, nothing drifted.
 
 What is left that is genuinely this deployment's is identity and data, not
