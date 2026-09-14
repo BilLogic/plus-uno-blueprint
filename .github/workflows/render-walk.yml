@@ -4,9 +4,10 @@
 # the distribution with no database configured, previews it, and drives Chromium
 # over every phase, scenario, path and layout the board offers, failing on a
 # console error or a page error and filing one screenshot per view. The walk is
-# the template's — `render-walk/` inside the pinned package, a published path —
-# and `scripts/render-walk.mjs` is how this repository runs it; that file carries
-# the two reasons it exists, at length.
+# the template's — `render-walk/` inside the pinned package, a published path,
+# with its own runner since v1.44.10 — and `scripts/render-walk.mjs` is how this
+# repository reaches it: one precondition, then that runner. The staging this
+# repository used to do is the package's now, and that file says so at length.
 #
 # WHY ITS OWN WORKFLOW rather than a step in `gates`. It needs a browser and the
 # system libraries around it, and it is minutes rather than seconds, so putting
@@ -89,12 +90,17 @@ jobs:
       # WHETHER THERE IS A BOARD TO WALK AT ALL, asked once and answered for the
       # two steps below.
       #
-      # `sample.nav` is a config field and the blueprint CONTENT behind it is
-      # not, so this deployment's no-database build shows its own phase and
-      # scenario rows over an empty canvas. `check:render-walk` says so through
-      # the `unverified` register and exits 0 — the skip is announced, not
-      # swallowed — which means the self-test below cannot be asserted: an
-      # injected console error cannot fail a walk that never opened a page.
+      # Both halves of the board are config fields since v1.44.10 —
+      # `sample.nav` and `sample.blueprints` — and this deployment supplies
+      # both. The content half is EMPTY, because the registry's generator takes
+      # a Service Blueprint IR and this deployment has never had one;
+      # `deployment/data/sampleBlueprints.ts` carries that reason and the
+      # command that fills it. So a no-database build still shows this
+      # deployment's phase and scenario rows over an empty canvas.
+      # `check:render-walk` says so through the `unverified` register and exits
+      # 0 — the skip is announced, not swallowed — which means the self-test
+      # below cannot be asserted: an injected console error cannot fail a walk
+      # that never opened a page.
       #
       # So the question is asked out loud here instead of being assumed either
       # way. The moment content for one scenario is registered, `walks` turns
