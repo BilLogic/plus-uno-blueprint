@@ -17,16 +17,7 @@
 // Generated on: 2026-09-14
 // Board:        17 scenarios, 33 paths, 269 lanes, 188 steps, 933 cells, 428 dependencies, 322 touchpoint placements, 600 resources
 
-import type { DeploymentConfig } from 'agentic-service-blueprinting'
-
-/**
- * The registry `sample.blueprints` takes. Derived from `DeploymentConfig`
- * rather than imported: the package's index does not export
- * `SampleBlueprintRegistry` yet, and the config field is the same type.
- */
-type SampleBlueprintRegistry = NonNullable<
-  NonNullable<DeploymentConfig['sample']>['blueprints']
->
+import type { SampleBlueprintRegistry } from 'agentic-service-blueprinting'
 
 export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
   "blueprintsByScenario": {

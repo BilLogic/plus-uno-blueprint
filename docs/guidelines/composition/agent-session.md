@@ -6,6 +6,16 @@ claims:
   - src/components/editor/AgentDock.tsx
   - src/components/editor/AgentMarkdown.tsx
   - src/components/editor/AgentPanel.tsx
+  - src/components/editor/agent/AgentChatView.tsx
+  - src/components/editor/agent/AgentSessionsView.tsx
+  - src/components/editor/agent/AgentSettingsRailButton.tsx
+  - src/components/editor/agent/ChangeCount.tsx
+  - src/components/editor/agent/SessionDialogs.tsx
+  - src/components/editor/agent/SessionRow.tsx
+  - src/components/editor/agent/TranscriptRow.tsx
+  - src/components/editor/agent/TranscriptStepsBlock.tsx
+  - src/components/editor/agent/transcriptBlocks.ts
+  - src/components/editor/agent/useAgentChangeCount.ts
   - src/components/editor/AdminSessionFields.tsx
   - src/components/editor/AgentProviderFields.tsx
   - src/components/editor/AgentSettingsFields.tsx
@@ -14,7 +24,7 @@ claims:
   - src/components/mobile/MobileAgentFab.tsx
   - src/components/mobile/MobileAgentSheet.tsx
   - src/components/mobile/mobileAgentBridge.ts
-last-reviewed: 2026-09-10
+last-reviewed: 2026-09-14
 ---
 
 # Agent session
@@ -142,6 +152,14 @@ It is lazy-loaded, because it is the only importer of the markdown toolchain and
 there is no reason for the landing page to pay for a parser — and the fallback is
 the raw text, so a slow chunk shows content rather than a spinner. Only assistant
 turns get markdown; user turns are plain pre-wrapped text.
+
+The modules behind all of this live in `src/components/editor/agent/`:
+`AgentSessionsView` and `SessionRow` for the list, `AgentChatView` with
+`TranscriptRow` and `TranscriptStepsBlock` for the conversation, the
+React-free `transcriptBlocks.ts` that decides which rows fold, `ChangeCount`
+with `useAgentChangeCount`, `SessionDialogs`, and
+`AgentSettingsRailButton` for the ⚙ below. `AgentPanel.tsx` itself is the
+session state machine and nothing else.
 
 ## Settings
 

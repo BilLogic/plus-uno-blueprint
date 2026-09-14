@@ -420,16 +420,7 @@ export function renderModule({ registry, generatedOn }) {
 // Generated on: ${generatedOn}
 // Board:        ${countsSentence(counts)}
 
-import type { DeploymentConfig } from 'agentic-service-blueprinting'
-
-/**
- * The registry \`sample.blueprints\` takes. Derived from \`DeploymentConfig\`
- * rather than imported: the package's index does not export
- * \`SampleBlueprintRegistry\` yet, and the config field is the same type.
- */
-type SampleBlueprintRegistry = NonNullable<
-  NonNullable<DeploymentConfig['sample']>['blueprints']
->
+import type { SampleBlueprintRegistry } from 'agentic-service-blueprinting'
 
 export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = ${tsLiteral(registry)}
 `

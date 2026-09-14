@@ -28,7 +28,7 @@ working account: how the arrangement behaves day to day.
 Through `package.json`:
 
 ```json
-"agentic-service-blueprinting": "github:BilLogic/agentic-service-blueprinting#v1.44.10"
+"agentic-service-blueprinting": "github:BilLogic/agentic-service-blueprinting#v1.44.11"
 ```
 
 A tag, never a branch, so a deployment always knows exactly which code it is
@@ -42,6 +42,13 @@ Two aliases divide the tree, and the division is the whole seam:
 |---|---|---|
 | `@/…` | `node_modules/agentic-service-blueprinting/src` | the application |
 | `~/…` | `deployment/` | this deployment's own modules |
+
+A third spelling sits beside those two: the **package name**. `@/…` is an
+alias this repository declares, so it resolves only here — a module the
+template's own generator writes for a deployment, or one that names a type
+the package index exports, says `agentic-service-blueprinting` instead,
+which resolves on both sides. `deployment/data/sampleNav.ts` and
+`deployment/data/sampleBlueprints.ts` are that case.
 
 `deployment/` is small on purpose: the `DeploymentConfig` the template's app is
 mounted with, the bootstrap that registers this deployment's reference
@@ -307,7 +314,7 @@ npm run check:shared-scripts  # every script the release publishes, held here an
 ```
 
 Run them; do not quote them. What the last run showed, 2026-09-14 against
-`v1.44.10`: 23 reconciled files byte-identical, 13 published scripts all held
+`v1.44.11`: 23 reconciled files byte-identical, 13 published scripts all held
 here and enrolled, one repo-local import enrolled nowhere, nothing drifted.
 
 What is left that is genuinely this deployment's is identity and data, not

@@ -4,6 +4,15 @@ summary: One shell, six subjects — the drawer chrome every entity panel is mad
 sources: src/components/blueprint/panelShell.tsx, src/components/blueprint/EntityDetailPanel.tsx, src/components/blueprint/BlueprintCellDetailPanel.tsx, src/components/blueprint/panelLoading.tsx, src/lib/panelEditorBusy.ts
 claims:
   - src/components/blueprint/BlueprintCellDetailPanel.tsx
+  - src/components/blueprint/CellDetailBreadcrumb.tsx
+  - src/components/blueprint/CellDetailDifferencesSurface.tsx
+  - src/components/blueprint/CellDetailDraftSurface.tsx
+  - src/components/blueprint/CellDetailEmptySurface.tsx
+  - src/components/blueprint/CellDetailOverview.tsx
+  - src/components/blueprint/CellDetailTabs.tsx
+  - src/components/blueprint/PanelSurfaceSwitcher.tsx
+  - src/components/blueprint/cellDetailAgentCommands.ts
+  - src/components/blueprint/cellDetailFacts.ts
   - src/components/blueprint/CellContentSection.tsx
   - src/components/blueprint/CellDependencyEditor.tsx
   - src/components/blueprint/CellDependencySections.tsx
@@ -33,7 +42,7 @@ claims:
   - src/components/blueprint/StepPanel.tsx
   - src/components/blueprint/panelLoading.tsx
   - src/components/blueprint/panelShell.tsx
-last-reviewed: 2026-08-30
+last-reviewed: 2026-09-14
 ---
 
 # Entity panels
@@ -164,6 +173,18 @@ the touchpoint when they are identical; the description paragraph is suppressed
 when it repeats the title or the content; and the touchpoint is a labelled
 field, not a second badge. Printing the same word twice as two facts is the
 failure each of them prevents.
+
+What answers "what is there to show" is `cellDetailFacts.ts` — one module,
+asked once, for the connections, the lane, the placement, the arrows and the
+storyboard strip. `CellDetailOverview.tsx` renders the top of Details from
+those facts, `CellDetailTabs.tsx` owns the three tabs and
+`CellDetailBreadcrumb.tsx` says where the cell sits; the draft, differences
+and nothing-selected surfaces are modules of their own
+(`CellDetailDraftSurface.tsx`, `CellDetailDifferencesSurface.tsx`,
+`CellDetailEmptySurface.tsx`) behind `PanelSurfaceSwitcher.tsx`, and the
+panel's agent commands sit in `cellDetailAgentCommands.ts`. What stayed in
+`BlueprintCellDetailPanel.tsx` is the drawer: which surface shows, how wide it
+is, what closes it, and the one footer every Save portals into.
 
 **Only outgoing arrows are editable here.** An incoming arrow belongs to the
 cell at the other end and is edited from there. Candidates are version-scoped,

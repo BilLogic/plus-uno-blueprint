@@ -34,6 +34,18 @@ claims:
   - src/components/editor/AnnotationCaptureMenu.tsx
   - src/components/editor/BoardAddressSync.tsx
   - src/components/editor/CanvasAnnotationLayer.tsx
+  - src/components/editor/AnnotationShapeStyleBar.tsx
+  - src/components/editor/AnnotationStickyStyleBar.tsx
+  - src/components/editor/AnnotationTextStyleBar.tsx
+  - src/components/editor/CanvasAnnotationBarChrome.tsx
+  - src/components/editor/CanvasAnnotationResizeHandles.tsx
+  - src/components/editor/CanvasAnnotationSwatches.tsx
+  - src/components/editor/canvasAnnotationChromeStyles.ts
+  - src/components/editor/canvasAnnotationGeometry.ts
+  - src/components/editor/canvasAnnotationNodeProps.ts
+  - src/components/editor/ShapeAnnotationNode.tsx
+  - src/components/editor/StickyAnnotationNode.tsx
+  - src/components/editor/TextAnnotationNode.tsx
   - src/components/editor/CanvasAnnotationToolbar.tsx
   - src/components/editor/CanvasCellContextMenu.tsx
   - src/components/editor/CanvasDesignTools.tsx
@@ -67,7 +79,7 @@ claims:
   - src/components/editor/ZoomPanViewport.tsx
   - src/components/editor/canvasPhaseSectionLayout.ts
   - src/components/editor/menubarHeaderLayout.ts
-last-reviewed: 2026-08-25
+last-reviewed: 2026-09-14
 ---
 
 # Canvas
@@ -112,6 +124,24 @@ mode.
 disabled Edit button would advertise a capability the session doesn't have;
 discoverability is handled in copy instead — see
 [content-voice](../foundations/content-voice.md).
+
+## The annotation layer, in pieces
+
+`CanvasAnnotationLayer.tsx` is the pointer, drag, resize and selection machine
+and the composition — and since v1.44.11 it is only those. Beside it sit the
+geometry every piece divides by (`canvasAnnotationGeometry.ts`), the pickers
+and grips (`CanvasAnnotationSwatches.tsx`,
+`CanvasAnnotationResizeHandles.tsx`), one floating bar per mark kind over a
+shared plate (`AnnotationShapeStyleBar.tsx`,
+`AnnotationStickyStyleBar.tsx`, `AnnotationTextStyleBar.tsx` on
+`CanvasAnnotationBarChrome.tsx`, whose class vocabulary — slot, icon slot,
+menu surface, menu item — is `canvasAnnotationChromeStyles.ts`), and the
+three nodes
+(`ShapeAnnotationNode.tsx`, `StickyAnnotationNode.tsx`,
+`TextAnnotationNode.tsx`) over the props contract they share
+(`canvasAnnotationNodeProps.ts`). Nothing a person does changed: the split is
+held upstream by the annotation-drag slice, and `npm run check:render-walk`
+drags a box onto a third cell here on every run.
 
 ## Panel as selection
 
