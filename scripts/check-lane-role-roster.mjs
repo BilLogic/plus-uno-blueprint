@@ -9,21 +9,21 @@
  * SET, and until this check existed neither statement was compared to
  * anything at all:
  *
- *   docs/reference/erd.mmd        the `%% Roles:` comment's `Canonical:`
- *                                 roster, which is where a person reading
- *                                 the ERD learns what the column holds
- *   src/lib/agent/tools/specs.ts  `LANE_ROLE_FILTER_PARAM`, a pipe-separated
- *                                 string that is the same set in a different
- *                                 notation, and the only description of the
- *                                 value set the model ever sees
+ *   docs/reference/erd.mmd     the `%% Roles:` comment's `Canonical:`
+ *                              roster, which is where a person reading the
+ *                              ERD learns what the column holds
+ *   the agent's lane-role      `LANE_ROLE_FILTER_DESCRIPTION`, the whole
+ *   filter description         description of the value set the model is ever
+ *                              given for its `lane_role` filter — the same set
+ *                              in a different notation
  *
  * Add a ninth role to `lanes_lane_role_check` today and both go quietly
  * incomplete. The ERD then misdescribes the schema, which is a documentation
- * defect and reads like one. The tool spec is the half that costs something:
- * the agent is never told the role exists, so it cannot filter on it, and a
- * blueprint appears not to cover lanes it covers. That is precisely the
- * failure #395 fixed — a read that comes back empty while reporting success —
- * arrived at from the other side.
+ * defect and reads like one. The filter description is the half that costs
+ * something: the agent is never told the role exists, so it cannot filter on
+ * it, and a blueprint appears not to cover lanes it covers. That is precisely
+ * the failure #395 fixed — a read that comes back empty while reporting
+ * success — arrived at from the other side.
  *
  * A THIRD list states the same set and is already held: `CANONICAL_LANE_ROLES`
  * in `src/lib/laneRoles.ts`, which `scripts/tests/lane-roles.test.mjs`
@@ -45,10 +45,11 @@
  * what is checked.
  *
  * ORDER IS NOT ASSERTED, only membership. The ERD lists the roster in the
- * constraint's own order; the tool spec deliberately does not, putting each
- * touchpoint role beside the actions role it pairs with, because that is the
- * order the reading is useful in. A check comparing sequences would have to
- * declare one of those two orders wrong, and neither is.
+ * constraint's own order; the filter description takes whatever order
+ * `CANONICAL_LANE_ROLES` is written in, which puts each touchpoint role beside
+ * the actions role it pairs with, because that is the order the reading is
+ * useful in. A check comparing sequences would have to declare one of those
+ * two orders wrong, and neither is.
  *
  * ── THE LIVE SET IS REUSED, NOT REPARSED ──────────────────────────────────
  *
@@ -99,10 +100,21 @@ import { staleConstraintPointer } from './check-lane-role-values.mjs'
 const REPO_ROOT = resolve(new URL('..', import.meta.url).pathname)
 
 export const ERD_PATH = 'docs/reference/erd.mmd'
-// The agent's tool specs, in the package — see the note on `ROLES_PATH` in
-// `scripts/lane-roles.mjs` for why the application is read from there now.
-export const SPECS_PATH =
-  'node_modules/agentic-service-blueprinting/src/lib/agent/tools/specs.ts'
+/**
+ * The module that declares the agent's lane-role filter description, in the
+ * package — see the note on `ROLES_PATH` in `scripts/lane-roles.mjs` for why
+ * the application is read from there now.
+ *
+ * It used to be `src/lib/agent/tools/specs.ts`, which declared every tool's
+ * whole spec as one literal array. The package now keeps one definition module
+ * per tool family under `definitions/`, each carrying its own name, surface and
+ * zod arguments, and `specs.ts` is nothing but
+ * `TOOL_DEFINITIONS.map(toolSpec)` — so the constant this reads moved to the
+ * module that owns the reads it is an argument of, and there is no literal left
+ * in `specs.ts` for any reader to see.
+ */
+export const FILTER_PATH =
+  'node_modules/agentic-service-blueprinting/src/lib/agent/tools/definitions/blueprint.ts'
 
 /**
  * The values of a `Canonical: a, b, c.` sentence, unfiltered.
@@ -160,21 +172,103 @@ export function rolesInErdRoster(mmd, source = ERD_PATH) {
 }
 
 /**
- * The roles `LANE_ROLE_FILTER_PARAM` offers the model, with its line.
+ * The source text a `const … = …` declaration is initialised with.
+ *
+ * Three forms are accepted, because which one the package happens to use says
+ * nothing about what the model is told:
+ *
+ *   a TEMPLATE literal   `` `… ${CANONICAL_LANE_ROLES.join(' | ')}` `` — what
+ *                        the package ships today
+ *   a QUOTED string      `'a | b | c'` — a roster written out by hand
+ *   a CALL wrapper       `str('a | b | c')`, `arg.optionalText(\`…\`)` — the
+ *                        shape the deployment's own copy used when the
+ *                        description was built by a helper
+ *
+ * Anything else throws. A reader that guessed would hand the comparison below
+ * an empty set, and an empty set agrees with a constraint about nothing while
+ * reporting success — the failure this whole family of checks exists to stop.
+ *
+ * Returns `{ initialiser, literal }`: the whole initialiser, which is what the
+ * derivation test is run against, and the inner text of its string literal,
+ * which is the description a hand-written roster would be read out of.
+ */
+function declaredText(source, path) {
+  const declared = source.indexOf('LANE_ROLE_FILTER_DESCRIPTION')
+  const eq = source.indexOf('=', declared)
+  let at = eq + 1
+  while (at < source.length && /\s/.test(source[at])) at += 1
+
+  // A string or template literal: read to its own closing delimiter, skipping
+  // escapes. A `'` inside a template's `${…}` is not a terminator, and the
+  // delimiter search is what makes that true without parsing the expression.
+  const quoted = (from) => {
+    const delimiter = source[from]
+    for (let i = from + 1; i < source.length; i += 1) {
+      if (source[i] === '\\') i += 1
+      else if (source[i] === delimiter) return source.slice(from + 1, i)
+    }
+    return null
+  }
+
+  if (source[at] === '`' || source[at] === "'" || source[at] === '"') {
+    const inner = quoted(at)
+    if (inner === null) {
+      throw new Error(
+        `LANE_ROLE_FILTER_DESCRIPTION in ${path} opens a string literal that ` +
+          `never closes, so this reader cannot see what the model is told. Fix ` +
+          `the reader.`,
+      )
+    }
+    return { initialiser: inner, literal: inner }
+  }
+
+  // A call wrapper. The argument list is COUNTED rather than matched: it
+  // legitimately contains parentheses — a derived description ends
+  // `CANONICAL_LANE_ROLES.join(' | ')}` — so a non-greedy regex stops at the
+  // wrong one and a greedy one runs to the end of the file. Counting also
+  // accepts the call on one line and wrapped over several, because how long
+  // the string is has nothing to do with what the model is told.
+  const open = source.indexOf('(', at)
+  if (open !== -1 && !/[;\n]/.test(source.slice(at, open))) {
+    let depth = 0
+    for (let i = open; i < source.length; i += 1) {
+      if (source[i] === '(') depth += 1
+      else if (source[i] === ')') {
+        depth -= 1
+        if (depth === 0) {
+          const args = source.slice(open + 1, i)
+          const first = args.search(/['"`]/)
+          return {
+            initialiser: args,
+            literal: first === -1 ? null : quoted(open + 1 + first),
+          }
+        }
+      }
+    }
+  }
+
+  throw new Error(
+    `LANE_ROLE_FILTER_DESCRIPTION in ${path} is initialised with neither a ` +
+      `string literal nor a call taking one, so this reader cannot see what the ` +
+      `model is told. Fix the reader.`,
+  )
+}
+
+/**
+ * The roles `LANE_ROLE_FILTER_DESCRIPTION` offers the model, with its line.
  *
  * ── THIS ARM CHANGED SHAPE WHEN THE APPLICATION MOVED INTO THE PACKAGE ────
  *
  * It used to read a pipe-separated LITERAL: the same set written out a second
- * time, in the notation a tool spec's `description` is read in, and a second
+ * time, in the notation a tool argument's description is read in, and a second
  * hand-maintained statement is exactly the kind of thing that goes quietly
  * incomplete when a ninth role is added. Comparing it to the constraint was
  * the point.
  *
  * The package does not restate the set. It interpolates it:
  *
- *     export const LANE_ROLE_FILTER_PARAM = str(
- *       `Optional. Restrict to lanes with this role, one of: ${CANONICAL_LANE_ROLES.join(' | ')}`,
- *     )
+ *     export const LANE_ROLE_FILTER_DESCRIPTION =
+ *       `Optional. Restrict to lanes with this role, one of: ${CANONICAL_LANE_ROLES.join(' | ')}`
  *
  * `CANONICAL_LANE_ROLES` is the third list named in this module's header, and
  * `scripts/tests/lane-roles.test.mjs` already holds it to the constraint value
@@ -189,80 +283,59 @@ export function rolesInErdRoster(mmd, source = ERD_PATH) {
  * calling it agreement would be the decorative version, and this deliberately
  * does not do that.
  */
-export function rolesInToolSpec(source, path = SPECS_PATH, live = null) {
+export function rolesInToolSpec(source, path = FILTER_PATH, live = null) {
   const lines = source.split('\n')
   // `export` is optional — this deployment's own copy declared the constant
   // module-private, the package exports it, and which it is says nothing about
   // what the model is offered.
   const start = lines.findIndex((line) =>
-    /^(?:export )?const LANE_ROLE_FILTER_PARAM\b/.test(line),
+    /^(?:export )?const LANE_ROLE_FILTER_DESCRIPTION\b/.test(line),
   )
   if (start === -1) {
     throw new Error(
-      `${path} no longer declares \`LANE_ROLE_FILTER_PARAM\` at the start of a ` +
-        `line. The reader in scripts/check-lane-role-roster.mjs can no longer ` +
-        `see the value set the agent is offered, so nothing is being compared. ` +
-        `Fix the reader.`,
+      `${path} no longer declares \`LANE_ROLE_FILTER_DESCRIPTION\` at the start ` +
+        `of a line. The reader in scripts/check-lane-role-roster.mjs can no ` +
+        `longer see the value set the agent is offered, so nothing is being ` +
+        `compared. Fix the reader.`,
     )
   }
 
-  // The declaration's body: everything between `str(` and ITS closing paren.
-  //
-  // Counted rather than matched. The body legitimately contains parentheses —
-  // the derived form ends `CANONICAL_LANE_ROLES.join(' | ')}\`` — so a
-  // non-greedy regex stops at the wrong one, and a greedy one runs to the end
-  // of the file. It also has to accept the declaration on one line and wrapped
-  // over several, because how long the string is has nothing to do with what
-  // the model is told.
-  const open = source.indexOf('str(', source.indexOf('LANE_ROLE_FILTER_PARAM'))
-  let depth = 0
-  let close = -1
-  for (let i = open + 'str('.length - 1; i < source.length; i += 1) {
-    if (source[i] === '(') depth += 1
-    else if (source[i] === ')') {
-      depth -= 1
-      if (depth === 0) {
-        close = i
-        break
-      }
-    }
-  }
-  if (open === -1 || close === -1) {
-    throw new Error(
-      `${path} declares LANE_ROLE_FILTER_PARAM but not as \`str(...)\`, so this ` +
-        `reader cannot see what the model is told. Fix the reader.`,
-    )
-  }
-  const body = source.slice(open + 'str('.length, close)
+  const { initialiser, literal } = declaredText(source, path)
 
   // Derived — the shape the package ships, and the one that makes drift
   // impossible. Nothing further to compare.
-  if (/CANONICAL_LANE_ROLES\s*\.\s*join\(/.test(body)) {
+  if (/CANONICAL_LANE_ROLES\s*\.\s*join\(/.test(initialiser)) {
     return { line: start + 1, derived: true, values: live ?? [] }
   }
 
-  // Restated by hand. The duplication is back, so compare it the old way. Any
-  // single-quoted string counts, INCLUDING an empty one — an empty roster is a
-  // filter that admits nothing, and it has to reach the "names no lane role"
-  // error below rather than read as a declaration this reader cannot parse.
-  const literal = /'([^']*)'/.exec(body)
-  if (!literal) {
+  // Restated by hand. The duplication is back, so compare it the old way.
+  if (literal === null) {
     throw new Error(
-      `LANE_ROLE_FILTER_PARAM in ${path} neither derives its roster from ` +
+      `LANE_ROLE_FILTER_DESCRIPTION in ${path} neither derives its roster from ` +
         `CANONICAL_LANE_ROLES nor states one as a pipe-separated literal, so ` +
         `this check is comparing nothing. Fix the reader, or restore the ` +
         `derivation.`,
     )
   }
-  const values = literal[1]
+  // Only the roster is split, not the sentence around it. A hand-written
+  // description reads "…, one of: a | b | c", and splitting the whole sentence
+  // on `|` would make its prose the first "role" and report it as one the
+  // constraint refuses — a true failure, named after the wrong thing. A bare
+  // list with no sentence is read whole, which is the shape the deployment's
+  // own copy used.
+  const roster = /one of:([\s\S]*)$/.exec(literal)
+  const values = (roster ? roster[1] : literal)
     .split('|')
     .map((entry) => entry.trim())
     .filter((entry) => entry !== '')
+  // An empty roster reaches this error rather than reading as a declaration the
+  // reader cannot parse: a filter that admits nothing is a defect in the
+  // document, not in the reading of it.
   if (values.length === 0) {
     throw new Error(
-      `LANE_ROLE_FILTER_PARAM in ${path} names no lane role at all. The filter ` +
-        `it describes would admit nothing, and this check would have compared ` +
-        `an empty set to the constraint and passed.`,
+      `LANE_ROLE_FILTER_DESCRIPTION in ${path} names no lane role at all. The ` +
+        `filter it describes would admit nothing, and this check would have ` +
+        `compared an empty set to the constraint and passed.`,
     )
   }
   return { line: start + 1, derived: false, values }
@@ -271,12 +344,12 @@ export function rolesInToolSpec(source, path = SPECS_PATH, live = null) {
 /** Both roster claims, read from the tree. */
 export function rosterClaims(root = REPO_ROOT) {
   const erd = rolesInErdRoster(readFileSync(resolve(root, ERD_PATH), 'utf8'))
-  // The live set is handed in so a DERIVED spec can report agreement without
-  // this module re-parsing the constraint — see the header's note on reusing
-  // `rolesInConstraint()` rather than committing a second parse.
+  // The live set is handed in so a DERIVED description can report agreement
+  // without this module re-parsing the constraint — see the header's note on
+  // reusing `rolesInConstraint()` rather than committing a second parse.
   const spec = rolesInToolSpec(
-    readFileSync(resolve(root, SPECS_PATH), 'utf8'),
-    SPECS_PATH,
+    readFileSync(resolve(root, FILTER_PATH), 'utf8'),
+    FILTER_PATH,
     rolesInConstraint(root),
   )
   return [
@@ -290,12 +363,12 @@ export function rosterClaims(root = REPO_ROOT) {
       values: erd.values,
     },
     {
-      file: SPECS_PATH,
+      file: FILTER_PATH,
       line: spec.line,
-      what: 'LANE_ROLE_FILTER_PARAM',
+      what: 'LANE_ROLE_FILTER_DESCRIPTION',
       consequence:
-        'a spec is the only description of the value set the model ever sees, ' +
-        'so a role missing from it is a role the agent cannot filter on',
+        'it is the only description of the value set the model ever sees, so a ' +
+        'role missing from it is a role the agent cannot filter on',
       values: spec.values,
     },
   ]
@@ -362,7 +435,7 @@ function main() {
     process.exit(1)
   }
   console.log(
-    `ok — the ERD roster and LANE_ROLE_FILTER_PARAM each state exactly the ` +
+    `ok — the ERD roster and LANE_ROLE_FILTER_DESCRIPTION each state exactly the ` +
       `${live.length} lane roles lanes_lane_role_check accepts (${live.join(', ')})`,
   )
 }
