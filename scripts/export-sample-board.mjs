@@ -39,7 +39,22 @@
  *
  * Every list is sorted on a key the database supplies, never on arrival order:
  * PostgREST promises no order for an embedded relation, and a file that
- * re-shuffles on every run is a file nobody can review. The only volatile
+ * re-shuffles on every run is a file nobody can review.
+ *
+ * ── WHAT IT CAN AND CANNOT SEE ────────────────────────────────────────────
+ *
+ * Two different absences, and only one of them is detectable from here.
+ *
+ * TRUNCATION is caught: the cells of every scenario are counted a second time
+ * as rows of their own and the run refuses on a disagreement, because a row cap
+ * applies inside a 200 with no error to notice.
+ *
+ * ROW-LEVEL FILTERING is not, and cannot be. A policy that hides a row hides it
+ * from every shape of the question equally, so a board RLS has trimmed looks
+ * exactly like a smaller board. What this file therefore claims is the honest
+ * half: every scenario the nav names returned at least one path, and every
+ * scenario that returned none is named in a warning. It does not claim that
+ * what anon sees is all there is. The only volatile
  * thing in the output is the generated-on line, and it is carried over from
  * the previous file whenever the body is byte-identical — so a run against
  * unchanged data produces NO DIFF AT ALL, and `git status` after a regenerate
@@ -62,27 +77,13 @@ import { fileURLToPath } from 'node:url'
 
 import { parseEnvFile } from './check-target-schema.mjs'
 import { credentials, postgrest, rest } from './generate-agent-account.mjs'
-import { BLUEPRINTS, NAV } from './render-walk.mjs'
+import { BLUEPRINTS, NAV, idsIn } from './render-walk.mjs'
 
 /** The tree this script runs in — the working directory, as every check here resolves it. */
 const REPO_ROOT = process.cwd()
 
 /** The npm alias, spelled once so the header it writes and the errors agree. */
 const COMMAND = 'npm run export:sample-board'
-
-const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g
-
-/**
- * Every id spelled in `text`, in the order it first appears and without
- * repeats. The nav lists phases and scenarios together; which of the two an id
- * is, is the database's answer rather than this file's guess.
- *
- * @param {string} text
- * @returns {string[]}
- */
-export function idsIn(text) {
-  return [...new Set(text.match(UUID) ?? [])]
-}
 
 /* ------------------------------------------------------------ the shaping */
 
@@ -92,7 +93,7 @@ export function idsIn(text) {
  * is not on the application's own select because the live board has the
  * database to ask, and the offline one does not.
  */
-const CELL_COLUMNS =
+export const CELL_COLUMNS =
   'id,cell_key,lane_id,step_id,position,content,frame,summary,status,"function",form,value_props,owner,perceived_owner'
 
 /** The board query, one scenario at a time. Mirrors the application's own. */
@@ -104,17 +105,35 @@ const PATH_SELECT = `id,name,summary,note,kind,status,scenario_id,` +
   `cell_touchpoints(id,touchpoint_id,name,position,summary,role,touchpoints(name,kind,icon_url)),` +
   `outgoing:cell_dependencies!cell_dependencies_source_cell_id_fkey(id,target_cell_id,kind,name,note))`
 
-/** The six values `entity_status` accepts; anything else reads as unsaid. */
-const ENTITY_STATUS = new Set(['proposed', 'planned', 'built', 'live', 'at_risk', 'deprecated'])
+/**
+ * The six values `entity_status` accepts; anything else reads as unsaid.
+ *
+ * Restated from the package rather than imported, because a `.mjs` script
+ * cannot import TypeScript out of `node_modules` — neither loader will compile
+ * it. A restatement with nothing holding it to its original is a restatement
+ * that drifts, so
+ * `scripts/tests/the-exporter-restates-the-package-and-is-held-to-it.test.mjs`
+ * reads the package's own sources as text and fails on a disagreement. Same
+ * argument, and the same remedy, as `scripts/lane-roles.mjs`.
+ */
+export const ENTITY_STATUS = ['proposed', 'planned', 'built', 'live', 'at_risk', 'deprecated']
 
 /** What a row gets when nobody has said otherwise. */
 const DEFAULT_ENTITY_STATUS = 'live'
 
 /** A status column narrowed to the vocabulary the renderer has treatments for. */
-const asEntityStatus = (value) => (ENTITY_STATUS.has(value) ? value : null)
+const STATUS_VALUES = new Set(ENTITY_STATUS)
+const asEntityStatus = (value) => (STATUS_VALUES.has(value) ? value : null)
+
+/** The two roles a placement can be marked with. Restated; held by the same test. */
+export const TOUCHPOINT_ROLES = ['core', 'peripheral']
+
+/** The two kinds a resource can be. Restated; held by the same test. */
+export const RESOURCE_KINDS = ['link', 'attachment']
 
 /** The column holds `core | peripheral`; null is a state of its own, not a quiet peripheral. */
-const asRole = (value) => (value === 'core' || value === 'peripheral' ? value : null)
+const ROLE_VALUES = new Set(TOUCHPOINT_ROLES)
+const asRole = (value) => (ROLE_VALUES.has(value) ? value : null)
 
 /** The column holds `link | attachment`; anything else reads as a link. */
 const asResourceKind = (value) => (value?.trim() === 'attachment' ? 'attachment' : 'link')
@@ -134,10 +153,14 @@ const by = (...keys) => (a, b) => {
  * An embedded relation as the application reads it: unnamed rows dropped,
  * the rest in the author's order, the name trimmed.
  *
- * The same rule as the package's `orderedNamedRows`, and it is a rule rather
- * than a convenience — a placement with no name has nothing to draw, and
- * PostgREST promises no order for an embed, so the position column is the only
- * thing that says which came first.
+ * The package's `orderedNamedRows` rule — a placement with no name has nothing
+ * to draw, and PostgREST promises no order for an embed, so the position column
+ * is what says which came first — PLUS an id tiebreak the package does not
+ * have. The package sorts on position alone and takes whatever order the
+ * comparator leaves rows that share one; a file re-shuffling those on every
+ * export is a file nobody can review, so this settles them on their id. Two
+ * rows at one position is already a defect in the data, and the two boards
+ * disagreeing about which comes first is the smaller half of it.
  */
 function orderedNamedRows(rows, project) {
   return (rows ?? [])
@@ -308,6 +331,11 @@ export function toSampleBlueprintRegistry(scenarioIds, rows) {
   for (const scenarioId of scenarioIds) {
     const paths = byScenario.get(scenarioId) ?? []
     if (paths.length === 0) continue
+    // Alphabetical, and that is THE EXPORTER'S OWN ORDER rather than the live
+    // board's. The picker lists paths in the order PostgREST returned them,
+    // which is no order at all — nothing to reproduce, and a file that carried
+    // it would re-shuffle on every export. What has to match the live board is
+    // element 0, and that is what `preferredPathIndex` settles.
     const sorted = [...paths].sort(by((path) => path.name, (path) => path.id))
     const preferred = preferredPathIndex(sorted)
     const ordered = [sorted[preferred], ...sorted.filter((_, index) => index !== preferred)]
@@ -351,10 +379,19 @@ export function dimensions(registry) {
 }
 
 /** The dimensions as one line, the spelling the docs' freshness note reuses. */
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
+
 export const countsSentence = (counts) =>
-  `${counts.scenarios} scenarios, ${counts.paths} paths, ${counts.lanes} lanes, ` +
-  `${counts.steps} steps, ${counts.cells} cells, ${counts.dependencies} dependencies, ` +
-  `${counts.touchpoints} touchpoint placements, ${counts.resources} resources`
+  [
+    plural(counts.scenarios, 'scenario', 'scenarios'),
+    plural(counts.paths, 'path', 'paths'),
+    plural(counts.lanes, 'lane', 'lanes'),
+    plural(counts.steps, 'step', 'steps'),
+    plural(counts.cells, 'cell', 'cells'),
+    plural(counts.dependencies, 'dependency', 'dependencies'),
+    plural(counts.touchpoints, 'touchpoint placement', 'touchpoint placements'),
+    plural(counts.resources, 'resource', 'resources'),
+  ].join(', ')
 
 /**
  * The module text. Pure, and split from the write so the generated-on line can
@@ -419,7 +456,17 @@ export function moduleToWrite(previous, registry, today) {
 
 /* ---------------------------------------------------------------- the run */
 
-/** `.env` values, ignoring a missing file — the environment may carry them. */
+/**
+ * `.env` values, ignoring a missing file — the environment may carry them.
+ *
+ * The same four lines as `generate-agent-account.mjs`, and deliberately not
+ * imported from it: that file is one of the scripts the template PUBLISHES and
+ * this repository holds byte-identical (`check:reconciled`,
+ * `check:shared-scripts`), so adding an export to it is an edit upstream owns.
+ * Its `credentials`, `rest` and `postgrest` are imported above because they are
+ * already exported; this is not, and four lines here is cheaper than a pin held
+ * for a one-word release.
+ */
 function readDotenv() {
   try {
     return parseEnvFile(readFileSync(resolve(REPO_ROOT, '.env'), 'utf8'))
@@ -438,6 +485,65 @@ async function read(target, path, subject) {
     )
   }
   return response.body
+}
+
+/**
+ * Every id of `table` whose `column` is one of `values`, paged explicitly.
+ *
+ * PostgREST caps a response at its own `db-max-rows` and says so in a header
+ * rather than in an error, so a read that asks for everything and takes what it
+ * gets is a read that can silently return half a board. The pages are asked for
+ * by number instead: a short page is the end, a full one is never assumed to be.
+ */
+async function flatIds(target, table, column, values, subject) {
+  const PAGE = 500
+  const ids = []
+  for (let offset = 0; ; offset += PAGE) {
+    const page = await read(
+      target,
+      `${table}?select=id&${column}=in.(${values.join(',')})&order=id.asc&limit=${PAGE}&offset=${offset}`,
+      subject,
+    )
+    ids.push(...page.map((row) => row.id))
+    if (page.length < PAGE) return ids
+  }
+}
+
+/**
+ * THE NESTED READ AGAINST A FLAT ONE, because a truncated board is a green run.
+ *
+ * The board query embeds a path's cells under it, and an embedded array is
+ * subject to the same row cap the top level is — applied inside a 200, with no
+ * error to notice. So the cells are counted a second way, as their own rows,
+ * paged: the same role, the same policies, a different shape. A disagreement is
+ * a refusal rather than a warning, because the script's own promise is that a
+ * partial board is never committed as a whole one.
+ *
+ * It is a TRUNCATION guard and not an RLS one, and the difference matters. A
+ * policy that hides rows hides them from both shapes equally; what this catches
+ * is the read surface handing back fewer rows than it holds.
+ */
+async function refuseOnTruncation(target, scenarioIds, rows) {
+  for (const scenarioId of scenarioIds) {
+    const paths = rows.filter((row) => row.scenario_id === scenarioId)
+    if (paths.length === 0) continue
+    const embedded = paths.reduce((total, row) => total + (row.cells?.length ?? 0), 0)
+    const flat = await flatIds(
+      target,
+      'cells',
+      'path_id',
+      paths.map((row) => row.id),
+      `the cells of scenario ${scenarioId}, counted as rows`,
+    )
+    if (flat.length !== embedded) {
+      throw new Error(
+        `scenario ${scenarioId} answered with ${embedded} cells embedded under its paths and ` +
+          `${flat.length} cells read as rows. The board query is being truncated — PostgREST caps ` +
+          'an embedded array the same way it caps a top-level one, inside a 200. Nothing is ' +
+          'written: a partial board committed as a whole one is worse than no board.',
+      )
+    }
+  }
 }
 
 async function main() {
@@ -480,6 +586,8 @@ async function main() {
       )),
     )
   }
+
+  await refuseOnTruncation(target, scenarioIds, rows)
 
   const registry = toSampleBlueprintRegistry(scenarioIds, rows)
   const counts = dimensions(registry)

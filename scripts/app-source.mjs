@@ -172,6 +172,13 @@ export function appSourceFiles(predicate = () => true, subdirectory = '') {
  * regenerated from the database, and a check no tree can satisfy is a check
  * that teaches people to edit generated files.
  *
+ * EVERY prose or naming reader honours it, not just the one that noticed first:
+ * `scripts/tests/badge-and-tag.test.mjs`, `retired-copy.test.mjs`,
+ * `entity-definitions.test.mjs`, and `sweptFiles` in `scripts/scanned-files.mjs`
+ * — which is what the two whole-tree residue sweeps read. Applying the argument
+ * to one guard and not the others would leave the same unclearable red waiting
+ * for whichever cell says the wrong word next.
+ *
  * It is NOT excluded from the type system, the bundler or the board's own
  * tests: `npm run typecheck` compiles it and
  * `deployment/data/sampleBlueprints.test.ts` holds it to the nav. What it is

@@ -71,8 +71,22 @@ export const BLUEPRINTS = 'deployment/data/sampleBlueprints.ts'
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g
 
-/** Every id spelled in `text`, as a set. */
-const idsIn = (text) => new Set(text.match(UUID) ?? [])
+/**
+ * Every id spelled in `text`, in the order it first appears and without
+ * repeats.
+ *
+ * Reading the nav as TEXT is the trick this file has always played on it — the
+ * nav is a TypeScript module a plain Node script cannot import, and an id is
+ * the only thing anyone needs from it. `scripts/export-sample-board.mjs` needs
+ * the same thing for the same reason and takes it from here rather than
+ * spelling the regex a second time: two answers to "which ids does the nav
+ * name" is how the exporter and the gate would start disagreeing about the
+ * board they are both about.
+ */
+export const idsIn = (text) => [...new Set(text.match(UUID) ?? [])]
+
+/** The same ids, as a set — what the comparison below actually wants. */
+const idSetIn = (text) => new Set(idsIn(text))
 
 /**
  * Whether a build of this repository with no database serves a board the walk
@@ -100,7 +114,7 @@ export function servesASampleBoard(root) {
   const navPath = join(root, NAV)
   const contentPath = join(root, BLUEPRINTS)
   if (!existsSync(navPath) || !existsSync(contentPath)) return true
-  const declared = idsIn(readFileSync(navPath, 'utf8'))
+  const declared = idSetIn(readFileSync(navPath, 'utf8'))
   if (declared.size === 0) return true
   for (const id of idsIn(readFileSync(contentPath, 'utf8'))) {
     if (declared.has(id)) return true

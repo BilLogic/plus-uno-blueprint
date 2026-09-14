@@ -24,7 +24,11 @@
  */
 import { execFileSync } from 'node:child_process'
 import { resolve } from 'node:path'
-import { APP_SOURCE_ROOT, appSourceFiles } from './app-source.mjs'
+import {
+  APP_SOURCE_ROOT,
+  appSourceFiles,
+  isGeneratedDeploymentContent,
+} from './app-source.mjs'
 
 const REPO_ROOT = resolve(new URL('..', import.meta.url).pathname)
 
@@ -68,7 +72,19 @@ export function scannedFiles(root = REPO_ROOT) {
  * repository root under vitest; `root` addresses the git listing only.
  */
 export function sweptFiles(root = REPO_ROOT) {
-  return [...scannedFiles(root), ...appSourceFiles((path) => !BINARY.test(path))]
+  return [
+    // GENERATED CONTENT is not prose this codebase wrote. The offline board's
+    // export is a thousand cells of the service's own words, rewritten whole by
+    // `npm run export:sample-board` on every run, so a residue or a retired
+    // word found in it names something a person typed into the database — and
+    // there is no edit here that survives the next export. A sweep that reads
+    // it is a sweep that can go red in a way no tree can clear, which is the
+    // failure the exclusion in `scripts/app-source.mjs` argues about at length;
+    // it is applied to every whole-tree reader rather than only to the one that
+    // happened to notice first.
+    ...scannedFiles(root).filter((path) => !isGeneratedDeploymentContent(path)),
+    ...appSourceFiles((path) => !BINARY.test(path)),
+  ]
 }
 
 /** The roots a whole-tree sweep must have read something from. @see sweptFiles */

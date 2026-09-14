@@ -18,7 +18,21 @@ import { SAMPLE_NAV } from './sampleNav'
  */
 const scenarioRows = SAMPLE_NAV.filter((item) => item.parentId)
 
+const everyBlueprint = Object.values(SAMPLE_BLUEPRINTS.blueprintsByScenario).flat()
+
 describe('the offline board', () => {
+  it('has a subject at all', () => {
+    // FIRST, because every assertion below is an emptiness check and an empty
+    // subject satisfies all of them at once: a nav that lost its scenarios, or
+    // a registry emptied by a bad export, would pass this file as loudly as a
+    // board that is whole. The floors are deliberately far under today's
+    // numbers — they are there to catch a collapse, not to be a second copy of
+    // the freshness note.
+    expect(scenarioRows.length).toBeGreaterThanOrEqual(15)
+    expect(everyBlueprint.length).toBeGreaterThanOrEqual(15)
+    expect(everyBlueprint.reduce((n, b) => n + b.cells.length, 0)).toBeGreaterThanOrEqual(500)
+  })
+
   it('answers every scenario the nav names', () => {
     const unanswered = scenarioRows
       .filter((row) => !(row.id in SAMPLE_BLUEPRINTS.blueprintsByScenario))

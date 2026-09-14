@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
+import { idsIn } from '../render-walk.mjs'
 import {
   countsSentence,
   dimensions,
-  idsIn,
   moduleToWrite,
   preferredPathIndex,
   toBlueprintData,
@@ -65,6 +65,9 @@ const path = (id, name, kind, overrides = {}) => ({
   ...overrides,
 })
 
+// `idsIn` lives with the render walk's gate, which asks the same question of
+// the same file; it is exercised here because the exporter's subject is what it
+// returns.
 describe('the ids the nav spells', () => {
   it('reads them in order, without repeats', () => {
     const text = `const A = '${SCENARIO}'\nconst B = '${SCENARIO}'\nconst C = '22222222-2222-4222-8222-222222222222'`
@@ -205,7 +208,9 @@ describe('the registry', () => {
 
   it('counts what it carries', () => {
     expect(dimensions(registry)).toMatchObject({ scenarios: 1, paths: 2, lanes: 2, steps: 4, cells: 4 })
-    expect(countsSentence(dimensions(registry))).toContain('1 scenarios, 2 paths')
+    // Singular where there is one of a thing: a generated header that reads
+            // "1 scenarios" is a generated header nobody trusts the rest of.
+    expect(countsSentence(dimensions(registry))).toContain('1 scenario, 2 paths')
   })
 })
 
