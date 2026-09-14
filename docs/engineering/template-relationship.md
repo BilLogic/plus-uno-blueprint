@@ -28,7 +28,7 @@ working account: how the arrangement behaves day to day.
 Through `package.json`:
 
 ```json
-"agentic-service-blueprinting": "github:BilLogic/agentic-service-blueprinting#v1.44.11"
+"agentic-service-blueprinting": "github:BilLogic/agentic-service-blueprinting#v1.44.12"
 ```
 
 A tag, never a branch, so a deployment always knows exactly which code it is
@@ -314,7 +314,7 @@ npm run check:shared-scripts  # every script the release publishes, held here an
 ```
 
 Run them; do not quote them. What the last run showed, 2026-09-14 against
-`v1.44.11`: 23 reconciled files byte-identical, 13 published scripts all held
+`v1.44.12`: 25 reconciled files byte-identical, 15 published scripts all held
 here and enrolled, one repo-local import enrolled nowhere, nothing drifted.
 
 What is left that is genuinely this deployment's is identity and data, not
@@ -328,7 +328,7 @@ why that is the intent:
 | `package.json` — `"name": "plus-service-hub"`, and the pin | Unguarded on purpose. The name is what npm calls this deployment, and the pin is the whole subject of a bump rather than something to hold still |
 | `index.html` — `<title>PLUS</title>` — and `public/favicon.svg` beside it | Unguarded on purpose, and deliberately unenrolled: branding is the one change that must not route through the template |
 | `scripts/apply_pending_goal_setting_migrations.mjs` — a hardcoded Supabase project ref | Unguarded on purpose. It is this deployment's project; a script naming anyone else's would be the defect |
-| `docs/`, `scripts/` | This repository's own writing and its own checks, including several that reach into the package to hold the docs to the release |
+| `docs/`, `scripts/` | This repository's own writing and its own checks, including several that reach into the package to hold the docs to the release. Not the composition documents: the claim for a file is written where the file lives, so those are the package's and arrive with the application |
 | `public/touchpoint-logos/` | Stock logos for well-known tools. Unguarded, and nothing about them is this deployment's but the choosing |
 | `deployment/data/sampleBlueprints.ts` — the offline board's content, exported from the live database | `deployment/data/sampleBlueprints.test.ts`, which holds the registry to every scenario `sampleNav.ts` names, and `check:render-walk`, which opens all of it in a browser |
 

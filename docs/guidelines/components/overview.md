@@ -8,8 +8,8 @@ last-reviewed: 2026-08-25
 # Components
 
 `src/components/ui/` is the design system: 34 primitives, and the whole of what
-this folder documents. Anything assembled out of them is
-[composition](../composition/overview.md). The need→primitive map for agent-UX
+this folder documents. Anything assembled out of them is composition, and the package documents it:
+`node_modules/agentic-service-blueprinting/docs/guidelines/composition/overview.md`. The need→primitive map for agent-UX
 work, with every primitive named, is
 [`docs/reference/ui-inventory.md`](../../reference/ui-inventory.md).
 
@@ -50,8 +50,8 @@ house idiom. The Radix migration is finished: `asChild` has zero occurrences in
 The drawer/sheet **posture** contract — which posture a panel takes at which
 width, how it is keyed, what a surface switch inside an open drawer may do —
 sat here for months, and it is a composition rule wearing a components label.
-It has moved, single-owner claim intact, to
-[composition/dialogs-sheets-and-forms.md](../composition/dialogs-sheets-and-forms.md).
+It has moved, single-owner claim intact, to the package's
+`node_modules/agentic-service-blueprinting/docs/guidelines/composition/dialogs-sheets-and-forms.md`.
 This doc still owns *which primitive*; that one owns *what shape it takes*.
 
 ## Badges and segmented controls

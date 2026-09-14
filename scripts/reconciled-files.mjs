@@ -22,7 +22,7 @@
  * repository still HOLDS and still shares, where two copies genuinely exist
  * and can still disagree.
  *
- * There are twenty-two, and they fall into three groups.
+ * There are twenty-five, and they fall into three groups.
  *
  *   - **The build's own configuration.** `vite.config.ts`, `tsconfig.json`,
  *     `tsconfig.app.json`, `tsconfig.node.json`, `eslint.config.js`,
@@ -37,8 +37,9 @@
  *     `always-loaded.mjs`, `authoring-archivers.mjs`, `check-pointers.mjs`,
  *     `check-router-budget.mjs`, `check-glossary-only.mjs`,
  *     `check-negation-ratchet.mjs`, `check-target-schema.mjs`,
- *     `agent-account.mjs`, `generate-agent-account.mjs`, `sweep.mjs`,
- *     `seed-list.mjs`, and two suites.
+ *     `check-harness-claims.mjs`, `agent-account.mjs`,
+ *     `generate-agent-account.mjs`, `sweep.mjs`, `seed-list.mjs`, and three
+ *     suites.
  *     `scripts/` is the one tree the flip did not touch: it is not the
  *     application, so it did not move into the package, and where both
  *     repositories run the same check they still run two copies of it. This is
@@ -224,6 +225,18 @@ export const RECONCILED_FILES = [
   // comes back, and `check:shared-scripts` now holds the pair from the other
   // direction as well.
   'scripts/tests/authoring-log.test.mjs',
+
+  // The composition-claims check, and its suite. The claim for a file is
+  // written where the file lives, so the documents that claim the assembled
+  // surfaces moved into the package and the check that reads them became one
+  // file run in both trees: here it lays this repository's composition folder
+  // over the package's and sweeps the trees `composition.claimed` names, and
+  // in the template it is the same walk over the one layer that tree has. Both
+  // halves of that behaviour are ours to keep honest, so both are enrolled —
+  // this repository ran a fork of the check for as long as it held its own ten
+  // documents, and a fork is exactly what the enrolment now forbids.
+  'scripts/check-harness-claims.mjs',
+  'scripts/tests/harness-claims.test.mjs',
 
 
   // ── The six that used to name a `docs/` path ──

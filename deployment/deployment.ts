@@ -23,7 +23,6 @@ import type { DeploymentConfig } from 'agentic-service-blueprinting'
 import blueprintAccount from '../docs/agents/blueprint.md?raw'
 import canvasAdapter from '~/agent/canvas-adapter.md?raw'
 import { coverContent } from './content/coverContent'
-import { SAMPLE_BLUEPRINTS } from './data/sampleBlueprints'
 import { SAMPLE_NAV } from './data/sampleNav'
 
 export const unoDeploymentConfig: DeploymentConfig = {
@@ -60,8 +59,24 @@ export const unoDeploymentConfig: DeploymentConfig = {
    * key the site itself ships — by `npm run export:sample-board`, because the
    * kit's own generator takes an IR and this deployment has never had one. Its
    * header carries the command; the script's header carries the why.
+   *
+   * THE REGISTRY ARRIVES BEHIND A LOADER RATHER THAN AS A VALUE, and the two
+   * forms draw the same board. What differs is which builds carry it. The
+   * registry is read on one condition — the bundled sample being active, which
+   * is false the moment a database is configured — and named as a value it was
+   * reachable from this module, so every build carried an export of the live
+   * board that the deployed site, which has a database, never asks for. Inside
+   * a dynamic import the only reference to those bytes is behind a chunk
+   * boundary. `DeploymentConfigProvider` calls the loader only when the
+   * bundled sample is reachable and awaits it before rendering below itself,
+   * because the board reads the registry while it draws: one chunk fetch
+   * before first paint in a no-database build, and no call at all in the
+   * deployed one.
    */
-  sample: { nav: SAMPLE_NAV, blueprints: SAMPLE_BLUEPRINTS },
+  sample: {
+    nav: SAMPLE_NAV,
+    blueprints: () => import('./data/sampleBlueprints').then((m) => m.SAMPLE_BLUEPRINTS),
+  },
   cellBudget: {
     prose: { target: 80, warning: 100 },
     touchpointLabels: { target: 32, warning: 48 },

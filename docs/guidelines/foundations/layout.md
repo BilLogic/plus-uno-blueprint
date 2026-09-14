@@ -59,8 +59,8 @@ code uses `useMobileShell`.)
 it; one aside changes from in-flow to floating. Below it the sidebar and the
 canvas cannot both have the width, so the sidebar collapses and reopening it
 draws over the canvas — reopening in flow down there would only recreate the
-squeeze the collapse was for. The behaviour is
-[composition/sidebar.md](../composition/sidebar.md#width-collapse-and-the-camera).
+squeeze the collapse was for. The sidebar's own account of width, collapse and the camera is the package's
+`node_modules/agentic-service-blueprinting/docs/guidelines/composition/sidebar.md`.
 
 **The two gates meet, and cannot drift apart.** The overlay query is one-sided
 because its floor is not a number of its own: below 768 the desktop shell does
@@ -82,7 +82,8 @@ beside it, so the board keeps the full width. No intermediate tablet *shell*
 exists, deliberately — a third shell would triple every layout decision for one
 middling viewport, and a posture change is the cheaper answer.
 
-What the phone does below the gate is [composition/mobile-shell.md](../composition/mobile-shell.md).
+What the phone does below the gate is the package's
+`node_modules/agentic-service-blueprinting/docs/guidelines/composition/mobile-shell.md`.
 
 ## Semantic zoom
 
