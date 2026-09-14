@@ -239,6 +239,32 @@ jobs:
       # above, belongs here after `npm ci`, and needs no database.
       - run: npm run check:shared-scripts
 
+      # THE GENERATED TYPES ARE THE DECLARATION OF THIS DEPLOYMENT'S DATABASE,
+      # and this is where that declaration is held to the application reading
+      # it. Since this deployment imports the application, `@/types/database`
+      # resolves INTO the package and `deployment/types/database.ts` compiles
+      # nothing here — so nothing was checking whether the database this file
+      # describes can actually serve the queries the package's application
+      # makes. A column the app reads and this project never migrated is a
+      # runtime error with every gate above it green.
+      #
+      # The check is the template's, run out of the installed package against
+      # this repository's file. It asks, for every table BOTH files describe,
+      # whether every column the package's application reads is described here
+      # too. A table the package has and this project does not is printed as
+      # information and does not fail — this deployment is entitled to carry
+      # the part of that core its service uses, and it does not run the
+      # migrations behind `schema_version` or `service_account_emails`. A
+      # column missing from a table it DID build still fails. Types are
+      # compared for contradiction rather than width, so the unions this
+      # template's generator narrows and the Supabase CLI emits as `string`
+      # are one text column at two precisions rather than a disagreement.
+      #
+      # Static, and the one credential-free member of the types family: it
+      # reads two files. `check:database-types:live` beside it is the other
+      # half and asks the live project.
+      - run: npm run check:database-types-superset
+
       # The cross-repository duplicate sweep (#364, story 8). Its sibling above
       # asks whether two declared-identical files still agree byte for byte;
       # this asks the opposite question about the files that will never be
