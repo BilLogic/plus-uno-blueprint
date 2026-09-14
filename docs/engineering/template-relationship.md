@@ -43,6 +43,13 @@ Two aliases divide the tree, and the division is the whole seam:
 | `@/…` | `node_modules/agentic-service-blueprinting/src` | the application |
 | `~/…` | `deployment/` | this deployment's own modules |
 
+A third spelling sits beside those two: the **package name**. `@/…` is an
+alias this repository declares, so it resolves only here — a module the
+template's own generator writes for a deployment, or one that names a type
+the package index exports, says `agentic-service-blueprinting` instead,
+which resolves on both sides. `deployment/data/sampleNav.ts` and
+`deployment/data/sampleBlueprints.ts` are that case.
+
 `deployment/` is small on purpose: the `DeploymentConfig` the template's app is
 mounted with, the bootstrap that registers this deployment's reference
 documents, the cover content, the brand dials, this deployment's own

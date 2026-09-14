@@ -134,7 +134,9 @@ and grips (`CanvasAnnotationSwatches.tsx`,
 `CanvasAnnotationResizeHandles.tsx`), one floating bar per mark kind over a
 shared plate (`AnnotationShapeStyleBar.tsx`,
 `AnnotationStickyStyleBar.tsx`, `AnnotationTextStyleBar.tsx` on
-`CanvasAnnotationBarChrome.tsx`), and the three nodes
+`CanvasAnnotationBarChrome.tsx`, whose class vocabulary — slot, icon slot,
+menu surface, menu item — is `canvasAnnotationChromeStyles.ts`), and the
+three nodes
 (`ShapeAnnotationNode.tsx`, `StickyAnnotationNode.tsx`,
 `TextAnnotationNode.tsx`) over the props contract they share
 (`canvasAnnotationNodeProps.ts`). Nothing a person does changed: the split is

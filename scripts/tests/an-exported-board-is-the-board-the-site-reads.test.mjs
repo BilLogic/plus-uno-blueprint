@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { idsIn } from '../render-walk.mjs'
+import { readFileSync } from 'node:fs'
+
+import { BLUEPRINTS, idsIn } from '../render-walk.mjs'
 import {
   countsSentence,
   dimensions,
   moduleToWrite,
   preferredPathIndex,
+  renderModule,
   toBlueprintData,
   toSampleBlueprintRegistry,
 } from '../export-sample-board.mjs'
@@ -233,5 +236,36 @@ describe('the module it writes', () => {
     const first = moduleToWrite(null, registry, '2026-01-01')
     const moved = toSampleBlueprintRegistry([SCENARIO], [path('path-1', 'Renamed', 'happy')])
     expect(moduleToWrite(first, moved, '2026-06-30')).toContain('// Generated on: 2026-06-30')
+  })
+})
+
+/**
+ * THE COMMITTED FILE AGAINST THE FUNCTION THAT WRITES IT, WITH NO DATABASE.
+ *
+ * `renderModule` holds the module's header and its type import, and the file
+ * it writes is committed — two copies of the same text, in two files, edited by
+ * hand whenever the package changes what a deployment should import. The only
+ * guard on that pair was `npm run check:sample-board`, which needs
+ * `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` and is deliberately not a gate
+ * (the board moves whenever somebody authors a cell). So a hand edit to one
+ * copy and not the other was a silent defect until the next credentialled run.
+ *
+ * This asks the cheap half of that question and needs nothing: the registry is
+ * read back OUT of the committed file — its literal is plain JSON — and
+ * re-rendered with the file's own carried date. A disagreement is an exporter
+ * whose next run would rewrite a file nobody meant to change.
+ */
+describe('the committed export and the function that writes it', () => {
+  const committed = readFileSync(BLUEPRINTS, 'utf8')
+  const MARKER = 'export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = '
+  const registry = JSON.parse(committed.slice(committed.indexOf(MARKER) + MARKER.length))
+  const generatedOn = /^\/\/ Generated on: (.+)$/m.exec(committed)[1]
+
+  it('agree byte for byte', () => {
+    expect(renderModule({ registry, generatedOn })).toBe(committed)
+  })
+
+  it('so a re-export of the same board would write nothing', () => {
+    expect(moduleToWrite(committed, registry, '2099-12-31')).toBe(committed)
   })
 })

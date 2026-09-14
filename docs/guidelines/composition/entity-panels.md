@@ -182,7 +182,7 @@ those facts, `CellDetailTabs.tsx` owns the three tabs and
 and nothing-selected surfaces are modules of their own
 (`CellDetailDraftSurface.tsx`, `CellDetailDifferencesSurface.tsx`,
 `CellDetailEmptySurface.tsx`) behind `PanelSurfaceSwitcher.tsx`, and the
-panel’s agent commands sit in `cellDetailAgentCommands.ts`. What stayed in
+panel's agent commands sit in `cellDetailAgentCommands.ts`. What stayed in
 `BlueprintCellDetailPanel.tsx` is the drawer: which surface shows, how wide it
 is, what closes it, and the one footer every Save portals into.
 
