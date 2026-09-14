@@ -206,32 +206,24 @@ export const RECONCILED_FILES = [
   // deployment too. See the module header.
   'scripts/tests/one-badge-one-size.test.mjs',
 
-  // ── The one file taken at the release's bytes and NOT enrolled ──
+  // `scripts/tests/authoring-log.test.mjs` is the sweep-side half of
+  // `authoring-archivers.mjs` above, and the two move together again.
   //
-  // `scripts/tests/authoring-log.test.mjs` is held byte-identical to the
-  // pinned release and is deliberately off this list, which is the one
-  // combination the header above says to write the reasoning for rather than
-  // leave to be rediscovered.
+  // It was off this list for one release. The change that moved
+  // `archivingFunctionsIn` onto the sweep rewrote the suite, and the new text
+  // spelled its fixture series `21000101000000_one.sql` /
+  // `21000102000000_two.sql` — a made-up pair that reads like a migration
+  // address, and `check:reconciled`'s citation rule is line-based over bytes
+  // and cannot tell a fixture from an address. The bytes were the release's
+  // and the promise this list makes about them was not, which was the honest
+  // state to be in rather than a weakened rule.
   //
-  // It was enrolled, and the release that moved `archivingFunctionsIn` onto the
-  // sweep rewrote it. The new text spells its fixture series
-  // `21000101000000_one.sql` / `21000102000000_two.sql` — a made-up pair, not
-  // migrations either repository has — and `check:reconciled`'s citation rule
-  // is line-based over bytes and cannot tell a fixture from an address. It is
-  // right not to: the two repositories do not share a migration series, so a
-  // migration filename in a file read from both sides resolves in at most one
-  // of them.
-  //
-  // This is the same defect as the router suite's `docs/a.md`, which the
-  // template respelled under `notes/` for exactly this reason — so the remedy
-  // is upstream's and the entry comes back the day the fixture is spelled
-  // somewhere no tree claims. Until then the bytes are the release's and the
-  // promise this list makes about them is not, which is the honest state to be
-  // in rather than a weakened rule.
-  //
-  // `authoring-archivers.mjs` above, which that release rewrote in the same
-  // change, cites nothing and stays enrolled. The two move together on bytes
-  // and apart on enrolment.
+  // v1.44.10 fixed it at the source, the way the router suite's `docs/a.md`
+  // was fixed: the members are spelled under `notes/`, which no tree claims,
+  // and the file joins the template's published shared list. So the entry
+  // comes back, and `check:shared-scripts` now holds the pair from the other
+  // direction as well.
+  'scripts/tests/authoring-log.test.mjs',
 
 
   // ── The six that used to name a `docs/` path ──

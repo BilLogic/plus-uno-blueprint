@@ -28,7 +28,7 @@ test('an empty allowlist has nothing to fail on, and reads nothing', () => {
   assert.deepEqual(auditReconciled({ files: [], readInstance: refuse, readAsb: refuse }), [])
 })
 
-test('the shipped allowlist is exactly the twenty-two files still shared after the import flip', () => {
+test('the shipped allowlist is exactly the twenty-three files still shared after the import flip', () => {
   // The list is mirrored here in full, in order, so that changing it is a
   // two-file change somebody has to mean. That mattered most when it was five
   // hundred paths long and growing one ticket at a time; it matters differently
@@ -58,6 +58,7 @@ test('the shipped allowlist is exactly the twenty-two files still shared after t
     'scripts/check-pointers.mjs',
     'scripts/check-router-budget.mjs',
     'scripts/tests/one-badge-one-size.test.mjs',
+    'scripts/tests/authoring-log.test.mjs',
     'scripts/check-glossary-only.mjs',
     'scripts/check-negation-ratchet.mjs',
     'scripts/check-target-schema.mjs',
