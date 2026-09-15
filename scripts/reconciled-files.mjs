@@ -287,6 +287,14 @@ export const RECONCILED_FILES = [
   'scripts/sweep.mjs',
   'scripts/seed-list.mjs',
 
+  // The other half of the sweep. `sweep.mjs` answers what a check examines;
+  // `verdict.mjs` answers what it concludes — the four outcomes rendered one
+  // way and the exit code set one way, so a check carries only its findings.
+  // It arrives with the six shared checks that now import it, and it is held
+  // byte-identical for the same reason they are: the rendering is the green
+  // line both repositories publish.
+  'scripts/verdict.mjs',
+
   // ── Two data files ──
   //
   // The placeholder a `cells.frame` carries when a step has no artwork yet. Its
