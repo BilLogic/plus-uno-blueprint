@@ -69,6 +69,7 @@ test('the shipped allowlist is exactly the twenty-five files still shared after 
     'scripts/agent-account.mjs',
     'scripts/sweep.mjs',
     'scripts/seed-list.mjs',
+    'scripts/verdict.mjs',
     'public/step-visual-placeholder.svg',
     'docs/agents/triage-labels.md',
   ])
