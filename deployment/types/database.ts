@@ -1,4 +1,4 @@
-import type { EntityStatus } from '@/lib/entityStatus'
+import type { EntityStatus } from 'agentic-service-blueprinting/src/lib/entityStatus.ts'
 /**
  * Supabase database types for the `public` schema — THIS DEPLOYMENT'S.
  *
