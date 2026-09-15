@@ -23,15 +23,45 @@ weeks** while both sides looked healthy.
 
 What it carries: the query-param names the URL layer accepts, the production app
 origin, the breadcrumb format the semantic view emits and the bot parses, the
-public-read and bot-read table lists, the FK constraint names used as PostgREST
-embed hints, the RPC names, and the search RPC's parameter names, returned-column
-names, accepted `granularity` values and emitted row kinds.
+public-read and bot-read table lists, the columns the bot names in a direct
+PostgREST select and what each of those columns is FOR, the FK constraint names
+used as PostgREST embed hints, the RPC names, and the search RPC's parameter
+names, returned-column names, accepted `granularity` values and emitted row
+kinds.
 
 Names and values are two different promises, and until 2026-08-26 only the first
 was made. See below.
 
 Keep that module **dependency-free** — the bot compiles it in a Worker context
 with no access to app imports.
+
+### The roles, so a rename travels instead of being spelled twice
+
+`botDirectReadColumns` says which columns the bot may select and nothing about
+what any of them means, so the bot spelled the meanings itself: `summary`
+wherever it wants a row's prose, `position` wherever it orders structural rows,
+`name` wherever it labels one, `['id','name','kind','summary','url']` for the
+touchpoint read and `audit_findings` for the findings table. That is enough to
+CATCH a rename and not enough to FOLLOW one — every rename below needed a
+matching edit on the bot's side, written a second time, in a Worker nothing
+type-checks against this schema.
+
+`botDirectReadRoles` names the column that plays each role, per table, beside
+`botTouchpointReadKeys` and `botFindingsTable` for the other two
+([#671](https://github.com/BilLogic/plus-uno-blueprint/issues/671)). The bot
+derives its read strings from them, so the next rename reaches it with the
+vendored copy. `slices` is why this is not cosmetic: its label column is
+`title`, so the one generic read string the bot could have written was already
+wrong for one table.
+
+Additive, deliberately: `botDirectReadColumns` and `botReadTables` are
+unchanged, so a consumer that has not re-vendored keeps working. Only a role a
+table really has is declared — `audit_findings` declares an empty entry rather
+than being left out, because a finding has no label, no prose and no order of
+its own, and both halves carry the same table keys so a new direct-read table
+forces a role decision. `check:contract` proves every role names a column its
+table publishes, which is what stops the two halves drifting into a select no
+live check has ever sent.
 
 ### The bot resolves it by path, and the path moved
 
