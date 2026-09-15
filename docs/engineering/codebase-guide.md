@@ -91,8 +91,8 @@ examples, each with its reason in its header comment:
 - `src/lib/agent/placement.ts` — the agent chat renders from two mount
   points (docked / floating) and a drag flips which one exists
   mid-gesture; component state would die in the gap.
-- `src/lib/agent/panelState.ts` — open session + composer drafts, the rest
-  of the "same conversation either way" promise.
+- `src/lib/agent/sessions.ts` — open session, drafts and attachments behind
+  one interface, the rest of the "same conversation either way" promise.
 - `src/contexts/canvasModeContext.ts` — view/design mode; the shared store
   lives outside the provider file so the agent's UI-context collector
   (plain functions) can read it.
