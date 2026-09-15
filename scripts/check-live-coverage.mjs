@@ -64,6 +64,17 @@ function triggers(text, name) {
   return new RegExp(`^\\s{2}${name}:\\s*$`, 'm').test(text)
 }
 
+/** A workflow's own `name:`, which is what `GITHUB_WORKFLOW` holds at run time. */
+function workflowName(workflows, path) {
+  const workflow = workflows.find((w) => w.path === path)
+  return workflow ? (/^name:\s*(.+)$/m.exec(workflow.text)?.[1] ?? '').trim() : ''
+}
+
+/** A workflow filters a trigger to a path list, rather than running on every change. */
+function filtersOn(text, path) {
+  return new RegExp(`^\\s+- ${path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'm').test(text)
+}
+
 /** A step really runs the script, rather than merely mentioning it in a comment. */
 function runsScript(text, script) {
   return new RegExp(`run:\\s*npm run ${script.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(text)
@@ -112,6 +123,17 @@ export function coverageFailures({ scripts, workflows }) {
     if (check.status === 'scheduled' && !naming.some((w) => triggers(w.text, 'schedule'))) {
       failures.push(`\`${check.script}\` claims a schedule and no scheduled workflow runs it`)
     }
+    // `alsoOn` is a promise about a `paths:` filter, so it is held to one: a
+    // path the entry claims and the workflow does not list is a pull request
+    // the coverage summary says is covered and that runs nothing.
+    for (const path of check.alsoOn ?? []) {
+      if (!naming.some((w) => triggers(w.text, 'pull_request') && filtersOn(w.text, path))) {
+        failures.push(
+          `\`${check.script}\` says it also runs on a pull request touching ${path}, and no ` +
+            'workflow that runs it filters `pull_request` to that path',
+        )
+      }
+    }
   }
 
   for (const workflow of workflows.filter((w) => triggers(w.text, 'pull_request'))) {
@@ -137,10 +159,33 @@ function summarise(lines) {
   else process.stdout.write(text)
 }
 
-function announce(context, env) {
+/**
+ * The checks THIS job is the one that runs.
+ *
+ * `status` says which CONTEXT a check runs in and, once more than one
+ * scheduled workflow exists, that is no longer the same as which JOB. The
+ * nightly schema sweep and the nightly board check are both `scheduled`, so
+ * live-schema's summary would report the board check as having verified
+ * nothing — a `::warning::` every morning about a check that ran green in the
+ * workflow next door, which is the false-absence twin of the false-presence
+ * this whole file exists for. `GITHUB_WORKFLOW` holds the running workflow's
+ * `name:`, so a job that says which one it is gets its own list; a run outside
+ * Actions, or one no entry names, still gets the whole context.
+ */
+function runningHere(checks, context, env, workflows) {
+  const ofContext = checks.filter((check) => check.status === context)
+  const running = env.GITHUB_WORKFLOW
+  if (!running) return ofContext
+  const mine = ofContext.filter((check) =>
+    check.runsIn.some((path) => workflowName(workflows, path) === running),
+  )
+  return mine.length > 0 ? mine : ofContext
+}
+
+function announce(context, env, workflows) {
   const checks = coverage(env)
-  const here = checks.filter((check) => check.status === context)
-  const elsewhere = checks.filter((check) => check.status !== context)
+  const here = runningHere(checks, context, env, workflows)
+  const elsewhere = checks.filter((check) => !here.includes(check))
   const lines = []
 
   if (context === 'pull-request') {
@@ -166,7 +211,10 @@ function announce(context, env) {
     return
   }
 
-  lines.push('### The nightly sweep of the live schema', '')
+  // Named after the job it is, now that more than one nightly prints one of
+  // these: a summary headed "the live schema" under a board check is a heading
+  // that has stopped being true.
+  lines.push(`### The nightly sweep${env.GITHUB_WORKFLOW ? ` — ${env.GITHUB_WORKFLOW}` : ' of the live schema'}`, '')
   for (const check of here) {
     if (check.covered) {
       lines.push(`- ✅ \`${check.script}\` — ${check.subject}`)
@@ -199,7 +247,7 @@ function main(argv, env) {
       console.error('::error::--announce takes `pull-request` or `scheduled`')
       process.exit(1)
     }
-    announce(context, env)
+    announce(context, env, workflows)
     return
   }
 

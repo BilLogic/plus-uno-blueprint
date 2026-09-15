@@ -1,0 +1,104 @@
+# The committed offline board, against the live board it was exported from.
+#
+# `deployment/data/sampleBlueprints.ts` is an export of production, taken
+# through the public read surface and committed. Every no-database build draws
+# it, `check:render-walk` walks it on every pull request — and until this
+# workflow existed, NOTHING said when it had stopped matching the database.
+# `npm run check:sample-board` could say so on any machine with the two public
+# variables, and nothing ran it: `scripts/live-checks.mjs` declared it `manual`,
+# which is an honest label for a check nobody runs and not a substitute for
+# running it. A board six months stale renders exactly as well as a current one.
+#
+# WHY NIGHTLY AND NOT A GATE. Not credentials — this needs none that a pull
+# request cannot have. The subject MOVES: the board changes whenever somebody
+# authors a cell, so a required check over it would go red because a colleague
+# edited a scenario, and a gate that fails for that reason is a gate people
+# learn to click past. A nightly bounds how long the two can disagree at one
+# day and puts the red where a person reads it rather than across everyone's
+# pull requests. Clearing it is `npm run export:sample-board`, committed.
+#
+# AND ON THE TWO FILES THAT ARE NOT THE DATABASE. A pull request touching the
+# exporter or the committed board is the one case where a difference is the
+# change under review rather than the day's authoring, so the same job runs
+# there. That is the whole of the `paths:` filter below and the reason it has
+# to stay narrow.
+#
+# THE CREDENTIALS ARE REPOSITORY VARIABLES, NOT SECRETS. `SUPABASE_URL` and
+# `SUPABASE_ANON_KEY` are the two `gates.yml` already hands to
+# `check:auth-posture` and `check:agent-account`: the project URL and the anon
+# key, both public by design and already inside the browser bundle this
+# repository deploys, so publishing them to Actions adds no exposure. They are
+# named here WITHOUT the `VITE_` prefix and read WITH it, the same mapping and
+# for the same reason as in `gates.yml` — the prefix means "the browser bundle
+# inlines this", and nothing in Actions is a browser bundle. No privileged
+# credential appears in this file and none may: it is reachable from a pull
+# request, and `scripts/check-live-coverage.mjs` fails the build if one does.
+name: offline-board
+
+on:
+  schedule:
+    # After live-schema's sweep of the same production project, so a red
+    # morning has one obvious order to read in.
+    - cron: "15 8 * * *"
+  pull_request:
+    paths:
+      - scripts/export-sample-board.mjs
+      - deployment/data/sampleBlueprints.ts
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: offline-board-${{ github.ref }}
+  # Ref-scoped, so a superseded pull-request run is a run about a commit nobody
+  # is looking at any more — the same pairing `gates.yml` and `render-walk.yml`
+  # keep. The nightly is alone on `refs/heads/main` and cancels nothing.
+  cancel-in-progress: true
+
+jobs:
+  drift:
+    name: the committed board still says what the database says
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # Read once, here, so the guard below and the check itself ask about the
+      # same two values under the names the script reads.
+      VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Before anything else, and whatever happens after: say out loud whether
+      # this run can perform the one check it exists for. It reads no
+      # credential — only whether one is present — names what goes unverified
+      # without one, and never fails the build. The list and the wording are
+      # `scripts/live-checks.mjs`, so they are not re-typed here.
+      - name: Say whether this run had what it needs
+        run: node scripts/check-live-coverage.mjs --announce scheduled
+
+      # And then be red about it. The announce above is a statement; this is
+      # the gate. A publishable-tier check that cannot see its subject is a red
+      # here exactly as it is in `gates.yml`, which fails on the same two
+      # variables — the warn-and-stay-green posture in `live-schema.yml` is for
+      # a PRIVILEGED secret a contributor cannot be handed, and these two are
+      # public by design and already in the deployed bundle.
+      - name: The two public variables are set
+        run: |
+          [ -n "$VITE_SUPABASE_URL" ] && [ -n "$VITE_SUPABASE_ANON_KEY" ] && exit 0
+          echo "::error::offline-board verified nothing — see the summary above for which variable is unset and how to set it."
+          exit 1
+
+      - run: npm ci
+
+      # Red on drift, with the counts of both boards and the first differing
+      # scenario in the log; green when the committed file is byte-identical to
+      # what a fresh export would write, the generated-on line aside.
+      - run: npm run check:sample-board

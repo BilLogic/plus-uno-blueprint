@@ -6,8 +6,11 @@ import { BLUEPRINTS, idsIn } from '../render-walk.mjs'
 import {
   countsSentence,
   dimensions,
+  driftReport,
+  firstDrift,
   moduleToWrite,
   preferredPathIndex,
+  registryIn,
   renderModule,
   toBlueprintData,
   toSampleBlueprintRegistry,
@@ -240,6 +243,108 @@ describe('the module it writes', () => {
 })
 
 /**
+ * WHAT A RED `--check` SAYS, which is the whole value of running it nightly.
+ *
+ * A run that says only "the file is not what the database says" sends a reader
+ * to a 1.4 MB generated diff with nothing to look for. These hold the sentence
+ * it says instead: both boards' counts, and the first scenario in nav order
+ * that moved, with what moved about it. Pure, so they read the report rather
+ * than a runner's scrollback.
+ */
+const SECOND = '22222222-2222-4222-8222-222222222222'
+
+const registryOf = (...paths) => toSampleBlueprintRegistry([SCENARIO], paths)
+
+describe('the drift a red check reports', () => {
+  const live = registryOf(path('path-1', 'Happy Path', 'happy'))
+
+  it('reads a written module back out of its own literal', () => {
+    const text = moduleToWrite(null, live, '2026-01-01')
+    expect(registryIn(text)).toEqual(live)
+  })
+
+  it('calls a module with no literal in it unreadable rather than drifted', () => {
+    expect(registryIn('// somebody hand-edited this away\n')).toBe(null)
+    expect(registryIn(null)).toBe(null)
+    const lines = driftReport({ previous: '// nothing here', live, scenarioIds: [SCENARIO] })
+    expect(lines.join('\n')).toContain('unreadable')
+    expect(lines.join('\n')).toContain('hand edit')
+  })
+
+  it('calls a tree with no committed board nothing, rather than a hand edit', () => {
+    const lines = driftReport({ previous: null, live, scenarioIds: [SCENARIO] })
+    expect(lines[2]).toContain('nothing')
+    expect(lines.join('\n')).not.toContain('hand edit')
+  })
+
+  it('says nothing differs when the two boards agree', () => {
+    expect(firstDrift([SCENARIO], live, live)).toBe(null)
+  })
+
+  it('names the scenario the committed board lacks', () => {
+    const committed = toSampleBlueprintRegistry([], [])
+    const drift = firstDrift([SCENARIO], committed, live)
+    expect(drift.scenarioId).toBe(SCENARIO)
+    expect(drift.said).toContain('carries no entry for it')
+    expect(drift.said).toContain('1 path')
+  })
+
+  it('names the scenario the database no longer answers for', () => {
+    const drift = firstDrift([SCENARIO], live, toSampleBlueprintRegistry([], []))
+    expect(drift.said).toContain('returned no path for it')
+  })
+
+  it('gives both counts when a row was added or lost', () => {
+    const wider = registryOf(path('path-1', 'Happy Path', 'happy'), path('path-2', 'Sad', 'sad'))
+    // Spelled out rather than rendered with the function under test, which
+    // would pass for any wording however wrong.
+    expect(firstDrift([SCENARIO], live, wider).said).toBe(
+      'committed 1 path, 1 lane, 2 steps, 2 cells, 0 dependencies, ' +
+        '0 touchpoint placements, 0 resources; ' +
+        'live 2 paths, 2 lanes, 4 steps, 4 cells, 0 dependencies, ' +
+        '0 touchpoint placements, 0 resources',
+    )
+  })
+
+  it('says the move is inside a row when the counts agree and the content does not', () => {
+    const renamed = registryOf(path('path-1', 'Happy Path', 'happy', { summary: 'moved' }))
+    const drift = firstDrift([SCENARIO], live, renamed)
+    expect(drift.said).toContain('INSIDE a row')
+  })
+
+  it('takes the scenarios in NAV order, not the registry\'s', () => {
+    // Both scenarios differ; the nav names the second one first, so that is
+    // the one a reader is sent to.
+    const committed = toSampleBlueprintRegistry(
+      [SCENARIO, SECOND],
+      [path('path-1', 'Happy Path', 'happy'), path('path-2', 'Other', 'happy', { scenario_id: SECOND })],
+    )
+    const moved = toSampleBlueprintRegistry([SCENARIO, SECOND], [])
+    expect(firstDrift([SECOND, SCENARIO], committed, moved).scenarioId).toBe(SECOND)
+  })
+
+  it('still names a scenario the nav has stopped listing', () => {
+    const committed = toSampleBlueprintRegistry([SCENARIO], [path('path-1', 'Happy Path', 'happy')])
+    expect(firstDrift([], committed, toSampleBlueprintRegistry([], [])).scenarioId).toBe(SCENARIO)
+  })
+
+  it('opens on one annotation and puts the rest in the log under it', () => {
+    const previous = moduleToWrite(null, registryOf(path('path-1', 'Happy Path', 'happy'), path('p2', 'Sad', 'sad')), '2026-01-01')
+    const lines = driftReport({ previous, live, scenarioIds: [SCENARIO] })
+    expect(lines.filter((line) => line.startsWith('::error::'))).toHaveLength(1)
+    expect(lines[1]).toContain('live:')
+    expect(lines[2]).toContain('committed:')
+    expect(lines[3]).toContain(`first differing scenario: ${SCENARIO}`)
+  })
+
+  it('says so when the module moved and no scenario did', () => {
+    const previous = moduleToWrite(null, live, '2026-01-01').replace('// Board:', '// Boards:')
+    const lines = driftReport({ previous, live, scenarioIds: [SCENARIO] })
+    expect(lines[3]).toContain('OUTSIDE `blueprintsByScenario`')
+  })
+})
+
+/**
  * THE COMMITTED FILE AGAINST THE FUNCTION THAT WRITES IT, WITH NO DATABASE.
  *
  * `renderModule` holds the module's header and its type import, and the file
@@ -257,8 +362,10 @@ describe('the module it writes', () => {
  */
 describe('the committed export and the function that writes it', () => {
   const committed = readFileSync(BLUEPRINTS, 'utf8')
-  const MARKER = 'export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = '
-  const registry = JSON.parse(committed.slice(committed.indexOf(MARKER) + MARKER.length))
+  // The read-back is the exporter's own, not a second spelling of its marker
+  // kept here — a copy of that line is a copy to forget when the module header
+  // moves, and `--check` reads it back the same way to name a drifted scenario.
+  const registry = registryIn(committed)
   const generatedOn = /^\/\/ Generated on: (.+)$/m.exec(committed)[1]
 
   it('agree byte for byte', () => {

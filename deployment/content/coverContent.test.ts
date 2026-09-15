@@ -2,8 +2,8 @@ import { existsSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { coverFigures, coverTabSections } from '@/components/cover/coverModel'
-import { packageCoverFigures } from '@/components/cover/packageCoverFigures'
+import { coverFigures, coverTabSections } from 'agentic-service-blueprinting/src/components/cover/coverModel.ts'
+import { packageCoverFigures } from 'agentic-service-blueprinting'
 import { coverContent } from '~/content/coverContent'
 
 /*

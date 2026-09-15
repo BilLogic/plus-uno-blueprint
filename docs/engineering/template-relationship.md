@@ -50,6 +50,25 @@ the package index exports, says `agentic-service-blueprinting` instead,
 which resolves on both sides. `deployment/data/sampleNav.ts` and
 `deployment/data/sampleBlueprints.ts` are that case.
 
+**Nothing under `deployment/` says `@/…`**, and that is the rule rather than
+the current state. A deployment file spelling the application's alias is a file
+that compiles here and nowhere else, which is the whole failure mode the
+arrangement exists to prevent. Two forms carry it instead, and which one
+applies is decided by the package's own seam:
+
+| What is imported | Spelling |
+|---|---|
+| Anything `src/index.ts` exports — `App`, `DeploymentConfig`, the board types, `packageCoverFigures` | `agentic-service-blueprinting` |
+| A module of the application the index does not export — `lib/brandAccent`, `lib/entityStatus`, `components/cover/coverModel` | `agentic-service-blueprinting/src/…​.ts`, through the package's own `"./*"` export |
+| This deployment's own modules | `~/…`, or a relative path within a directory |
+
+The second row is a reach past the seam and says so by being longer: a symbol
+worth importing twice is a symbol worth exporting from the index upstream, and
+the remedy is the one in *When the template changes something you depend on* —
+add the seam there, release, bump. It is the honest spelling meanwhile, because
+it is a published subpath of the package rather than an alias only this tree
+declares.
+
 `deployment/` is small on purpose: the `DeploymentConfig` the template's app is
 mounted with, the bootstrap that registers this deployment's reference
 documents, the cover content, the brand dials, this deployment's own
@@ -256,15 +275,31 @@ and the next export would silently take the edit back.
 
 `check:sample-board` is deliberately not a gate. The database moves whenever
 somebody authors a cell, and a required check that goes red because a colleague
-edited a board is a check people learn to ignore. The honest instrument is this
-freshness note, refreshed when the board is re-exported:
+edited a board is a check people learn to ignore. It is a **nightly** instead —
+`.github/workflows/offline-board.yml`, beside the live-schema sweep and on the
+same two public variables — so how long the committed board and the live one
+can disagree is bounded at a day rather than at however long it is since anyone
+last remembered. A red names both boards' counts and the first differing
+scenario, and a person clears it by running the export above and committing the
+result. The same workflow runs on a pull request that touches
+`scripts/export-sample-board.mjs` or `deployment/data/sampleBlueprints.ts`,
+which is the one case where a difference is the change under review rather than
+the day's authoring.
 
-> **Last exported 2026-09-14**: 17 scenarios, 33 paths, 269 lanes, 188 steps,
-> 933 cells, 428 dependencies, 322 touchpoint placements, 600 resources — every
-> scenario the nav names, none of them empty.
+The freshness claim itself is **not written down here**. It is two lines the
+export writes into the file's own header, and quoting them is the whole of the
+note:
 
-Three things the note deliberately does **not** claim, because nothing checked
-them:
+```sh
+grep -E '^// (Generated on|Board):' deployment/data/sampleBlueprints.ts
+```
+
+A date and a count restated in prose is a date and a count that can be wrong
+while everything else is green — which is what a hand-refreshed note in this
+document was. The generator's own header cannot drift from the file it heads.
+
+Three things that header deliberately does **not** claim, because nothing
+checked them:
 
 - **Not "nothing was withheld".** The exporter can see one absence and only one:
   a scenario that came back with no path at all, which it names in a warning. A

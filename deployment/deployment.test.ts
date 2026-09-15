@@ -24,7 +24,7 @@ import { currentStoragePrefix } from 'agentic-service-blueprinting/bootstrap'
 import {
   configureCellBudget,
   getCellContentLengthGuidance,
-} from '@/lib/cellContentLimits'
+} from 'agentic-service-blueprinting/src/lib/cellContentLimits.ts'
 import { unoDeploymentConfig } from '~/deployment'
 import { coverContent } from '~/content/coverContent'
 import { SAMPLE_NAV } from '~/data/sampleNav'

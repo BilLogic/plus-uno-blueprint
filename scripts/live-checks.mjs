@@ -72,6 +72,20 @@
  * `manual` is a real answer and one check keeps it. It is not a placeholder
  * for "we did not get round to it": an entry that says `manual` has to say in
  * `unverified` what that costs, and a pull request prints the sentence.
+ *
+ * ── AND ONE CHECK IS BOTH ─────────────────────────────────────────────────
+ *
+ * `alsoOn` is a scheduled entry's list of PATHS that also put it in front of a
+ * merge. It exists for one shape, `check:sample-board`, and the shape is a
+ * MOVING SUBJECT: the committed offline board is an export of a database
+ * somebody authors into, so it is nightly for the reason the privileged checks
+ * are — a pull request does not change the subject, and a required check over
+ * a moving one goes red for a colleague's edit until people learn to click
+ * past it. But two files in this repository DO change it, and a pull request
+ * touching either is the one case where a difference is the change under
+ * review. So the workflow carries both triggers and the entry says which paths
+ * arm the second, rather than a reader inferring it from a `paths:` filter.
+ * `check-live-coverage.mjs` holds the workflow to the list.
  */
 
 /** @typedef {'none'|'publishable'|'privileged'} Secrecy */
@@ -127,17 +141,12 @@ export const LIVE_CHECKS = Object.freeze([
     subject: "the offline board committed here, against the live board it was exported from",
     secrecy: 'publishable',
     needs: ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'],
-    status: 'manual',
-    runsIn: [],
+    status: 'scheduled',
+    runsIn: ['.github/workflows/offline-board.yml'],
+    alsoOn: ['scripts/export-sample-board.mjs', 'deployment/data/sampleBlueprints.ts'],
     unverified:
-      'whether `deployment/data/sampleBlueprints.ts` still says what the database says. It stays ' +
-      'manual DELIBERATELY, and this is the one entry whose skip is the design rather than a gap: ' +
-      'the board moves whenever somebody authors a cell, so a required check over it would go red ' +
-      'because a colleague edited a scenario, and a gate that fails for that reason is a gate ' +
-      'people learn to click past. What CI does hold is that the committed board RENDERS — ' +
-      '`check:render-walk` opens every phase, scenario, path and layout of it in a browser on ' +
-      'every pull request. Its freshness is a person\'s call: run `npm run export:sample-board`, ' +
-      'commit the result, and move the dated note in docs/engineering/template-relationship.md',
+      'whether `deployment/data/sampleBlueprints.ts` still says what the database says — the ' +
+      'offline board every no-database build draws',
   },
   {
     key: 'identifiers',
@@ -237,6 +246,19 @@ export function unverifiedHere(check) {
     check.secrecy === 'privileged'
       ? ` That job needs the ${check.needs.join(' and ')} repository secret and reports in its own summary whether it had one.`
       : ''
+  // A check with `alsoOn` runs on SOME pull requests, and this job cannot see
+  // which files the pull request touched — so "did not run on this pull
+  // request" would be false on exactly the pull requests where it matters
+  // most. Say the condition instead of asserting the outcome.
+  if (check.alsoOn?.length) {
+    const paths = check.alsoOn.map((path) => `\`${path}\``).join(' or ')
+    return (
+      `\`npm run ${check.script}\` did not run in THIS job. It runs in ${check.runsIn.join(' and ')} — ` +
+      `nightly against production, and on a pull request that touches ${paths}, which is the one ` +
+      `case where a difference is the change under review. Unless that job ran beside this one, ` +
+      `this went unverified: ${check.unverified}.`
+    )
+  }
   return (
     `\`npm run ${check.script}\` did not run on this pull request, so this went unverified: ` +
     `${check.unverified}. It runs in ${check.runsIn.join(' and ')}, not here.${how}`

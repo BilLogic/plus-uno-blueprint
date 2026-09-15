@@ -31,7 +31,7 @@ import './styles/brand.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from 'agentic-service-blueprinting'
-import { applyBrandAccent } from '@/lib/brandAccent'
+import { applyBrandAccent } from 'agentic-service-blueprinting/src/lib/brandAccent.ts'
 import { unoDeploymentConfig } from './deployment'
 
 /**
@@ -55,15 +55,18 @@ const root = createRoot(document.getElementById('root')!)
  * service slug (`serviceRoute.ts`), so proto pages live under a reserved
  * `/proto/` prefix that no service slug can claim.
  *
- * The page itself is the application's, reached through `@/…` like any other
- * module of it; the ROUTE is this deployment's, which is why it is declared
- * here and not upstream. The package's own entry carries no such branch.
+ * The page itself is the application's, reached by a subpath of the PACKAGE —
+ * the `"./*"` export the package publishes — rather than by `@/…`, which is an
+ * alias this repository declares and so names a path only this tree resolves.
+ * It is a reach past the package's index, which exports no page; the ROUTE is
+ * this deployment's, which is why it is declared here and not upstream. The
+ * package's own entry carries no such branch.
  */
 if (
   import.meta.env.DEV &&
   window.location.pathname.replace(/\/$/, '') === '/proto/arrows'
 ) {
-  void import('@/dev/ArrowSituationCatalogPage').then(
+  void import('agentic-service-blueprinting/src/dev/ArrowSituationCatalogPage.tsx').then(
     ({ ArrowSituationCatalogPage }) => {
       root.render(
         <StrictMode>
