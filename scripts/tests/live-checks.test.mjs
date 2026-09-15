@@ -24,13 +24,20 @@ const PULL_REQUEST = 'on:\n  pull_request:\n  push:\n    branches: [main]\n'
 const SCHEDULED = 'on:\n  schedule:\n    - cron: "45 7 * * *"\n  workflow_dispatch:\n'
 const BOTH = `${PULL_REQUEST}  schedule:\n    - cron: "45 7 * * *"\n`
 
+/** A `pull_request` narrowed to a path list, beside a schedule — the `alsoOn` shape. */
+const filtered = (paths) =>
+  `on:\n  pull_request:\n    paths:\n${paths.map((path) => `      - ${path}\n`).join('')}` +
+  '  schedule:\n    - cron: "15 8 * * *"\n'
+
 /**
  * The declaration as it stands, rendered into workflows that satisfy it.
  *
  * A file's triggers are decided by everything it hosts, not by the first entry
  * that named it: `bot-contract-probe.yml` really does carry a pull-request
  * check and a scheduled one at once, and a fixture that modelled it as either
- * alone would assert a repository this is not.
+ * alone would assert a repository this is not. An entry with `alsoOn` adds a
+ * third shape — a schedule and a `pull_request` filtered to the paths the
+ * entry names — for the same reason: `offline-board.yml` really is both.
  */
 function workflowsSatisfying(checks = LIVE_CHECKS) {
   const byPath = new Map()
@@ -39,7 +46,9 @@ function workflowsSatisfying(checks = LIVE_CHECKS) {
       const onPullRequests = checks.some(
         (other) => other.status === 'pull-request' && other.runsIn.includes(path),
       )
-      const existing = byPath.get(path) ?? (onPullRequests ? BOTH : SCHEDULED)
+      const alsoOn = checks.filter((other) => other.runsIn.includes(path)).flatMap((other) => other.alsoOn ?? [])
+      const opening = alsoOn.length > 0 ? filtered(alsoOn) : onPullRequests ? BOTH : SCHEDULED
+      const existing = byPath.get(path) ?? opening
       byPath.set(path, `${existing}      - run: npm run ${check.script}\n`)
     }
   }
@@ -81,6 +90,18 @@ test('a check declared manual that CI actually runs is a finding', () => {
     { path: '.github/workflows/extra.yml', text: `${SCHEDULED}      - run: npm run ${manual.script}\n` },
   ]
   assert.ok(coverageFailures({ scripts: SCRIPTS, workflows }).some((f) => /is not manual/.test(f)))
+})
+
+test('an `alsoOn` path no workflow filters on is a finding', () => {
+  // The entry is what a pull request's coverage summary reads from, so a path
+  // it claims and the YAML does not list is a pull request told it was covered
+  // by a job that never started.
+  const entry = LIVE_CHECKS.find((check) => check.alsoOn?.length)
+  const workflows = workflowsSatisfying().map((w) =>
+    entry.runsIn.includes(w.path) ? { ...w, text: w.text.replace(`      - ${entry.alsoOn[0]}\n`, '') } : w,
+  )
+  const failures = coverageFailures({ scripts: SCRIPTS, workflows })
+  assert.ok(failures.some((f) => new RegExp(`also runs on a pull request touching ${entry.alsoOn[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(f)))
 })
 
 test('a pull-request workflow that names a privileged credential is a finding', () => {

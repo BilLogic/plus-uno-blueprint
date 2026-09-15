@@ -67,9 +67,20 @@
  *
  * `--check` is deliberately NOT wired into `gates`: the database moves whenever
  * somebody authors a cell, and a gate that fails because a colleague edited a
- * board would be a gate that teaches people to ignore it. The freshness note in
- * `docs/engineering/template-relationship.md` is the honest instrument — a date
- * and a count, refreshed when the board is re-exported.
+ * board would be a gate that teaches people to ignore it.
+ *
+ * What it IS wired into is `.github/workflows/offline-board.yml`, which runs it
+ * nightly against production and on a pull request that touches this script or
+ * the file it writes. Nightly, a red is the day's authoring: somebody clears it
+ * by running the command above and committing the result, and the worst case is
+ * a board one day stale rather than a board stale since whenever anyone last
+ * remembered. On those pull requests a red is the change under review instead,
+ * which is the one case where it belongs in front of a merge.
+ *
+ * A red says WHICH scenario moved first and by how much — see `driftReport`.
+ * The freshness claim itself is not written here twice: it is the
+ * `Generated on:` and `Board:` lines this script puts in the file's own header,
+ * which the docs quote rather than restate, so no hand edit can make it lie.
  */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -378,20 +389,50 @@ export function dimensions(registry) {
   }
 }
 
-/** The dimensions as one line, the spelling the docs' freshness note reuses. */
+/** The dimensions as one line, the spelling the header and every drift report reuse. */
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
 
+/**
+ * Every term the counts sentence says, in the order it says them.
+ *
+ * A list rather than eight lines of prose because two sentences are written
+ * from it: the whole board's, which opens on the scenario count, and one
+ * scenario's, which cannot — "1 scenario" inside a sentence about one scenario
+ * is a word that carries nothing.
+ */
+const COUNT_TERMS = Object.freeze([
+  ['scenarios', 'scenario', 'scenarios'],
+  ['paths', 'path', 'paths'],
+  ['lanes', 'lane', 'lanes'],
+  ['steps', 'step', 'steps'],
+  ['cells', 'cell', 'cells'],
+  ['dependencies', 'dependency', 'dependencies'],
+  ['touchpoints', 'touchpoint placement', 'touchpoint placements'],
+  ['resources', 'resource', 'resources'],
+])
+
 export const countsSentence = (counts) =>
-  [
-    plural(counts.scenarios, 'scenario', 'scenarios'),
-    plural(counts.paths, 'path', 'paths'),
-    plural(counts.lanes, 'lane', 'lanes'),
-    plural(counts.steps, 'step', 'steps'),
-    plural(counts.cells, 'cell', 'cells'),
-    plural(counts.dependencies, 'dependency', 'dependencies'),
-    plural(counts.touchpoints, 'touchpoint placement', 'touchpoint placements'),
-    plural(counts.resources, 'resource', 'resources'),
-  ].join(', ')
+  COUNT_TERMS.map(([key, one, many]) => plural(counts[key], one, many)).join(', ')
+
+/** The same sentence about ONE scenario's paths, which is every term but the first. */
+const scenarioCounts = (paths) => dimensions({ blueprintsByScenario: { one: paths ?? [] } })
+
+export const scenarioSentence = (paths) =>
+  COUNT_TERMS.slice(1)
+    .map(([key, one, many]) => plural(scenarioCounts(paths)[key], one, many))
+    .join(', ')
+
+/** Whether two scenarios hold the same number of every thing a board is made of. */
+const sameCounts = (left, right) => {
+  const [a, b] = [scenarioCounts(left), scenarioCounts(right)]
+  return COUNT_TERMS.slice(1).every(([key]) => a[key] === b[key])
+}
+
+/**
+ * The one line the registry literal hangs off, spelled once so writing the
+ * module and reading one back cannot disagree about it.
+ */
+export const REGISTRY_MARKER = 'export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = '
 
 /**
  * The module text. Pure, and split from the write so the generated-on line can
@@ -422,7 +463,7 @@ export function renderModule({ registry, generatedOn }) {
 
 import type { SampleBlueprintRegistry } from 'agentic-service-blueprinting'
 
-export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = ${tsLiteral(registry)}
+${REGISTRY_MARKER}${tsLiteral(registry)}
 `
 }
 
@@ -443,6 +484,123 @@ export function moduleToWrite(previous, registry, today) {
   if (!carried) return fresh
   const asCarried = renderModule({ registry, generatedOn: carried })
   return asCarried === previous ? previous : fresh
+}
+
+/* ------------------------------------------------------------- the report */
+
+/**
+ * The registry a written module carries, read back out of its own literal.
+ *
+ * `tsLiteral` is `JSON.stringify`, so what follows the marker is plain JSON and
+ * nothing has to evaluate TypeScript to get at it. A file that does not parse
+ * is not drift and is not reported as drift: it is a hand edit, and the caller
+ * says so in those words.
+ */
+export function registryIn(module) {
+  if (!module) return null
+  const at = module.indexOf(REGISTRY_MARKER)
+  if (at < 0) return null
+  try {
+    return JSON.parse(module.slice(at + REGISTRY_MARKER.length))
+  } catch {
+    return null
+  }
+}
+
+/**
+ * THE FIRST SCENARIO THE COMMITTED BOARD AND THE LIVE ONE DISAGREE ABOUT.
+ *
+ * `--check` can already say THAT the two differ — the module it would write is
+ * not the module on disk — and that on its own sends a reader to a 1.4 MB
+ * generated diff with no idea what to look for. So the run also says WHICH
+ * scenario moved first, in nav order, and what moved about it: a scenario one
+ * side has and the other does not, a count that changed, or counts that agree
+ * while something inside a row does not.
+ *
+ * Nav order rather than the registry's key order, because the nav is the order
+ * a person reads the board in. Scenarios the committed file carries and the nav
+ * no longer names come after, so a row orphaned by a nav edit is still named.
+ *
+ * @param {string[]} scenarioIds The board's scenarios, in nav order.
+ * @param {object | null} committed The registry the committed module carries.
+ * @param {object} live The registry this run just read.
+ */
+export function firstDrift(scenarioIds, committed, live) {
+  if (!committed) return null
+  const orphans = Object.keys(committed.blueprintsByScenario ?? {}).filter(
+    (id) => !scenarioIds.includes(id),
+  )
+  for (const scenarioId of [...scenarioIds, ...orphans]) {
+    const here = committed.blueprintsByScenario?.[scenarioId]
+    const there = live.blueprintsByScenario?.[scenarioId]
+    if (JSON.stringify(here ?? null) === JSON.stringify(there ?? null)) continue
+    if (!here) {
+      return {
+        scenarioId,
+        said: `the committed board carries no entry for it; the database answered with ${scenarioSentence(there)}`,
+      }
+    }
+    if (!there) {
+      return {
+        scenarioId,
+        said: `the database returned no path for it; the committed board carries ${scenarioSentence(here)}`,
+      }
+    }
+    const mine = scenarioSentence(here)
+    const theirs = scenarioSentence(there)
+    // The COUNTS decide which sentence this is, never the two sentences: a
+    // wording change in `COUNT_TERMS` would otherwise silently retune what the
+    // run calls a row moving versus a row's contents moving.
+    if (sameCounts(here, there)) {
+      return {
+        scenarioId,
+        said:
+          `both carry ${mine}, so what moved is INSIDE a row rather than a row itself — ` +
+          'a name, a cell\'s prose, a status, a URL, or an order',
+      }
+    }
+    return { scenarioId, said: `committed ${mine}; live ${theirs}` }
+  }
+  return null
+}
+
+/**
+ * What a red `--check` prints, as lines. Pure, so a test can read the report
+ * rather than a runner's scrollback.
+ *
+ * Only the first line is an annotation: GitHub renders one per `::error::` and
+ * a report broken into eight of them is eight annotations saying one thing.
+ * The rest are plain log lines directly under it.
+ */
+export function driftReport({ previous, live, scenarioIds }) {
+  const committed = registryIn(previous)
+  const lines = [
+    `::error::${BLUEPRINTS} is not what the database says. Run \`${COMMAND}\` and commit the result.`,
+    `  live:      ${countsSentence(dimensions(live))}`,
+  ]
+  if (previous === null || previous === undefined) {
+    // Not drift and not a hand edit: there is no committed board at all, which
+    // is the state before the first export and after somebody deletes it.
+    lines.push(`  committed: nothing — ${BLUEPRINTS} does not exist in this tree.`)
+    return lines
+  }
+  if (!committed) {
+    lines.push(
+      `  committed: unreadable — ${BLUEPRINTS} carries no registry literal this run could parse, ` +
+        'which is a hand edit to a generated file rather than drift in the board.',
+    )
+    return lines
+  }
+  lines.push(`  committed: ${countsSentence(dimensions(committed))}`)
+  const drift = firstDrift(scenarioIds, committed, live)
+  lines.push(
+    drift
+      ? `  first differing scenario: ${drift.scenarioId} — ${drift.said}`
+      : '  no scenario differs: what moved is OUTSIDE `blueprintsByScenario` — the module\'s ' +
+        'header, its type import, or the hidden-path map beside it. That is an exporter change, ' +
+        'not an authoring one.',
+  )
+  return lines
 }
 
 /* ---------------------------------------------------------------- the run */
@@ -609,9 +767,7 @@ async function main() {
       console.log(`ok — ${BLUEPRINTS} is what the database says: ${countsSentence(counts)}`)
       return
     }
-    console.error(
-      `::error::${BLUEPRINTS} is not what the database says. Run \`${COMMAND}\` and commit the result.`,
-    )
+    for (const line of driftReport({ previous, live: registry, scenarioIds })) console.error(line)
     process.exitCode = 1
     return
   }

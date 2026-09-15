@@ -1,7 +1,7 @@
 ---
 status: accepted
 audience: developers
-summary: Each live check is answered on its own — publishable credentials run on every pull request, privileged ones run nightly and never on a pull request, one stays manual — and whatever the answer, a job that did not verify something says which thing, on every pull request.
+summary: Each live check is answered on its own — publishable credentials run on every pull request, privileged ones run nightly and never on a pull request, a check over a subject that moves on its own runs nightly plus on the pull requests that could move it, one stays manual — and whatever the answer, a job that did not verify something says which thing, on every pull request.
 ---
 
 # A check that cannot see its subject says so
@@ -53,6 +53,22 @@ production, and a pull request does not change production; what changes it is
 an apply, which a person performs. A daily sweep bounds a divergence at one
 day. That is the whole promise `.github/workflows/live-schema.yml` makes.
 
+**A subject that moves on its own → nightly, and on the pull requests that
+could move it.** Added with `check:sample-board` (#677). Its credential is
+publishable, so the first rule above would put it on every pull request — and
+that rule assumes a subject a pull request does not change EXCEPT through the
+pull request. The committed offline board breaks the assumption from the other
+end: it is an export of a database people author into all day, so a required
+check over it goes red because a colleague edited a scenario, and a gate that
+fails for that reason is the gate this record's last section is about. Nightly
+for the same reason the privileged checks are nightly — a divergence bounded at
+a day, with the red where a person reads it. But two files in this repository
+DO move it, the exporter and the committed board itself, and a pull request
+touching either is the one case where a difference is the change under review;
+so the workflow carries a path-filtered `pull_request` trigger as well, and the
+entry's `alsoOn` names the paths so the declaration says it rather than a
+reader inferring it from YAML.
+
 **A tool in a loop → manual, and said out loud.**
 `check:migration-ledger:live` stays manual. It is a step in the apply loop
 rather than a watch on production — `apply:pending` ends by naming it, its
@@ -92,6 +108,10 @@ had been set a fortnight earlier and still showed grey, and an auth check whose
   `workflow_dispatch` takes a ref, and a branch's copy of that file could say
   anything, so the job refuses a ref other than `main` loudly rather than
   skipping.
+- A scheduled announcement is scoped to the workflow that is running it. Once
+  two nightlies print one of these, an unscoped summary reports the other
+  workflow's checks as having verified nothing — the false-absence twin of the
+  false presence this record is about.
 - Every pull request now carries warning annotations that are not failures.
   They are permanent by design: the sentence "these ticks did not look at
   production" stays true after the nightly is armed.
