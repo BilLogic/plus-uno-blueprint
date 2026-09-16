@@ -16,4 +16,16 @@
 # 200 rather than 301: the browser keeps the address it asked for, so the app
 # still reads the slug and the query params out of it. A redirect would throw
 # both away.
+
+# A missing hashed asset is a 404, not the app shell.
+#
+# Netlify takes the first rule that matches, so this one has to sit above the
+# fallback: a stale tab asking for a chunk from a previous deploy would
+# otherwise fall through and be handed `index.html` with a 200 and a
+# `text/html` type, which the browser reports as a failed dynamic import
+# rather than as the missing file it is. `:splat` keeps the real path so a
+# chunk that IS there is still served; only the ones that are not answer 404.
+# The catch-all below must stay last.
+/assets/*    /assets/:splat    404
+
 /*    /index.html   200

@@ -38,3 +38,25 @@ read from this repo.
 - **Database changes do not roll back this way.** Migrations are append-only, so
   an undo is a new migration. A revert of app code against a migrated database
   is a half-rollback, and knowing which half you got is the whole problem.
+
+## What the two files in `public/` decide
+
+There is no `netlify.toml`, but there are two files the host reads, and they
+ship as part of the build because Vite copies `public/` verbatim.
+
+- **`public/_redirects`** — the rules, taken **top to bottom, first match
+  wins**. `/assets/*` answers **404** for a path with no file behind it, so a
+  tab left open across a deploy gets a real not-found for a chunk that is gone
+  instead of `index.html` served as a script. Below it, `/*` rewrites to
+  `/index.html` with a **200**, which is what makes `/<service-slug>?cell=<id>`
+  a real address. **The catch-all stays last**: anything added under it is
+  dead.
+- **`public/_headers`** — the Content-Security-Policy for every path, plus
+  `Cache-Control: public, max-age=31536000, immutable` for `/assets/*`. The
+  year is safe because Vite puts the content hash in the filename, so a changed
+  file is a different name. Nothing gives `/` or `/index.html` a long cache;
+  the shell has to be re-fetched to learn the new hashes.
+
+`scripts/tests/a-deep-link-is-a-real-address.test.mjs` holds both — the order
+of the two rules and the immutable header — so a rule added in the wrong place
+goes red rather than shipping.
