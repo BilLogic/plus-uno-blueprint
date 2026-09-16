@@ -1,2 +1,7 @@
 /*
   Content-Security-Policy: default-src 'self'; img-src 'self' data: https://osybxeojvsqcwxkgnalm.supabase.co; connect-src 'self' https://osybxeojvsqcwxkgnalm.supabase.co https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-ancestors 'none'; base-uri 'self'
+
+# Hashed assets never change under the same name — Vite puts the content hash
+# in the filename — so a year is safe and `immutable` stops the revalidation.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
