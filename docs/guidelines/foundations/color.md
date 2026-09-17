@@ -124,8 +124,9 @@ blueprint canvas, where the resting color comes from row data — hence tier 4.
 
 ## Dark mode
 
-`next-themes` with `attribute="class"` puts `.dark` on the root; Tailwind's
-dark variant keys off it (with `enableColorScheme` handling the UA color-scheme).
+The template's own `lib/theme.ts` puts `.dark` on the root while its module
+graph evaluates, before the first paint; Tailwind's dark variant keys off it,
+and the same code sets the UA `color-scheme`.
 The part that is ours alone: **`.dark` can sit on a subtree** — the
 presentation stage (`SlicePresentation`) goes dark while the app stays light.
 That is why `semantic.css` declares its derivations at `:root, .dark, .light`
