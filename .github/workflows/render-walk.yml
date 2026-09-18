@@ -120,8 +120,31 @@ jobs:
       # console errors looks identical whether the app is clean or the listener
       # was never wired up — so one error is injected into every page and a zero
       # exit is the failure.
+      # THE STORAGE PREFIX THE WALK WRITES UNDER IS THIS DEPLOYMENT'S, not the
+      # template's. A spec that seeds settings — the phone agent jump seeds an
+      # agent key — writes `<prefix>agent-settings`, and the app reads the
+      # prefix `deployment/bootstrap.ts` configures. Left unset, the spec
+      # defaults to the template's `sb-`, the app reads `uno-`, and the surface
+      # under test never appears: the walk fails on a missing button rather
+      # than on anything about the board. Read out of `bootstrap.ts` rather
+      # than written twice, so a prefix change cannot desync the walk in
+      # silence, and empty is a hard failure rather than a default.
+      - name: The prefix the walk seeds under
+        id: prefix
+        run: |
+          set -euo pipefail
+          prefix=$(sed -n "s/.*configureStorageNamespace('\([^']*\)').*/\1/p" deployment/bootstrap.ts)
+          if [ -z "$prefix" ]; then
+            echo "could not read configureStorageNamespace from deployment/bootstrap.ts" >&2
+            exit 1
+          fi
+          echo "value=$prefix" >> "$GITHUB_OUTPUT"
+          echo "the walk seeds under \"$prefix\""
+
       - name: A console error fails the walk
         if: steps.board.outputs.walks == 'true'
+        env:
+          RENDER_WALK_STORAGE_PREFIX: ${{ steps.prefix.outputs.value }}
         run: |
           set -euo pipefail
           if RENDER_WALK_INJECT_CONSOLE_ERROR=1 npm run check:render-walk; then
@@ -136,6 +159,8 @@ jobs:
       # step on the answer above would hide the sentence the register exists to
       # show.
       - name: Walk every view of the board, and drag an annotation
+        env:
+          RENDER_WALK_STORAGE_PREFIX: ${{ steps.prefix.outputs.value }}
         run: npm run check:render-walk
 
       # One screenshot per view, kept whichever way the walk went. The failures
