@@ -170,9 +170,17 @@ export function wiringFaults({ loop, config, references, harness }) {
   // about which tools its surface rows name. A second `?raw` import here is
   // how they came apart before: the tool served the replacement while the
   // prompt carried the template's.
-  if (!/buildSystem[\s\S]*?readReference\('canvas-adapter',\s*roster\)/.test(loop)) {
+  //
+  // The name is `buildStableSystem` from template v1.44.27 on, where the
+  // prompt was split into a stable half and a volatile one so it is built
+  // once per call instead of twice. The splice belongs to the STABLE half and
+  // this assertion follows it there — an adapter rendered per call would
+  // defeat the caching the split exists for. The function name is matched on
+  // purpose: when the template moves this again, that is a thing to look at,
+  // not to paper over with a looser pattern.
+  if (!/buildStableSystem[\s\S]*?readReference\('canvas-adapter',\s*roster\)/.test(loop)) {
     faults.push({
-      problem: `${LOOP}'s buildSystem does not splice readReference('canvas-adapter', roster) — the prompt must carry the document the loader serves, rendered against the same roster, not a second copy`,
+      problem: `${LOOP}'s buildStableSystem does not splice readReference('canvas-adapter', roster) — the prompt must carry the document the loader serves, rendered against the same roster, not a second copy`,
     })
   }
   if (adapterImport(loop, { specifier: OVERRIDE_SPECIFIER })) {
