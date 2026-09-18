@@ -168,7 +168,7 @@ const WIRED = {
   // drift — and one rendering of its surface rows rather than two.
   loop: [
     "import { readReference } from '@/lib/agent/tools/references'",
-    'export function buildSystem(note, skill, roster) {',
+    'export function buildStableSystem(note, skill, roster) {',
     "  return [ROLE, readReference('canvas-adapter', roster), note].join(\"\")",
     '}',
   ].join('\n'),
