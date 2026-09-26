@@ -3,5 +3,7 @@
 
 # Hashed assets never change under the same name — Vite puts the content hash
 # in the filename — so a year is safe and `immutable` stops the revalidation.
-/assets/*
+# They sit under the BASE_PATH in `netlify.toml`, so the block does too; the
+# `/*` CSP above already covers every path under it.
+/blueprint/assets/*
   Cache-Control: public, max-age=31536000, immutable

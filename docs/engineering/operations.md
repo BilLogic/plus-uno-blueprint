@@ -74,11 +74,19 @@ preview port of its own.
 
 The origin has to be in the hosted project's auth **Redirect URLs** (Supabase
 dashboard → Authentication → URL Configuration), alongside the **Site URL**
-`https://uno-blueprint.netlify.app`. That allowlist is what makes emailed auth
-links work: magic-link and recovery emails redirect to the requesting origin
-only if it is on the list, otherwise Supabase silently falls back to the Site
-URL. If a mailed link lands somewhere unexpected, check this configuration
+`https://plus-uno.netlify.app/blueprint`. That allowlist is what makes emailed
+auth links work: magic-link and recovery emails redirect to the requesting
+origin only if it is on the list, otherwise Supabase silently falls back to the
+Site URL. If a mailed link lands somewhere unexpected, check this configuration
 first.
+
+Production is served under a path, `/blueprint/` (the `BASE_PATH` in
+`netlify.toml`), and is reached two ways: through the proxy on PLUS's own site
+and directly on this project's Netlify site, the fallback. A magic link returns
+to the origin it was sent from, so the list needs **both**:
+
+- `https://plus-uno.netlify.app/blueprint/**` — the proxied address people use
+- `https://plus-uno-blueprint.netlify.app/blueprint/**` — the fallback host
 
 **Unverified:** the allowlist is dashboard state and cannot be read from this
 repo, so it may still carry the fictional `5199` and may or may not carry
