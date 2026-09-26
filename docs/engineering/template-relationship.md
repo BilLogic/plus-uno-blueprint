@@ -28,7 +28,7 @@ working account: how the arrangement behaves day to day.
 Through `package.json`:
 
 ```json
-"uno-blueprint": "github:BilLogic/uno-blueprint#v1.44.13"
+"uno-blueprint": "github:BilLogic/uno-blueprint#v2.0.0"
 ```
 
 A tag, never a branch, so a deployment always knows exactly which code it is

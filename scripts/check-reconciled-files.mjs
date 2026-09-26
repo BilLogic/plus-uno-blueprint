@@ -19,24 +19,23 @@
  * genuinely exist and can still disagree. `scripts/reconciled-files.mjs`
  * argues each group.
  *
- * An empty allowlist is still a trivial pass, exiting 0 without needing the template
- * present. It will not be empty again.
+ * An empty allowlist is still a trivial pass, exiting 0 without needing the
+ * template present. It will not be empty again.
  *
  * The template is the pinned git dependency `uno-blueprint` (see
- * package.json / the lockfile), installed to
- * `node_modules/uno-blueprint` by `npm ci` — the same copy
- * `scripts/check-write-surface.mjs` reads, and the reason both run in the
- * `gates` job AFTER `npm ci`. Byte-identity is measured against that pinned
- * version, so "reconciled" means "identical to the template at the pinned tag"; a pin
- * bump that moves the template's copy is exactly the drift this is meant to catch. The
- * installed package is the right source precisely because it is what the
+ * package.json / the lockfile), installed to `node_modules/uno-blueprint` by
+ * `npm ci` — the same copy `scripts/check-write-surface.mjs` reads, and the
+ * reason both run in the `gates` job AFTER `npm ci`. Byte-identity is
+ * measured against that pinned version, so "reconciled" means "identical to
+ * the template at the pinned tag"; a pin bump that moves the template's copy
+ * is exactly the drift this is meant to catch. The installed package is the right source precisely because it is what the
  * deployment runs: a sibling checkout on somebody's disk is a template nobody
  * is deployed against.
  *
  * When the allowlist is non-empty but the package is not installed, it fails
- * the way the divergence reporter fails on a template tree it cannot read: loudly,
- * with the command to fix it, never a green pass it cannot stand behind. An
- * empty allowlist needs no package and passes anyway.
+ * the way the divergence reporter fails on a template tree it cannot read:
+ * loudly, with the command to fix it, never a green pass it cannot stand
+ * behind. An empty allowlist needs no package and passes anyway.
  *
  * An install that is present but BEHIND the pin is the same condition wearing
  * a disguise, and `scripts/template-pin.mjs` unmasks it before any comparison
@@ -120,7 +119,8 @@ export function auditReconciled({ files, readInstance, readTemplate }) {
 }
 
 function main() {
-  // Empty allowlist ⇒ nothing to compare ⇒ pass, without needing the template present.
+  // Empty allowlist ⇒ nothing to compare ⇒ pass, without needing the template
+  // present.
   if (RECONCILED_FILES.length === 0) {
     console.log('reconciled set is empty; nothing to compare.')
     return

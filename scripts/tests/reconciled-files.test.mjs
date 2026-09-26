@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
  * The reconciled-set drift gate's contract (#319): an empty allowlist passes,
- * an enrolled file byte-identical to the template passes, an enrolled file that differs
- * fails.
+ * an enrolled file byte-identical to the template passes, an enrolled file
+ * that differs fails.
  *
  * `auditReconciled` is exercised against in-memory readers rather than a real
- * template checkout, so the outcomes are pinned to byte-equality alone and not to
- * whatever the pinned package happens to ship. Two tests do read the shipped
+ * template checkout, so the outcomes are pinned to byte-equality alone and not
+ * to whatever the pinned package happens to ship. Two tests do read the shipped
  * list: one asserts the enrolled set — first populated by #351, the shared
  * arrow-routing engine, and grown by every reconciliation ticket and pin bump
  * since — and one asserts that no path on it is enrolled twice (#407).

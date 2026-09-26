@@ -133,7 +133,7 @@ export const PROSE_FLOOR = 80
 export const NOT_OUR_PROSE = ['docs/agents/']
 
 /** The two repository names that are one token as far as meaning is concerned. */
-const REPOSITORY_NAMES = /plus-uno-blueprint|uno-blueprint/gi
+const REPOSITORY_NAMES = /(?:plus-)?uno-blueprint/gi
 
 /**
  * One statement, stripped of the four things that let a copy read as different
