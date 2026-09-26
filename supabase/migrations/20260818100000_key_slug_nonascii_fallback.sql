@@ -1,6 +1,6 @@
 -- key_slug: md5-fragment fallback for non-ASCII names.
 --
--- Port of the template fix (agentic-service-blueprinting PR #12, 2026-08-18).
+-- Port of the template fix (uno-blueprint PR #12, 2026-08-18).
 -- The original key_slug (20260731001000_blueprint_authoring_operations) slugs
 -- through an [a-z0-9] filter, so a fully non-ASCII name (a CJK lane like
 -- 运营协调员, a Cyrillic step) slugs to the empty string and the function

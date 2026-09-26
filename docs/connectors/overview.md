@@ -9,7 +9,7 @@ Everything this repo is coupled to across a boundary it does not control: the
 database, the Slack bot that reads it, and the host that serves it.
 
 `docs/connectors/` is **instance-only, on purpose.** This app is one deployment
-of a template that is also the `agentic-service-blueprinting` package, and the
+of a template that is also the `uno-blueprint` package, and the
 package must inherit nothing PLUS-specific. Anything in this folder describes
 *this* instance's integrations; a fork replaces the contents and keeps the
 folder, the filenames, and the shape.

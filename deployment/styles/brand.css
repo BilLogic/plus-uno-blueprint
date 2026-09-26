@@ -3,7 +3,7 @@
  * `styles/themes/light.css` describes, held here rather than by forking those
  * two files.
  *
- * Imported AFTER `agentic-service-blueprinting/styles.css`, so these
+ * Imported AFTER `uno-blueprint/styles.css`, so these
  * declarations are later in source order than the template's own. Every
  * selector below is the one the template declares the same dial on, so the two
  * meet at equal specificity and source order decides — which is the whole

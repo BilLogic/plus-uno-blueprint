@@ -1,15 +1,16 @@
-import { packageCoverFigures } from 'agentic-service-blueprinting'
-import type { CoverContent } from 'agentic-service-blueprinting'
+import { packageCoverFigures } from 'uno-blueprint'
+import type { CoverContent } from 'uno-blueprint'
 
 /**
- * Uno's cover-page content — every user-facing string on the landing view.
+ * PLUS Uno Blueprint's cover-page content — every user-facing string on the
+ * landing view.
  *
- * The renderers in `components/cover/` are shared with the
- * agentic-service-blueprinting template and know nothing about PLUS; a
- * deployment is entirely defined by this module. Uno's own service comes
- * first, then the four generalized tabs the template ships, carried across
- * verbatim: they describe the blueprint model, slices, and the skills, none
- * of which are template-specific.
+ * The renderers in `components/cover/` are shared with the Uno Blueprint
+ * template and know nothing about PLUS; a deployment is entirely defined by
+ * this module. This deployment's own service comes first, then the four
+ * generalized tabs the template ships, carried across verbatim: they describe
+ * the blueprint model, slices, and the skills, none of which are
+ * template-specific.
  *
  * THE THIRTEEN DIAGRAMS COME FROM THE PACKAGE, and are values rather than
  * paths. Who authored a figure is who supplies it: those thirteen draw the
@@ -35,12 +36,12 @@ import type { CoverContent } from 'agentic-service-blueprinting'
  * reserves the right box before the image decodes — is taken whole.
  */
 export const coverContent: CoverContent = {
-  title: 'Uno Blueprint',
+  title: 'PLUS Uno Blueprint',
   lede: 'A repository of the service experiences PLUS supports for tutors, from Discovery to Post-Session — every phase, every scenario, every path variant, down to what one actor does at one moment. It is data, not a diagram: agents query it, slices come out of it, and a change is traced through it before anyone commits.',
   primaryCtaLabel: 'View PLUS Blueprints',
   commandCopy: { copyLabel: 'Copy', copiedLabel: 'Copied' },
   states: {
-    noSlices: 'No slices in this workspace yet — `/sb:slice` cuts the first one.',
+    noSlices: 'No slices in this workspace yet — `/ub:slice` cuts the first one.',
   },
   tabs: [
     {
@@ -256,34 +257,34 @@ export const coverContent: CoverContent = {
         {
           kind: 'skill',
           id: 'skills-map',
-          command: '/sb:map',
+          command: '/ub:map',
           summary:
             "Builds a blueprint from what you already have — documents, a working session, or someone else's diagram — and produces a validated blueprint file, signed off scenario by scenario and imported into the workspace.",
-          figure: packageCoverFigures.sbMap,
+          figure: packageCoverFigures.ubMap,
         },
         {
           kind: 'skill',
           id: 'skills-audit',
-          command: '/sb:audit',
+          command: '/ub:audit',
           summary:
             'Runs the check roster to find what is missing, conflicting, or unowned, and produces findings for triage — the audit writes no changes of its own.',
-          figure: packageCoverFigures.sbAudit,
+          figure: packageCoverFigures.ubAudit,
         },
         {
           kind: 'skill',
           id: 'skills-whatif',
-          command: '/sb:whatif',
+          command: '/ub:whatif',
           summary:
             'Traces a proposed change through the dependency graph before anyone commits, producing the cells it would reach and the assumptions it would break — worked on a copy, never the live blueprint.',
-          figure: packageCoverFigures.sbWhatif,
+          figure: packageCoverFigures.ubWhatif,
         },
         {
           kind: 'skill',
           id: 'skills-slice',
-          command: '/sb:slice',
+          command: '/ub:slice',
           summary:
             'Cuts the view one stakeholder needs out of the whole, producing one slice per view that still cites the cells it quotes.',
-          figure: packageCoverFigures.sbSlice,
+          figure: packageCoverFigures.ubSlice,
         },
         {
           kind: 'prose',

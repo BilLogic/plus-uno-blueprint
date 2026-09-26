@@ -6,6 +6,6 @@ summary: Recorded in the template as ADR 0018. A resource's `featured` flag is o
 
 # Featured is one column, two verbs
 
-This decision is recorded in the template, as [BilLogic/agentic-service-blueprinting ADR 0018](https://github.com/BilLogic/agentic-service-blueprinting/blob/main/docs/adr/0018-featured-is-one-column-two-verbs.md). It is about code this deployment runs from the template, so the template is where it lives. Read it there for the decision, its reasons and its consequences.
+This decision is recorded in the template, as [BilLogic/uno-blueprint ADR 0018](https://github.com/BilLogic/uno-blueprint/blob/main/docs/adr/0018-featured-is-one-column-two-verbs.md). It is about code this deployment runs from the template, so the template is where it lives. Read it there for the decision, its reasons and its consequences.
 
 This file keeps its number so that a citation of ADR 0011 in this repository still lands. The two repositories number their records independently: here, 0011 is this pointer; in the template, 0018 is the record.

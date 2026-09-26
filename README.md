@@ -31,7 +31,7 @@ live* → [`docs/engineering/codebase-guide.md`](docs/engineering/codebase-guide
 ## It runs the template
 
 The app is not written here. It comes from
-[agentic-service-blueprinting](https://github.com/BilLogic/agentic-service-blueprinting),
+[Uno Blueprint](https://github.com/BilLogic/uno-blueprint),
 the open-source template this deployment is one instance of, pinned in
 `package.json` by release tag — a tag rather than a branch, so a consumer
 always knows exactly which code it is running.
@@ -59,7 +59,7 @@ Two lanes, never mixed.
 - **Reference** — living, always true. `product/` (what the thing is and how to
   read it), `guidelines/` (the design system: `foundations/` and `components/`;
   the composition documents are the package's, at
-  `node_modules/agentic-service-blueprinting/docs/guidelines/composition/`),
+  `node_modules/uno-blueprint/docs/guidelines/composition/`),
   `engineering/` (how the code works), `reference/` (fixed
   vocabularies and id maps), `adr/` (decisions that are surprising or hard to
   reverse), `connectors/` (everything crossing a repo boundary).

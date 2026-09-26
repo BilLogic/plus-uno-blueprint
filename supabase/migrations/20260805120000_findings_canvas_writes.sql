@@ -1,4 +1,4 @@
--- Canvas write parity for sb:audit / sb:whatif: the in-app agent (dev auth
+-- Canvas write parity for ub:audit / ub:whatif: the in-app agent (dev auth
 -- user) records and triages findings directly, same as the IDE flow's
 -- service-key writes. anon keeps read-only — the deployed app is unchanged.
 -- Delete stays revoked everywhere: supersede/triage are status flips, and

@@ -19,21 +19,21 @@
 // order would not be testing anything.
 import '~/bootstrap'
 import { describe, expect, it } from 'vitest'
-import { resolveDeploymentConfig } from 'agentic-service-blueprinting'
-import { currentStoragePrefix } from 'agentic-service-blueprinting/bootstrap'
+import { resolveDeploymentConfig } from 'uno-blueprint'
+import { currentStoragePrefix } from 'uno-blueprint/bootstrap'
 import {
   configureCellBudget,
   getCellContentLengthGuidance,
-} from 'agentic-service-blueprinting/src/lib/cellContentLimits.ts'
-import { unoDeploymentConfig } from '~/deployment'
+} from 'uno-blueprint/src/lib/cellContentLimits.ts'
+import { plusUnoDeploymentConfig } from '~/deployment'
 import { coverContent } from '~/content/coverContent'
 import { SAMPLE_NAV } from '~/data/sampleNav'
 
-const resolved = resolveDeploymentConfig(unoDeploymentConfig)
+const resolved = resolveDeploymentConfig(plusUnoDeploymentConfig)
 
 describe('this deployment', () => {
   it('namespaces storage under its own prefix, not the package default', () => {
-    // `sb-` is what the package ships. Every key in a reader's browser was
+    // `ub-` is what the package ships. Every key in a reader's browser was
     // written under `uno-`, and nothing raises if the bootstrap call is lost —
     // the state just quietly resets. Hence an assertion rather than a comment.
     expect(currentStoragePrefix()).toBe('uno-')
@@ -46,7 +46,7 @@ describe('this deployment', () => {
 
   it('serves its own cover and its own pre-database board', () => {
     expect(resolved.cover).toBe(coverContent)
-    expect(resolved.cover.title).toBe('Uno Blueprint')
+    expect(resolved.cover.title).toBe('PLUS Uno Blueprint')
     expect(resolved.sample.nav).toEqual(SAMPLE_NAV)
     expect(resolved.sample.nav.length).toBeGreaterThan(0)
   })

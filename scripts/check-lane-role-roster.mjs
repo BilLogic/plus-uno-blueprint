@@ -77,7 +77,7 @@
  * (`scripts/reconciled-files.mjs`), which means it is the pinned template's
  * file and this deployment holds it byte-identical; editing it here would
  * redden `check:reconciled`, and the change belongs upstream in
- * `agentic-service-blueprinting` — which is what #399 means by calling this
+ * `uno-blueprint` — which is what #399 means by calling this
  * part of the #304 convergence.
  *
  * Two things would keep the fit imperfect even upstream, and they are the
@@ -114,7 +114,7 @@ export const ERD_PATH = 'docs/reference/erd.mmd'
  * in `specs.ts` for any reader to see.
  */
 export const FILTER_PATH =
-  'node_modules/agentic-service-blueprinting/src/lib/agent/tools/definitions/blueprint.ts'
+  'node_modules/uno-blueprint/src/lib/agent/tools/definitions/blueprint.ts'
 
 /**
  * The values of a `Canonical: a, b, c.` sentence, unfiltered.

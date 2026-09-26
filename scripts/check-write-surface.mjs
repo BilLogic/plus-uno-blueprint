@@ -3,7 +3,7 @@
  * The canvas adapter this app SERVES, against the surfaces the app HAS.
  *
  * Adapted from `scripts/check-write-surface.mjs` in
- * agentic-service-blueprinting (v0.5.0), which compares one row. This
+ * uno-blueprint (v0.5.0), which compares one row. This
  * instance overrides the adapter rather than sharing it (#115), so there
  * are four subjects instead of one, and the first is the one the upstream
  * script has no reason to own.
@@ -15,7 +15,7 @@
  *      `agent.references['canvas-adapter']`, which the application's
  *      reference loader lays over the template's per name. Both must resolve
  *      `deployment/agent/canvas-adapter.md` and NOT
- *      `agentic-service-blueprinting/references/canvas-adapter.md`.
+ *      `uno-blueprint/references/canvas-adapter.md`.
  *      Without this check the others still pass while the app serves
  *      the package's rulebook again: `npm update`, a pin bump, a merge
  *      that reverts one import line — the document below would be audited,
@@ -89,7 +89,7 @@ const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url))
  * loop that stopped splicing the loader's record would serve the template's
  * rulebook with nothing on screen to say so.
  */
-const APP = 'node_modules/agentic-service-blueprinting/src'
+const APP = 'node_modules/uno-blueprint/src'
 const ADAPTER = 'deployment/agent/canvas-adapter.md'
 const LOOP = `${APP}/lib/agent/loop.ts`
 const DOCS = `${APP}/lib/agent/tools/referenceDocs.ts`
@@ -115,7 +115,7 @@ const SCHEMA = 'supabase/schema.reference.sql'
 const MIGRATIONS = 'supabase/migrations'
 
 /** The package specifier the override exists to displace. */
-const PACKAGE_ADAPTER = 'agentic-service-blueprinting/references/canvas-adapter.md'
+const PACKAGE_ADAPTER = 'uno-blueprint/references/canvas-adapter.md'
 
 /**
  * The specifier this deployment's registration must import the override under.
@@ -462,7 +462,7 @@ export function retiredMentions(lines) {
 /**
  * `SUPERSESSION_HEADING` (declared above) heads the list of installed
  * references that teach the retired vocabulary — empty once the package
- * agrees, as asb v1.0.0 does.
+ * agrees, as the template does at v1.0.0.
  *
  * They live in `node_modules/` and this repository cannot edit them, so the
  * only honest remedy is for the served rulebook to say so where the agent

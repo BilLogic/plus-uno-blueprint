@@ -2,7 +2,7 @@
 /**
  * The template version that is INSTALLED, against the one that is PINNED.
  *
- * Four scripts here read `node_modules/agentic-service-blueprinting` and
+ * Four scripts here read `node_modules/uno-blueprint` and
  * measure this repository against what they find. None of them used to ask
  * whether what they found is the version `package.json` pins, so a pin bump
  * that landed without a matching install had every one of them comparing
@@ -45,7 +45,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 /** The dependency, by the name it has in package.json. */
-export const TEMPLATE_PACKAGE = 'agentic-service-blueprinting'
+export const TEMPLATE_PACKAGE = 'uno-blueprint'
 
 /** Where `npm ci` puts it. The copy every one of the four callers reads. */
 export const PACKAGE = `node_modules/${TEMPLATE_PACKAGE}`
@@ -68,7 +68,7 @@ export function pinnedSpec(manifestText) {
 /**
  * The version a dependency spec names, or null when it names none.
  *
- * `github:BilLogic/agentic-service-blueprinting#v1.12.9` is a pin and yields
+ * `github:BilLogic/uno-blueprint#v1.12.9` is a pin and yields
  * `1.12.9`; `#main`, a `file:` link and a bare semver range are not pins and
  * yield null. The `v` is optional because the tag prefix is a convention of
  * the tags and not of the version.

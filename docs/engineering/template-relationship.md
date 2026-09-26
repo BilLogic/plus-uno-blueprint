@@ -1,12 +1,12 @@
 ---
 audience: developers
-summary: This repository is a deployment of the agentic-service-blueprinting template and imports it at a pinned tag — where the application actually lives, what `@/` and `~/` resolve to, what a version bump involves, what to do when the template changes something you depend on, the offline board a no-database build draws and the command that re-exports it, and what the retired merge-era machinery was for.
+summary: This repository is a deployment of the uno-blueprint template and imports it at a pinned tag — where the application actually lives, what `@/` and `~/` resolve to, what a version bump involves, what to do when the template changes something you depend on, the offline board a no-database build draws and the command that re-exports it, and what the retired merge-era machinery was for.
 ---
 
 # The template relationship
 
 The application is not in this repository. It is
-[agentic-service-blueprinting](https://github.com/BilLogic/agentic-service-blueprinting),
+[Uno Blueprint](https://github.com/BilLogic/uno-blueprint),
 installed as a dependency and pinned by release tag, and what lives here is one
 deployment of it: a database, a blueprint's worth of content, a brand, an
 environment, and the handful of modules that tell the template which of those to
@@ -17,8 +17,8 @@ is authored and released; here is where a real Supabase, its migrations and one
 organization's content live. Read every rule below as an answer to "which side
 owns this".
 
-The decision itself is recorded upstream — [ADR 0019](https://github.com/BilLogic/agentic-service-blueprinting/blob/main/docs/adr/0019-the-deployment-is-a-deployment-of-the-template.md)
-(a deployment, not a fork) and [ADR 0020](https://github.com/BilLogic/agentic-service-blueprinting/blob/main/docs/adr/0020-the-deployment-imports-the-template.md)
+The decision itself is recorded upstream — [ADR 0019](https://github.com/BilLogic/uno-blueprint/blob/main/docs/adr/0019-the-deployment-is-a-deployment-of-the-template.md)
+(a deployment, not a fork) and [ADR 0020](https://github.com/BilLogic/uno-blueprint/blob/main/docs/adr/0020-the-deployment-imports-the-template.md)
 (imported, never vendored). `docs/adr/0012` and `0013` here are pointers at
 those, kept so a citation of the local number still lands. This document is the
 working account: how the arrangement behaves day to day.
@@ -28,25 +28,25 @@ working account: how the arrangement behaves day to day.
 Through `package.json`:
 
 ```json
-"agentic-service-blueprinting": "github:BilLogic/agentic-service-blueprinting#v1.44.13"
+"uno-blueprint": "github:BilLogic/uno-blueprint#v1.44.13"
 ```
 
 A tag, never a branch, so a deployment always knows exactly which code it is
 running; the lockfile pins the commit that tag resolved to. `npm ci` unpacks it
-to `node_modules/agentic-service-blueprinting`, and that directory is the
+to `node_modules/uno-blueprint`, and that directory is the
 application — every component, hook, context, style, agent tool and skill.
 
 Two aliases divide the tree, and the division is the whole seam:
 
 | Prefix | Resolves to | Holds |
 |---|---|---|
-| `@/…` | `node_modules/agentic-service-blueprinting/src` | the application |
+| `@/…` | `node_modules/uno-blueprint/src` | the application |
 | `~/…` | `deployment/` | this deployment's own modules |
 
 A third spelling sits beside those two: the **package name**. `@/…` is an
 alias this repository declares, so it resolves only here — a module the
 template's own generator writes for a deployment, or one that names a type
-the package index exports, says `agentic-service-blueprinting` instead,
+the package index exports, says `uno-blueprint` instead,
 which resolves on both sides. `deployment/data/sampleNav.ts` and
 `deployment/data/sampleBlueprints.ts` are that case.
 
@@ -58,8 +58,8 @@ applies is decided by the package's own seam:
 
 | What is imported | Spelling |
 |---|---|
-| Anything `src/index.ts` exports — `App`, `DeploymentConfig`, the board types, `packageCoverFigures` | `agentic-service-blueprinting` |
-| A module of the application the index does not export — `lib/brandAccent`, `lib/entityStatus`, `components/cover/coverModel` | `agentic-service-blueprinting/src/…​.ts`, through the package's own `"./*"` export |
+| Anything `src/index.ts` exports — `App`, `DeploymentConfig`, the board types, `packageCoverFigures` | `uno-blueprint` |
+| A module of the application the index does not export — `lib/brandAccent`, `lib/entityStatus`, `components/cover/coverModel` | `uno-blueprint/src/…​.ts`, through the package's own `"./*"` export |
 | This deployment's own modules | `~/…`, or a relative path within a directory |
 
 The second row is a reach past the seam and says so by being longer: a symbol
@@ -227,7 +227,7 @@ step named **template scrub**: delete this repository's PLUS-specific code and
 parameterize the rest, producing a generic template out of this tree.
 
 No such script was ever written and none should be. The plan assumed the
-template would be extracted *from here*. It was not — `agentic-service-blueprinting`
+template would be extracted *from here*. It was not — `uno-blueprint`
 became its own repository and did the generalizing upstream, by hand, over time,
 and this repository is now a consumer of the result. The audit's largest named
 coupling is the proof: `blueprintArrowGeometry.ts` carried 20 hardcoded PLUS
@@ -339,7 +339,7 @@ the application were broken.
 "Coupled" no longer means what it meant when this repository held its own copy
 of the application. Since the import and the scripts' convergence there is no
 `src/` here at all: the application is read out of
-`node_modules/agentic-service-blueprinting`, this deployment's own modules live
+`node_modules/uno-blueprint`, this deployment's own modules live
 under `deployment/`, and the only place the two trees can still drift is the
 files both have to keep on disk. That drift is measured, never listed:
 

@@ -10,7 +10,7 @@ last-reviewed: 2026-08-25
 `src/components/ui/` is the design system — every primitive under it, and the
 whole of what this folder documents. Anything assembled out of them is
 composition, which the package documents: read its composition folder under
-`node_modules/agentic-service-blueprinting/docs/guidelines/composition/`,
+`node_modules/uno-blueprint/docs/guidelines/composition/`,
 starting at `overview.md`. The need→primitive map for agent-UX work, with every
 primitive named, is
 [`docs/reference/ui-inventory.md`](../../reference/ui-inventory.md).

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
  * The reconciled-set drift gate's contract (#319): an empty allowlist passes,
- * an enrolled file byte-identical to asb passes, an enrolled file that differs
+ * an enrolled file byte-identical to the template passes, an enrolled file that differs
  * fails.
  *
  * `auditReconciled` is exercised against in-memory readers rather than a real
- * asb checkout, so the outcomes are pinned to byte-equality alone and not to
+ * template checkout, so the outcomes are pinned to byte-equality alone and not to
  * whatever the pinned package happens to ship. Two tests do read the shipped
  * list: one asserts the enrolled set — first populated by #351, the shared
  * arrow-routing engine, and grown by every reconciliation ticket and pin bump
@@ -25,7 +25,7 @@ const refuse = () => {
 }
 
 test('an empty allowlist has nothing to fail on, and reads nothing', () => {
-  assert.deepEqual(auditReconciled({ files: [], readInstance: refuse, readAsb: refuse }), [])
+  assert.deepEqual(auditReconciled({ files: [], readInstance: refuse, readTemplate: refuse }), [])
 })
 
 test('the shipped allowlist is exactly the twenty-five files still shared after the import flip', () => {
@@ -110,7 +110,7 @@ test('every enrolled path is a file the package ships too', () => {
   for (const path of RECONCILED_FILES) {
     assert.ok(
       existsSync(
-        new URL(`../../node_modules/agentic-service-blueprinting/${path}`, import.meta.url),
+        new URL(`../../node_modules/uno-blueprint/${path}`, import.meta.url),
       ),
       `${path} is enrolled as reconciled but the pinned release does not ship ` +
         `it. Run npm ci; if the release really dropped it, the entry goes.`,
@@ -125,7 +125,7 @@ test('no path is enrolled twice, so removing one entry really un-enrols a file',
   // file that two tickets touched reads as belonging in two places.
   //
   // Nothing was ever measured wrongly: the checker compared each of them to
-  // asb twice and reached the same verdict both times. What a duplicate breaks
+  // the template twice and reached the same verdict both times. What a duplicate breaks
   // is REMOVAL, and removal is the operation this list most needs to keep
   // honest. Delete one occurrence of a doubly-listed path and the file stays
   // enrolled from the other block, silently — so a deliberate un-enrolment
@@ -149,20 +149,20 @@ test('no path is enrolled twice, so removing one entry really un-enrols a file',
   assert.equal(RECONCILED_FILES.length, seen.size)
 })
 
-test('an enrolled file byte-identical to asb passes', () => {
+test('an enrolled file byte-identical to the template passes', () => {
   const problems = auditReconciled({
     files: ['src/lib/shared.ts'],
     readInstance: () => bytes('export const x = 1\n'),
-    readAsb: () => bytes('export const x = 1\n'),
+    readTemplate: () => bytes('export const x = 1\n'),
   })
   assert.deepEqual(problems, [])
 })
 
-test('an enrolled file that differs from asb fails', () => {
+test('an enrolled file that differs from the template fails', () => {
   const problems = auditReconciled({
     files: ['src/lib/shared.ts'],
     readInstance: () => bytes('export const x = 1\n'),
-    readAsb: () => bytes('export const x = 2\n'),
+    readTemplate: () => bytes('export const x = 2\n'),
   })
   assert.equal(problems.length, 1)
   assert.match(problems[0], /drifted/)
@@ -172,16 +172,16 @@ test('a difference as small as a trailing newline fails — this is byte-identit
   const problems = auditReconciled({
     files: ['src/lib/shared.ts'],
     readInstance: () => bytes('export const x = 1\n'),
-    readAsb: () => bytes('export const x = 1'),
+    readTemplate: () => bytes('export const x = 1'),
   })
   assert.equal(problems.length, 1)
 })
 
-test('an enrolled path asb does not ship fails rather than passing blind', () => {
+test('an enrolled path the template does not ship fails rather than passing blind', () => {
   const problems = auditReconciled({
     files: ['src/lib/instance-only.ts'],
     readInstance: () => bytes('export const x = 1\n'),
-    readAsb: () => null,
+    readTemplate: () => null,
   })
   assert.equal(problems.length, 1)
   assert.match(problems[0], /no copy/)
@@ -191,7 +191,7 @@ test('an enrolled path this repo has deleted fails rather than passing blind', (
   const problems = auditReconciled({
     files: ['src/lib/gone.ts'],
     readInstance: () => null,
-    readAsb: () => bytes('export const x = 1\n'),
+    readTemplate: () => bytes('export const x = 1\n'),
   })
   assert.equal(problems.length, 1)
   assert.match(problems[0], /does not exist in this repo/)

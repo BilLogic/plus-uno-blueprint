@@ -65,7 +65,7 @@ code uses `useMobileShell`.)
 one posture, and the sidebar's two states are open in the flow and collapsed to
 its rail — no width reads a second threshold. The sidebar's own account of
 width, collapse and the camera is the package's
-`node_modules/agentic-service-blueprinting/docs/guidelines/composition/sidebar.md`.
+`node_modules/uno-blueprint/docs/guidelines/composition/sidebar.md`.
 A deployment
 that wanted a narrow band where the column drew over the canvas would be adding
 a posture rather than tuning one, and that is a change to argue upstream.

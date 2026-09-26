@@ -4,7 +4,7 @@
  * PRECONDITION.
  *
  * The walk is the template's: a published directory inside
- * `node_modules/agentic-service-blueprinting/render-walk/`. Nothing here
+ * `node_modules/uno-blueprint/render-walk/`. Nothing here
  * decides what it opens or what it asserts, and since v1.44.10 nothing here
  * STAGES it either.
  *

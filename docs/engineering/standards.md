@@ -97,7 +97,7 @@ run `npm run interface-map` after changing a panel label's binding.
 
 **The two gates on the template boundary**, `npm run check:reconciled` and
 `npm run check:duplicate-meaning`, both read the lockfile-pinned
-`node_modules/agentic-service-blueprinting` rather than a sibling checkout,
+`node_modules/uno-blueprint` rather than a sibling checkout,
 which is what lets them run on a pull request from a clean install. The first
 holds every file `scripts/reconciled-files.mjs` declares byte-identical to the
 template's copy. The second asks the opposite question about the files that

@@ -10,7 +10,7 @@
  *      because six of the application's modules build their localStorage key
  *      while the import graph evaluates and two of them read storage there.
  *      Nothing raises if this line moves below the next one — the keys simply
- *      come out under the package's `sb-` prefix, every reader's saved state
+ *      come out under the package's `ub-` prefix, every reader's saved state
  *      silently resets, and the old keys sit unread in browsers this
  *      deployment does not control.
  *   2. the package's stylesheet, which carries the application's utilities and
@@ -26,13 +26,13 @@
  * exists at all.
  */
 import './bootstrap'
-import 'agentic-service-blueprinting/styles.css'
+import 'uno-blueprint/styles.css'
 import './styles/brand.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { App } from 'agentic-service-blueprinting'
-import { applyBrandAccent } from 'agentic-service-blueprinting/src/lib/brandAccent.ts'
-import { unoDeploymentConfig } from './deployment'
+import { App } from 'uno-blueprint'
+import { applyBrandAccent } from 'uno-blueprint/src/lib/brandAccent.ts'
+import { plusUnoDeploymentConfig } from './deployment'
 
 /**
  * The deployment's `brand.accent`, onto the root before anything renders.
@@ -44,7 +44,7 @@ import { unoDeploymentConfig } from './deployment'
  * agreeing is a thing worth having assert itself on every load rather than a
  * coincidence nobody checks.
  */
-applyBrandAccent(document.documentElement, unoDeploymentConfig.brand)
+applyBrandAccent(document.documentElement, plusUnoDeploymentConfig.brand)
 
 const root = createRoot(document.getElementById('root')!)
 
@@ -66,7 +66,7 @@ if (
   import.meta.env.DEV &&
   window.location.pathname.replace(/\/$/, '') === '/proto/arrows'
 ) {
-  void import('agentic-service-blueprinting/src/dev/ArrowSituationCatalogPage.tsx').then(
+  void import('uno-blueprint/src/dev/ArrowSituationCatalogPage.tsx').then(
     ({ ArrowSituationCatalogPage }) => {
       root.render(
         <StrictMode>
@@ -78,7 +78,7 @@ if (
 } else {
   root.render(
     <StrictMode>
-      <App config={unoDeploymentConfig} />
+      <App config={plusUnoDeploymentConfig} />
     </StrictMode>,
   )
 }

@@ -45,7 +45,7 @@ const HEX_COLOUR = /#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b/g
 /**
  * A cross-repository reference, which is not repo-local at all.
  *
- * `BilLogic/agentic-service-blueprinting#139` names one issue from either
+ * `BilLogic/uno-blueprint#139` names one issue from either
  * side — the owner and repository are written down, so the address does not
  * change with the reader. Only the bare `#139` is ambiguous. The qualified
  * form is masked before the scan, so a shared file may cite the other
