@@ -2,7 +2,7 @@
 audience: developers
 summary: Deploy, rollback, dashboards, monitoring, inviting people, and the local-stack troubleshooting checklist.
 sources: README.md, .env.example, src/components/EditorErrorBoundary.tsx, supabase/migrations/20260805170000_service_tier_rpc_enforcement.sql, package.json
-last-reviewed: 2026-08-25
+last-reviewed: 2026-09-26
 ---
 
 # Operations

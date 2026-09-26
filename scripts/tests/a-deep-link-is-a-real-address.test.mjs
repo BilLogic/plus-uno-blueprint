@@ -18,6 +18,7 @@ import {
   fileRedirectFindings,
   hostingRules,
 } from 'uno-blueprint/scripts/check-hosting-rules.mjs'
+import { BLUEPRINT_CONTRACT } from '../blueprintContract.mjs'
 
 const REDIRECTS = 'public/_redirects'
 const HEADERS = 'public/_headers'
@@ -97,10 +98,11 @@ test('hashed assets are served immutable', () => {
   )
 })
 
-// And the template's own hosting check over the same two files, at the same
-// prefix: no forced rule, no second asset block, no long cache on the shell.
-// The assertions above say why each rule exists; this is what keeps the files
-// held to everything the template holds its own to.
+// And the template's own findings over the same two files, at the same prefix:
+// no forced rule, no second asset block, no long cache on the shell. Only the
+// `public/` half of its check applies here. Its `netlify.toml` half expects the
+// redirect table in that file, and this repository keeps its rules in
+// `public/_redirects` and keeps `netlify.toml` to the one setting.
 test('the template hosting check finds nothing under the prefix', () => {
   assert.deepEqual(fileRedirectFindings(readFileSync(REDIRECTS, 'utf8'), REDIRECTS, BASE), [])
   assert.deepEqual(cacheFindings(readFileSync(HEADERS, 'utf8'), HEADERS, BASE), [])
@@ -108,11 +110,22 @@ test('the template hosting check finds nothing under the prefix', () => {
 
 // Served from a path, the site's own root has no file behind it. Somebody who
 // knows the bare address is sent to the board rather than handed a 404.
-test('the bare root is sent to the board, and shadows nothing', () => {
-  if (BASE === '/') return
+test.skipIf(BASE === '/')('the bare root is sent to the board, and shadows nothing', () => {
   const rules = ruleLines()
   const [from, to, status] = rules[0].split(/\s+/)
   assert.equal(from, '/', 'the root redirect comes first and matches the bare root alone')
   assert.equal(to, BASE, `the root is sent to ${BASE}`)
   assert.equal(status, '302', 'a temporary redirect, so the root can be given something of its own later')
+})
+
+// The bot builds `${appUrl}/?cell=<id>`, so the contract's app root has to sit
+// at the same prefix the build is served under, or every cell link it posts
+// lands outside the app.
+test('the contract app root is served under the same prefix', () => {
+  const { pathname } = new URL(BLUEPRINT_CONTRACT.appUrl)
+  assert.equal(
+    pathname.replace(/\/*$/, '/'),
+    BASE,
+    `appUrl ${BLUEPRINT_CONTRACT.appUrl} must sit at ${BASE}, the BASE_PATH in ${CONFIG}`,
+  )
 })
