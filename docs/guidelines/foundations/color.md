@@ -2,7 +2,7 @@
 audience: designers
 summary: The four color-token tiers, semantic-only consumption, the retune record behind the brand dials, dark mode as a class, the forced-colors stance, lane tints, the annotation chrome ink ladder, and the agent-ink precedent.
 sources: src/styles/colors.css, src/styles/semantic.css, src/styles/theme.css, src/styles/blueprint.css, src/styles/themes/, src/lib/canvasAnnotations.ts, src/config.ts, src/lib/brandAccent.ts
-last-reviewed: 2026-09-08
+last-reviewed: 2026-09-26
 ---
 
 # Color
@@ -36,7 +36,7 @@ filled control is made of is an authored dial, `--primary-lightness` and
 `--primary-chroma`, and both live in `deployment/styles/brand.css` at one value
 in both themes. The identity fill declares no dial of its own, so `--brand`
 resolves to exactly `--primary`. Those are
-tuning decisions rather than brand facts; the three walked-back passes behind
+tuning decisions rather than brand facts; the walked-back passes behind
 the control's pair are [the `--primary` retune](#the---primary-retune) below.
 `semantic.css` derives and declares no dial of its own, which is what lets its
 text be the template's, byte for byte
@@ -65,7 +65,7 @@ ramp step, and why the derivation multipliers stay ratios rather than literals
 | 2026-08-06 | "matcha ceramic": L 0.78 / C 0.09, hue dial pushed to 183 | Lightness was what made the first pass too heavy. It dropped chroma at the same time, which was collateral, and moved the hue off the brand ramp, which was a mistake. |
 | 2026-08-07a | C 0.09 → 0.12 at the same L | The chroma target is a ratio, not a number: match Supabase's utilisation of the sRGB ceiling at its own L/H (#3ECF8E is `oklch(0.762 0.154 159.4)`, 88.6% of its ceiling). |
 | 2026-08-07b | Hue back to 177.6, L to 0.83, C to 0.135 | Both faults that were left had the same root — below. |
-| 2026-09-26 | L 0.83 → 0.52, C 0.135 → 0.095, `--brand-*` dials removed | A light fill with dark ink reads as a tinted badge rather than the page's one action. A deep fill with white ink reads as a button, the way Notion's saturated blue does. The cover's call to action is the identity fill, so it follows. |
+| 2026-09-26 | L 0.83 → 0.52, C 0.135 → 0.095, `--brand-*` dials removed | A light fill with dark ink reads as a tinted badge rather than the page's one action. A deep fill with white ink reads as a button. The cover's call to action is the identity fill, so it follows. |
 
 **Hue.** The 2026-08-06 pivot to 183 left `--primary` 5.4° off the `--brand-*`
 ramp, which sat at OKLCH hue 177.6 at every step. The gap is small in the
@@ -89,7 +89,10 @@ from #46D0BF.
 to the marketing site's deep-teal button it read as a pastel badge, not as the
 action. At L 0.52 / H 177.6 the sRGB ceiling is C 0.0960. 0.095 sits just
 inside it, so the fill is saturated as far as the gamut allows without ever
-being gamut-mapped. Rendered: **#047A68**, one step from the marketing site's
+being gamut-mapped. This retires 2026-08-07a's ratio (about 88% of the
+ceiling): 88% here is C 0.085, which gives back the saturation this pass
+exists to add, and the headroom the ratio bought is not needed while the
+value stays below the ceiling. Rendered: **#047A68**, one step from the marketing site's
 #007A66. The ink flip crosses to white on its own at this lightness, so no dial
 was added for it.
 
@@ -109,7 +112,7 @@ After CSS Color 4 gamut mapping, for the accent this deployment ships:
 | Token | Resolves to | Measurement |
 |---|---|---|
 | `--primary` | `oklch(0.52 0.095 177.6)`, #047A68 | 99% of the sRGB chroma ceiling at its own L/H, and inside it. |
-| `--primary-foreground` | near-white (L 0.985), the same ink in both themes | White on the fill measures 5.24:1, past AA's 4.5:1 for body text. |
+| `--primary-foreground` | near-white `oklch(0.985 0.0076 177.6)`, the same ink in both themes | 5.03:1 on the fill, past AA's 4.5:1 for body text. |
 | `--primary-border` | wants C 0.1188 at L 0.40, ceiling 0.0738, so it maps to the ceiling | #005447. The ×1.25 buys no chroma; the edge is carried by the −0.12 lightness step, 1.69:1 against the fill. |
 | `--ring` | #008F7A, also ceiling-bound (wants 0.1755 at L 0.58, ceiling 0.1071) | 4.00:1 on the light canvas and 4.55:1 on the dark one, clearing SC 1.4.11's 3:1 in both. Its dependants — `--sidebar-selected`, `--sidebar-selected-rail`, `--sidebar-ancestor` — moved with it. |
 
@@ -121,7 +124,8 @@ black text on a black button — and it fails silently. The flip holds above
 that is not hypothetical.
 
 The next retune argues about these dials, so it is argued where they are
-declared: change them in both theme files, and add a row here.
+declared: change them in both blocks of `deployment/styles/brand.css` (and
+the print block), and add a row here.
 
 ## The tier system
 

@@ -50,7 +50,7 @@
   /* The filled control. The template ships 0.205/0 — a near-black neutral —
      because it ships no brand at all; this deployment is teal, so the fill is
      a deep teal that carries chroma, and semantic.css flips the ink on it to
-     white on its own. The light mint stays with the identity dials below. */
+     white on its own. */
   --primary-lightness: 0.52;
   --primary-chroma: 0.095;
 
