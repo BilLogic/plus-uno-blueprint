@@ -1,6 +1,6 @@
 ---
 audience: developers
-summary: This repository is a deployment of the uno-blueprint template and imports it at a pinned tag — where the application actually lives, what `@/` and `~/` resolve to, what a version bump involves, what to do when the template changes something you depend on, the offline board a no-database build draws and the command that re-exports it, and what the retired merge-era machinery was for.
+summary: This repository is a deployment of the Uno Blueprint template and imports it at a pinned tag — where the application actually lives, what `@/` and `~/` resolve to, what a version bump involves, what to do when the template changes something you depend on, the offline board a no-database build draws and the command that re-exports it, and what the retired merge-era machinery was for.
 ---
 
 # The template relationship

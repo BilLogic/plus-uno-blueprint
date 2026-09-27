@@ -125,9 +125,9 @@ test('no path is enrolled twice, so removing one entry really un-enrols a file',
   // file that two tickets touched reads as belonging in two places.
   //
   // Nothing was ever measured wrongly: the checker compared each of them to
-  // the template twice and reached the same verdict both times. What a duplicate breaks
-  // is REMOVAL, and removal is the operation this list most needs to keep
-  // honest. Delete one occurrence of a doubly-listed path and the file stays
+  // the template twice and reached the same verdict both times. What a
+  // duplicate breaks is REMOVAL, and removal is the operation this list most
+  // needs to keep honest. Delete one occurrence of a doubly-listed path and the file stays
   // enrolled from the other block, silently — so a deliberate un-enrolment
   // reads as done and has not happened. It also inflates the count in the
   // checker's own summary line, which is the number quoted in PR bodies.

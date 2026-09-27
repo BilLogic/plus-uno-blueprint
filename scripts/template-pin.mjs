@@ -68,8 +68,8 @@ export function pinnedSpec(manifestText) {
 /**
  * The version a dependency spec names, or null when it names none.
  *
- * `github:BilLogic/uno-blueprint#v1.12.9` is a pin and yields
- * `1.12.9`; `#main`, a `file:` link and a bare semver range are not pins and
+ * `github:BilLogic/uno-blueprint#v2.0.0` is a pin and yields
+ * `2.0.0`; `#main`, a `file:` link and a bare semver range are not pins and
  * yield null. The `v` is optional because the tag prefix is a convention of
  * the tags and not of the version.
  */
