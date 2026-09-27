@@ -345,7 +345,7 @@ files both have to keep on disk. That drift is measured, never listed:
 
 ```sh
 npm run check:reconciled      # every shared file against the pinned template's bytes
-npm run check:shared-scripts  # every script the release publishes, held here and enrolled
+npm run check:shared-scripts  # every file the release publishes, held here and enrolled — and no other
 ```
 
 Run them; do not quote them. What the last run showed, 2026-09-14 against

@@ -47,8 +47,10 @@
  *     cannot see for itself: a release that publishes a shared script this tree
  *     does not hold moves no byte here and turns no gate below red.
  *     `npm run check:shared-scripts` is the other direction — it reads the
- *     template's own published list out of the installed package and fails on a
- *     path we do not hold, do not hold identically, or hold and never enrolled.
+ *     template's own published lists out of the installed package and fails on
+ *     a path we do not hold, do not hold identically, or hold and never
+ *     enrolled, and on an entry here the release does not publish. So this list
+ *     and the template's are the same set, checked from both ends.
  *   - **Two data files.** `public/step-visual-placeholder.svg`, whose NAME is
  *     written into fourteen applied migrations so only the copy inside it is
  *     shareable, and `docs/agents/triage-labels.md`, which maps the five
