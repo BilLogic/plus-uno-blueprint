@@ -345,12 +345,14 @@ files both have to keep on disk. That drift is measured, never listed:
 
 ```sh
 npm run check:reconciled      # every shared file against the pinned template's bytes
-npm run check:shared-scripts  # every script the release publishes, held here and enrolled
+npm run check:shared-scripts  # every file the release publishes, held here and enrolled — and no other
 ```
 
-Run them; do not quote them. What the last run showed, 2026-09-14 against
-`v1.44.13`: 25 reconciled files byte-identical, 15 published scripts all held
-here and enrolled, one repo-local import enrolled nowhere, nothing drifted.
+Run them; do not quote them. What the last run showed, 2026-09-27 against
+`v2.2.2`: 26 reconciled files byte-identical, 26 published files — eighteen
+scripts, six build configs, two data files — all held here and enrolled,
+nothing enrolled that the release does not publish, one repo-local import
+enrolled nowhere, nothing drifted.
 
 What is left that is genuinely this deployment's is identity and data, not
 application code. Each line says what guards it, or says that nothing does and

@@ -41,10 +41,10 @@ test('the shipped allowlist is exactly the twenty-five files still shared after 
   // hole BESIDE this assertion rather than in place of it.
   //
   // THIS ASSERTION CANNOT SEE THE OTHER DIRECTION, and that is not a gap to
-  // close here. A release that publishes a shared script this repository does
+  // close here. A release that publishes a shared file this repository does
   // not hold leaves this list exactly as it was and every test in this file
   // green; `scripts/tests/shared-scripts.test.mjs` is the suite that reads the
-  // template's own published list and fails on the difference.
+  // template's own published lists and fails on the difference, either way.
   assert.deepEqual(RECONCILED_FILES, [
     'tsconfig.json',
     'tsconfig.app.json',

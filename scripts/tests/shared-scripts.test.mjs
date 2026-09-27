@@ -4,7 +4,8 @@
  *
  * `check:reconciled` asks whether a file we DECLARED identical has drifted.
  * `check:shared-scripts` asks whether the template has started publishing a
- * shared script we do not hold — a failure that moves no byte on this side and
+ * shared file we do not hold, and whether we enrol one it does not publish.
+ * The first is a failure that moves no byte on this side and
  * turns no other gate red, which is how this repository came to be running a
  * generation of router checks the template had already replaced.
  *
@@ -22,7 +23,7 @@ import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
-import { GUARD, declaredPaths, faults } from '../check-shared-scripts.mjs'
+import { GUARD, PUBLISHED, declaredPaths, faults } from '../check-shared-scripts.mjs'
 import { RECONCILED_FILES } from '../reconciled-files.mjs'
 import { PACKAGE } from '../template-pin.mjs'
 
@@ -41,6 +42,14 @@ const GUARD_SOURCE = [
   '',
   'export const REPO_LOCAL_IMPORTS = new Map([',
   "  ['scripts/repo-config.mjs', 'the seam itself — every field is a fact about this repository'],",
+  '])',
+  '',
+  'export const SHARED_CONFIGS = new Map([',
+  '  [',
+  "    'vite.config.ts',",
+  "    'the two aliases and the application source root — `@/*` and `~/*`',",
+  '  ],',
+  "  ['tsconfig.json', \"the `@/*` mapping, and a reason that quotes ['a', 'b'] nothing\"],",
   '])',
 ].join('\n')
 
@@ -61,6 +70,13 @@ test('both declarations are read, entries on one line and on several alike', () 
   ])
 })
 
+test('a list of files that are not scripts is read by its keys, not its reasons', () => {
+  // The configs and the data files are published beside the scripts, and a
+  // reason may quote a path of its own; only the first string of an entry is
+  // the path.
+  assert.deepEqual(declaredPaths(GUARD_SOURCE, 'SHARED_CONFIGS'), ['vite.config.ts', 'tsconfig.json'])
+})
+
 test('the shared list stops at its own closing bracket', () => {
   // The bug a greedy match would cause: `SHARED_SCRIPTS` swallowing the
   // repo-local declaration after it, so `repo-config.mjs` would be demanded
@@ -77,12 +93,12 @@ test('a renamed declaration refuses the run rather than comparing nothing', () =
   )
 })
 
-test('a declaration with no scripts path in it refuses too', () => {
+test('a declaration with no path in it refuses too', () => {
   // The subtler shape of the same thing: the Map is found, the entries are
   // spelled some way this reader does not see, and the list comes back empty.
   assert.throws(
     () => declaredPaths('export const SHARED_SCRIPTS = new Map([\n])', 'SHARED_SCRIPTS'),
-    /with no scripts\/ path in it/,
+    /with no path in it/,
   )
 })
 
@@ -131,7 +147,8 @@ test('byte-identical and unenrolled is a fault, because bytes are not the promis
 
 test('the seam enrolled as shared is a fault in the opposite direction', () => {
   // A budget set against a different router passes while measuring nothing, so
-  // `repo-config.mjs` being held identical to the template's is the defect.
+  // `repo-config.mjs` being held identical to the template's is the defect —
+  // named once, as the seam, and not again as an unpublished enrolment.
   const problems = check({ enrolled: [...SHARED, 'scripts/repo-config.mjs'] })
   assert.equal(problems.length, 1)
   assert.match(problems[0], /never shared/)
@@ -141,6 +158,18 @@ test('a seam this tree does not have is named as the load failure it is', () => 
   const problems = check({ ours: { 'scripts/sweep.mjs': 'one\n' } })
   assert.equal(problems.length, 1)
   assert.match(problems[0], /fails at load/)
+})
+
+test('an enrolment the release does not publish is the reverse fault', () => {
+  // The promise only this side knows it made: the template's guard never reads
+  // the file, so nothing upstream goes red when a comment in it starts citing
+  // something this tree lacks.
+  const problems = check({
+    ours: { ...IDENTICAL, 'public/x.svg': '<svg/>' },
+    enrolled: [...SHARED, 'public/x.svg'],
+  })
+  assert.equal(problems.length, 1)
+  assert.match(problems[0], /^public\/x\.svg: .*does not publish it/)
 })
 
 test('a path the template lists and does not ship is named as upstream’s', () => {
@@ -155,7 +184,7 @@ test('a path the template lists and does not ship is named as upstream’s', () 
 // The manifest — the real repository against the real installed package
 // ---------------------------------------------------------------------------
 
-test('this repository holds every script the pinned release publishes', () => {
+test('this repository holds every file the pinned release publishes, and enrols no other', () => {
   const packageRoot = resolve(REPO_ROOT, PACKAGE)
   const readIn = (root) => (path) => {
     const full = join(root, path)
@@ -163,10 +192,10 @@ test('this repository holds every script the pinned release publishes', () => {
   }
   const guard = readIn(packageRoot)(GUARD)
   assert.ok(guard, `${PACKAGE}/${GUARD} is not installed — run npm ci`)
-  const shared = declaredPaths(guard, 'SHARED_SCRIPTS')
-  // Non-vacuity: the release publishes eleven, and a list that shrank to one
-  // would pass every assertion below while holding almost nothing.
-  assert.ok(shared.length >= 10, `only ${shared.length} published scripts parsed`)
+  const shared = PUBLISHED.flatMap((declaration) => declaredPaths(guard, declaration))
+  // Non-vacuity: the release publishes twenty-six, and a list that shrank to
+  // one would pass every assertion below while holding almost nothing.
+  assert.ok(shared.length >= 20, `only ${shared.length} published files parsed`)
   assert.deepEqual(
     faults({
       shared,
