@@ -19,8 +19,10 @@
  * written onto the root in a layout effect. That is deliberate duplication and
  * not a second source of truth: the stylesheet is what paints the first frame,
  * the accent is what a reader of the config sees, and both are 177.6 because
- * the hex they describe is one colour. The accent cannot carry the two dials
- * below it, which is why they are authored here.
+ * the accent hex and the fill share one hue. They share nothing else: the
+ * accent is the specified light blue-green, the fill is the deep teal the two
+ * dials below make of it, and the accent cannot carry those dials, which is
+ * why they are authored here.
  */
 
 /*
@@ -41,10 +43,11 @@
      blue-green — and it is exactly the hue every dial below is drawn at, so
      `--primary` and the identity fill land on one hue rather than near it.
      A 2026-08-06 pivot moved this dial to 183 and called the 5.4° gap from the
-     ramp sub-threshold drift. It was not: `--primary` is the only brand surface
-     derived from this dial, so the gap put the filled button on a cyaner hue
-     than every other brand usage in the app. Closed on 2026-08-07 by moving the
-     dial back onto the ramp rather than re-deriving the ramp onto the dial. */
+     ramp sub-threshold drift. It was not: `--primary` was then the only brand
+     surface derived from this dial, so the gap put the filled button on a
+     cyaner hue than every other brand usage in the app. Closed on 2026-08-07
+     by moving the dial back onto the ramp rather than re-deriving the ramp
+     onto the dial. */
   --hue: 177.6;
 
   /* The filled control. The template ships 0.205/0 — a near-black neutral —

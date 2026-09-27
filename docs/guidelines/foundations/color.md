@@ -1,7 +1,7 @@
 ---
 audience: designers
 summary: The four color-token tiers, semantic-only consumption, the retune record behind the brand dials, dark mode as a class, the forced-colors stance, lane tints, the annotation chrome ink ladder, and the agent-ink precedent.
-sources: src/styles/colors.css, src/styles/semantic.css, src/styles/theme.css, src/styles/blueprint.css, src/styles/themes/, src/lib/canvasAnnotations.ts, src/config.ts, src/lib/brandAccent.ts
+sources: deployment/styles/brand.css, src/styles/colors.css, src/styles/semantic.css, src/styles/theme.css, src/styles/blueprint.css, src/styles/themes/, src/lib/canvasAnnotations.ts, src/config.ts, src/lib/brandAccent.ts
 last-reviewed: 2026-09-26
 ---
 
@@ -114,7 +114,7 @@ After CSS Color 4 gamut mapping, for the accent this deployment ships:
 | `--primary` | `oklch(0.52 0.095 177.6)`, #047A68 | 99% of the sRGB chroma ceiling at its own L/H, and inside it. |
 | `--primary-foreground` | near-white `oklch(0.985 0.0076 177.6)`, the same ink in both themes | 5.03:1 on the fill, past AA's 4.5:1 for body text. |
 | `--primary-border` | wants C 0.1188 at L 0.40, ceiling 0.0738, so it maps to the ceiling | #005447. The ×1.25 buys no chroma; the edge is carried by the −0.12 lightness step, 1.69:1 against the fill. |
-| `--ring` | #008F7A, also ceiling-bound (wants 0.1755 at L 0.58, ceiling 0.1071) | 4.00:1 on the light canvas and 4.55:1 on the dark one, clearing SC 1.4.11's 3:1 in both. Its dependants — `--sidebar-selected`, `--sidebar-selected-rail`, `--sidebar-ancestor` — moved with it. |
+| `--ring` | #008F7A, also ceiling-bound (wants 0.1235 at L 0.58, ceiling 0.1071) | 4.00:1 on the light canvas and 4.55:1 on the dark one, clearing SC 1.4.11's 3:1 in both. Its dependants — `--sidebar-selected`, `--sidebar-selected-rail`, `--sidebar-ancestor` — moved with it. |
 
 The ink is **derived by the flip, not written as a fixed dark**. A fixed ink is
 only ever right for the accents that happen to be light: measured across the
@@ -135,7 +135,7 @@ authoritative statement is the header comment in `src/styles/blueprint.css`):
 | Tier | File | Shape |
 |---|---|---|
 | 1 Primitive | `src/styles/colors.css` | `--color-{family}-{step}` — Radix scales + the brand ramp. Values only; components must not touch these. |
-| 2 Semantic | `src/styles/semantic.css` | `--background`, `--primary`, `--warning`, `--sidebar-*` — every role, derived in OKLCH from a handful of theme dials (`src/styles/themes/light.css`, `dark.css`). |
+| 2 Semantic | `src/styles/semantic.css` | `--background`, `--primary`, `--warning`, `--sidebar-*` — every role, derived in OKLCH from a handful of theme dials (the template's `themes/light.css` and `dark.css`, overridden by this deployment in `deployment/styles/brand.css`). |
 | 3 Tailwind | `src/styles/theme.css` | `@theme inline` indirection so `bg-canvas`, `text-muted-foreground` exist as utilities. Never write `var(--color-canvas)` by hand — `@theme inline` keys are not emitted as properties. |
 | 4 Component | `src/styles/blueprint.css` | `--{property}-blueprint-{part}-{state}` — variables a component sets on itself so shared rules can read them. Not design tokens: every value assigned is a tier-1/2 reference. The one carve-out is `--shadow-blueprint-annotation-fill`, whose per-theme `rgb()` alphas are a shadow, not a meaning-carrying color. |
 
