@@ -5,7 +5,8 @@
  * `scripts/check-reconciled-files.mjs` beside this one asks: has any file we
  * DECLARED byte-identical drifted? That is one direction, and it is the
  * direction a deployment can already see. This asks the other, which it
- * cannot: has the template started publishing a shared script we do not hold?
+ * cannot: has the template started publishing a shared file we do not hold —
+ * and do we enrol one it does not publish?
  *
  * The two questions fail on different events and neither implies the other.
  * Drift is an edit on one side of a path both sides have. A MISSING ENROLMENT
@@ -97,7 +98,9 @@ export function declaredPaths(source, declaration) {
         'an empty list agrees with every tree. Fix the reader.',
     )
   }
-  const paths = [...block[1].matchAll(/\[\s*'([^']+)'/g)].map(([, path]) => path)
+  // An entry opens a line: `['path', …` or `[` then `'path',` below it. A
+  // reason may quote a bracketed list of its own mid-line, and is not a key.
+  const paths = [...block[1].matchAll(/^\s*\[\s*'([^']+)'/gm)].map(([, path]) => path)
   if (paths.length === 0) {
     throw new Error(
       `${PACKAGE}/${GUARD} declares ${declaration} with no path in it. Either the ` +
@@ -209,7 +212,7 @@ function main() {
   const guard = readIn(packageRoot)(GUARD)
   if (guard === null) {
     console.error(
-      `${PACKAGE}/${GUARD} is not there, so which scripts the template publishes cannot be ` +
+      `${PACKAGE}/${GUARD} is not there, so which files the template publishes cannot be ` +
         'read.\nRun `npm ci`, then re-run this check.',
     )
     process.exit(1)

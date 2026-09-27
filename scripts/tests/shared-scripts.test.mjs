@@ -4,7 +4,8 @@
  *
  * `check:reconciled` asks whether a file we DECLARED identical has drifted.
  * `check:shared-scripts` asks whether the template has started publishing a
- * shared script we do not hold — a failure that moves no byte on this side and
+ * shared file we do not hold, and whether we enrol one it does not publish.
+ * The first is a failure that moves no byte on this side and
  * turns no other gate red, which is how this repository came to be running a
  * generation of router checks the template had already replaced.
  *
@@ -48,7 +49,7 @@ const GUARD_SOURCE = [
   "    'vite.config.ts',",
   "    'the two aliases and the application source root — `@/*` and `~/*`',",
   '  ],',
-  "  ['tsconfig.json', 'the `@/*` mapping, and a reason that quotes [\\'a\\'] nothing'],",
+  "  ['tsconfig.json', \"the `@/*` mapping, and a reason that quotes ['a', 'b'] nothing\"],",
   '])',
 ].join('\n')
 
@@ -146,7 +147,8 @@ test('byte-identical and unenrolled is a fault, because bytes are not the promis
 
 test('the seam enrolled as shared is a fault in the opposite direction', () => {
   // A budget set against a different router passes while measuring nothing, so
-  // `repo-config.mjs` being held identical to the template's is the defect.
+  // `repo-config.mjs` being held identical to the template's is the defect —
+  // named once, as the seam, and not again as an unpublished enrolment.
   const problems = check({ enrolled: [...SHARED, 'scripts/repo-config.mjs'] })
   assert.equal(problems.length, 1)
   assert.match(problems[0], /never shared/)
@@ -168,12 +170,6 @@ test('an enrolment the release does not publish is the reverse fault', () => {
   })
   assert.equal(problems.length, 1)
   assert.match(problems[0], /^public\/x\.svg: .*does not publish it/)
-})
-
-test('the seam enrolled is named once, as the seam', () => {
-  // Not also as an unpublished enrolment: one path, one fault, one fix.
-  const problems = check({ enrolled: [...SHARED, 'scripts/repo-config.mjs'] })
-  assert.equal(problems.length, 1)
 })
 
 test('a path the template lists and does not ship is named as upstream’s', () => {

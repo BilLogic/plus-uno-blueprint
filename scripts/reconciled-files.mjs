@@ -22,7 +22,7 @@
  * repository still HOLDS and still shares, where two copies genuinely exist
  * and can still disagree.
  *
- * There are twenty-five, and they fall into three groups.
+ * There are twenty-six, and they fall into three groups.
  *
  *   - **The build's own configuration.** `vite.config.ts`, `tsconfig.json`,
  *     `tsconfig.app.json`, `tsconfig.node.json`, `eslint.config.js`,
@@ -38,13 +38,13 @@
  *     `check-router-budget.mjs`, `check-glossary-only.mjs`,
  *     `check-negation-ratchet.mjs`, `check-target-schema.mjs`,
  *     `check-harness-claims.mjs`, `agent-account.mjs`,
- *     `generate-agent-account.mjs`, `sweep.mjs`, `seed-list.mjs`, and three
- *     suites.
+ *     `generate-agent-account.mjs`, `sweep.mjs`, `seed-list.mjs`,
+ *     `verdict.mjs`, and four suites.
  *     `scripts/` is the one tree the flip did not touch: it is not the
  *     application, so it did not move into the package, and where both
  *     repositories run the same check they still run two copies of it. This is
  *     also the group that grows, and it is the group with a failure this list
- *     cannot see for itself: a release that publishes a shared script this tree
+ *     cannot see for itself: a release that publishes a shared file this tree
  *     does not hold moves no byte here and turns no gate below red.
  *     `npm run check:shared-scripts` is the other direction — it reads the
  *     template's own published lists out of the installed package and fails on
