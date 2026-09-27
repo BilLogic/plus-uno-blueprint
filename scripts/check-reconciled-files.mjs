@@ -28,9 +28,9 @@
  * reason both run in the `gates` job AFTER `npm ci`. Byte-identity is
  * measured against that pinned version, so "reconciled" means "identical to
  * the template at the pinned tag"; a pin bump that moves the template's copy
- * is exactly the drift this is meant to catch. The installed package is the right source precisely because it is what the
- * deployment runs: a sibling checkout on somebody's disk is a template nobody
- * is deployed against.
+ * is exactly the drift this is meant to catch. The installed package is the
+ * right source precisely because it is what the deployment runs: a sibling
+ * checkout on somebody's disk is a template nobody is deployed against.
  *
  * When the allowlist is non-empty but the package is not installed, it fails
  * the way the divergence reporter fails on a template tree it cannot read:

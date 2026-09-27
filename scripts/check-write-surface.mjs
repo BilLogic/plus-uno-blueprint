@@ -2,8 +2,8 @@
 /**
  * The canvas adapter this app SERVES, against the surfaces the app HAS.
  *
- * Adapted from `scripts/check-write-surface.mjs` in
- * uno-blueprint (v0.5.0), which compares one row. This
+ * Adapted from the template's `scripts/check-write-surface.mjs` at v0.5.0,
+ * before the template took its current name, which compares one row. This
  * instance overrides the adapter rather than sharing it (#115), so there
  * are four subjects instead of one, and the first is the one the upstream
  * script has no reason to own.
@@ -462,7 +462,8 @@ export function retiredMentions(lines) {
 /**
  * `SUPERSESSION_HEADING` (declared above) heads the list of installed
  * references that teach the retired vocabulary — empty once the package
- * agrees, as the template does at v1.0.0.
+ * agrees, as the template has since v1.0.0, a tag cut under its earlier
+ * name.
  *
  * They live in `node_modules/` and this repository cannot edit them, so the
  * only honest remedy is for the served rulebook to say so where the agent
