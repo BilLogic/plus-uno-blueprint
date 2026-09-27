@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * The reconciled set: shared files this deployment has DECLARED byte-identical
- * to the template it is imported from — agentic-service-blueprinting, the
+ * to the template it is imported from — uno-blueprint, the
  * dependency pinned in package.json and the lockfile.
  *
  * `scripts/check-reconciled-files.mjs` reads this list and fails CI if any path
@@ -87,7 +87,7 @@
  * build resolves it.
  *
  * `one-badge-one-size.test.mjs` builds a throwaway tree, mounts the package
- * into it as `node_modules/agentic-service-blueprinting`, and asserts the walk
+ * into it as `node_modules/uno-blueprint`, and asserts the walk
  * finds the same files through the mounted copy as through the direct one. It
  * used to mount the root the suite was run FROM — the same directory in a
  * repository that keeps its own `src`, and in a deployment a root with no

@@ -2,7 +2,7 @@
 
 One case = prompt (+ optional setup / scripted follow-up turns) + rubric.
 Every rubric line traces to a written rule — the four-skill plugin's
-references in the installed `agentic-service-blueprinting` package, plus
+references in the installed `uno-blueprint` package, plus
 this instance's canvas-adapter override — so a failing line names
 the practice it broke, not a vibe. Source keys:
 
@@ -50,7 +50,7 @@ line). A case fails if any line fails.
     moments. *(map skill)*
 
 ### A2 · slice-skill-followed
-- **Prompt:** `/sb:slice` + "Pull out the tutor's journey through Warm-Up
+- **Prompt:** `/ub:slice` + "Pull out the tutor's journey through Warm-Up
   as a slice."
 - **Rubric:**
   - [T] Reads the blueprint (or the scenario list) before proposing.
@@ -63,7 +63,7 @@ line). A case fails if any line fails.
     *(slices table contract)*
 
 ### A3 · audit-records-findings
-- **Prompt:** `/sb:audit` + "Audit the Warm-Up scenario for gaps and
+- **Prompt:** `/ub:audit` + "Audit the Warm-Up scenario for gaps and
   inconsistencies."
 - **Rubric:**
   - [T] Reads the audit playbook or a check doc before reporting.
@@ -308,7 +308,7 @@ line). A case fails if any line fails.
 
 | Surface | What runs | How it's evaled |
 |---|---|---|
-| **App** (canvas agent) | ROLE + this instance's canvas-adapter override + the package's four /sb:* SKILL.mds via the composer; writes through the app's RPC wrappers (findings included) | Live in the panel (verified with a real key), plus this suite via the CLI runner simulating the app's tool surface |
+| **App** (canvas agent) | ROLE + this instance's canvas-adapter override + the package's four /ub:* SKILL.mds via the composer; writes through the app's RPC wrappers (findings included) | Live in the panel (verified with a real key), plus this suite via the CLI runner simulating the app's tool surface |
 | **CLI** | `run.mjs` — headless: real Gemini, real reads, dry-run writes | This suite, A1–E2 |
 | **IDE** | The plugin's own `skills/*/SKILL.md` followed by an IDE agent with file tools — IR JSON + `validate_ir.py` + workspace state | Subagent runs: IDE-1 (map: notes → validated IR workspace with elicitation log), IDE-2 (slice: cut from that IR via `slice_tools.py`); graded on validator exit 0, step count 5–15, spine role, no-filler cells, and the self-reported skill ambiguities |
 

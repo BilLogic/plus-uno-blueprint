@@ -36,7 +36,7 @@ reasoning lives in [`docs/adr/`](../adr/) and is linked from here.
 
 What each of those component folders looks like *as a designed surface* is the
 package's composition documents, which arrive with the application under
-`node_modules/agentic-service-blueprinting/docs/guidelines/` — **the package's
+`node_modules/uno-blueprint/docs/guidelines/` — **the package's
 `guidelines/`, which every `composition/…` below names** — starting at
 `composition/overview.md`. Every file under `blueprint/`, `editor/`, `cover/`
 and `mobile/` is claimed by exactly one of them. This table says where code

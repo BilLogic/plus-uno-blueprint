@@ -198,15 +198,15 @@ jobs:
       # asserts loop.ts still serves the override, so a pin bump or a reverted
       # import line cannot silently reinstate the wrong rulebook.
       #
-      # It reads `node_modules/agentic-service-blueprinting`, so it must run
+      # It reads `node_modules/uno-blueprint`, so it must run
       # after `npm ci`; it needs no database and no credential.
       - run: npm run check:write-surface
 
       # The byte-identity drift gate (#319). `scripts/reconciled-files.mjs`
       # names the shared files this deployment has DECLARED byte-identical to
       # the pinned template; this fails the build if any of them has drifted
-      # from asb's copy. It reads the same installed package
-      # `node_modules/agentic-service-blueprinting` that check:write-surface
+      # from the template's copy. It reads the same installed package
+      # `node_modules/uno-blueprint` that check:write-surface
       # above does, so it belongs here in `gates`, after `npm ci`, and needs no
       # database.
       #
@@ -235,7 +235,7 @@ jobs:
       # The list is the template's, read out of the installed package's own
       # shared-script guard rather than copied here — a second copy is a list to
       # forget to update, which is the failure this step exists to catch. So it
-      # reads `node_modules/agentic-service-blueprinting` like the two steps
+      # reads `node_modules/uno-blueprint` like the two steps
       # above, belongs here after `npm ci`, and needs no database.
       - run: npm run check:shared-scripts
 
@@ -285,7 +285,7 @@ jobs:
       # that gate permanently red, and no runner there has a second repository
       # on disk. It runs here because this is the only one of the three repos
       # that holds both harnesses at once — the template arrives through the
-      # lockfile as `node_modules/agentic-service-blueprinting`. So, like the
+      # lockfile as `node_modules/uno-blueprint`. So, like the
       # two checks above, it belongs in `gates` after `npm ci`, needs no
       # database, no credential and no network, and can be a required check.
       - run: npm run check:duplicate-meaning

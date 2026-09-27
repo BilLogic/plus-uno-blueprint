@@ -5,8 +5,8 @@
  *
  * This repository is the only one of the three that holds two harnesses at
  * once. The template arrives as the lockfile-pinned git dependency
- * `agentic-service-blueprinting`, installed by `npm ci` to
- * `node_modules/agentic-service-blueprinting`, so a sweep across the repository
+ * `uno-blueprint`, installed by `npm ci` to
+ * `node_modules/uno-blueprint`, so a sweep across the repository
  * boundary needs no sibling checkout, no credential and no network — which is
  * why the spec's fifth check moved here from `plus-uno`, whose own gate
  * forbids a member that cannot run on a clean checkout.
@@ -41,7 +41,7 @@
  *      that single word sit seventeen blocks of identical prose that no
  *      byte-level comparison of the two files can reach. A sentence about
  *      `plus-uno-blueprint` and the same sentence about
- *      `agentic-service-blueprinting` are one statement, and folding the two
+ *      `uno-blueprint` are one statement, and folding the two
  *      names to one token is what lets the sweep see that.
  *
  * So the finding is not "these bytes agree". It is "this deployment and the
@@ -133,7 +133,7 @@ export const PROSE_FLOOR = 80
 export const NOT_OUR_PROSE = ['docs/agents/']
 
 /** The two repository names that are one token as far as meaning is concerned. */
-const REPOSITORY_NAMES = /plus-uno-blueprint|agentic-service-blueprinting/gi
+const REPOSITORY_NAMES = /(?:plus-)?uno-blueprint/gi
 
 /**
  * One statement, stripped of the four things that let a copy read as different

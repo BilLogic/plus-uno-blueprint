@@ -124,7 +124,7 @@ jobs:
       # template's. A spec that seeds settings — the phone agent jump seeds an
       # agent key — writes `<prefix>agent-settings`, and the app reads the
       # prefix `deployment/bootstrap.ts` configures. Left unset, the spec
-      # defaults to the template's `sb-`, the app reads `uno-`, and the surface
+      # defaults to the template's `ub-`, the app reads `uno-`, and the surface
       # under test never appears: the walk fails on a missing button rather
       # than on anything about the board. Read out of `bootstrap.ts` rather
       # than written twice, so a prefix change cannot desync the walk in

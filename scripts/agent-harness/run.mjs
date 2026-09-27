@@ -18,7 +18,7 @@
  *   the harness offers byte-identical declarations to the app's. Likewise
  *   role.md, canvas-adapter.md and the skill files are the SAME FILES the
  *   app loads (`?raw` there, readFileSync here), resolved out of the
- *   installed agentic-service-blueprinting package. No copies, so no drift.
+ *   installed uno-blueprint package. No copies, so no drift.
  * - MIRRORED BY HAND: the system-prompt ASSEMBLY (buildSystem + the tier /
  *   mobile injections), the Gemini provider glue, the batch limiter and
  *   the round cap follow the application's lib/agent/loop.ts and its
@@ -37,7 +37,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { viteImportsPlugin } from 'agentic-service-blueprinting/vite-imports'
+import { viteImportsPlugin } from 'uno-blueprint/vite-imports'
 import { CASES } from './cases.mjs'
 
 /**
@@ -64,14 +64,14 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
  * The application, as installed.
  *
  * This deployment holds no `src/` of its own any more: it imports the
- * application out of `agentic-service-blueprinting` and the harness follows it
+ * application out of `uno-blueprint` and the harness follows it
  * there, so the files one-sourced below — role.md, the tool specs — are still
  * the SAME files the app loads rather than copies of them. Resolved through
  * the package's own entry point instead of a spelled-out `node_modules/…`
  * path, so a hoisted or linked install resolves too.
  */
 const PACKAGE = dirname(
-  fileURLToPath(import.meta.resolve('agentic-service-blueprinting/package.json')),
+  fileURLToPath(import.meta.resolve('uno-blueprint/package.json')),
 )
 const APP_SOURCE = resolve(PACKAGE, 'src')
 
@@ -196,7 +196,7 @@ function buildSystem(skillId, contextNote) {
   if (skillId) {
     const content = readFileSync(resolve(PACKAGE, 'skills', skillId, 'SKILL.md'), 'utf8')
     parts.push(
-      `\n\n--- active skill: /sb:${skillId} (invoked by the user; the same SKILL.md IDE agents follow) ---\n${content}\n\nYou are the canvas agent, not an IDE agent: skip the skill's file/script/CLI mechanics and act through your tools, translated by the canvas-adapter above. The skill's judgment — what makes a good blueprint/slice, the order of questions, the quality bars — applies in full.`,
+      `\n\n--- active skill: /ub:${skillId} (invoked by the user; the same SKILL.md IDE agents follow) ---\n${content}\n\nYou are the canvas agent, not an IDE agent: skip the skill's file/script/CLI mechanics and act through your tools, translated by the canvas-adapter above. The skill's judgment — what makes a good blueprint/slice, the order of questions, the quality bars — applies in full.`,
     )
   }
   if (contextNote) parts.push(`\n\n--- current context ---\n${contextNote}`)

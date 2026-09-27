@@ -7,7 +7,7 @@ already installed.
 
 - **Node 22+** and npm.
 - **git**, and network access to GitHub. The in-app agent's rulebook is a
-  dependency — `agentic-service-blueprinting`, pinned by git URL at a tagged
+  dependency — `uno-blueprint`, pinned by git URL at a tagged
   release — so `npm install` clones it. An offline install has no skill text.
 - **Docker**, only if you want a local database. You can skip it and point at a
   hosted Supabase project instead.

@@ -461,7 +461,7 @@ export function renderModule({ registry, generatedOn }) {
 // Generated on: ${generatedOn}
 // Board:        ${countsSentence(counts)}
 
-import type { SampleBlueprintRegistry } from 'agentic-service-blueprinting'
+import type { SampleBlueprintRegistry } from 'uno-blueprint'
 
 ${REGISTRY_MARKER}${tsLiteral(registry)}
 `

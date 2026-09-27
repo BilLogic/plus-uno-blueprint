@@ -1,13 +1,13 @@
 ---
 audience: everyone
-summary: What uno-blueprint is in plain words, who it is for, the surfaces at a glance, and who can look vs. edit.
+summary: What PLUS Uno Blueprint is in plain words, who it is for, the surfaces at a glance, and who can look vs. edit.
 sources: src/components/editor/EditorShell.tsx
 last-reviewed: 2026-08-18
 ---
 
-# What uno-blueprint is
+# What PLUS Uno Blueprint is
 
-uno-blueprint is a living map of how the PLUS tutoring service works, moment
+PLUS Uno Blueprint is a living map of how the PLUS tutoring service works, moment
 by moment. The map is a **service blueprint**: a chart that lays out, in time
 order, everything that happens when someone uses the service — what students
 and tutors see and do, and what happens behind the scenes to make each of

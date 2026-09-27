@@ -41,7 +41,7 @@ const REPO_ROOT = resolve(new URL('..', import.meta.url).pathname)
  * deployment actually has, which is the disagreement that can really bite.
  */
 export const ROLES_PATH =
-  'node_modules/agentic-service-blueprinting/src/lib/laneRoles.ts'
+  'node_modules/uno-blueprint/src/lib/laneRoles.ts'
 export const MIGRATIONS_DIR = 'supabase/migrations'
 
 /** The CHECK constraint that owns the vocabulary, by filename. */
