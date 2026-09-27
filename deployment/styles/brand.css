@@ -19,8 +19,10 @@
  * written onto the root in a layout effect. That is deliberate duplication and
  * not a second source of truth: the stylesheet is what paints the first frame,
  * the accent is what a reader of the config sees, and both are 177.6 because
- * the hex they describe is one colour. The accent cannot carry the four dials
- * below it, which is why the ramp is authored here.
+ * the accent hex and the fill share one hue. They share nothing else: the
+ * accent is the specified light blue-green, the fill is the deep teal the two
+ * dials below make of it, and the accent cannot carry those dials, which is
+ * why they are authored here.
  */
 
 /*
@@ -41,32 +43,32 @@
      blue-green — and it is exactly the hue every dial below is drawn at, so
      `--primary` and the identity fill land on one hue rather than near it.
      A 2026-08-06 pivot moved this dial to 183 and called the 5.4° gap from the
-     ramp sub-threshold drift. It was not: `--primary` is the only brand surface
-     derived from this dial, so the gap put the filled button on a cyaner hue
-     than every other brand usage in the app. Closed on 2026-08-07 by moving the
-     dial back onto the ramp rather than re-deriving the ramp onto the dial. */
+     ramp sub-threshold drift. It was not: `--primary` was then the only brand
+     surface derived from this dial, so the gap put the filled button on a
+     cyaner hue than every other brand usage in the app. Closed on 2026-08-07
+     by moving the dial back onto the ramp rather than re-deriving the ramp
+     onto the dial. */
   --hue: 177.6;
 
   /* The filled control. The template ships 0.205/0 — a near-black neutral —
      because it ships no brand at all; this deployment is teal, so the fill is
-     light and carries chroma, and semantic.css flips the ink on it on its own. */
-  --primary-lightness: 0.83;
-  --primary-chroma: 0.135;
+     a deep teal that carries chroma, and semantic.css flips the ink on it to
+     white on its own. */
+  --primary-lightness: 0.52;
+  --primary-chroma: 0.095;
 
-  /* Brand identity at its authored vividness, its own pair rather than a reuse
-     of the primary dials: primary is the accent tuned until the filled control
-     clears its contrast floor, brand is the accent as the identity wears it.
-     Share one pair and the two roles resolve to one colour and the distinction
-     becomes decoration. */
-  --brand-lightness: 0.76;
-  --brand-chroma: 0.13;
+  /* No `--brand-*` dial, on purpose. With none declared the identity fill
+     resolves to exactly `--primary`, so the cover's call to action is the same
+     deep teal with white ink as every other filled control. A separate light
+     mint here put dark ink on the one button the cover asks a reader to
+     press. */
 }
 
 /*
  * Dark. Every dial the block above declares, restated — see the note there.
  *
  * This deployment does NOT invert its filled control the way the template's
- * neutral one must: 0.83 at chroma 0.135 reads on both canvases, so the button
+ * neutral one must: 0.52 at chroma 0.095 reads on both canvases, so the button
  * is the same teal in both modes and only the ground moves.
  */
 .dark {
@@ -80,10 +82,8 @@
      declares. */
   --surface-hue: var(--hue);
   --chroma: 0.005;
-  --primary-lightness: 0.83;
-  --primary-chroma: 0.135;
-  --brand-lightness: 0.76;
-  --brand-chroma: 0.13;
+  --primary-lightness: 0.52;
+  --primary-chroma: 0.095;
   /* 0.58, not the template's 0.62. Its dark canvas is a neutral charcoal; this
      one is tinted, and 0.58 is what clears SC 1.4.11's 3:1 against it. */
   --ring-lightness: 0.58;
@@ -100,7 +100,7 @@
    * differently here.
    *
    *   - `--primary-lightness`. Its themes disagree (0.205 light, 0.922 dark) so
-   *     its print block pins 0.205. This deployment's two themes AGREE at 0.83,
+   *     its print block pins 0.205. This deployment's two themes AGREE at 0.52,
    *     so that pin is not a default being inherited — it is a value being
    *     overwritten, and a board printed from either mode would come out with a
    *     near-black filled control. Taken back explicitly.
@@ -119,6 +119,6 @@
   .dark {
     --surface-hue: 34;
     --chroma: 0;
-    --primary-lightness: 0.83;
+    --primary-lightness: 0.52;
   }
 }
