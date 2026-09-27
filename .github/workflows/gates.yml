@@ -223,8 +223,9 @@ jobs:
 
       # The OTHER direction of the same gate. `check:reconciled` above asks
       # whether a file this repository DECLARED identical has drifted; this asks
-      # whether the template has started publishing a shared script this
-      # repository does not hold. The two fail on different events and neither
+      # whether the template has started publishing a shared file this
+      # repository does not hold, and whether this repository enrols one the
+      # template does not publish. The two fail on different events and neither
       # implies the other: a release adding a file to its own shared list moves
       # no byte here and turns no gate above red, so every check goes on passing
       # while this deployment runs an older mechanism than the one it pins. That
@@ -232,8 +233,9 @@ jobs:
       # resolved a root from their own location, a release after the template
       # stopped doing that.
       #
-      # The list is the template's, read out of the installed package's own
-      # shared-script guard rather than copied here — a second copy is a list to
+      # The lists are the template's — scripts, build configs and data files —
+      # read out of the installed package's own shared-file guard rather than
+      # copied here — a second copy is a list to
       # forget to update, which is the failure this step exists to catch. So it
       # reads `node_modules/uno-blueprint` like the two steps
       # above, belongs here after `npm ci`, and needs no database.
