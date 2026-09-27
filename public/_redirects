@@ -16,6 +16,17 @@
 # 200 rather than 301: the browser keeps the address it asked for, so the app
 # still reads the slug and the query params out of it. A redirect would throw
 # both away.
+#
+# Everything sits under `/blueprint/`, the BASE_PATH in `netlify.toml`: the
+# build writes its files there, and the board is shown at
+# plus-uno.netlify.app/blueprint through a proxy that forwards the path
+# unchanged. The same rules therefore answer both ways in.
+
+# Nothing is served at this site's own root any more, so a bare `/` would be a
+# 404. It is sent to the board instead. It matches `/` alone, so it shadows
+# nothing below, and it is a 302 rather than a 301 so a browser does not keep
+# it forever if the root is ever given something of its own.
+/    /blueprint/    302
 
 # A missing hashed asset is a 404, not the app shell.
 #
@@ -26,6 +37,6 @@
 # rather than as the missing file it is. `:splat` keeps the real path so a
 # chunk that IS there is still served; only the ones that are not answer 404.
 # The catch-all below must stay last.
-/assets/*    /assets/:splat    404
+/blueprint/assets/*    /blueprint/assets/:splat    404
 
-/*    /index.html   200
+/blueprint/*    /blueprint/index.html   200

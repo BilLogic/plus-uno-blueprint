@@ -22,12 +22,12 @@ a re-shaped `findings` column — and **each made a bot read return empty for
 weeks** while both sides looked healthy.
 
 What it carries: the query-param names the URL layer accepts, the production app
-origin, the breadcrumb format the semantic view emits and the bot parses, the
-public-read and bot-read table lists, the columns the bot names in a direct
-PostgREST select and what each of those columns is FOR, the FK constraint names
-used as PostgREST embed hints, the RPC names, and the search RPC's parameter
-names, returned-column names, accepted `granularity` values and emitted row
-kinds.
+root (origin plus the path it is served under), the breadcrumb format the
+semantic view emits and the bot parses, the public-read and bot-read table
+lists, the columns the bot names in a direct PostgREST select and what each of
+those columns is FOR, the FK constraint names used as PostgREST embed hints, the
+RPC names, and the search RPC's parameter names, returned-column names, accepted
+`granularity` values and emitted row kinds.
 
 Names and values are two different promises, and until 2026-08-26 only the first
 was made. See below.

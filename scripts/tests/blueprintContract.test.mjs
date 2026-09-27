@@ -545,8 +545,8 @@ const COVERAGE = {
     how: 'compared, name for name, against the PARAMS literal the installed application declares',
   },
   appUrl: {
-    by: 'scripts/check-blueprint-contract.mjs',
-    how: 'printed as the subject of every live run, so a wrong origin is visible in the log',
+    by: 'scripts/tests/a-deep-link-is-a-real-address.test.mjs',
+    how: 'held to the BASE_PATH in netlify.toml, the prefix the build is served under',
   },
   breadcrumb: {
     by: 'scripts/check-blueprint-contract.mjs',

@@ -1,0 +1,15 @@
+# One setting, and only this one.
+#
+# The build command, the publish directory and the Node version stay in the
+# Netlify site configuration, where they have always been. This file carries
+# the path the app is served under, because the build and the hosting check
+# both have to read the same value: Vite takes it as `base` and writes the
+# output under `dist/blueprint/`, and `scripts/tests/a-deep-link-is-a-real-address.test.mjs`
+# holds `public/_redirects` and `public/_headers` to the same prefix.
+#
+# `/blueprint/` because the board is shown at plus-uno.netlify.app/blueprint,
+# proxied from this site, and this site serves the same files at its own
+# /blueprint/ as the fallback. A local `npm run build` does not read this file;
+# set BASE_PATH in the shell to build what production ships.
+[build.environment]
+  BASE_PATH = "/blueprint/"
