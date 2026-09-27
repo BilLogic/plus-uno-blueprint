@@ -8,9 +8,10 @@ summary: The host — push to main is production, netlify.toml carries only the 
 Netlify builds this repo from `main`. **Push to main is production**: no staging
 tier, no manual promotion step.
 
-**`netlify.toml` carries one setting and nothing else.** Build settings — the
-command, the publish directory `dist`, the Node version — live in the Netlify
-site configuration as a standard Vite build. The file holds only
+**`netlify.toml` carries one setting and nothing else.** The other build
+settings — the command, the publish directory, the Node version — are set in
+the Netlify site settings, not in this repo, and cannot be read from it. The
+file holds only
 `BASE_PATH = "/blueprint/"` under `[build.environment]`, because the build and
 the hosting test both have to read the same value: Vite takes it as `base` and
 writes the output under `dist/blueprint/`, and the rules in `public/` sit under

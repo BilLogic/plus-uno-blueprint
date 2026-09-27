@@ -1,7 +1,7 @@
 ---
 audience: developers
 summary: Deploy, rollback, dashboards, monitoring, inviting people, and the local-stack troubleshooting checklist.
-sources: README.md, .env.example, src/components/EditorErrorBoundary.tsx, supabase/migrations/20260805170000_service_tier_rpc_enforcement.sql, package.json
+sources: README.md, .env.example, src/components/EditorErrorBoundary.tsx, supabase/migrations/20260805170000_service_tier_rpc_enforcement.sql, package.json, netlify.toml
 last-reviewed: 2026-09-26
 ---
 
@@ -10,8 +10,9 @@ last-reviewed: 2026-09-26
 ## Deploy
 
 Netlify builds from `main`: **push to main = production**, no staging
-tier, no manual step. There is no `netlify.toml` in the repo — build
-settings live in the Netlify site config (standard Vite build). The
+tier, no manual step. `netlify.toml` carries only `BASE_PATH`; the
+build command, publish directory and Node version are set in the Netlify
+site settings, not in this repo (standard Vite build). The
 deploy environment carries only the public Supabase URL and anon key;
 nothing secret ever goes there
 ([access-and-security](access-and-security.md#environments) owns the
