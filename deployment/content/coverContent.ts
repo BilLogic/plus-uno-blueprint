@@ -41,7 +41,7 @@ import type { CoverContent } from 'uno-blueprint'
  */
 export const coverContent: CoverContent = {
   title: 'PLUS Uno Blueprint',
-  lede: 'A structured repository of the service experiences PLUS supports for tutors. It holds every phase, scenario, path, and action in one system, from Application through Post-session, including Program Administration. Unlike a static diagram, the blueprint is structured data: agents can query it, teams can cut focused views from it, and a proposed change can be traced through the service before anything is changed.',
+  lede: 'A structured repository of the service experiences PLUS supports for tutors. It holds every phase, scenario, path, and action in one system, from Application through Post-session, including Program Administration. Unlike a static diagram, the blueprint is structured data: agents can query it, teams can cut focused views from it, and a proposed change can be traced through the service before anyone acts on it.',
   primaryCtaLabel: 'View PLUS Blueprints',
   commandCopy: { copyLabel: 'Copy', copiedLabel: 'Copied' },
   states: {
