@@ -57,21 +57,25 @@ repo.
   an undo is a new migration. A revert of app code against a migrated database
   is a half-rollback, and knowing which half you got is the whole problem.
 
-## What the two files in `public/` decide
+## What the host files decide
 
-Two files the host reads ship as part of the build, because Vite copies
-`public/` verbatim. Under a prefix the copy lands in `dist/blueprint/`, and the
-build moves these two back up to `dist/`, the only place the host reads them.
-Every rule in them sits under `/blueprint/`.
+Two files the host reads ship as part of the build. Vite copies `public/`
+verbatim, which brings `_headers`; under a prefix the copy lands in
+`dist/blueprint/`, and the build moves it back up to `dist/`, the only place
+the host reads it. The build also writes `dist/_redirects` itself for the
+prefix, so this repository ships no `public/_redirects`. Every rule sits under
+`/blueprint/`.
 
-- **`public/_redirects`** — the rules, taken **top to bottom, first match
-  wins**. A bare `/` is sent to `/blueprint/` with a **302**; it matches the
-  root alone, so it shadows nothing. `/blueprint/assets/*` answers **404** for
-  a path with no file behind it, so a tab left open across a deploy gets a real
-  not-found for a chunk that is gone instead of `index.html` served as a
-  script. Below it, `/blueprint/*` rewrites to `/blueprint/index.html` with a
-  **200**, which is what makes `/blueprint/<service-slug>?cell=<id>` a real
-  address. **The catch-all stays last**: anything added under it is dead.
+- **`dist/_redirects`**, written by the build — the rules, taken **top to
+  bottom, first match wins**. A bare `/` is sent to `/blueprint/` with a
+  **301**; it matches the root alone, so it shadows nothing.
+  `/blueprint/assets/*` answers **404** for a path with no file behind it, so
+  a tab left open across a deploy gets a real not-found for a chunk that is
+  gone instead of `index.html` served as a script. Below it, `/blueprint/*`
+  rewrites to `/blueprint/index.html` with a **200**, which is what makes
+  `/blueprint/<service-slug>?cell=<id>` a real address. A `public/_redirects`
+  added here is kept above those rules, and the build refuses one with a line
+  that answers for the app (`/`, `/blueprint/` or anything under it).
 - **`public/_headers`** — the Content-Security-Policy for every path, plus
   `Cache-Control: public, max-age=31536000, immutable` for
   `/blueprint/assets/*`. The year is safe because Vite puts the content hash in
@@ -79,6 +83,7 @@ Every rule in them sits under `/blueprint/`.
   a long cache; it has to be re-fetched to learn the new hashes.
 
 `scripts/tests/a-deep-link-is-a-real-address.test.mjs` holds both at the prefix
-it reads out of `netlify.toml` — the root redirect, the order of the two rules,
-the immutable header, and the template's own hosting check over the same files —
-so a rule added in the wrong place goes red rather than shipping.
+it reads out of `netlify.toml`, through the same function the build calls — the
+root redirect, the order of the two rules, the immutable header, and the
+template's own hosting check over the same files — so a rule added in the wrong
+place goes red rather than shipping.

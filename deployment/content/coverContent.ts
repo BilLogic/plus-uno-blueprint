@@ -179,7 +179,7 @@ export const coverContent: CoverContent = {
           ],
           figure: {
             ...packageCoverFigures.blueprintAnatomy,
-            alt: 'Inside one path — lanes, steps, cells, dependencies, and the derived divider lines',
+            alt: 'Inside one path — lanes as rows, steps as columns, a cell where they cross, leads-to arrows from cell to cell, and the derived divider lines between the lanes',
           },
         },
         {
@@ -193,7 +193,7 @@ export const coverContent: CoverContent = {
           ],
           figure: {
             ...packageCoverFigures.cellAnatomy,
-            alt: 'Inside one cell — placement, ownership, function, evidence, dependencies, and the slices that quote it',
+            alt: 'Inside one cell — one cell on the board opened into its record: placement, ownership, function, evidence, resources, dependencies, and the slices that cite it',
           },
         },
       ],
