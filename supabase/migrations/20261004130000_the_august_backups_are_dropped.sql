@@ -9,11 +9,14 @@
 -- or check names an `archive` table, and the schema is not exposed over the
 -- API.
 --
--- The rows that existed only there, 33 cells, 33 cell_triggers, 9 layers,
--- 1 step and 1 path, are kept in docs/archive/2026-08-08-backup-orphan-rows.json,
--- which stays tracked; that export is what makes this drop safe. Everything
--- else in these tables was a copy of rows the live tables still hold or that
--- were re-authored on purpose.
+-- Every row of all nine tables, 1,852 in all, is exported first to
+-- docs/archive/2026-10-04-archive-schema-backups.json, which stays tracked;
+-- that export is what makes this drop safe. The 2026-08-08 orphan export
+-- beside it covers only the rows that were absent from the live tables when
+-- it was written, and some rows were missing from it: 36 cell_triggers whose
+-- cells are still live but whose links are not, and the 8 path_steps of the
+-- one exported path. The full export holds those too, so nothing here exists
+-- only in the database when it goes.
 --
 -- The empty `archive` schema goes with them. `drop schema` without cascade
 -- refuses a schema that still holds anything, so a table added there since
