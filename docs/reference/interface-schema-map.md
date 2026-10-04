@@ -1,6 +1,6 @@
 ---
 audience: designers, developers
-summary: Every word a panel puts in front of a reader and the name behind it — the five labels that diverge and why each does, what the catalog says about each name, and why the subject is panel labels rather than words on screen; the alignment rule itself is the sb kit's reference.
+summary: Every word a panel puts in front of a reader and the name behind it — the five labels that diverge and why each does, what the catalog says about each name, and why the subject is panel labels rather than words on screen; the alignment rule itself is the template's reference.
 sources: scripts/interface-schema-map.mjs, scripts/tests/labels-name-their-columns.test.mjs, supabase/migrations/
 last-reviewed: 2026-09-14
 ---
@@ -10,11 +10,11 @@ last-reviewed: 2026-09-14
 This is what this deployment's panel labels are bound to, and nothing about the
 method. The alignment rule — when a label and a `table.column` count as the
 same word, and why a table of divergences alone cannot say that the rest are
-fine — is the sb kit's `references/interface-schema-map.md`, along with the
+fine — is the template's `references/interface-schema-map.md`, along with the
 complaint the map answers, of which
 [#171](https://github.com/BilLogic/plus-uno-blueprint/issues/171) is this
 repo's instance; nearest copy on disk is
-`node_modules/agentic-service-blueprinting/references/interface-schema-map.md`.
+`node_modules/uno-blueprint/references/interface-schema-map.md`.
 `scripts/retired-vocabulary.mjs` records the words that **changed**; this
 records what every current word here is **bound to**, the agreements included.
 The interface word is a **panel label** — the `label`, `term` and `title` props

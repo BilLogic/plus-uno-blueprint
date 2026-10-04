@@ -1,7 +1,7 @@
 ---
 audience: designers, product
 summary: Grounding product and design decisions on the blueprint — cells as evidence, slices to specs, touchpoint reasoning, audits as design-debt radar.
-sources: src/lib/urlViewState.ts, agentic-service-blueprinting skills/slice/references/slice-playbook.md
+sources: src/lib/urlViewState.ts, uno-blueprint skills/slice/references/slice-playbook.md
 last-reviewed: 2026-08-08
 ---
 
@@ -27,7 +27,7 @@ are, but anchored in the journey:
   link opens the live cell, so the citation can't silently go stale the
   way a screenshot does.
 - **If the cell you need doesn't exist, that is itself a discovery**: the
-  journey has an unmapped moment. Get it mapped (the team, or `/sb:map`)
+  journey has an unmapped moment. Get it mapped (the team, or `/ub:map`)
   before building on it — designing against an unmapped moment is
   designing against a guess.
 
@@ -37,7 +37,7 @@ A slice is halfway to a spec: an ordered, cited selection of moments for
 one audience. The workflow:
 
 1. **Frame the question** — whose experience, which stretch of the journey?
-2. **Cut the slice** (ask the team or use `/sb:slice`) — journey, moment,
+2. **Cut the slice** (ask the team or use `/ub:slice`) — journey, moment,
    lane, or single-cell close-up.
 3. **Read it as the requirements skeleton.** Each frame is a moment your
    feature must serve; each cited cell carries current behavior, owner,
@@ -62,7 +62,7 @@ flow diagram doesn't. For any moment you're redesigning, ask:
   a "seamless" frontstage moment is a promise at risk.
 - **Would moving it across the line change the experience?** Automating a
   frontstage moment pushes it below; surfacing backstage work (progress
-  indicators) pulls it above. `/sb:whatif` can trace the consequences of
+  indicators) pulls it above. `/ub:whatif` can trace the consequences of
   such a restaging through the dependency graph before you commit —
   cheaper than prototyping the wrong side of the line.
 

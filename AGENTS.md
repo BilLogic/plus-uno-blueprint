@@ -1,4 +1,4 @@
-# Working in uno-blueprint
+# Working in plus-uno-blueprint
 
 Short by design. This file is the whole always-loaded tier, and every routing
 item in it is a **pointer** — a trigger word, then the document that carries the
@@ -63,7 +63,7 @@ newer; say so and follow the code.
 | Styling anything — colour, spacing, motion, elevation, any raw value | `docs/engineering/standards.md` § The Supabase benchmark, concretely |
 | Running the gates — test, lint, typecheck, docs index, composition claims | `docs/engineering/standards.md` § Testing |
 | Commands behaving oddly — `tsc`, shell globs, generated files, canvas assets | `docs/engineering/standards.md` § Tooling traps |
-| Skills — `/sb:map`, `/sb:audit`, `/sb:whatif`, `/sb:slice` are the installed `sb` plugin's, authored upstream and absent from this repo | `docs/engineering/agent-system.md` § Skills and the pinned-package contract |
+| Skills — `/ub:map`, `/ub:audit`, `/ub:whatif`, `/ub:slice` are the installed `ub` plugin's, authored upstream and absent from this repo | `docs/engineering/agent-system.md` § Skills and the pinned-package contract |
 | Blueprint reads — retrieval, absence, what a status licenses, the schema as the catalog describes it | `docs/agents/blueprint.md` |
 | Migrations, applying or replaying one | `docs/engineering/access-and-security.md` § Migrations workflow |
 | Deploying, rolling back, monitoring, inviting someone | `docs/engineering/operations.md` |

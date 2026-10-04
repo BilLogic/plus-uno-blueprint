@@ -41,8 +41,12 @@ export const BLUEPRINT_CONTRACT = {
     slide: 'slide',
   },
 
-  /** Production app origin. The bot's env var overrides; this is the shared default. */
-  appUrl: 'https://uno-blueprint.netlify.app',
+  /**
+   * Production app root: an origin plus the path the app is served under, the
+   * BASE_PATH in `netlify.toml`. No trailing slash, so `${appUrl}/?cell=<id>`
+   * is a deep link. The bot's env var overrides; this is the shared default.
+   */
+  appUrl: 'https://plus-uno.netlify.app/blueprint',
 
   /**
    * Breadcrumb format produced by the semantic view

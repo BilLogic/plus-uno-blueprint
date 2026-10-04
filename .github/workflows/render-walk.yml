@@ -78,6 +78,21 @@ jobs:
       # cache saves the browser DOWNLOAD, not the dependency install.
       - run: npx playwright install --with-deps chromium
 
+      # The path production is served under, read out of `netlify.toml` the way
+      # the template's hosting check reads it. The build below and the walk
+      # after it both take it as BASE_PATH, so the walk previews the build at
+      # the prefix it ships under and catches any URL that steps outside it.
+      - name: The path production is served under
+        run: |
+          set -euo pipefail
+          base=$(node --input-type=module -e "
+            import { readFileSync } from 'node:fs'
+            import { basePathIn } from 'uno-blueprint/scripts/check-hosting-rules.mjs'
+            process.stdout.write(basePathIn(readFileSync('netlify.toml', 'utf8'), {}))
+          ")
+          echo "BASE_PATH=$base" >> "$GITHUB_ENV"
+          echo "the build and the walk are served under \"$base\""
+
       # NO DATABASE, stated rather than merely left unset. This is the line that
       # decides which of the two worlds the walk measures, and it is the same
       # line the template's own job carries.
@@ -124,7 +139,7 @@ jobs:
       # template's. A spec that seeds settings — the phone agent jump seeds an
       # agent key — writes `<prefix>agent-settings`, and the app reads the
       # prefix `deployment/bootstrap.ts` configures. Left unset, the spec
-      # defaults to the template's `sb-`, the app reads `uno-`, and the surface
+      # defaults to the template's `ub-`, the app reads `uno-`, and the surface
       # under test never appears: the walk fails on a missing button rather
       # than on anything about the board. Read out of `bootstrap.ts` rather
       # than written twice, so a prefix change cannot desync the walk in

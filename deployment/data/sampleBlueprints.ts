@@ -17,7 +17,7 @@
 // Generated on: 2026-09-14
 // Board:        17 scenarios, 33 paths, 269 lanes, 188 steps, 933 cells, 428 dependencies, 322 touchpoint placements, 600 resources
 
-import type { SampleBlueprintRegistry } from 'agentic-service-blueprinting'
+import type { SampleBlueprintRegistry } from 'uno-blueprint'
 
 export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
   "blueprintsByScenario": {

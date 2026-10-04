@@ -7,7 +7,7 @@
  * the ordinary case. This is the opposite question over the files already on
  * the list: they are DECLARED reconciled, and for those the only acceptable
  * divergence is zero. A reconciled file that stops being byte-identical to
- * asb's copy — either side moving — fails CI.
+ * the template's copy — either side moving — fails CI.
  *
  * WHAT IT GUARDS NOW. It began as the road to the import flip: each enrolment
  * was a file proved identical so that it could be deleted and imported
@@ -19,24 +19,23 @@
  * genuinely exist and can still disagree. `scripts/reconciled-files.mjs`
  * argues each group.
  *
- * An empty allowlist is still a trivial pass, exiting 0 without needing asb
- * present. It will not be empty again.
+ * An empty allowlist is still a trivial pass, exiting 0 without needing the
+ * template present. It will not be empty again.
  *
- * asb is the pinned git dependency `agentic-service-blueprinting` (see
- * package.json / the lockfile), installed to
- * `node_modules/agentic-service-blueprinting` by `npm ci` — the same copy
- * `scripts/check-write-surface.mjs` reads, and the reason both run in the
- * `gates` job AFTER `npm ci`. Byte-identity is measured against that pinned
- * version, so "reconciled" means "identical to asb at the pinned tag"; a pin
- * bump that moves asb's copy is exactly the drift this is meant to catch. The
- * installed package is the right source precisely because it is what the
- * deployment runs: a sibling checkout on somebody's disk is a template nobody
- * is deployed against.
+ * The template is the pinned git dependency `uno-blueprint` (see
+ * package.json / the lockfile), installed to `node_modules/uno-blueprint` by
+ * `npm ci` — the same copy `scripts/check-write-surface.mjs` reads, and the
+ * reason both run in the `gates` job AFTER `npm ci`. Byte-identity is
+ * measured against that pinned version, so "reconciled" means "identical to
+ * the template at the pinned tag"; a pin bump that moves the template's copy
+ * is exactly the drift this is meant to catch. The installed package is the
+ * right source precisely because it is what the deployment runs: a sibling
+ * checkout on somebody's disk is a template nobody is deployed against.
  *
  * When the allowlist is non-empty but the package is not installed, it fails
- * the way the divergence reporter fails on an asb tree it cannot read: loudly,
- * with the command to fix it, never a green pass it cannot stand behind. An
- * empty allowlist needs no package and passes anyway.
+ * the way the divergence reporter fails on a template tree it cannot read:
+ * loudly, with the command to fix it, never a green pass it cannot stand
+ * behind. An empty allowlist needs no package and passes anyway.
  *
  * An install that is present but BEHIND the pin is the same condition wearing
  * a disguise, and `scripts/template-pin.mjs` unmasks it before any comparison
@@ -68,7 +67,7 @@ const byteReader = (root) => (path) => {
 /**
  * The problems with the reconciled set. Two kinds, both fatal:
  *
- * 1. an enrolled path that is not byte-identical to asb's copy;
+ * 1. an enrolled path that is not byte-identical to the template's copy;
  * 2. an enrolled file that cites a repo-local identity — an issue number, an
  *    ADR number, a migration filename, a `docs/` path, a plan or todo number.
  *
@@ -86,27 +85,27 @@ const byteReader = (root) => (path) => {
  * @param {object} io
  * @param {string[]} io.files                  enrolled repo-relative paths
  * @param {(p: string) => Buffer|null} io.readInstance  this repo's bytes at a path
- * @param {(p: string) => Buffer|null} io.readAsb       asb's bytes at the same path
+ * @param {(p: string) => Buffer|null} io.readTemplate  the template's bytes at the same path
  */
-export function auditReconciled({ files, readInstance, readAsb }) {
+export function auditReconciled({ files, readInstance, readTemplate }) {
   const problems = []
   for (const path of files) {
     const ours = readInstance(path)
-    const theirs = readAsb(path)
+    const theirs = readTemplate(path)
     if (ours === null) {
       problems.push(`${path} is enrolled as reconciled but does not exist in this repo`)
       continue
     }
     if (theirs === null) {
       problems.push(
-        `${path} is enrolled as reconciled but asb has no copy at that path — ` +
+        `${path} is enrolled as reconciled but the template has no copy at that path — ` +
           'it is not a shared file at the pinned version',
       )
       continue
     }
     if (!ours.equals(theirs)) {
       problems.push(
-        `${path} has drifted from asb's copy. It is on the reconciled allowlist, ` +
+        `${path} has drifted from the template's copy. It is on the reconciled allowlist, ` +
           'so the two must be byte-identical: reconcile them, or drop the entry ' +
           'from scripts/reconciled-files.mjs',
       )
@@ -120,7 +119,8 @@ export function auditReconciled({ files, readInstance, readAsb }) {
 }
 
 function main() {
-  // Empty allowlist ⇒ nothing to compare ⇒ pass, without needing asb present.
+  // Empty allowlist ⇒ nothing to compare ⇒ pass, without needing the template
+  // present.
   if (RECONCILED_FILES.length === 0) {
     console.log('reconciled set is empty; nothing to compare.')
     return
@@ -145,13 +145,13 @@ function main() {
   const problems = auditReconciled({
     files: RECONCILED_FILES,
     readInstance: byteReader(REPO_ROOT),
-    readAsb: byteReader(packageRoot),
+    readTemplate: byteReader(packageRoot),
   })
 
   if (problems.length === 0) {
     console.log(
       `${RECONCILED_FILES.length} reconciled file(s) are byte-identical to ` +
-        'agentic-service-blueprinting.',
+        'uno-blueprint.',
     )
     return
   }
@@ -160,7 +160,7 @@ function main() {
   console.error(
     `\n${problems.length} problem(s) in the reconciled set. A file on ` +
       'scripts/reconciled-files.mjs is a promise of two things: that it stays ' +
-      "byte-identical to asb's copy, and that it cites no identity that means " +
+      "byte-identical to the template's copy, and that it cites no identity that means " +
       'something different on the other side. Make both true, or drop the entry.',
   )
   process.exit(1)

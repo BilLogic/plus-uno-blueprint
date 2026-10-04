@@ -1,4 +1,4 @@
-import type { NavItem } from 'agentic-service-blueprinting'
+import type { NavItem } from 'uno-blueprint'
 
 /**
  * The board this deployment shows before its own arrives.

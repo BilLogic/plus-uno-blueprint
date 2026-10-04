@@ -108,7 +108,7 @@ test('a branch, a file link and a bare range are not pins', () => {
   // deliberate act, and refusing on it would break the one workflow where a
   // person genuinely wants the installed tree to be something else.
   assert.equal(versionInSpec(`github:BilLogic/${TEMPLATE_PACKAGE}#main`), null)
-  assert.equal(versionInSpec('file:../agentic-service-blueprinting'), null)
+  assert.equal(versionInSpec('file:../uno-blueprint'), null)
   assert.equal(versionInSpec('^1.12.9'), null)
   assert.equal(versionInSpec(undefined), null)
 })

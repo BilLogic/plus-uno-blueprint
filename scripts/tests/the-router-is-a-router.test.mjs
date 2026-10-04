@@ -16,9 +16,10 @@
  * asserted without a prohibition or a padded file ever being written into the
  * real router.
  *
- * Same suite as the deployment's `the-router-is-a-router.test.mjs`, plus the
- * two cases for what differs here: a Python pointer is swept, and the exempt
- * section is § Rules that hold for every skill.
+ * One suite in every repository that holds it, byte-identical. Two of its
+ * cases — a Python pointer is swept, and the exempt section is § Rules that
+ * hold for every skill — build their own router in a throwaway tree, so both
+ * hold wherever the suite runs.
  *
  * THE FIXTURE PATHS SIT UNDER `notes/`, AND NOT UNDER EITHER REPOSITORY'S
  * DOCUMENTATION TREE, DELIBERATELY. They are files this suite CREATES in a
@@ -253,16 +254,16 @@ test('a rule that holds for every skill is exempt from the trigger rules, and it
 })
 
 test('a Python pointer is swept — the validator and the secret hook are not prose', () => {
-  const live = repo('## Routes\n\n- **Validation** is `scripts/validate_ir.py` exit 0.\n', {
-    'scripts/validate_ir.py': '',
+  const live = repo('## Routes\n\n- **Validation** is `notes/validate_ir.py` exit 0.\n', {
+    'notes/validate_ir.py': '',
   })
   try {
     assert.deepEqual(sweep(live.root).failures, [])
   } finally {
     live.done()
   }
-  const dead = repo('## Routes\n\n- **Validation** is `scripts/validate_ir.py` exit 0.\n', {
-    'scripts/other.py': '',
+  const dead = repo('## Routes\n\n- **Validation** is `notes/validate_ir.py` exit 0.\n', {
+    'notes/other.py': '',
   })
   try {
     const { failures } = sweep(dead.root)
@@ -294,8 +295,8 @@ test('a directory pointer resolves against the directory', () => {
 })
 
 test('an item keeps its wrapped continuation lines, so a pointer may land on the second line', () => {
-  const router = '## Routes\n\n- **Editing** anything under `skills/` means running\n  `scripts/sync.mjs` afterwards.\n'
-  const r = repo(router, { 'skills/map/SKILL.md': '', 'scripts/sync.mjs': '' })
+  const router = '## Routes\n\n- **Editing** anything under `skills/` means running\n  `notes/sync.mjs` afterwards.\n'
+  const r = repo(router, { 'skills/map/SKILL.md': '', 'notes/sync.mjs': '' })
   try {
     const items = itemsIn(router)
     assert.equal(items.length, 1)

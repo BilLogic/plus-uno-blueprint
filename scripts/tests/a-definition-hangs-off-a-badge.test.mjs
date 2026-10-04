@@ -53,7 +53,7 @@ const REPO_ROOT = process.cwd()
  *
  * It is a path inside the installed package now: the components this checks
  * are the APPLICATION's, and the application is no longer a directory in this
- * repository — it is read out of `agentic-service-blueprinting`.
+ * repository — it is read out of `uno-blueprint`.
  */
 const CARD_MODULE = `${APP_SOURCE_ROOT}/components/blueprint/DefinitionCard.tsx`
 

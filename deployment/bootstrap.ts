@@ -9,7 +9,7 @@
  * wrong raises an error that names the fix rather than running quietly on the
  * template's default.
  *
- * It imports from `agentic-service-blueprinting/bootstrap` and NOT from the
+ * It imports from `uno-blueprint/bootstrap` and NOT from the
  * package root. The root export reaches `App`, and evaluating `App` is the
  * exact thing this call has to precede; the bootstrap entry's import graph is
  * held empty of the application for that reason.
@@ -25,14 +25,14 @@
  * rule entirely, and the seam with it. Both documents are ordinary
  * configuration now, on `agent.references` in `deployment.ts`.
  */
-import { configureStorageNamespace } from 'agentic-service-blueprinting/bootstrap'
+import { configureStorageNamespace } from 'uno-blueprint/bootstrap'
 
 /**
  * FIRST, AND BEFORE ANYTHING READS STORAGE.
  *
  * Six of the application's modules build their localStorage key while the
  * import graph evaluates, and two of them read storage there to seed a store
- * snapshot. The package's own default prefix is `sb-`; every key already
+ * snapshot. The package's own default prefix is `ub-`; every key already
  * sitting in a reader's browser was written under `uno-`. A call that arrives
  * one lifecycle too late does not raise here — it is `storageKey` freezing the
  * prefix on first read that raises — but a call that never arrives at all is

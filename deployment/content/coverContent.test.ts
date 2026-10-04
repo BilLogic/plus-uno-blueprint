@@ -2,17 +2,17 @@ import { existsSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { coverFigures, coverTabSections } from 'agentic-service-blueprinting/src/components/cover/coverModel.ts'
-import { packageCoverFigures } from 'agentic-service-blueprinting'
+import { coverFigures, coverTabSections } from 'uno-blueprint/src/components/cover/coverModel.ts'
+import { packageCoverFigures } from 'uno-blueprint'
 import { coverContent } from '~/content/coverContent'
 
 /*
- * Uno's cover content contract.
+ * PLUS Uno Blueprint's cover content contract.
  *
- * The renderers are shared with the agentic-service-blueprinting template,
- * where the equivalent test forbids deployment vocabulary (PLUS, uno,
- * tutor) to keep that skin generalized. This is the deployment, so that
- * gate is deliberately absent — uno's whole first tab is about PLUS. What
+ * The renderers are shared with the Uno Blueprint template, where the
+ * equivalent test forbids deployment vocabulary (PLUS, plus-uno, tutor) to
+ * keep that skin generalized. This is the deployment, so that gate is
+ * deliberately absent — this deployment's whole first tab is about PLUS. What
  * still has to hold is everything a reader would notice if it broke: the
  * figures resolve, the alt text says something, and the tab order is the
  * one the page was designed around.
@@ -28,14 +28,14 @@ import { coverContent } from '~/content/coverContent'
 const PUBLIC_DIR = fileURLToPath(new URL('../../public', import.meta.url))
 /** Where the package authors its figures — the far side of the imports. */
 const PACKAGE_ASSETS_DIR = fileURLToPath(
-  new URL('../../node_modules/agentic-service-blueprinting/docs/assets', import.meta.url),
+  new URL('../../node_modules/uno-blueprint/docs/assets', import.meta.url),
 )
 
 /** The figures the package brings, by the `src` an import resolves to. */
 const SUPPLIED = new Set(Object.values(packageCoverFigures).map((figure) => figure.src))
 
 describe('coverContent', () => {
-  it('leads with uno’s own service, then the generalized tabs', () => {
+  it('leads with this deployment’s own service, then the generalized tabs', () => {
     expect(coverContent.tabs.map((tab) => tab.label)).toEqual([
       'The service',
       'Overview',
@@ -99,7 +99,7 @@ describe('coverContent', () => {
   })
 
   it('names the service and its own call to action', () => {
-    expect(coverContent.title).toBe('Uno Blueprint')
+    expect(coverContent.title).toBe('PLUS Uno Blueprint')
     expect(coverContent.primaryCtaLabel).toBe('View PLUS Blueprints')
   })
 
