@@ -39,6 +39,14 @@ API keys.** The agent's provider keys are browser-held per user and never reach
 a build. [engineering/access-and-security.md](../engineering/access-and-security.md)
 owns the environment rules.
 
+**Only production builds against the database.** `VITE_SUPABASE_URL` is set
+for the Production context alone and is empty for deploy previews and branch
+deploys, so a preview builds in no-database mode and draws the bundled sample
+board. A preview pointed at the live project spent its egress quota every time
+someone opened one, and a password sign-in there could write to production
+from an address nobody reviews. The value is site configuration in the Netlify
+UI, not in `netlify.toml`, and cannot be read from this repo.
+
 The app's address also matters to the database: its served path,
 `https://plus-uno.netlify.app/blueprint`, is the **Site URL** in the hosted
 project's auth configuration, because magic links and OAuth sign-ins return
