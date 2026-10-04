@@ -39,12 +39,14 @@ API keys.** The agent's provider keys are browser-held per user and never reach
 a build. [engineering/access-and-security.md](../engineering/access-and-security.md)
 owns the environment rules.
 
-The app's address also matters to the database: it must be the **Site URL** in
-the hosted project's auth configuration, and both ways in, proxied and fallback,
-must be on the redirect allow-list alongside any local origin that needs emailed
-auth links to come back ([engineering/operations.md](../engineering/operations.md)
-lists them). That allowlist is dashboard state and cannot be read from this
-repo.
+The app's address also matters to the database: its served path,
+`https://plus-uno.netlify.app/blueprint`, is the **Site URL** in the hosted
+project's auth configuration, because magic links and OAuth sign-ins return
+there whenever they name no redirect, or name one the allow-list does not
+hold.
+[engineering/operations.md](../engineering/operations.md) lists the Site URL and
+the allow-list, and says why each entry is there. Both are dashboard state and
+cannot be read from this repo.
 
 ## Consequences of "main is production"
 

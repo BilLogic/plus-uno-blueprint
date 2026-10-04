@@ -73,26 +73,41 @@ preview port of its own.
 > `.claude/launch.json` has ever existed here**. An agent harness that wants a
 > declared port has to add one; until then, `npm run dev` on 5173 is it.
 
-The origin has to be in the hosted project's auth **Redirect URLs** (Supabase
-dashboard → Authentication → URL Configuration), alongside the **Site URL**
-`https://plus-uno.netlify.app/blueprint`. That allowlist is what makes emailed
-auth links work: magic-link and recovery emails redirect to the requesting
-origin only if it is on the list, otherwise Supabase silently falls back to the
-Site URL. If a mailed link lands somewhere unexpected, check this configuration
-first.
+The hosted project's auth settings live in the Supabase dashboard →
+Authentication → URL Configuration, and they hold two things.
 
-Production is served under a path, `/blueprint/` (the `BASE_PATH` in
-`netlify.toml`), and is reached two ways: through the proxy on PLUS's own site
-and directly on this project's Netlify site, the fallback. A magic link returns
-to the origin it was sent from, so the list needs **both**:
+**Site URL: `https://plus-uno.netlify.app/blueprint`.** It is the app's served
+path, not the bare host, because the Site URL is where auth sends a person back
+by default. A magic link, a recovery email and an OAuth sign-in all return to it
+whenever the request names no redirect, or names one the allow-list does not
+hold — and Supabase says nothing when it falls back. Production is served under
+`/blueprint/` (the `BASE_PATH` in `netlify.toml`), so a Site URL of the bare
+`https://plus-uno.netlify.app` would land a returning sign-in on PLUS's own site
+rather than on the app, with the session in a fragment nothing there reads.
+
+**Redirect URLs, the allow-list:**
 
 - `https://plus-uno.netlify.app/blueprint/**` — the proxied address people use
-- `https://plus-uno-blueprint.netlify.app/blueprint/**` — the fallback host
+- `https://uno-blueprint.netlify.app/**` — the app's earlier host, kept so a
+  link requested there before the move still returns to it
+- the localhost origins used in development, such as `http://localhost:5173`
 
-**Unverified:** the allowlist is dashboard state and cannot be read from this
-repo, so it may still carry the fictional `5199` and may or may not carry
-`5173`. Confirm `http://localhost:5173` is listed before relying on a mailed
-link locally. Using any other port means adding that origin there too.
+A mailed or OAuth link returns to the origin it was requested from only if that
+origin is on the list; otherwise it lands on the Site URL. If a link lands
+somewhere unexpected, check this configuration first.
+
+Production is reached two ways: through the proxy on PLUS's own site and
+directly on this project's Netlify site,
+`https://plus-uno-blueprint.netlify.app/blueprint/`, the fallback. The list
+above does not name the fallback host, so a link requested there returns to the
+Site URL — the proxied address — rather than to the fallback. That is the
+intended address anyway; add `https://plus-uno-blueprint.netlify.app/blueprint/**`
+if a sign-in ever has to stay on the fallback.
+
+**Unverified:** the allow-list is dashboard state and cannot be read from this
+repo. The entries above are as recorded on 2026-10-04; confirm the localhost
+origin you use is listed before relying on a mailed link locally, and add any
+other port you run on.
 
 ## Inviting people
 
