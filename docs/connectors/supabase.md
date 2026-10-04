@@ -18,6 +18,18 @@ wrappers, the `semantic_search` schema and the migration workflow are
 which is the single owner. This doc covers the *boundary*: what crosses it, and
 what a change on one side obliges on the other.
 
+## Where sign-in returns
+
+Auth's URL configuration is dashboard state, not a file here. The **Site URL**
+is `https://plus-uno.netlify.app/blueprint`, the app's served path, because a
+magic link or an OAuth sign-in returns to the Site URL whenever the redirect it
+asks for is not on the allow-list, and a bare host would land it on PLUS's site
+rather than on the app. The allow-list holds
+`https://plus-uno.netlify.app/blueprint/**`, with the older
+`https://uno-blueprint.netlify.app/**` and the localhost origins kept for legacy
+and development. [engineering/operations.md](../engineering/operations.md#local-dev-servers-and-auth-redirects)
+owns the entries and says what to check when a link lands somewhere unexpected.
+
 ## What crosses
 
 | Artefact | Direction | Owner |
