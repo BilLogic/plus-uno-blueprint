@@ -88,7 +88,8 @@ rather than on the app, with the session in a fragment nothing there reads.
 **Redirect URLs, the allow-list:**
 
 - `https://plus-uno.netlify.app/blueprint/**` — the proxied address people use
-- `https://uno-blueprint.netlify.app/**` — older, kept for the legacy host
+- `https://uno-blueprint.netlify.app/**` — the app's earlier host, kept so a
+  link requested there before the move still returns to it
 - the localhost origins used in development, such as `http://localhost:5173`
 
 A mailed or OAuth link returns to the origin it was requested from only if that

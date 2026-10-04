@@ -42,7 +42,8 @@ owns the environment rules.
 The app's address also matters to the database: its served path,
 `https://plus-uno.netlify.app/blueprint`, is the **Site URL** in the hosted
 project's auth configuration, because magic links and OAuth sign-ins return
-there whenever the redirect they ask for is not on the allow-list.
+there whenever they name no redirect, or name one the allow-list does not
+hold.
 [engineering/operations.md](../engineering/operations.md) lists the Site URL and
 the allow-list, and says why each entry is there. Both are dashboard state and
 cannot be read from this repo.
