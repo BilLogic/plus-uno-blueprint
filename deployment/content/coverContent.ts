@@ -8,9 +8,13 @@ import type { CoverContent } from 'uno-blueprint'
  * The renderers in `components/cover/` are shared with the Uno Blueprint
  * template and know nothing about PLUS; a deployment is entirely defined by
  * this module. This deployment's own service comes first, then the four
- * generalized tabs the template ships, carried across verbatim: they describe
- * the blueprint model, slices, and the skills, none of which are
- * template-specific.
+ * general tabs, which describe the blueprint model, slices and the skills and
+ * follow the template's wording. Where they differ, the difference is local:
+ * "Where you reach it from" names four surfaces, the Slack bot among them,
+ * where the template ships three; a few phrasings predate the template's
+ * latest edits (among them title-case use names, the cell's dependency
+ * words, the skill-set opener); and the two "Inside one" figures carry
+ * their own alt text, below.
  *
  * THE THIRTEEN DIAGRAMS COME FROM THE PACKAGE, and are values rather than
  * paths. Who authored a figure is who supplies it: those thirteen draw the
@@ -143,7 +147,7 @@ export const coverContent: CoverContent = {
           id: 'overview-where',
           heading: 'Where you reach it from',
           paragraphs: [
-            'Four ways to work the same blueprint. The app is where people read, compare, and present. The in-app agent drafts changes in place, using the same write path the interface uses. Agentic tools reach the same rows from an IDE or a terminal — that is where the four skills run. The Slack bot answers questions and links back to the exact cell it read.',
+            'The same blueprint can be accessed in four ways. The app is where people read, compare, and present. The in-app agent drafts changes in place, using the same write path the interface uses. Agentic tools reach the same rows from an IDE or a terminal, where the skills run. The Slack bot answers questions and links back to the exact cell it read.',
             'All four sit on one shared context layer, so what any surface reads is what the others wrote. Who may do what follows from the account a surface signs in with, not from which surface it is.',
           ],
           figure: packageCoverFigures.fourWaysIn,
