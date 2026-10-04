@@ -24,7 +24,7 @@ import {
 import { hostRulesUnder } from '../../vite.config.ts'
 import { BLUEPRINT_CONTRACT } from '../blueprintContract.mjs'
 
-const REDIRECTS = 'the _redirects the build writes'
+const WRITTEN_REDIRECTS = 'the _redirects the build writes'
 const HEADERS = 'public/_headers'
 const CONFIG = 'netlify.toml'
 
@@ -49,7 +49,7 @@ const ruleLines = () =>
 test('every path falls back to the app, and keeps the address it asked for', () => {
   const rules = ruleLines()
 
-  assert.ok(rules.length > 0, `${REDIRECTS} has no rules, so no path reaches the app`)
+  assert.ok(rules.length > 0, `${WRITTEN_REDIRECTS} has no rules, so no path reaches the app`)
 
   const fallback = rules.at(-1)
   const [from, to, status] = fallback.split(/\s+/)
@@ -76,7 +76,7 @@ test('a missing hashed asset is a 404, and the catch-all still comes last', () =
   const assets = rules.findIndex((rule) => rule.split(/\s+/)[0] === RULES.assets)
   const fallback = rules.findIndex((rule) => rule.split(/\s+/)[0] === RULES.catchAll)
 
-  assert.ok(assets !== -1, `${REDIRECTS} has no ${RULES.assets} rule, so a missing chunk is served the app shell`)
+  assert.ok(assets !== -1, `${WRITTEN_REDIRECTS} has no ${RULES.assets} rule, so a missing chunk is served the app shell`)
   assert.ok(
     assets < fallback,
     `the ${RULES.assets} rule must precede the catch-all — Netlify takes the first match`,
@@ -115,7 +115,7 @@ test('hashed assets are served immutable', () => {
 // expects the redirect table in that file, and this repository keeps
 // `netlify.toml` to the one setting.
 test('the template hosting check finds nothing under the prefix', () => {
-  assert.deepEqual(fileRedirectFindings(WRITTEN.redirects, REDIRECTS, BASE), [])
+  assert.deepEqual(fileRedirectFindings(WRITTEN.redirects, WRITTEN_REDIRECTS, BASE), [])
   assert.deepEqual(cacheFindings(WRITTEN.headers, HEADERS, BASE), [])
 })
 
@@ -123,7 +123,11 @@ test('the template hosting check finds nothing under the prefix', () => {
 // knows the bare address is sent to the board rather than handed a 404.
 test.skipIf(BASE === '/')('the bare root is sent to the board, and shadows nothing', () => {
   const rules = ruleLines()
-  const [from, to, status] = rules[0].split(/\s+/)
+  // The first rule the build writes; a `public/_redirects` of this
+  // repository's own would sit above it, and answers nothing at `/`.
+  const root = rules.find((rule) => rule.split(/\s+/)[0] === '/')
+  assert.ok(root, `${WRITTEN_REDIRECTS} has no rule for the bare root`)
+  const [from, to, status] = root.split(/\s+/)
   assert.equal(from, '/', 'the root redirect comes first and matches the bare root alone')
   assert.equal(to, BASE, `the root is sent to ${BASE}`)
   assert.equal(status, '301', 'the build sends the bare root on to the prefix for good')

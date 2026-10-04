@@ -25,7 +25,8 @@ proxies `/blueprint/*` to this site's `/blueprint/:splat` with a 200, forwarding
 the path unchanged, and this site serves the same files at
 `https://plus-uno-blueprint.netlify.app/blueprint/` as the fallback. The proxy
 rule lives in PLUS's repository, not here. A bare `/` on this site is sent to
-`/blueprint/` with a 302, since nothing else is served at its root.
+`/blueprint/` with a 301, written by the build, since nothing else is served
+at its root.
 
 A local `npm run build` does not read `netlify.toml`: set `BASE_PATH=/blueprint/`
 in the shell to build what production ships.

@@ -68,8 +68,9 @@
  * Dark. Every dial the block above declares, restated — see the note there.
  *
  * This deployment does NOT lighten its filled control in dark the way the
- * template's does (0.771 / 0.129): 0.52 at chroma 0.095 reads on both canvases, so the button
- * is the same teal in both modes and only the ground moves.
+ * template's does (0.771 / 0.129): 0.52 at chroma 0.095 reads on both
+ * canvases, so the button is the same teal in both modes and only the ground
+ * moves.
  */
 .dark {
   --hue: 177.6;
@@ -91,27 +92,25 @@
 
 @media print {
   /*
-   * The paper override, taken back where this deployment's dials differ from
-   * the two the template's own print block restates.
+   * The paper override, taken back where this deployment's dark dials differ
+   * from its light ones.
    *
    * The template's block is written to one rule: it restates exactly the dials
    * ITS two themes disagree about, and omits the ones they agree on because
-   * agreement is what makes the omission safe. Both halves of that rule land
-   * differently here.
+   * agreement is what makes the omission safe. This file loads after it, at
+   * the same selectors, so every dial declared above wins over the template's
+   * print pins on source order — its 0.536 / 0.101 fill included. What is left
+   * to take back is what this deployment's OWN dark block declares and its
+   * light block does not mean on paper:
    *
-   *   - `--primary-lightness`. Its themes disagree (0.536 light, 0.771 dark)
-   *     so its print block pins 0.536. This deployment's two themes AGREE at
-   *     0.52, so that pin is not a default being inherited — it is a value
-   *     being overwritten. Taken back explicitly.
-   *   - `--surface-hue` and `--chroma`. Its themes agree (34 and 0) so its
-   *     print block omits both. This deployment's disagree — dark runs the
-   *     surface ramp on the brand hue at chroma 0.005 — so with nothing here to
-   *     take them back, a page printed from dark mode would carry dark's tint
-   *     onto white paper. These are the light values.
+   *   - `--surface-hue` and `--chroma`. The template's themes agree (34 and 0)
+   *     so its print block omits both. This deployment's disagree — dark runs
+   *     the surface ramp on the brand hue at chroma 0.005 — so with nothing
+   *     here to take them back, a page printed from dark mode would carry
+   *     dark's tint onto white paper. These are the light values.
    *
-   * `--hue` and `--primary-chroma` are deliberately absent: this deployment's
-   * two themes agree on both, and the template's print pin of chroma (0.101)
-   * loses on source order to this file's own declarations, so nothing can
+   * `--hue`, `--primary-lightness` and `--primary-chroma` are deliberately
+   * absent: this deployment's two themes agree on all three, so nothing can
    * leak, and a defensive copy here would be a second unheld source of truth
    * of exactly the kind that caused the defect the template's block was
    * rewritten to fix.
@@ -120,6 +119,5 @@
   .dark {
     --surface-hue: 34;
     --chroma: 0;
-    --primary-lightness: 0.52;
   }
 }
