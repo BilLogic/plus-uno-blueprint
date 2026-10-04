@@ -12,8 +12,8 @@ import type { CoverContent } from 'uno-blueprint'
  * follow the template's wording. Where they differ, the difference is local:
  * "Where you reach it from" names four surfaces, the Slack bot among them,
  * where the template ships three; a few phrasings predate the template's
- * latest edits (among them title-case use names, the cell's dependency
- * words, the skill-set opener); and the two "Inside one" figures carry
+ * latest edits (among them title-case use names and the skill-set
+ * opener); and the two "Inside one" figures carry
  * their own alt text, below.
  *
  * THE THIRTEEN DIAGRAMS COME FROM THE PACKAGE, and are values rather than
@@ -190,7 +190,7 @@ export const coverContent: CoverContent = {
           heading: 'Inside one cell',
           paragraphs: [
             "A cell captures one actor's action at one step, along with the context around it. It shows where the action sits in the blueprint, what happens, what form it takes, and the value it creates. It also records both who **owns** the action and who the customer believes owns it, since those are not always the same.",
-            'Each cell can also include supporting **evidence**, linked resources, and **dependencies**: what sets the action off, what it sets off, and what it needs to exist. It also shows which slices reference that cell, so you can see which views would be affected if it changed.',
+            'Each cell can also include supporting **evidence**, linked resources, and **dependencies**: what leads to the action, what it leads to, what enables it, and what it enables. It also shows which slices reference that cell, so you can see which views would be affected if it changed.',
           ],
           figure: {
             ...packageCoverFigures.cellAnatomy,
