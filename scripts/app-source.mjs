@@ -2,7 +2,7 @@
 /**
  * Where the application's source is, now that this repository does not hold it.
  *
- * This deployment reads the application out of `agentic-service-blueprinting`.
+ * This deployment reads the application out of `uno-blueprint`.
  * Every check here that used to walk `src/` was walking the application; the
  * path moved, the checks did not stop being worth running, and several of them
  * are worth MORE than they were — a check that compares the application's
@@ -43,7 +43,7 @@ import { dirname, join, relative as relativeTo, resolve } from 'node:path'
  */
 export const APP_SOURCE_ROOTS = [
   'src',
-  'node_modules/agentic-service-blueprinting/src',
+  'node_modules/uno-blueprint/src',
 ]
 
 /**
@@ -67,7 +67,7 @@ export function appSourceRoot(repoRoot) {
 /**
  * The directory the application's root sits in, absolute.
  *
- * Here that is always `<repo>/node_modules/agentic-service-blueprinting`, and
+ * Here that is always `<repo>/node_modules/uno-blueprint`, and
  * in a repository that keeps its own `src` it is the repository root. It is
  * what a pointer INTO the application is resolved against, so `src/lib/…`
  * reads the same on either side and a check's expected paths are one list
@@ -114,7 +114,7 @@ export function appSource(relative) {
   if (!existsSync(path))
     throw new Error(
       `The application's ${relative} is not on disk at ${APP_SOURCE_ROOT}/${relative}. ` +
-        `This deployment reads the application out of agentic-service-blueprinting — ` +
+        `This deployment reads the application out of uno-blueprint — ` +
         `run npm ci, or check whether the pinned release still ships that file.`,
     )
   return readFileSync(path, 'utf8')

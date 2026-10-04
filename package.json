@@ -50,7 +50,7 @@
     "check:write-surface": "node scripts/check-write-surface.mjs",
     "check:reconciled": "node scripts/check-reconciled-files.mjs",
     "check:shared-scripts": "node scripts/check-shared-scripts.mjs",
-    "check:database-types-superset": "node node_modules/agentic-service-blueprinting/scripts/check-database-types-superset.mjs deployment/types/database.ts",
+    "check:database-types-superset": "node node_modules/uno-blueprint/scripts/check-database-types-superset.mjs deployment/types/database.ts",
     "export:sample-board": "node scripts/export-sample-board.mjs",
     "check:sample-board": "node scripts/export-sample-board.mjs --check",
     "check:render-walk": "node scripts/render-walk.mjs",
@@ -62,14 +62,12 @@
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
-    "@fontsource-variable/source-code-pro": "^5.3.0",
     "@fontsource-variable/ubuntu-sans": "^5.3.0",
     "@shadcn/react": "^0.3.0",
     "@supabase/supabase-js": "^2.112.2",
     "@tailwindcss/forms": "0.5.11",
     "@tailwindcss/typography": "0.5.20",
     "@tanstack/react-query": "5.101.4",
-    "agentic-service-blueprinting": "github:BilLogic/agentic-service-blueprinting#v1.44.29",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -82,7 +80,8 @@
     "remark-gfm": "^4.0.1",
     "shadcn": "^4.13.0",
     "tailwind-merge": "^3.6.0",
-    "tw-animate-css": "^1.4.0"
+    "tw-animate-css": "^1.4.0",
+    "uno-blueprint": "github:BilLogic/uno-blueprint#v2.5.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

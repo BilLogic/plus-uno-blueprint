@@ -1,4 +1,4 @@
-import type { EntityStatus } from 'agentic-service-blueprinting/src/lib/entityStatus.ts'
+import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
 /**
  * Supabase database types for the `public` schema — THIS DEPLOYMENT'S.
  *
@@ -7,7 +7,7 @@ import type { EntityStatus } from 'agentic-service-blueprinting/src/lib/entitySt
  *
  * NOTHING IMPORTS THIS FILE, AND NOTHING SHOULD. It is not a module the
  * application compiles against — the application is read out of
- * `agentic-service-blueprinting` and is typechecked against the copy that
+ * `uno-blueprint` and is typechecked against the copy that
  * ships with it, which is the right subject for code that ships with it too.
  * This is the DECLARATION: the statement of what schema this deployment's
  * database actually has, read by `check:database-types:live` and by

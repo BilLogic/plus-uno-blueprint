@@ -15,8 +15,9 @@ Two faces, declared in `src/styles/theme.css` in Supabase's seam shape:
   injection seam so an embedding app can swap it. Body, headings, cell content.
   There is no separate heading face and no weight overrides: headings are this
   stack at a heavier weight, exactly as Supabase does it.
-- **Mono** — Source Code Pro Variable, behind `--font-source-code-pro` (seam
-  filled in `src/styles/base.css`). Code, identifiers, and the utility register
+- **Mono** — Ubuntu Sans Mono Variable, behind `--app-font-mono` (the older
+  `--font-source-code-pro` is still read; the seam is filled in the
+  template's `src/styles/theme.css`). Code, identifiers, and the utility register
   below.
 
 The fallback chains live *outside* the `var()` slot on purpose — see the

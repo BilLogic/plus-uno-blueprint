@@ -1,20 +1,20 @@
 ---
 audience: service designers, practitioners
 summary: The four blueprint practices (map, audit, what-if, slice), the compare workflow, findings triage, and where each practice is specified.
-sources: agentic-service-blueprinting skills/, agentic-service-blueprinting references/
+sources: uno-blueprint skills/, uno-blueprint references/
 last-reviewed: 2026-08-08
 ---
 
 # Service design practice
 
 How service-blueprint work actually runs here. Four practices, each
-available as a skill (`/sb:*`) to both the in-app assistant and IDE agents,
+available as a skill (`/ub:*`) to both the in-app assistant and IDE agents,
 each grounded in written specifications — the provenance section at the end
 maps practice to specification to skill.
 
 ## The four practices
 
-### Mapping — `/sb:map`
+### Mapping — `/ub:map`
 
 Building the blueprint itself: from a conversation (a structured question
 script walks you from "what's the service?" down to individual cells), from
@@ -24,7 +24,7 @@ cell write. The other three practices deliberately cannot create or edit
 cells — anything they surface that needs a blueprint change routes back
 through map.
 
-### Auditing — `/sb:audit`
+### Auditing — `/ub:audit`
 
 Running the check roster against an imported blueprint. Each check on the
 roster is its own specification document; each runs blind (one
@@ -35,7 +35,7 @@ Re-runs are safe: findings deduplicate by fingerprint, dismissed findings
 stay dismissed, and each check atomically supersedes only its own previous
 results.
 
-### What-if — `/sb:whatif`
+### What-if — `/ub:whatif`
 
 Tracing consequences before committing: "what breaks if we automate
 check-in?" It builds a hypothetical variant (a local file — the shared
@@ -45,7 +45,7 @@ displaced work lands. Accepting an analysis emits a change request; the
 actual blueprint change happens through map, which refuses if the base
 blueprint moved since the analysis.
 
-### Slicing — `/sb:slice`
+### Slicing — `/ub:slice`
 
 Cutting stakeholder views: one actor's journey, one moment across every
 lane, one lane end to end, or one cell in close-up (a storyboard is a
@@ -83,8 +83,8 @@ never "quick-fix" cells from inside an audit.
 These practices are textbook-grounded (Shostack-lineage service
 blueprinting) but they are not folklore here: they are **encoded as
 specifications** that both humans and agents execute. There is one copy of
-them: the `agentic-service-blueprinting` package, which the IDE loads as the
-`sb` plugin and this app installs as a pinned dependency. To change how the
+them: the `uno-blueprint` package, which the IDE loads as the
+`ub` plugin and this app installs as a pinned dependency. To change how the
 practice works, edit the specification upstream and bump the pin — don't
 improvise around it. That's also how the practice
 grows: a new audit check is a new `check-*.md` written from the playbook's
@@ -92,10 +92,10 @@ template, run alone once, then added to the roster.
 
 | Practice | Specification files (references/)                                                                                                                                                                                                                              | Applied by   |
 | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| Mapping  | `elicitation-protocol.md` (question script), `lane-vocabulary.md` (drafting convergence), `lane-roles.md` (lane semantics ↔ rendering), `data-model.md`                                                                                                       | `/sb:map`    |
-| Auditing | `audit-playbook.md` (run semantics, fingerprints, triage, check template), `check-gap-sweep.md`, `check-jargon-lint.md`, `check-channel-conflict.md`, `check-kpi-alignment.md`, `check-perceived-owner.md`, `check-value-ledger.md`, `check-fee-visibility.md` | `/sb:audit`  |
-| What-if  | `whatif-playbook.md` (variant discipline, replay/restage/prioritize, promote handoff)                                                                                                                                                                          | `/sb:whatif` |
-| Slicing  | `slice-playbook.md` (selection + regeneration rules), `slice-templates.md`                                                                                                                                                                                     | `/sb:slice`  |
+| Mapping  | `elicitation-protocol.md` (question script), `lane-vocabulary.md` (drafting convergence), `lane-roles.md` (lane semantics ↔ rendering), `data-model.md`                                                                                                       | `/ub:map`    |
+| Auditing | `audit-playbook.md` (run semantics, fingerprints, triage, check template), `check-gap-sweep.md`, `check-jargon-lint.md`, `check-channel-conflict.md`, `check-kpi-alignment.md`, `check-perceived-owner.md`, `check-value-ledger.md`, `check-fee-visibility.md` | `/ub:audit`  |
+| What-if  | `whatif-playbook.md` (variant discipline, replay/restage/prioritize, promote handoff)                                                                                                                                                                          | `/ub:whatif` |
+| Slicing  | `slice-playbook.md` (selection + regeneration rules), `slice-templates.md`                                                                                                                                                                                     | `/ub:slice`  |
 
 Lay explanation of audits and findings for non-practitioners:
 [doc 04](04-the-assistant-and-audits.md). Using slices to drive product

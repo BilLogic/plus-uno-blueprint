@@ -36,7 +36,7 @@ test('this deployment\'s own database and the template itself stay out of scope'
   // The template is what a candidate is compared AGAINST. Offering its own
   // files as candidates would be proposing to reconcile it with itself.
   assert.equal(
-    inScope('node_modules/agentic-service-blueprinting/src/lib/blueprintContract.ts'),
+    inScope('node_modules/uno-blueprint/src/lib/blueprintContract.ts'),
     false,
   )
   // Everything this repository actually holds and could share is in scope.
@@ -68,7 +68,7 @@ test('a file that differs only in a comment is a candidate', () => {
   const candidates = enrollableCandidates({
     paths: ['src/lib/a.ts'],
     readInstance: () => '// our words\nexport const a = 1\n',
-    readAsb: () => '// their words\nexport const a = 1\n',
+    readTemplate: () => '// their words\nexport const a = 1\n',
   })
   assert.deepEqual(candidates, ['src/lib/a.ts'])
 })
@@ -77,7 +77,7 @@ test('a file that differs in code is never a candidate', () => {
   const candidates = enrollableCandidates({
     paths: ['src/lib/a.ts'],
     readInstance: () => '// same words\nexport const a = 1\n',
-    readAsb: () => '// same words\nexport const a = 2\n',
+    readTemplate: () => '// same words\nexport const a = 2\n',
   })
   assert.deepEqual(candidates, [])
 })
@@ -88,18 +88,18 @@ test('an already-enrolled path is left out — the gate owns it', () => {
   const candidates = enrollableCandidates({
     paths: [enrolled],
     readInstance: () => '// ours\nx()\n',
-    readAsb: () => '// theirs\nx()\n',
+    readTemplate: () => '// theirs\nx()\n',
   })
   assert.deepEqual(candidates, [])
 })
 
 test('a path missing on either side is not a candidate', () => {
   assert.deepEqual(
-    enrollableCandidates({ paths: ['src/lib/a.ts'], readInstance: () => 'x()', readAsb: () => null }),
+    enrollableCandidates({ paths: ['src/lib/a.ts'], readInstance: () => 'x()', readTemplate: () => null }),
     [],
   )
   assert.deepEqual(
-    enrollableCandidates({ paths: ['src/lib/a.ts'], readInstance: () => null, readAsb: () => 'x()' }),
+    enrollableCandidates({ paths: ['src/lib/a.ts'], readInstance: () => null, readTemplate: () => 'x()' }),
     [],
   )
 })
@@ -128,7 +128,7 @@ test('a candidate citing a repo-local identity is separated from the rest', () =
     candidates: ['src/lib/cites.ts', 'src/lib/clean.ts'],
     readInstance: (path) =>
       path === 'src/lib/cites.ts' ? '// see 20260909060000\nx()\n' : '// our words\nx()\n',
-    readAsb: (path) =>
+    readTemplate: (path) =>
       path === 'src/lib/cites.ts' ? '// see 21000208000000\nx()\n' : '// their words\nx()\n',
   })
   assert.deepEqual(proseOnly, ['src/lib/clean.ts'])
@@ -153,7 +153,7 @@ test('a citation on only one side still blocks the candidate', () => {
   const { blocked, proseOnly } = splitOnCitations({
     candidates: ['src/lib/a.ts'],
     readInstance: () => '// applied in 20260820030000\n// the change log (#176)\nx()\n',
-    readAsb: () => '// applied already\nx()\n',
+    readTemplate: () => '// applied already\nx()\n',
   })
   assert.deepEqual(proseOnly, [])
   assert.deepEqual(

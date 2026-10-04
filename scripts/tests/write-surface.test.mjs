@@ -55,7 +55,7 @@ const read = (path) => readFileSync(resolve(REPO_ROOT, path), 'utf8')
 // code; the application moved into the package. `APP` is how the two are told
 // apart at every read below.
 const ADAPTER = 'deployment/agent/canvas-adapter.md'
-const PACKAGE = 'node_modules/agentic-service-blueprinting'
+const PACKAGE = 'node_modules/uno-blueprint'
 const APP = `${PACKAGE}/src`
 
 // ---------------------------------------------------------------------------
@@ -174,7 +174,7 @@ const WIRED = {
   ].join('\n'),
   config: [
     "import canvasAdapter from '~/agent/canvas-adapter.md?raw'",
-    'export const unoDeploymentConfig = {',
+    'export const plusUnoDeploymentConfig = {',
     '  agent: {',
     '    references: {',
     "      'canvas-adapter': canvasAdapter,",
@@ -201,12 +201,12 @@ test('a pin bump that reinstates the package adapter in loop.ts fails', () => {
     'packageAdapter',
   ).replace(
     "import { readReference } from '@/lib/agent/tools/references'",
-    "import packageAdapter from 'agentic-service-blueprinting/references/canvas-adapter.md?raw'",
+    "import packageAdapter from 'uno-blueprint/references/canvas-adapter.md?raw'",
   )
   const faults = wiringFaults({ ...WIRED, loop }).map((fault) => fault.problem)
   assert.equal(faults.length, 2)
   assert.match(faults[0], /does not splice readReference/)
-  assert.match(faults[1], /still imports 'agentic-service-blueprinting/)
+  assert.match(faults[1], /still imports 'uno-blueprint/)
 })
 
 test('loop.ts importing the override again fails, even while splicing the record', () => {
@@ -275,8 +275,8 @@ test('adapterImport ignores a specifier that merely contains the path', () => {
   // import and failing a correctly-wired file.
   assert.equal(
     adapterImport(
-      "// see agentic-service-blueprinting/references/canvas-adapter.md?raw\n",
-      { specifier: 'agentic-service-blueprinting/references/canvas-adapter.md' },
+      "// see uno-blueprint/references/canvas-adapter.md?raw\n",
+      { specifier: 'uno-blueprint/references/canvas-adapter.md' },
     ),
     null,
   )
@@ -393,7 +393,7 @@ test('listDifferences names both a missing warning and a stale one', () => {
 function liveResult() {
   const referenceDocs = [
     ...read(`${APP}/lib/agent/tools/referenceDocs.ts`).matchAll(
-      /from 'agentic-service-blueprinting\/([^']+\.md)\?raw'/g,
+      /from 'uno-blueprint\/([^']+\.md)\?raw'/g,
     ),
   ].map(([, name]) => ({ name, text: read(join(PACKAGE, name)) }))
   const dir = resolve(REPO_ROOT, 'supabase/migrations')
@@ -518,7 +518,7 @@ test('the supersession list is the installed docs that actually teach the wrong 
   const claimed = supersededPaths(read(ADAPTER))
   const actual = [
     ...read(`${APP}/lib/agent/tools/referenceDocs.ts`).matchAll(
-      /from 'agentic-service-blueprinting\/([^']+\.md)\?raw'/g,
+      /from 'uno-blueprint\/([^']+\.md)\?raw'/g,
     ),
   ]
     .map(([, name]) => name)

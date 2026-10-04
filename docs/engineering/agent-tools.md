@@ -35,7 +35,7 @@ refusal, not an attempt. **Deliberately absent: every delete.**
   mocks those visual effects, so production camera movement is validated in a
   real browser in addition to tool-parity and model-sequencing tests.
 - **`src/lib/agent/tools/read.ts`** — the read tools and the reference
-  documents, imported from the pinned `agentic-service-blueprinting`
+  documents, imported from the pinned `uno-blueprint`
   package; asserts at module init that its keys match `REFERENCE_NAMES`
   exactly.
 

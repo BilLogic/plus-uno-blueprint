@@ -19,13 +19,13 @@
  * the two documents this deployment serves its own agent, which used to be a
  * pre-import call in `bootstrap.ts` and are ordinary configuration now.
  */
-import type { DeploymentConfig } from 'agentic-service-blueprinting'
+import type { DeploymentConfig } from 'uno-blueprint'
 import blueprintAccount from '../docs/agents/blueprint.md?raw'
 import canvasAdapter from '~/agent/canvas-adapter.md?raw'
 import { coverContent } from './content/coverContent'
 import { SAMPLE_NAV } from './data/sampleNav'
 
-export const unoDeploymentConfig: DeploymentConfig = {
+export const plusUnoDeploymentConfig: DeploymentConfig = {
   brand: {
     /**
      * The wordmark. It reaches app chrome through

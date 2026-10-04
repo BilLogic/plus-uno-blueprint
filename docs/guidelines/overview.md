@@ -38,7 +38,7 @@ judgement.
 - **Composition** — everything assembled out of them: the files under
   `blueprint/`, `editor/`, `cover/` and `mobile/`, cut into nine nameable
   surfaces. Those documents are the package's and arrive with the application,
-  under `node_modules/agentic-service-blueprinting/docs/guidelines/` — **the
+  under `node_modules/uno-blueprint/docs/guidelines/` — **the
   package's `guidelines/`, which every `composition/…` below names** — starting
   at `composition/overview.md`. The claim for a file is written where the file
   lives, so this deployment holds none of them. Every assembled file is claimed

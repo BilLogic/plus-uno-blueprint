@@ -109,14 +109,14 @@ Two module-level seams, both deliberately non-React:
 
 ## Skills and the pinned-package contract
 
-The slash commands (`/sb:map`, `/sb:slice`, `/sb:audit`, `/sb:whatif`,
+The slash commands (`/ub:map`, `/ub:slice`, `/ub:audit`, `/ub:whatif`,
 plus bare aliases — `skills.ts`) load the **same SKILL.md files IDE humans
-get** from the `sb` plugin. Not a copy of them — the files themselves.
+get** from the `ub` plugin. Not a copy of them — the files themselves.
 The contract:
 
-- **Canonical home**: the `agentic-service-blueprinting` repo. Skills and
+- **Canonical home**: the `uno-blueprint` repo. Skills and
   references are authored THERE, never in this repo.
-- **How the app reads them**: `agentic-service-blueprinting` is a
+- **How the app reads them**: `uno-blueprint` is a
   dependency, pinned by git URL at a tagged release
   (`package.json`; the lockfile pins the resolved commit). `skills.ts`
   imports `skills/<name>/SKILL.md?raw`; `read.ts` imports seventeen of the

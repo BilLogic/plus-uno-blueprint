@@ -103,15 +103,15 @@ export function stripProse(text) {
  * @param {object} io
  * @param {string[]} io.paths                          candidate repo-relative paths
  * @param {(p: string) => string|null} io.readInstance this repo's text
- * @param {(p: string) => string|null} io.readAsb      the template's text
+ * @param {(p: string) => string|null} io.readTemplate the template's text
  */
-export function enrollableCandidates({ paths, readInstance, readAsb }) {
+export function enrollableCandidates({ paths, readInstance, readTemplate }) {
   const enrolled = new Set(RECONCILED_FILES)
   const candidates = []
   for (const path of paths) {
     if (enrolled.has(path)) continue
     const ours = readInstance(path)
-    const theirs = readAsb(path)
+    const theirs = readTemplate(path)
     if (ours === null || theirs === null) continue
     if (ours === theirs) continue
     if (stripProse(ours) === stripProse(theirs)) candidates.push(path)
@@ -144,15 +144,15 @@ export function enrollableCandidates({ paths, readInstance, readAsb }) {
  * @param {object} io
  * @param {string[]} io.candidates                    prose-only candidate paths
  * @param {(p: string) => string|null} io.readInstance this repo's text
- * @param {(p: string) => string|null} io.readAsb      the template's text
+ * @param {(p: string) => string|null} io.readTemplate the template's text
  */
-export function splitOnCitations({ candidates, readInstance, readAsb }) {
+export function splitOnCitations({ candidates, readInstance, readTemplate }) {
   const blocked = []
   const proseOnly = []
   for (const path of candidates) {
     const findings = [
       ['this repo', readInstance(path)],
-      ['template', readAsb(path)],
+      ['template', readTemplate(path)],
     ].flatMap(([side, text]) =>
       repoLocalCitations(path, text ?? '').map((finding) => ({ ...finding, side })),
     )
@@ -250,15 +250,15 @@ function main() {
   refuseOnStaleInstall(ROOT)
 
   const readInstance = textReader(ROOT)
-  const readAsb = textReader(packageRoot)
-  const candidates = enrollableCandidates({ paths: trackedPaths(), readInstance, readAsb })
+  const readTemplate = textReader(packageRoot)
+  const candidates = enrollableCandidates({ paths: trackedPaths(), readInstance, readTemplate })
 
   if (candidates.length === 0) {
     console.log('No shared file differs from the pinned template by prose alone.')
     return
   }
 
-  const { blocked, proseOnly } = splitOnCitations({ candidates, readInstance, readAsb })
+  const { blocked, proseOnly } = splitOnCitations({ candidates, readInstance, readTemplate })
   console.log(formatEnrollableReport({ blocked, proseOnly }))
 }
 

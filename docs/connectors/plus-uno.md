@@ -11,7 +11,7 @@ it. It is the one live cross-repo invariant, and the reason it has a doc rather
 than a comment is that it has broken silently twice.
 
 This is an **instance integration, not harness.** The
-`agentic-service-blueprinting` package must inherit nothing of it.
+`uno-blueprint` package must inherit nothing of it.
 
 ## The canonical home is here
 
@@ -22,12 +22,12 @@ a re-shaped `findings` column — and **each made a bot read return empty for
 weeks** while both sides looked healthy.
 
 What it carries: the query-param names the URL layer accepts, the production app
-origin, the breadcrumb format the semantic view emits and the bot parses, the
-public-read and bot-read table lists, the columns the bot names in a direct
-PostgREST select and what each of those columns is FOR, the FK constraint names
-used as PostgREST embed hints, the RPC names, and the search RPC's parameter
-names, returned-column names, accepted `granularity` values and emitted row
-kinds.
+root (origin plus the path it is served under), the breadcrumb format the
+semantic view emits and the bot parses, the public-read and bot-read table
+lists, the columns the bot names in a direct PostgREST select and what each of
+those columns is FOR, the FK constraint names used as PostgREST embed hints, the
+RPC names, and the search RPC's parameter names, returned-column names, accepted
+`granularity` values and emitted row kinds.
 
 Names and values are two different promises, and until 2026-08-26 only the first
 was made. See below.
@@ -178,7 +178,7 @@ the contract, so nothing fails when they drift: the bot reads them by key in
 recorded here rather than fixed because adding them to the contract is a
 change to what the contract is FOR, not a rename.
 
-The skills package is the third side of this. `agentic-service-blueprinting`
+The skills package is the third side of this. `uno-blueprint`
 is a git-URL dependency pinned to a tag, so a fix there goes upstream and
 arrives here as a version bump — which has to happen in the same window. Two
 retired spellings are still on that side: `agents/auditor.md` asks the model
@@ -369,7 +369,7 @@ One of the eight is this deployment's, and it is the one the bot reads:
 
 The other seven are the application's, which this deployment no longer holds a
 copy of. Their paths below are relative to the package root — read them under
-`node_modules/agentic-service-blueprinting/`, and change them upstream:
+`node_modules/uno-blueprint/`, and change them upstream:
 
 - `src/lib/urlViewState.ts` — the param names
 - `src/lib/openCellStore.ts` — the share link the bot builds

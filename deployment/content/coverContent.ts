@@ -1,15 +1,16 @@
-import { packageCoverFigures } from 'agentic-service-blueprinting'
-import type { CoverContent } from 'agentic-service-blueprinting'
+import { packageCoverFigures } from 'uno-blueprint'
+import type { CoverContent } from 'uno-blueprint'
 
 /**
- * Uno's cover-page content — every user-facing string on the landing view.
+ * PLUS Uno Blueprint's cover-page content — every user-facing string on the
+ * landing view.
  *
- * The renderers in `components/cover/` are shared with the
- * agentic-service-blueprinting template and know nothing about PLUS; a
- * deployment is entirely defined by this module. Uno's own service comes
- * first, then the four generalized tabs the template ships, carried across
- * verbatim: they describe the blueprint model, slices, and the skills, none
- * of which are template-specific.
+ * The renderers in `components/cover/` are shared with the Uno Blueprint
+ * template and know nothing about PLUS; a deployment is entirely defined by
+ * this module. This deployment's own service comes first, then the four
+ * generalized tabs the template ships, carried across verbatim: they describe
+ * the blueprint model, slices, and the skills, none of which are
+ * template-specific.
  *
  * THE THIRTEEN DIAGRAMS COME FROM THE PACKAGE, and are values rather than
  * paths. Who authored a figure is who supplies it: those thirteen draw the
@@ -35,12 +36,12 @@ import type { CoverContent } from 'agentic-service-blueprinting'
  * reserves the right box before the image decodes — is taken whole.
  */
 export const coverContent: CoverContent = {
-  title: 'Uno Blueprint',
+  title: 'PLUS Uno Blueprint',
   lede: 'A structured repository of the service experiences PLUS supports for tutors. It holds every phase, scenario, path, and action in one system, from Application through Post-session, including Program Administration. Unlike a static diagram, the blueprint is structured data: agents can query it, teams can cut focused views from it, and a proposed change can be traced through the service before anything is changed.',
   primaryCtaLabel: 'View PLUS Blueprints',
   commandCopy: { copyLabel: 'Copy', copiedLabel: 'Copied' },
   states: {
-    noSlices: 'No slices in this workspace yet — `/sb:slice` cuts the first one.',
+    noSlices: 'No slices in this workspace yet — `/ub:slice` cuts the first one.',
   },
   tabs: [
     {
@@ -79,7 +80,7 @@ export const coverContent: CoverContent = {
                 id: 'service-tutors',
                 heading: 'Tutors',
                 paragraphs: [
-                  'Tutors at PLUS are university students working part time. Before they run sessions, they complete onboarding and lesson modules. In each tutoring session they typically support about 5–6 students, guided by the PLUS app built by the PLUS team. The blueprints in here follow that arc, Discovery through Post-Session, so a tutor journey and the staff work behind it are read from one map.',
+                  'Tutors at PLUS are university students working part time. Before they run sessions, they complete onboarding and lesson modules. In each tutoring session they typically support about 5–6 students, guided by the PLUS app built by the PLUS team. The blueprints in here follow that arc, Application through Post-session, so a tutor journey and the staff work behind it are read from one map.',
                 ],
                 image: {
                   src: '/homepage/tutor-illustration.png',
@@ -101,8 +102,8 @@ export const coverContent: CoverContent = {
           id: 'overview-why',
           heading: 'Why a blueprint that stays true',
           paragraphs: [
-            'Service blueprints have always been worth having and have always gone stale. They were strategic artifacts (commissioned, workshopped, opened a few times a year) because reading one took facilitation and context you had to rebuild every time. The map decayed quietly, and nothing in the week depended on it enough to force a correction.',
-            'This project makes one bet: put the blueprint in a structure an agent can query, and the cost of reading it collapses. Interpretation stops being the expensive part, so the map gets consulted in ordinary work rather than at offsites. Because something now depends on it daily, keeping it accurate has a practical reason rather than a virtuous one.',
+            'Service blueprints have always been worth having and have always gone stale. They were strategic artifacts — commissioned, workshopped, opened a few times a year — because reading one took facilitation and context you had to rebuild every time. The map decayed quietly, and nothing in the week depended on it enough to force a correction.',
+            'This project makes one bet: put the blueprint in a structure an agent can query, and the cost of reading it collapses. Interpretation stops being the expensive part, so the map gets consulted in ordinary work rather than at offsites — and because something now depends on it daily, keeping it accurate has a practical reason rather than a virtuous one.',
           ],
           figure: packageCoverFigures.whyNow,
         },
@@ -111,13 +112,13 @@ export const coverContent: CoverContent = {
           id: 'overview-when',
           heading: 'How teams use it',
           intro:
-            'Teams can use the blueprint in different ways and adopt each use case as it becomes relevant.',
+            'Four uses where the blueprint is the shortest path to an answer. They are alternatives, not a sequence — most teams start with one and grow into the rest.',
           columns: { term: 'Use', definition: 'What the blueprint gives you' },
           items: [
             {
               term: 'Onboarding',
               definition:
-                'Give someone new a complete view of the service before they take ownership of one part of it.',
+                'Someone new reads the whole service — every lane, every phase — before they own any part of it.',
             },
             {
               term: 'Stakeholder Alignment',
@@ -132,7 +133,7 @@ export const coverContent: CoverContent = {
             {
               term: 'Context Management',
               definition:
-                'The audit names what is missing, in conflict, or unowned, so the map can be corrected rather than left to drift.',
+                'The audit roster names what has stopped holding since the service last moved, so the map is corrected rather than abandoned by degrees.',
             },
           ],
           figure: packageCoverFigures.whenToUse,
@@ -142,7 +143,7 @@ export const coverContent: CoverContent = {
           id: 'overview-where',
           heading: 'Where you reach it from',
           paragraphs: [
-            'The same blueprint can be accessed in four ways. The app is where people read, compare, and present. The in-app agent drafts changes in place, using the same write path the interface uses. Agentic tools reach the same rows from an IDE or a terminal, where the skills run. The Slack bot answers questions and links back to the exact cell it read.',
+            'Four ways to work the same blueprint. The app is where people read, compare, and present. The in-app agent drafts changes in place, using the same write path the interface uses. Agentic tools reach the same rows from an IDE or a terminal — that is where the four skills run. The Slack bot answers questions and links back to the exact cell it read.',
             'All four sit on one shared context layer, so what any surface reads is what the others wrote. Who may do what follows from the account a surface signs in with, not from which surface it is.',
           ],
           figure: packageCoverFigures.fourWaysIn,
@@ -162,7 +163,8 @@ export const coverContent: CoverContent = {
           id: 'blueprints-organized',
           heading: 'How a blueprint is organized',
           paragraphs: [
-            'A service is organized into phases, and phases can loop back to earlier ones to model repeat visits or renewals without duplicating the journey. Each phase contains scenarios that represent the different situations an actor might be in, and each scenario contains paths that show the different ways that situation can unfold, including the expected path and variations where something changes or goes wrong. Each path is shown as a grid.',
+            'A **service** holds ordered **phases**, and a phase may loop back to an earlier one — which is how renewals and repeat visits are modeled without duplicating the journey. A phase holds **scenarios**: the distinct situations someone can be in. A scenario holds **paths** — variants of that same situation, the one that goes well and the ones where something does not.',
+            'Every path is a grid. That is the next level down.',
           ],
           figure: packageCoverFigures.dataModelHierarchy,
         },
@@ -171,12 +173,12 @@ export const coverContent: CoverContent = {
           id: 'blueprints-path',
           heading: 'Inside one path',
           paragraphs: [
-            'Each path is a grid. Lanes are rows, with one actor per lane, and steps are columns, moving from left to right over time. A **cell** is where a lane and step meet, showing what that actor does at that moment. Arrows show **dependencies** between cells.',
-            'The **line of interaction**, **line of visibility**, and **line of internal interaction** are generated from the roles of the lanes, so they always stay aligned with the actors they separate. Steps are defined at the scenario level, and each path uses the relevant steps in its own order, making different paths easier to compare precisely.',
+            'Lanes are rows, one actor each. Steps are columns, time running left to right. A **cell** is the intersection — what that actor does at that moment. Arrows are **dependencies**: one cell setting another in motion.',
+            "The divider lines — **line of interaction**, **line of visibility**, **line of internal interaction** — are derived from the lanes' roles rather than drawn on top of them, so they cannot drift out of agreement with the lanes they separate. Steps are canonical per scenario and each path includes a subset in its own order, which is what makes comparing two paths exact rather than approximate.",
           ],
           figure: {
             ...packageCoverFigures.blueprintAnatomy,
-            alt: 'Inside one path — lanes, steps, cells, dependencies, and the derived divider lines',
+            alt: 'Inside one path — lanes as rows, steps as columns, a cell where they cross, leads-to arrows from cell to cell, and the derived divider lines between the lanes',
           },
         },
         {
@@ -184,12 +186,13 @@ export const coverContent: CoverContent = {
           id: 'blueprints-cell',
           heading: 'Inside one cell',
           paragraphs: [
-            'A cell captures one actor’s action at one step, along with the context around it. It shows where the action sits in the blueprint, what happens, what form it takes, and the value it creates. It also records both who **owns** the action and who the customer believes owns it, since those are not always the same.',
-            'Each cell can also include supporting **evidence**, linked resources, and **dependencies**: what triggers the action, what it triggers next, and what it depends on. It also shows which slices reference that cell, so you can see which views would be affected if it changed.',
+            "A cell is one actor's action at one step, plus the record around it. It carries where it sits in the hierarchy, what it does, what form it takes, and what it is worth. It carries who **owns** it and who the customer *thinks* owns it — two fields, because the interesting case is when they differ.",
+            'It also carries the **evidence** it rests on, the resources it points at, its **dependencies** — what sets it off, what it sets off, what it needs to exist — and the slices that quote it.',
+            'That last one runs both ways: open a cell and you can see which views would change if you edited it.',
           ],
           figure: {
             ...packageCoverFigures.cellAnatomy,
-            alt: 'Inside one cell — placement, ownership, function, evidence, dependencies, and the slices that quote it',
+            alt: 'Inside one cell — one cell on the board opened into its record: placement, ownership, function, evidence, resources, dependencies, and the slices that cite it',
           },
         },
       ],
@@ -207,9 +210,9 @@ export const coverContent: CoverContent = {
           id: 'slices-intro',
           heading: 'A view taken out of the blueprint',
           paragraphs: [
-            'A blueprint is complete by design, but that can make it too much for one audience or question. A **slice** is a focused view built from an ordered set of cells, with its own title and caption.',
-            'Slices reference the original cells instead of copying them. That means they stay connected to the source, so when the blueprint changes, the slice does not become an outdated snapshot.',
-            'A slice opens in its own tab beside the blueprint, making it easy to move between the focused view and the full service. In presentation mode, it can also be viewed slide by slide. Both the slice and individual presentation slides can be linked directly, so you can share exactly what you are looking at.',
+            'A blueprint is complete by design, which makes it the wrong thing to put in front of any one person. A **slice** is a standing view cut from it: an ordered set of cells with a title and a caption, built for one audience and one question.',
+            'A slice quotes cells rather than copying them — it keeps naming its sources. That is the difference between a view and a snapshot: when the cells move, the slice does not go on asserting the old thing.',
+            'It opens as its own tab beside the blueprint, so a reader can move between the view and the board it came from. In presentation mode it runs slide by slide, for when the audience is a room rather than a person. Both states are addressable — a slice link carries its id, a presented one carries the slide — so you can send someone exactly what you are looking at.',
           ],
           figure: packageCoverFigures.sliceConcept,
         },
@@ -219,20 +222,14 @@ export const coverContent: CoverContent = {
           heading: 'Five ways to slice',
           columns: { term: 'Type', definition: 'What it selects' },
           items: [
-            {
-              term: 'journey',
-              definition: 'One lane across the steps of the path.',
-            },
+            { term: 'journey', definition: "One actor's path, end to end." },
             {
               term: 'step',
-              definition: 'One moment, across the lanes at that step.',
+              definition: 'One step top to bottom — every lane at that moment.',
             },
-            { term: 'lane', definition: 'One lane, held together as its own view.' },
+            { term: 'lane', definition: 'One actor across the whole journey.' },
             { term: 'cell', definition: 'One cell in full.' },
-            {
-              term: 'custom',
-              definition: 'A view built around a question the other four shapes do not already name.',
-            },
+            { term: 'custom', definition: 'Whatever the question needs.' },
           ],
           figure: packageCoverFigures.slicingModel,
         },
@@ -251,48 +248,48 @@ export const coverContent: CoverContent = {
           id: 'skills-set',
           heading: 'The skill set',
           paragraphs: [
-            'Four Claude Code skills help maintain the blueprint without relying on someone to keep it updated by hand. Each skill has its own playbooks, scripts, and references, and each ends with a clear validation step, such as a validator check, sign-off, or matching read-back.',
-            'More intensive analysis runs in fresh-context agents that return a summary rather than carrying all of the source material forward. This helps catch issues the original drafting context may be too anchored on.',
+            'Four Claude Code skills maintain the blueprint, rather than anyone keeping it up by hand. Each carries its own playbooks and scripts and links only the shared references its task needs, and each ends at a deterministic gate — a validator exit, a sign-off, a read-back that matches — rather than at "looks done".',
+            'The heavy reading happens in fresh-context agents that return a summary instead of their raw material. That is deliberate: a context that never saw the drafting catches what the drafting context is anchored on.',
           ],
           figure: packageCoverFigures.skillArchitecture,
         },
         {
           kind: 'skill',
           id: 'skills-map',
-          command: '/sb:map',
+          command: '/ub:map',
           summary:
-            'Builds a blueprint from what you already have (ex: existing documents, a working session, or another service diagram). Each scenario is reviewed and signed off before the finished blueprint is imported into the workspace.',
-          figure: packageCoverFigures.sbMap,
+            "Builds a blueprint from what you already have — documents, a working session, or someone else's diagram — and produces a validated blueprint file, signed off scenario by scenario and imported into the workspace.",
+          figure: packageCoverFigures.ubMap,
         },
         {
           kind: 'skill',
           id: 'skills-audit',
-          command: '/sb:audit',
+          command: '/ub:audit',
           summary:
-            'Checks the blueprint for anything missing, conflicting, or unowned. It produces findings for review, but does not make changes to the blueprint itself.',
-          figure: packageCoverFigures.sbAudit,
+            'Runs the check roster to find what is missing, conflicting, or unowned, and produces findings for triage — the audit writes no changes of its own.',
+          figure: packageCoverFigures.ubAudit,
         },
         {
           kind: 'skill',
           id: 'skills-whatif',
-          command: '/sb:whatif',
+          command: '/ub:whatif',
           summary:
-            'Traces a proposed change through the dependency graph before it is made. It shows which cells would be affected and which assumptions might break, working from a copy rather than the live blueprint.',
-          figure: packageCoverFigures.sbWhatif,
+            'Traces a proposed change through the dependency graph before anyone commits, producing the cells it would reach and the assumptions it would break — worked on a copy, never the live blueprint.',
+          figure: packageCoverFigures.ubWhatif,
         },
         {
           kind: 'skill',
           id: 'skills-slice',
-          command: '/sb:slice',
+          command: '/ub:slice',
           summary:
-            'Creates a focused view of the blueprint for a specific stakeholder or question. Each slice continues to reference the original cells it came from.',
-          figure: packageCoverFigures.sbSlice,
+            'Cuts the view one stakeholder needs out of the whole, producing one slice per view that still cites the cells it quotes.',
+          figure: packageCoverFigures.ubSlice,
         },
         {
           kind: 'prose',
           id: 'skills-outro',
           paragraphs: [
-            'These skills run where you write code, not on this page. Install the repository as a plugin and ask for what you need.',
+            'These run where you write code, not on this page — install the repo as a plugin and ask for what you want.',
           ],
         },
       ],

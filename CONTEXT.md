@@ -38,8 +38,8 @@ The board's own words — *service*, *phase*, *scenario*, *path*, *step*, *lane*
 deployment does not define them. They are defined once, under this same heading
 in the template's own `CONTEXT.md`, with the retirements behind each one and the
 columns each is bound to. Nearest copy on disk:
-`node_modules/agentic-service-blueprinting/CONTEXT.md`, and the schema itself is
-`node_modules/agentic-service-blueprinting/references/data-model.md`.
+`node_modules/uno-blueprint/CONTEXT.md`, and the schema itself is
+`node_modules/uno-blueprint/references/data-model.md`.
 
 What follows is what this instance says that the template has no reason to say,
 and nothing else. A sentence about a shared word that grows back here is drift —
@@ -99,10 +99,10 @@ record of what happened. It replaced `deleted_structure`, which recorded
 deletions durably while every other write was remembered only until the tab
 closed.
 
-**`/sb:map`, `/sb:audit`, `/sb:whatif`, `/sb:slice`** — the four domain skills.
-They are *skills*, not app surfaces, and they come from the installed `sb`
-plugin (the `agentic-service-blueprinting` repo), not from this repo. Note that
-**`slice` is overloaded**: `/sb:slice` is the skill that produces one, a *slice*
+**`/ub:map`, `/ub:audit`, `/ub:whatif`, `/ub:slice`** — the four domain skills.
+They are *skills*, not app surfaces, and they come from the installed `ub`
+plugin (the `uno-blueprint` repo), not from this repo. Note that
+**`slice` is overloaded**: `/ub:slice` is the skill that produces one, a *slice*
 is the artefact it produces.
 
 ### Five words for arrival
@@ -113,7 +113,7 @@ shell, one to the canvas, one is a duration, and one is about the data rather
 than the screen. The shell, the canvas and the skeleton hold are all shared
 code, so the five are defined once, under this same heading in the template's
 own `CONTEXT.md`, and not a second time here. Nearest copy on disk:
-`node_modules/agentic-service-blueprinting/CONTEXT.md`.
+`node_modules/uno-blueprint/CONTEXT.md`.
 
 **status** — what a query returned. Defined there like the rest, and named
 again here for the one thing the template has no reason to say: it is **not the

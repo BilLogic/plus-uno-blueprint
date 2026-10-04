@@ -66,7 +66,7 @@ test('a block stated in both fails, and the failure names both line numbers', ()
   })
   assert.equal(found.length, 1)
   assert.match(found[0], /^CONTEXT\.md:5 is stated in the template too, at /)
-  assert.match(found[0], /agentic-service-blueprinting\/CONTEXT\.md:1 —/)
+  assert.match(found[0], /uno-blueprint\/CONTEXT\.md:1 —/)
   assert.match(found[0], /\*\*sprawl\*\* — a document too long/)
 })
 
@@ -103,7 +103,7 @@ test("swapping one repository's name for the other does not hide a copy", () => 
   const sentence =
     'How the engineering skills read and write this repository\'s issue queue — GitHub Issues on '
   const ours = `${sentence}BilLogic/plus-uno-blueprint, reached through the gh CLI and nothing else.`
-  const theirs = `${sentence}BilLogic/agentic-service-blueprinting, reached through the gh CLI and nothing else.`
+  const theirs = `${sentence}BilLogic/uno-blueprint, reached through the gh CLI and nothing else.`
   assert.notEqual(ours, theirs)
   assert.equal(findings({ ours: doc(ours), theirs: doc(theirs), subject: 'C.md' }).length, 1)
 })

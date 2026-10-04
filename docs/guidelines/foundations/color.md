@@ -1,8 +1,8 @@
 ---
 audience: designers
 summary: The four color-token tiers, semantic-only consumption, the retune record behind the brand dials, dark mode as a class, the forced-colors stance, lane tints, the annotation chrome ink ladder, and the agent-ink precedent.
-sources: src/styles/colors.css, src/styles/semantic.css, src/styles/theme.css, src/styles/blueprint.css, src/styles/themes/, src/lib/canvasAnnotations.ts, src/config.ts, src/lib/brandAccent.ts
-last-reviewed: 2026-09-08
+sources: deployment/styles/brand.css, src/styles/colors.css, src/styles/semantic.css, src/styles/theme.css, src/styles/blueprint.css, src/styles/themes/, src/lib/canvasAnnotations.ts, src/config.ts, src/lib/brandAccent.ts
+last-reviewed: 2026-09-26
 ---
 
 # Color
@@ -31,12 +31,12 @@ print.
 the exemption rather than trusting it: the file may carry a single hex and it
 has to be the accent the module exports.
 
-What the accent reaches is the hue, and only the hue. Everything else the two
-brand fills are made of is an authored dial — `--primary-lightness` and
-`--primary-chroma` for the filled control, `--brand-lightness` and
-`--brand-chroma` for the identity fill — and all four live in
-`src/styles/themes/light.css` and `dark.css`, at one value in both. Those are
-tuning decisions rather than brand facts; the three walked-back passes behind
+What the accent reaches is the hue, and only the hue. Everything else the
+filled control is made of is an authored dial, `--primary-lightness` and
+`--primary-chroma`, and both live in `deployment/styles/brand.css` at one value
+in both themes. The identity fill declares no dial of its own, so `--brand`
+resolves to exactly `--primary`. Those are
+tuning decisions rather than brand facts; the walked-back passes behind
 the control's pair are [the `--primary` retune](#the---primary-retune) below.
 `semantic.css` derives and declares no dial of its own, which is what lets its
 text be the template's, byte for byte
@@ -51,7 +51,7 @@ or unset, still clears the contrast floors in both themes.
 ## The `--primary` retune
 
 The record of how the filled control's dials reached `--primary-lightness:
-0.83` and `--primary-chroma: 0.135` on `--hue: 177.6`. It lives here rather
+0.52` and `--primary-chroma: 0.095` on `--hue: 177.6`. It lives here rather
 than beside the declaration for one reason: `semantic.css` is the template's
 copy verbatim, and a dated narrative about this deployment's numbers is true in
 one repository and false in the other. What
@@ -65,6 +65,7 @@ ramp step, and why the derivation multipliers stay ratios rather than literals
 | 2026-08-06 | "matcha ceramic": L 0.78 / C 0.09, hue dial pushed to 183 | Lightness was what made the first pass too heavy. It dropped chroma at the same time, which was collateral, and moved the hue off the brand ramp, which was a mistake. |
 | 2026-08-07a | C 0.09 → 0.12 at the same L | The chroma target is a ratio, not a number: match Supabase's utilisation of the sRGB ceiling at its own L/H (#3ECF8E is `oklch(0.762 0.154 159.4)`, 88.6% of its ceiling). |
 | 2026-08-07b | Hue back to 177.6, L to 0.83, C to 0.135 | Both faults that were left had the same root — below. |
+| 2026-09-26 | L 0.83 → 0.52, C 0.135 → 0.095, `--brand-*` dials removed | A light fill with dark ink reads as a tinted badge rather than the page's one action. A deep fill with white ink reads as a button. The cover's call to action is the identity fill, so it follows. |
 
 **Hue.** The 2026-08-06 pivot to 183 left `--primary` 5.4° off the `--brand-*`
 ramp, which sat at OKLCH hue 177.6 at every step. The gap is small in the
@@ -80,9 +81,29 @@ is brighter, still 0.044 below the step that read as a badge, and the 1px
 `--primary-border` hairline that did not exist in the 0.874 pass is what lets
 the fill be lighter without going soft.
 
-**Chroma** follows the ratio 2026-08-07a established: at L 0.83 / H 177.6 the
-sRGB ceiling is C 0.1532 and 0.135 is 88.1% of it, with headroom so the fill
-itself is never gamut-mapped. Rendered: **#48E4C7**, up from #46D0BF.
+**Chroma** followed the ratio 2026-08-07a established: at L 0.83 / H 177.6 the
+sRGB ceiling is C 0.1532 and 0.135 was 88.1% of it. Rendered: **#48E4C7**, up
+from #46D0BF.
+
+**2026-09-26: deep fill, white ink.** The 0.83 fill carried dark ink, and next
+to the marketing site's deep-teal button it read as a pastel badge, not as the
+action. At L 0.52 / H 177.6 the sRGB ceiling is C 0.0960. 0.095 sits just
+inside it, so the fill is saturated as far as the gamut allows without ever
+being gamut-mapped. This retires 2026-08-07a's ratio (about 88% of the
+ceiling): 88% here is C 0.085, which gives back the saturation this pass
+exists to add, and the headroom the ratio bought is not needed while the
+value stays below the ceiling. Rendered: **#047A68**, one step from the marketing site's
+#007A66. The ink flip crosses to white on its own at this lightness, so no dial
+was added for it.
+
+The identity pair (`--brand-lightness: 0.76`, `--brand-chroma: 0.13`, the
+light mint) was removed in the same pass. Its only filled use is the cover's
+call to action, the button this retune exists for, and keeping it would have
+left that one button light with dark ink. With no brand dial declared,
+`--brand` resolves to `--primary`. The tinted brand roles (`--text-brand`,
+`--surface-brand`, `--border-brand`) take their lightness from the surface
+ladder and only their chroma from the fill, so they keep the hue and lose a
+little vividness: text-brand chroma goes from 0.117 to 0.086.
 
 ### What the shipped dials measure
 
@@ -90,10 +111,10 @@ After CSS Color 4 gamut mapping, for the accent this deployment ships:
 
 | Token | Resolves to | Measurement |
 |---|---|---|
-| `--primary` | `oklch(0.83 0.135 177.6)`, #48E4C7 | 88.1% of the sRGB chroma ceiling at its own L/H. |
-| `--primary-foreground` | #121917, the same ink in both themes | 11.19:1 on the fill, past AAA's 7:1. White on this fill would be about 1.4:1. |
-| `--primary-border` | wants C 0.1688 at L 0.71, ceiling 0.1311, so it maps to the ceiling | The ×1.25 buys no chroma; the edge is carried entirely by the −0.12 lightness step, 1.52:1 against the fill. |
-| `--ring` | #008F7A, also ceiling-bound (wants 0.1755 at L 0.58, ceiling 0.1071) | 4.00:1 on the light canvas and 4.55:1 on the dark one, clearing SC 1.4.11's 3:1 in both. Its dependants — `--sidebar-selected`, `--sidebar-selected-rail`, `--sidebar-ancestor` — moved with it. |
+| `--primary` | `oklch(0.52 0.095 177.6)`, #047A68 | 99% of the sRGB chroma ceiling at its own L/H, and inside it. |
+| `--primary-foreground` | near-white `oklch(0.985 0.0076 177.6)`, the same ink in both themes | 5.03:1 on the fill, past AA's 4.5:1 for body text. |
+| `--primary-border` | wants C 0.1188 at L 0.40, ceiling 0.0738, so it maps to the ceiling | #005447. The ×1.25 buys no chroma; the edge is carried by the −0.12 lightness step, 1.69:1 against the fill. |
+| `--ring` | #008F7A, also ceiling-bound (wants 0.1235 at L 0.58, ceiling 0.1071) | 4.00:1 on the light canvas and 4.55:1 on the dark one, clearing SC 1.4.11's 3:1 in both. Its dependants — `--sidebar-selected`, `--sidebar-selected-rail`, `--sidebar-ancestor` — moved with it. |
 
 The ink is **derived by the flip, not written as a fixed dark**. A fixed ink is
 only ever right for the accents that happen to be light: measured across the
@@ -103,7 +124,8 @@ black text on a black button — and it fails silently. The flip holds above
 that is not hypothetical.
 
 The next retune argues about these dials, so it is argued where they are
-declared: change them in both theme files, and add a row here.
+declared: change them in both blocks of `deployment/styles/brand.css` (and
+the print block), and add a row here.
 
 ## The tier system
 
@@ -113,7 +135,7 @@ authoritative statement is the header comment in `src/styles/blueprint.css`):
 | Tier | File | Shape |
 |---|---|---|
 | 1 Primitive | `src/styles/colors.css` | `--color-{family}-{step}` — Radix scales + the brand ramp. Values only; components must not touch these. |
-| 2 Semantic | `src/styles/semantic.css` | `--background`, `--primary`, `--warning`, `--sidebar-*` — every role, derived in OKLCH from a handful of theme dials (`src/styles/themes/light.css`, `dark.css`). |
+| 2 Semantic | `src/styles/semantic.css` | `--background`, `--primary`, `--warning`, `--sidebar-*` — every role, derived in OKLCH from a handful of theme dials (the template's `themes/light.css` and `dark.css`, overridden by this deployment in `deployment/styles/brand.css`). |
 | 3 Tailwind | `src/styles/theme.css` | `@theme inline` indirection so `bg-canvas`, `text-muted-foreground` exist as utilities. Never write `var(--color-canvas)` by hand — `@theme inline` keys are not emitted as properties. |
 | 4 Component | `src/styles/blueprint.css` | `--{property}-blueprint-{part}-{state}` — variables a component sets on itself so shared rules can read them. Not design tokens: every value assigned is a tier-1/2 reference. The one carve-out is `--shadow-blueprint-annotation-fill`, whose per-theme `rgb()` alphas are a shadow, not a meaning-carrying color. |
 

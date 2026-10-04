@@ -77,7 +77,7 @@ describe('what the rule leaves alone', () => {
     // The owner and repository are written down, so the address does not
     // change with the reader — it is the bare form that means two things.
     expect(
-      repoLocalCitations('src/a.ts', '// BilLogic/agentic-service-blueprinting#139 settled it'),
+      repoLocalCitations('src/a.ts', '// BilLogic/uno-blueprint#139 settled it'),
     ).toEqual([])
     expect(texts('src/a.ts', '// qualified owner/repo#139, then bare #243')).toEqual(['#243'])
   })
