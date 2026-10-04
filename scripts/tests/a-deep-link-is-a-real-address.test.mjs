@@ -8,19 +8,23 @@
 //
 // Every rule sits under the path the app is served from — the BASE_PATH in
 // `netlify.toml`, read here the way the template's hosting check reads it, so
-// the build and these assertions cannot disagree about the prefix.
+// the build and these assertions cannot disagree about the prefix. The build
+// writes the redirects itself under that prefix, so this repository ships no
+// `public/_redirects`: these tests read what the build writes, from the same
+// function the build calls, over the files this repository does ship.
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import {
   basePathIn,
   cacheFindings,
   fileRedirectFindings,
   hostingRules,
 } from 'uno-blueprint/scripts/check-hosting-rules.mjs'
+import { hostRulesUnder } from '../../vite.config.ts'
 import { BLUEPRINT_CONTRACT } from '../blueprintContract.mjs'
 
-const REDIRECTS = 'public/_redirects'
+const WRITTEN_REDIRECTS = 'the _redirects the build writes'
 const HEADERS = 'public/_headers'
 const CONFIG = 'netlify.toml'
 
@@ -28,9 +32,16 @@ const CONFIG = 'netlify.toml'
 // what production is held to.
 const BASE = basePathIn(readFileSync(CONFIG, 'utf8'), {})
 const RULES = hostingRules(BASE)
+// A `public/_redirects` added later is read the way the build reads it: kept
+// above the written rules, or refused if it answers for the app.
+const OWN_REDIRECTS = 'public/_redirects'
+const WRITTEN = hostRulesUnder(BASE, {
+  redirects: existsSync(OWN_REDIRECTS) ? readFileSync(OWN_REDIRECTS, 'utf8') : null,
+  headers: readFileSync(HEADERS, 'utf8'),
+})
 
 const ruleLines = () =>
-  readFileSync(REDIRECTS, 'utf8')
+  WRITTEN.redirects
       .split('\n')
       .map((line) => line.trim())
       .filter((line) => line && !line.startsWith('#'))
@@ -38,7 +49,7 @@ const ruleLines = () =>
 test('every path falls back to the app, and keeps the address it asked for', () => {
   const rules = ruleLines()
 
-  assert.ok(rules.length > 0, `${REDIRECTS} has no rules, so no path reaches the app`)
+  assert.ok(rules.length > 0, `${WRITTEN_REDIRECTS} has no rules, so no path reaches the app`)
 
   const fallback = rules.at(-1)
   const [from, to, status] = fallback.split(/\s+/)
@@ -65,7 +76,7 @@ test('a missing hashed asset is a 404, and the catch-all still comes last', () =
   const assets = rules.findIndex((rule) => rule.split(/\s+/)[0] === RULES.assets)
   const fallback = rules.findIndex((rule) => rule.split(/\s+/)[0] === RULES.catchAll)
 
-  assert.ok(assets !== -1, `${REDIRECTS} has no ${RULES.assets} rule, so a missing chunk is served the app shell`)
+  assert.ok(assets !== -1, `${WRITTEN_REDIRECTS} has no ${RULES.assets} rule, so a missing chunk is served the app shell`)
   assert.ok(
     assets < fallback,
     `the ${RULES.assets} rule must precede the catch-all — Netlify takes the first match`,
@@ -79,7 +90,7 @@ test('a missing hashed asset is a 404, and the catch-all still comes last', () =
 
 // Hashed names are what makes a year-long cache safe.
 test('hashed assets are served immutable', () => {
-  const headers = readFileSync(HEADERS, 'utf8')
+  const headers = WRITTEN.headers
     .split('\n')
     .map((line) => line.trimEnd())
 
@@ -98,24 +109,28 @@ test('hashed assets are served immutable', () => {
   )
 })
 
-// And the template's own findings over the same two files, at the same prefix:
-// no forced rule, no second asset block, no long cache on the shell. Only the
-// `public/` half of its check applies here. Its `netlify.toml` half expects the
-// redirect table in that file, and this repository keeps its rules in
-// `public/_redirects` and keeps `netlify.toml` to the one setting.
+// And the template's own findings over what the build writes, at the same
+// prefix: no forced rule, no second asset block, no long cache on the shell.
+// Only the `public/` half of its check applies here. Its `netlify.toml` half
+// expects the redirect table in that file, and this repository keeps
+// `netlify.toml` to the one setting.
 test('the template hosting check finds nothing under the prefix', () => {
-  assert.deepEqual(fileRedirectFindings(readFileSync(REDIRECTS, 'utf8'), REDIRECTS, BASE), [])
-  assert.deepEqual(cacheFindings(readFileSync(HEADERS, 'utf8'), HEADERS, BASE), [])
+  assert.deepEqual(fileRedirectFindings(WRITTEN.redirects, WRITTEN_REDIRECTS, BASE), [])
+  assert.deepEqual(cacheFindings(WRITTEN.headers, HEADERS, BASE), [])
 })
 
 // Served from a path, the site's own root has no file behind it. Somebody who
 // knows the bare address is sent to the board rather than handed a 404.
 test.skipIf(BASE === '/')('the bare root is sent to the board, and shadows nothing', () => {
   const rules = ruleLines()
-  const [from, to, status] = rules[0].split(/\s+/)
+  // The first rule the build writes; a `public/_redirects` of this
+  // repository's own would sit above it, and answers nothing at `/`.
+  const root = rules.find((rule) => rule.split(/\s+/)[0] === '/')
+  assert.ok(root, `${WRITTEN_REDIRECTS} has no rule for the bare root`)
+  const [from, to, status] = root.split(/\s+/)
   assert.equal(from, '/', 'the root redirect comes first and matches the bare root alone')
   assert.equal(to, BASE, `the root is sent to ${BASE}`)
-  assert.equal(status, '302', 'a temporary redirect, so the root can be given something of its own later')
+  assert.equal(status, '301', 'the build sends the bare root on to the prefix for good')
 })
 
 // The bot builds `${appUrl}/?cell=<id>`, so the contract's app root has to sit
