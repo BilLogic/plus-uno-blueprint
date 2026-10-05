@@ -3,7 +3,10 @@
  *
  * The replayed series must leave the `cell-attachments` bucket with its four
  * policies on `storage.objects`, every write policy behind
- * `is_service_account()` and under the `cells/<id>/<id>.<ext>` pattern. The
+ * `is_service_account()`, and both key-checking ones under an id-only
+ * `<prefix>/<id>/<id>.<ext>` pattern. The prefixes are `cells/`, for a cell's
+ * attachments, and `touchpoints/`, for a registry entry's icon
+ * (20261005120000); a key never carries a name, so a rename moves no URL. The
  * live half — that the anon key is refused — is `check:auth-posture`.
  */
 import { test } from 'vitest'
@@ -41,8 +44,8 @@ test('every write policy is service-account only and keyed by ids', () => {
     if (name !== 'cell_attachments_delete') {
       assert.match(
         definition,
-        /cells\/\[0-9a-f-\]\{36\}\/\[0-9a-f-\]\{36\}\\\.\[a-z0-9\]\{1,8\}/,
-        `${name} does not pin the object key to ids`,
+        /\^\(cells\|touchpoints\)\/\[0-9a-f-\]\{36\}\/\[0-9a-f-\]\{36\}\\\.\[a-z0-9\]\{1,8\}\$/,
+        `${name} does not pin the object key to ids under cells/ or touchpoints/`,
       )
     }
   }
