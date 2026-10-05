@@ -1,6 +1,6 @@
 ---
 audience: designers, developers
-summary: Every word a panel puts in front of a reader and the name behind it — the five labels that diverge and why each does, what the catalog says about each name, and why the subject is panel labels rather than words on screen; the alignment rule itself is the template's reference.
+summary: Every word a panel puts in front of a reader and the name behind it — the seven labels that diverge and why each does, what the catalog says about each name, and why the subject is panel labels rather than words on screen; the alignment rule itself is the template's reference.
 sources: scripts/interface-schema-map.mjs, scripts/tests/labels-name-their-columns.test.mjs, supabase/migrations/
 last-reviewed: 2026-09-14
 ---
@@ -29,7 +29,7 @@ relation rather than one field of it.
 | The interface says | The schema says | Why they differ |
 |---|---|---|
 | **Content** | `cells.content` | — |
-| **Summary** | `cells.summary`, `cell_touchpoints.summary`, `paths.summary`, `phases.summary`, `scenarios.summary`, `services.summary`, `steps.summary` | — |
+| **Summary** | `cells.summary`, `cell_touchpoints.summary`, `paths.summary`, `phases.summary`, `scenarios.summary`, `services.summary`, `steps.summary`, `touchpoints.summary` | — |
 | **Status** | `cells.status`, `paths.status` | — |
 | **Owner** | `cells.owner` | — |
 | **Perceived owner** | `cells.perceived_owner` | — |
@@ -37,9 +37,12 @@ relation rather than one field of it.
 | **Form** | `cells.form` | — |
 | **Value proposition** | `cells.value_props` | `props` abbreviates this exact phrase and no other. A label is read once and a name is typed daily, so the panel spells out what the schema shortens. Singular on purpose: a cell has one value proposition, stated once per audience — each row is a `for` and a `value` — and the plural on the column counts those statements, not separate propositions. |
 | **Touchpoint** | `touchpoints` | — |
+| **Name** | `touchpoints.name` | — |
+| **URL** | `touchpoints.url` | — |
+| **Icon** | `touchpoints.icon_url` | The field shows the picture and offers Upload and Clear; nobody types an address into it. The column holds where the file lives, an object in `cell-attachments` for every stock logo here, which is why it is a URL. The label names the thing a reader sees rather than how it is stored. |
 | **Role** | `cell_touchpoints.role` | — |
 | **Registry** | `cell_touchpoints.touchpoint_id` | The column is a foreign key into `touchpoints`, and the field is where a name-only placement is linked to the registry entry it was about (#277). A reader is choosing from the registry; the panel says so rather than naming the key. |
-| **Kind** | `evidence.kind` | — |
+| **Kind** | `evidence.kind`, `touchpoints.kind` | — |
 | **Title** | `evidence.title` | — |
 | **Note** | `evidence.note` | — |
 | **Actor** | `lanes.stakeholder_id` | The registry the key points into is `stakeholders`, and the word this vocabulary uses for a party standing in the room is actor: a lane names its actor, and a `team` is a stakeholder that can never be one. The label says the narrower word, which is the only one the board is about. |
@@ -99,7 +102,7 @@ and the sentence behind it are read from one place and cannot drift into two.
 
 <!-- generated:catalog — npm run interface-map -->
 
-25 of 37 names carry a comment in the catalog.
+27 of 42 names carry a comment in the catalog.
 
 | The schema says | What the catalog says |
 |---|---|
@@ -111,6 +114,7 @@ and the sentence behind it are read from one place and cannot drift into two.
 | `scenarios.summary` | — |
 | `services.summary` | What this service is, in the words a newcomer needs. The one field above the business model in the service panel. |
 | `steps.summary` | What this moment is, across every lane — the one sentence that makes the column legible without reading five cells. Shown as the caption under the step's strip, which is the frames of its cells read across the lanes. |
+| `touchpoints.summary` | — |
 | `cells.status` | How far along the thing this cell describes is. Defaults to live — a current-state blueprint documents what is in use. |
 | `paths.status` | How far along this route is. Defaults to live. Replaces the "Prototype: " / "Planned: " name prefixes, which said the same thing where nothing could query it. |
 | `cells.owner` | Actual owning team/party for this cell. |
@@ -119,9 +123,13 @@ and the sentence behind it are read from one place and cannot drift into two.
 | `cells.form` | Spec: communication/look/feel/sound (what it must convey). |
 | `cells.value_props` | Array of {for, value} — value generated per beneficiary (user, business, actor). |
 | `touchpoints` | Deployment-level catalog of the tools, documents, channels and artifacts the |
+| `touchpoints.name` | The identity: unique across the deployment, so a second service reuses an |
+| `touchpoints.url` | — |
+| `touchpoints.icon_url` | A stable URL for the touchpoint's stock icon or logo — the mark a well-known tool shows in the detail panel. A property of the thing the deployment owns, authored once per name, never per placement. Blueprint data rather than app configuration: null draws nothing, and the renderer reads this row instead of matching a tool name against a table baked into code (#326 S2, Decision D4). Matches the template's column of the same name (asb 21000124000000) so a re-map round-trips. |
 | `cell_touchpoints.role` | What this touchpoint is to this moment: core (the step happens through |
 | `cell_touchpoints.touchpoint_id` | — |
 | `evidence.kind` | — |
+| `touchpoints.kind` | — |
 | `evidence.title` | — |
 | `evidence.note` | The one thing worth keeping about this source, in the author's own words: |
 | `lanes.stakeholder_id` | — |

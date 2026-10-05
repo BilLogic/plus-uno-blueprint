@@ -109,7 +109,11 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  * file did not name it. It arrived in the generation like the other
  * forty-nine, so it is not drift and does not belong in the list below.
  *
- * DRIFT SINCE THIS GENERATION: nothing.
+ * DRIFT SINCE THIS GENERATION: one function.
+ *
+ * - `update_touchpoint(p_touchpoint_id, p_name, p_kind, p_summary, p_url,
+ *   p_icon_url)` (20261005120000), written ahead of its apply. It is the
+ *   template's signature, which the pinned application posts by key.
  *
  * That line is a list because a migration in this repository's own series
  * applies to production before the code that reads it is merged, so this file
@@ -123,8 +127,8 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  * statement of how far the file has travelled from its last generated state,
  * so an edit left out of it is invisible — which is exactly what happened
  * twice: three functions and two renames landed here while the paragraph went
- * on saying two. It says nothing today; the next edit written ahead of its
- * apply replaces that nothing the moment it is written.
+ * on saying two. It holds one entry today, and the regeneration that follows
+ * the apply takes it back out.
  */
 
 export type Json =
@@ -1507,6 +1511,17 @@ export type Database = {
       update_scenario_layout: {
         Args: { layout: string; scenario_id: string }
         Returns: undefined
+      }
+      update_touchpoint: {
+        Args: {
+          p_icon_url: string
+          p_kind: string
+          p_name: string
+          p_summary: string
+          p_touchpoint_id: string
+          p_url: string
+        }
+        Returns: Json
       }
       upsert_cell: {
         Args: {

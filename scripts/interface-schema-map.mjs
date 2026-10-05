@@ -62,6 +62,7 @@ export const LABEL_COLUMNS = Object.freeze(
         'scenarios.summary',
         'services.summary',
         'steps.summary',
+        'touchpoints.summary',
       ],
       because: '',
     },
@@ -77,6 +78,17 @@ export const LABEL_COLUMNS = Object.freeze(
         '`props` abbreviates this exact phrase and no other. A label is read once and a name is typed daily, so the panel spells out what the schema shortens. Singular on purpose: a cell has one value proposition, stated once per audience — each row is a `for` and a `value` — and the plural on the column counts those statements, not separate propositions.',
     },
     { label: 'Touchpoint', names: ['touchpoints'], because: '' },
+    // The touchpoint editor, opened from that field: the registry entry's own
+    // fields, saved together by `update_touchpoint`. Its Kind and Summary bind
+    // on the rows of those words elsewhere.
+    { label: 'Name', names: ['touchpoints.name'], because: '' },
+    { label: 'URL', names: ['touchpoints.url'], because: '' },
+    {
+      label: 'Icon',
+      names: ['touchpoints.icon_url'],
+      because:
+        'The field shows the picture and offers Upload and Clear; nobody types an address into it. The column holds where the file lives, an object in `cell-attachments` for every stock logo here, which is why it is a URL. The label names the thing a reader sees rather than how it is stored.',
+    },
     { label: 'Role', names: ['cell_touchpoints.role'], because: '' },
     {
       label: 'Registry',
@@ -86,7 +98,7 @@ export const LABEL_COLUMNS = Object.freeze(
     },
     {
       label: 'Kind',
-      names: ['evidence.kind'],
+      names: ['evidence.kind', 'touchpoints.kind'],
       because: '',
     },
     {
