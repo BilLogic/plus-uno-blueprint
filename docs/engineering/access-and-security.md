@@ -459,13 +459,14 @@ wrapped them wrote to `src/types/database.ts` and left with it when this
 deployment stopped holding the application, so they are the template's scripts
 and not this repository's.
 
-Three layers go back on by hand after every regeneration, and they are the whole
+Four layers go back on by hand after every regeneration, and they are the whole
 of what is not the generator's: the narrowed column types (`paths.kind` to
 `PathKind`, the two `status` columns to `EntityStatus`), the row aliases at the
-foot of the file, and the `DEFAULT NULL` arguments widened to `?: T | null`. The
+foot of the file, the `DEFAULT NULL` arguments widened to `?: T | null`, and
+`restore_cell_dependency`'s `name` and `note` widened to `T | null`. The
 file's own header argues each one and is the place to read before running the
 generator. The argument stays there rather than being copied here, because a
-fourth layer appearing is a change to that list and not to this document.
+fifth layer appearing is a change to that list and not to this document.
 
 Nothing imports the file, by design. It is not a module the application compiles
 against — the application is read out of the package and typechecked against the
@@ -482,7 +483,7 @@ found the next morning rather than by a read that fails — provided the
 run.
 
 **When `check:database-types:live` goes red**, regenerate through the connector,
-put the three layers back, and run the check again. Do not patch the file to
+put the four layers back, and run the check again. Do not patch the file to
 satisfy it. A hand-patched file agrees with the database and disagrees with the
 generator, so the next regeneration reverts the patch and the disagreement comes
 back as a type error somewhere unrelated — and a patch is how two foreign-key
