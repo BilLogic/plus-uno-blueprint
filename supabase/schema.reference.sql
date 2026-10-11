@@ -9,17 +9,17 @@
 -- `authoring_changes`, the record is `business_models`);
 -- `cell_dependencies.label` is `name`, `stakeholders.note` is `summary`,
 -- `resources.kind` is `link | attachment` with every row owned by a cell, and
--- `scenarios.layout` is `stacked | merged`. Each of those was a statement made
--- with a generation stamp on it.
+-- `scenarios.layout` is `stacked | merged`.
 --
 -- A snapshot regenerated one day before a rename is a snapshot that lies with a
 -- generation stamp on it, which is worse than one that admits it is old.
 --
 -- To refresh, re-run docs/reference/schema-snapshot-queries.sql and rewrite this
--- file plus docs/reference/erd.mmd from its output. Columns, defaults,
--- nullability, foreign keys, CHECK and UNIQUE constraints and partial unique
--- indexes here are read from pg_catalog; the comments are the explanation the
--- catalog cannot give. That file's fourth query — the SECURITY DEFINER grant
+-- file plus docs/reference/erd.mmd from its output. Columns and nullability
+-- (query 1), foreign keys (2), CHECK constraints (3), defaults and generated
+-- columns (5), PRIMARY KEY / UNIQUE / EXCLUDE constraints (6), partial unique
+-- indexes (7), and the domain and views (8) are each read from pg_catalog by
+-- the query named; the comments are the explanation the catalog cannot give. That file's fourth query — the SECURITY DEFINER grant
 -- invariant — is asserted by `npm run check:identifiers` on every pull request.
 --
 -- READ THIS AS A SNAPSHOT, NOT AS DDL TO RUN. supabase/migrations/ is the source
@@ -250,6 +250,11 @@ create table public.resources (
   constraint resources_placement_in_cell_fkey foreign key (cell_touchpoint_id, cell_id)
     references public.cell_touchpoints (id, cell_id) on delete cascade,
   -- Both deferrable: a reorder swaps two positions inside one transaction.
+  -- The cell's rule is an EXCLUDE, not a UNIQUE, since 20260902130000: once a
+  -- placement's rows carried `cell_id` too, a plain unique (cell_id, position)
+  -- collided with them, so it is restricted to the cell's own rows — and a
+  -- unique index could carry that predicate but not the deferral that lets
+  -- `sync_cell_resources` reorder in one statement.
   constraint resources_cell_position_unique exclude using btree
     (cell_id with =, position with =) where (cell_touchpoint_id is null)
     deferrable initially deferred,
@@ -371,7 +376,7 @@ create table public.stakeholders (
   -- `team` is a container, not a person: a team holds its people via part_of_id.
   kind text not null check (kind in ('recipient','staff','partner','provider','team')),
   summary text,   -- the definition; `note` until 20260830170000
-  aliases text[] not null default '{}',   -- other spellings seen in THIS blueprint
+  aliases text[] not null default '{}',   -- other spellings this deployment has seen
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   part_of_id uuid references public.stakeholders (id)
