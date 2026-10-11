@@ -274,9 +274,11 @@ export function placeholderTokens(source) {
  *
  * A row is found by its first cell, `Edit IR JSON` and `Read the blueprint`,
  * because the claim that the two rows are the WHOLE surface now sits once, in
- * the sentence under the table rather than inside each row. That sentence is
- * held too: without it the rows are two rows among many, and nothing tells the
- * agent that a tool outside them does not exist.
+ * a sentence of its own rather than inside each row. That sentence is held
+ * too, by its exact words anywhere in the document with line breaks folded to
+ * spaces — not by its place under the table: without it the rows are two rows
+ * among many, and nothing tells the agent that a tool outside them does not
+ * exist.
  */
 export function surfaceRowFaults(markdown, tokens) {
   const faults = []

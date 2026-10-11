@@ -115,6 +115,18 @@ test('a missing surface row is a failure, not an empty list', () => {
   assert.match(faults[2], /no longer says "The Edit IR JSON and Read the blueprint rows are your whole/)
 })
 
+test('both rows rendered but the whole-surface sentence gone still fails', () => {
+  // The bug: the two rows check out on their own, so a document that keeps
+  // them and drops the sentence passes every row test above — while nothing
+  // any longer tells the agent that a tool outside the two rows does not exist.
+  const withoutClaim = RENDERED.split('\n').slice(0, 2).join('\n')
+  assert.ok(withoutClaim.includes('| Edit IR JSON |'))
+  assert.ok(withoutClaim.includes('| Read the blueprint |'))
+  const faults = surfaceRowFaults(withoutClaim, TOKENS).map((fault) => fault.problem)
+  assert.equal(faults.length, 1)
+  assert.match(faults[0], /no longer says "The Edit IR JSON and Read the blueprint rows are your whole/)
+})
+
 test('the placeholder tokens are read out of the application, not spelled here', () => {
   const source = [
     "export const READ_TOOLS_PLACEHOLDER = '{{read_tools}}'",

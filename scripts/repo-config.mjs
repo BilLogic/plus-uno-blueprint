@@ -36,10 +36,11 @@ export const repoConfig = {
    * The skill and agent descriptions' ceiling, in characters
    * (`check-router-budget.mjs`): every description a plugin host puts in
    * front of a session on every turn, counted apart from the router. Zero,
-   * and that is a measurement: this deployment holds no `skills/` or
-   * `agents/` of its own — the `ub` plugin's are authored upstream and the
-   * template's budget holds them — so the census counts nothing, and a skill
-   * or agent added here fails the check until it is budgeted.
+   * and that is a measurement: the census reads `skills/<skill>/SKILL.md` and
+   * `agents/<agent>.md` where a plugin host finds them, and this deployment
+   * holds neither folder — the `ub` plugin's are authored upstream and the
+   * template's budget holds them — so it counts nothing. A skill or agent
+   * added here is counted, and fails the check until it is budgeted.
    */
   descriptions: {
     budget: 0,
@@ -58,15 +59,12 @@ export const repoConfig = {
   /**
    * Folders whose markdown every prose sweep reads, beside the root docs
    * (the sweep's `docs` subject, `sweep.mjs`). This deployment ships no plugin
-   * surface, so it has no `references/`, `skills/` or `agents/` at the root.
-   * `skills` and `agents` are named anyway, because the description census
-   * (`descriptions` above, `always-loaded.mjs`) reads its files out of this
-   * sweep: without them a skill or agent added here would be invisible to the
-   * zero budget rather than over it. A folder named here that this tree does
-   * not have is a skip said out loud rather than a silent nothing, so those two
-   * announce themselves on every sweep until one exists.
+   * surface, so it has no `references/`, `skills/` or `agents/` at the root,
+   * and `docs` is the whole of it. The description census (`descriptions`
+   * above, `always-loaded.mjs`) finds skills and agents on its own, so neither
+   * folder is named here for its sake.
    */
-  sweptDirs: ['docs', 'skills', 'agents'],
+  sweptDirs: ['docs'],
 
   /**
    * Trees whose markdown keeps the words of the day it was written, so no
