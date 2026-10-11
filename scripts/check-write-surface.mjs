@@ -266,21 +266,27 @@ export function placeholderTokens(source) {
  * alias for a release. So a tool-shaped code span BEFORE the em dash is a
  * fault, and the dash is where the comparable part of the row stops on both:
  * after it come `ui_command`'s data-changing commands on the write row and the
- * "none of them move the user's canvas" promise on the read row.
+ * "without moving the user's canvas" promise on the read row.
  *
  * The second is the token itself. A renamed placeholder is a row that reaches
  * the model unfilled, and `placeholderTokens` above is what makes the two
  * names one fact.
+ *
+ * A row is found by its first cell, `Edit IR JSON` and `Read the blueprint`,
+ * because the claim that the two rows are the WHOLE surface now sits once, in
+ * the sentence under the table rather than inside each row. That sentence is
+ * held too: without it the rows are two rows among many, and nothing tells the
+ * agent that a tool outside them does not exist.
  */
 export function surfaceRowFaults(markdown, tokens) {
   const faults = []
-  for (const [surface, claim] of [
-    ['write', 'That is the FULL write surface'],
-    ['read', 'That is the FULL read surface'],
+  for (const [surface, label] of [
+    ['write', 'Edit IR JSON'],
+    ['read', 'Read the blueprint'],
   ]) {
-    const row = markdown.split('\n').find((line) => line.includes(claim))
+    const row = markdown.split('\n').find((line) => line.startsWith(`| ${label} |`))
     if (!row) {
-      faults.push({ problem: `${ADAPTER} has no "${claim}" row at all` })
+      faults.push({ problem: `${ADAPTER} has no "${label}" row at all` })
       continue
     }
     const token = tokens[surface]
@@ -296,8 +302,17 @@ export function surfaceRowFaults(markdown, tokens) {
       })
     }
   }
+  if (!markdown.replace(/\s+/g, ' ').includes(WHOLE_SURFACE_CLAIM)) {
+    faults.push({
+      problem: `${ADAPTER} no longer says "${WHOLE_SURFACE_CLAIM}", so nothing tells the agent the two rows are all it can call`,
+    })
+  }
   return faults
 }
+
+/** The sentence that makes the two surface rows the whole surface. */
+export const WHOLE_SURFACE_CLAIM =
+  'The Edit IR JSON and Read the blueprint rows are your whole write and read surface.'
 
 /**
  * The names of the tools that WRITE, read out of the application's definition
