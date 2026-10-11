@@ -1,29 +1,31 @@
 %% Service Blueprint ERD
 %%
-%% REGENERATED FROM THE LIVE SCHEMA on 2026-08-26, not hand-edited. The previous
-%% version was generated on 2026-08-20 and was wrong the next morning: the
-%% vocabulary refactor's last three migrations landed on 2026-08-21, so this
-%% file spent six days asserting `service_lifecycles` and `propositions` at a
-%% database that had neither. It was also missing `deleted_structure`
-%% altogether, carried a `paths.kind` enum with five values where the
-%% database has three, and filed `slices.origin` under the wrong enum.
+%% REGENERATED FROM THE LIVE SCHEMA on 2026-10-11, through 20261011120000, from
+%% the same catalog read as supabase/schema.reference.sql. The previous
+%% regeneration was 2026-08-26, and the hand edits since had not kept up: it
+%% still drew `cells.picture` and `cells.links`, both dropped; a `service_id`
+%% on `stakeholders`, which became a deployment-level catalog (ADR 0014); and
+%% had no `touchpoints`, `cell_touchpoints` or `resources` at all.
 %%
 %% A snapshot regenerated one day before a rename is a snapshot that lies with
 %% a generation stamp on it, which is worse than one that admits it is old.
-%% docs/reference/schema-snapshot-queries.sql query 4 is now asserted by
-%% migration 20260826130000 rather than trusted to a human; the other three
-%% still need re-running by hand whenever the schema moves.
 %%
 %% To refresh: re-run the queries in docs/reference/schema-snapshot-queries.sql
 %% against the live database and rewrite this file plus
-%% supabase/schema.reference.sql from their output.
+%% supabase/schema.reference.sql from their output. Every column is drawn
+%% except `created_at` and `updated_at`, which every table carries alike —
+%% save `slide_images`, which has neither, and `agent_messages`, which has only
+%% `created_at`.
 %%
-%% Enums (CHECK constraints, live 2026-08-26):
+%% Enums (CHECK constraints, live 2026-10-11):
 %%   scenarios.layout         ∈ (stacked | merged)  what the board opens as;
 %%                                                  written by the header toggle
 %%   paths.kind               ∈ (happy | variant | exception)
 %%   cell_dependencies.kind   ∈ (leads_to | enables)
 %%   stakeholders.kind        ∈ (recipient | staff | partner | provider | team)
+%%   touchpoints.kind         ∈ (app | document | physical | channel | service | other)
+%%   cell_touchpoints.role    ∈ (core | peripheral); null means unstated
+%%   resources.kind           ∈ (link | attachment)
 %%   evidence.kind            ∈ (interview | survey | analytics | doc | meeting |
 %%                               decision | observation | other)
 %%   audit_findings.severity  ∈ (info | warn | critical)
@@ -37,7 +39,8 @@
 %%   authoring_changes.deleted_kind ∈ (scenario | path | lane | step | cell)
 %%   authoring_changes.author ∈ (human | agent)
 %%   agent_messages.kind      ∈ (user | assistant | tool | status)
-%%   origin (cells | lanes | paths | phases | scenarios | steps) ∈ (import | app)
+%%   origin (cells | lanes | paths | phases | scenarios | steps | touchpoints |
+%%           cell_touchpoints | resources) ∈ (import | app)
 %%
 %% cells.status and paths.status are the `entity_status` DOMAIN, not a CHECK —
 %% one shared six-value list, so the two tables cannot drift apart.
@@ -78,12 +81,20 @@ erDiagram
   cells              ||--o{ cell_dependencies : "source"
   cells              ||--o{ cell_dependencies : "target"
 
+  %% Touchpoints: a deployment-level catalog, placed on cells. A placement
+  %% points at the catalog or names a thing outside it, never both.
+  touchpoints        |o--o{ cell_touchpoints : "touchpoint_id, NULLABLE, on delete restrict"
+  cells              ||--o{ cell_touchpoints : "placements"
+  cells              ||--o{ resources : "every resource knows its cell"
+  cell_touchpoints   |o--o{ resources : "(cell_touchpoint_id, cell_id), same cell"
+  stakeholders       |o--o{ touchpoints : "touchpoints.stakeholder_id"
+
   %% Records ABOUT the board rather than squares of it. Shipped 2026-07-29 in
   %% f65efcf. Called the "derived layer" until 2026-08-26 and the "analysis
   %% tier" until 2026-08-31, then neither: no one word was true of all four, so
   %% each has an OWNER instead (CONTEXT.md). Four of the five are authored by a
   %% person, which is what both nouns got wrong.
-  services           ||--o{ stakeholders : "the cast"
+  %% The cast is a deployment-level catalog, owned by no one service (ADR 0014).
   stakeholders       |o--o| stakeholders : "part_of_id, teams contain people"
   stakeholders       |o--o{ lanes : "lanes.stakeholder_id, NULLABLE"
   stakeholders       |o--o{ slices : "slices.stakeholder_id"
@@ -104,6 +115,8 @@ erDiagram
     text name
     text summary
     text origin "import | app"
+    jsonb entity_examples "a local example for every core kind"
+    text slug "unique; null until set"
   }
   phases {
     uuid id PK
@@ -121,6 +134,7 @@ erDiagram
     uuid phase_id FK
     text name
     text summary "the situation this blueprint covers"
+    text note "the author's aside"
     int position
     text layout "stacked | merged"
     text origin
@@ -165,16 +179,15 @@ erDiagram
     uuid lane_id FK
     uuid step_id FK
     text content "what happens in this moment"
+    text frame "an absolute URL, never a site path"
     text summary "the tl;dr the detail fields add up to"
     text function "why this moment exists"
     text form "tone and manner; frontstage only"
     jsonb value_props "who gets what"
     text owner "OVERRIDE of the lane's owner_team; empty means same as the lane"
     text perceived_owner "who the customer believes owns it; frontstage only"
-    text picture
-    jsonb links "authored URLs — resources, NOT dependencies"
     int position "order within one (lane, step) slot"
-    text cell_key "service/scenario/path/lane/step, slugified"
+    text cell_key "service/scenario/path/lane/step, slugified; unique"
     entity_status status
     tsvector search_tsv "generated"
     text origin
@@ -186,6 +199,39 @@ erDiagram
     text kind "leads_to = makes it happen, drawn | enables = makes it possible, never drawn"
     text name "the word on the arrow"
     text note "why the edge exists, in the author's own words"
+  }
+  touchpoints {
+    uuid id PK
+    uuid stakeholder_id FK
+    text name "unique across the deployment"
+    text kind
+    text summary
+    text url
+    text icon_url
+    text tone "a renderer tone name; deliberately unconstrained"
+    text_array aliases "other names it answers to"
+    text origin
+  }
+  cell_touchpoints {
+    uuid id PK
+    uuid cell_id FK
+    uuid touchpoint_id FK "XOR with name"
+    text name "a thing outside the catalog; XOR with touchpoint_id"
+    int position "unique per cell, deferred"
+    text summary
+    text role "core | peripheral"
+    text origin
+  }
+  resources {
+    uuid id PK
+    uuid cell_id FK
+    uuid cell_touchpoint_id FK "null = the cell's own list"
+    text kind "link | attachment"
+    text name
+    text url "required by a CHECK, never a site path"
+    int position
+    bool featured "one featured attachment per owner"
+    text origin
   }
   evidence {
     uuid id PK
@@ -248,12 +294,11 @@ erDiagram
   }
   stakeholders {
     uuid id PK
-    uuid service_id FK
     uuid part_of_id FK "self-reference: an actor is part of another, one level"
-    text name
+    text name "unique across the deployment"
     text kind "recipient | staff | partner | provider | team"
-    text note
-    text_array aliases "other spellings seen in this blueprint"
+    text summary "the definition"
+    text_array aliases "other spellings this deployment has seen"
   }
   business_models {
     uuid service_id PK
@@ -280,12 +325,13 @@ erDiagram
   }
   agent_sessions {
     uuid id PK
+    uuid created_by FK "auth.users; null = before ownership was recorded"
     text title
   }
   agent_messages {
     uuid id PK
     uuid session_id FK
-    bigint seq
+    bigint seq "unique per session"
     text kind "user | assistant | tool | status"
     jsonb payload
   }

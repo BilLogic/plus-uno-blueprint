@@ -135,7 +135,8 @@ detail).
   `supabase stop --project-id <other>`), then start again.
 - **Types don't match the schema** (TS errors on columns you can see in
   the dashboard) — **regenerate `deployment/types/database.ts`** through
-  the Supabase connector, then put its three hand-applied layers back.
+  the Supabase connector, then put back the hand-applied layers listed
+  in its header.
   Neither CLI path works here and the npm scripts that wrapped them left
   with `src/`; the procedure, and what to do when
   `check:database-types:live` goes red, are in

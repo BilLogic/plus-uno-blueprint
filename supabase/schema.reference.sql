@@ -1,24 +1,32 @@
 -- Reference snapshot: Service Blueprint schema
 --
--- REGENERATED FROM THE LIVE SCHEMA on 2026-08-26. The previous version was
--- generated on 2026-08-20 and was wrong the next morning: the vocabulary
--- refactor's last three migrations landed on 2026-08-21, so this file spent six
--- days describing `service_lifecycles` and `propositions` at a database that
--- had neither. It also never gained `cells.status` or `paths.status` from the
--- `maturity` rename, and still carried the `services` placeholder table that
--- 20260821340000 dropped.
+-- REGENERATED FROM THE LIVE SCHEMA on 2026-10-11, through 20261011120000.
+-- The previous regeneration was 2026-08-26, and six weeks of hand patches
+-- after it had not kept up: `audit_findings` still showed `note` where the
+-- database has `summary`, and neither `impact` nor `effort`; `touchpoints`,
+-- `cell_touchpoints` and `authoring_changes` were absent; `deleted_structure`
+-- and `business_model` named tables the database no longer has (the ledger is
+-- `authoring_changes`, the record is `business_models`);
+-- `cell_dependencies.label` is `name`, `stakeholders.note` is `summary`,
+-- `resources.kind` is `link | attachment` with every row owned by a cell, and
+-- `scenarios.layout` is `stacked | merged`.
 --
 -- A snapshot regenerated one day before a rename is a snapshot that lies with a
 -- generation stamp on it, which is worse than one that admits it is old.
 --
 -- To refresh, re-run docs/reference/schema-snapshot-queries.sql and rewrite this
--- file plus docs/reference/erd.mmd from its output. That file's fourth query —
--- the SECURITY DEFINER grant invariant — is now asserted by migration
--- 20260826130000 instead of being trusted to whoever remembers to run it.
+-- file plus docs/reference/erd.mmd from its output. Columns and nullability
+-- (query 1), foreign keys (2), CHECK constraints (3), defaults and generated
+-- columns (5), PRIMARY KEY / UNIQUE / EXCLUDE constraints (6), partial unique
+-- indexes (7), and the domain and views (8) are each read from pg_catalog by
+-- the query named; the comments are the explanation the catalog cannot give. That file's fourth query — the SECURITY DEFINER grant
+-- invariant — is asserted by `npm run check:identifiers` on every pull request.
 --
 -- READ THIS AS A SNAPSHOT, NOT AS DDL TO RUN. supabase/migrations/ is the source
 -- of truth; column ORDER here follows the live table (which reflects the order
 -- columns were added, not any design), and defaults are shown where they exist.
+-- Triggers, functions, policies and grants are not reproduced: the migrations
+-- say them, and `check:rls-posture:live` asks the database about the last two.
 --
 -- `entity_status` is a DOMAIN over text, not a per-table CHECK:
 --   proposed | planned | built | live | at_risk | deprecated
@@ -30,7 +38,10 @@ create table public.services (
   name text not null,
   summary text,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  origin text not null default 'import' check (origin in ('import','app')),
+  entity_examples jsonb not null default '{}'::jsonb,   -- 20260902210000
+  slug text unique                                       -- 20260902240000
 );
 
 create table public.phases (
@@ -39,12 +50,12 @@ create table public.phases (
   name text not null,
   summary text,   -- the stage in one line
   position integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
   loops_to_phase_id uuid references public.phases (id) on delete set null,
   business_impact text,
   operational_requirements text,
-  origin text not null default 'import' check (origin in ('import','app')),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  origin text not null default 'import' check (origin in ('import','app'))
 );
 
 create table public.scenarios (
@@ -53,12 +64,12 @@ create table public.scenarios (
   name text not null,
   summary text,   -- the situation this blueprint covers
   position integer not null default 0,
-  -- `merged` is a per-session display chosen in the compare control, never
-  -- stored. create_scenario refuses it by name.
-  layout text not null default 'single' check (layout in ('single','stacked')),
-  origin text not null default 'import' check (origin in ('import','app')),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  -- What the board opens as, written by the header toggle.
+  layout text not null default 'stacked' check (layout in ('stacked','merged')),
+  origin text not null default 'import' check (origin in ('import','app')),
+  note text
 );
 
 create table public.paths (
@@ -66,11 +77,11 @@ create table public.paths (
   scenario_id uuid not null references public.scenarios (id) on delete cascade,
   name text not null,
   kind text not null check (kind in ('happy','variant','exception')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
   summary text,   -- when this route applies
   note text,      -- the author's aside: open questions, provenance, working state
   origin text not null default 'import' check (origin in ('import','app')),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
   status entity_status not null default 'live'
 );
 
@@ -79,19 +90,23 @@ create table public.lanes (
   id uuid primary key default gen_random_uuid(),
   path_id uuid not null references public.paths (id) on delete cascade,
   name text not null,
-  -- Semantic key, deliberately separate from the display name: inferring one
-  -- from the other broke every non-English blueprint.
-  lane_role text,
-  -- Null on the 224 structural rows (tech, support, storyboard, the action
-  -- rows). A null stakeholder is what tells a check "this is scaffolding".
-  stakeholder_id uuid references public.stakeholders (id),
   position integer not null default 0,
-  owner_team text,
-  kpis jsonb not null default '[]'::jsonb,
-  tools jsonb not null default '[]'::jsonb,
-  origin text not null default 'import' check (origin in ('import','app')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
+  -- Semantic key, deliberately separate from the display name: inferring one
+  -- from the other broke every non-English blueprint. Null = generic swimlane.
+  lane_role text check (lane_role is null or lane_role in (
+    'customer_actions','frontstage_actions','backstage_actions','partner_actions',
+    'frontstage_touchpoints','backstage_touchpoints','support_actions','storyboard')),
+  owner_team text,
+  kpis jsonb not null default '[]'::jsonb check (jsonb_typeof(kpis) = 'array'),
+  tools jsonb not null default '[]'::jsonb check (jsonb_typeof(tools) = 'array'),
+  origin text not null default 'import' check (origin in ('import','app')),
+  -- Null on the structural rows (tech, support, storyboard, the action rows).
+  -- A null stakeholder is what tells a check "this is scaffolding".
+  stakeholder_id uuid references public.stakeholders (id),
+  -- The target of cells_path_matches_lane_fkey below.
+  constraint lanes_id_path_unique unique (id, path_id),
   -- One lane per slot. Deferred because reorder_lanes renumbers one statement
   -- per lane and add_lane opens a slot with a single self-colliding UPDATE
   -- (20260828130000); path_steps_path_column_unique is deferred for the same
@@ -102,12 +117,12 @@ create table public.lanes (
 
 create table public.steps (
   id uuid primary key default gen_random_uuid(),
-  scenario_id uuid not null references public.scenarios (id) on delete cascade,
   name text not null,
-  summary text,   -- what this moment is, across every lane (storyboard caption)
-  origin text not null default 'import' check (origin in ('import','app')),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  scenario_id uuid not null references public.scenarios (id) on delete cascade,
+  origin text not null default 'import' check (origin in ('import','app')),
+  summary text   -- what this moment is, across every lane (storyboard caption)
 );
 
 create table public.path_steps (
@@ -116,7 +131,9 @@ create table public.path_steps (
   position integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  primary key (path_id, step_id)
+  primary key (path_id, step_id),
+  constraint path_steps_path_column_unique
+    unique (path_id, position) deferrable initially deferred
 );
 
 create table public.cells (
@@ -125,65 +142,130 @@ create table public.cells (
   lane_id uuid not null references public.lanes (id) on delete cascade,
   step_id uuid not null references public.steps (id) on delete cascade,
   content text not null default '',      -- what happens in this moment
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  frame text check (frame is null or frame !~ '^/'),   -- an absolute URL, never a site path
   summary text,                          -- the tl;dr the detail fields add up to
   function text,                         -- why this moment exists
   form text,                             -- tone and manner; frontstage only
-  value_props jsonb not null default '[]'::jsonb,
+  value_props jsonb not null default '[]'::jsonb check (jsonb_typeof(value_props) = 'array'),
   owner text,            -- OVERRIDE of the lane's owner_team; empty = same as the lane
   perceived_owner text,  -- who the customer believes owns it; frontstage only
-  frame text,
-  position integer not null default 0,       -- order within one (lane, step) slot
-  cell_key text,
   origin text not null default 'import' check (origin in ('import','app')),
+  cell_key text,         -- unique where not null (cells_cell_key_unique)
+  position integer not null default 0,       -- order within one (lane, step) slot
   search_tsv tsvector generated always as (/* content + summary + function + form
-                                             + owner + perceived_owner + value_props */) stored,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
+                                             + owner + perceived_owner + value_props,
+                                             plus content + summary with `/` split
+                                             into words */) stored,
   status entity_status not null default 'live',
-  unique (lane_id, step_id, position)
+  constraint cells_lane_step_slot_unique unique (lane_id, step_id, position),
+  -- A cell sits on its lane's path. The trigger cells_validate_path_match only
+  -- sees writes to cells; this key also refuses moving the LANE (20260830180000).
+  constraint cells_path_matches_lane_fkey foreign key (lane_id, path_id)
+    references public.lanes (id, path_id) on delete cascade
 );
-
--- Added by hand on 2026-08-31 with 20260830280000, which dropped `cells.links`
--- above. `evidence.note` went with it in the same edit, though 20260830190000
--- is what dropped the column — this file had simply not caught up.
---
--- NOT a regeneration, and it is still behind in ways this edit does not fix:
--- `touchpoints`, `cell_touchpoints` and `unplaced_touchpoint_details` are
--- absent, and `cells.picture` is `cells.frame` since 20260830270000. The
--- header at the top of this file says to read it as a snapshot; these are
--- what that sentence is currently about.
-create table public.resources (
-  id uuid primary key default gen_random_uuid(),
-  -- Exactly one of these two: check (num_nonnulls(cell_id, cell_touchpoint_id) = 1)
-  cell_id uuid references public.cells (id) on delete cascade,
-  cell_touchpoint_id uuid references public.cell_touchpoints (id) on delete cascade,
-  kind text not null default 'link' check (kind in ('link','other')),
-  name text not null,     -- what the thing on the other end is called
-  url text,               -- required when kind = 'link'
-  position integer not null,
-  origin text not null check (origin in ('import','app')),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  -- Both deferrable: a reorder swaps two positions inside one transaction.
-  unique (cell_id, position),
-  unique (cell_touchpoint_id, position)
-);
+create unique index cells_cell_key_unique on public.cells (cell_key) where cell_key is not null;
 
 create table public.cell_dependencies (
   id uuid primary key default gen_random_uuid(),
   source_cell_id uuid not null references public.cells (id) on delete cascade,
   target_cell_id uuid not null references public.cells (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
   -- leads_to = the source makes the target happen (drawn as an arrow)
   -- enables   = the source makes the target possible without causing it (never drawn)
   -- Both read SOURCE-FIRST, which is why neither is `depends_on`.
   kind text not null default 'leads_to' check (kind in ('leads_to','enables')),
-  label text,
-  note text,
+  name text,   -- the word on the arrow; `label` until 20260830190000
+  note text,   -- why the edge exists, in the author's own words
+  constraint cell_dependencies_no_self_reference check (source_cell_id <> target_cell_id),
+  constraint cell_dependencies_source_target_kind_unique
+    unique (source_cell_id, target_cell_id, kind)
+);
+
+-- ── Touchpoints and resources ────────────────────────────────────────────────
+-- A touchpoint is a thing the service owns (20260830140000): a deployment-level
+-- catalog, unique by name, owned by no one service (ADR 0014). A cell places it
+-- through cell_touchpoints, or names something that is not in the catalog.
+create table public.touchpoints (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  kind text not null default 'other'
+    check (kind in ('app','document','physical','channel','service','other')),
+  summary text,
+  url text,
+  stakeholder_id uuid references public.stakeholders (id),
+  origin text not null check (origin in ('import','app')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  check (source_cell_id <> target_cell_id),
-  unique (source_cell_id, target_cell_id, kind)
+  icon_url text,
+  -- Deliberately unconstrained: the tone vocabulary belongs to the token model
+  -- (ADR 0001), and a CHECK here would be a second copy of it (20260905110000).
+  tone text,
+  aliases text[]   -- other names it answers to (20260905120000)
 );
+
+create table public.cell_touchpoints (
+  id uuid primary key default gen_random_uuid(),
+  cell_id uuid not null references public.cells (id) on delete cascade,
+  touchpoint_id uuid references public.touchpoints (id) on delete restrict,
+  position integer not null,
+  summary text,
+  role text check (role in ('core','peripheral')),
+  origin text not null check (origin in ('import','app')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- A placement either points at the catalog or names a thing that is not in
+  -- it, never both and never neither.
+  name text,
+  constraint cell_touchpoints_one_identity check ((touchpoint_id is null) <> (name is null)),
+  constraint cell_touchpoints_name_not_blank check (name is null or btrim(name) <> ''),
+  unique (cell_id, touchpoint_id),
+  unique (id, cell_id),   -- the target of resources_placement_in_cell_fkey
+  constraint cell_touchpoints_cell_position_unique
+    unique (cell_id, position) deferrable initially deferred
+);
+create unique index cell_touchpoints_cell_name_key
+  on public.cell_touchpoints (cell_id, lower(name)) where name is not null;
+
+-- Every resource knows its cell (20260902130000); one that belongs to a
+-- placement names that placement too, and the composite key below keeps the
+-- two on the same cell.
+create table public.resources (
+  id uuid primary key default gen_random_uuid(),
+  cell_id uuid not null references public.cells (id) on delete cascade,
+  cell_touchpoint_id uuid,
+  kind text not null default 'link' check (kind in ('link','attachment')),
+  name text not null,     -- what the thing on the other end is called
+  -- Nullable in the catalog, required by a CHECK: resources_has_url is
+  -- (nullif(btrim(url), '') is not null), which a blank string fails too.
+  url text,
+  position integer not null,
+  origin text not null check (origin in ('import','app')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  featured boolean not null default false,
+  constraint resources_url_absolute check (url is null or url !~ '^/'),
+  constraint resources_placement_in_cell_fkey foreign key (cell_touchpoint_id, cell_id)
+    references public.cell_touchpoints (id, cell_id) on delete cascade,
+  -- Both deferrable: a reorder swaps two positions inside one transaction.
+  -- The cell's rule is an EXCLUDE, not a UNIQUE, since 20260902130000: once a
+  -- placement's rows carried `cell_id` too, a plain unique (cell_id, position)
+  -- collided with them, so it is restricted to the cell's own rows — and a
+  -- unique index could carry that predicate but not the deferral that lets
+  -- `sync_cell_resources` reorder in one statement.
+  constraint resources_cell_position_unique exclude using btree
+    (cell_id with =, position with =) where (cell_touchpoint_id is null)
+    deferrable initially deferred,
+  constraint resources_touchpoint_position_unique
+    unique (cell_touchpoint_id, position) deferrable initially deferred
+);
+-- One featured attachment per cell, and one per placement.
+create unique index resources_one_featured_attachment_per_cell on public.resources (cell_id)
+  where featured and kind = 'attachment' and cell_touchpoint_id is null;
+create unique index resources_one_featured_attachment_per_placement on public.resources (cell_touchpoint_id)
+  where featured and kind = 'attachment' and cell_touchpoint_id is not null;
 
 -- ── About the board: evidence, findings, slices, slides (2026-07-29) ────────
 -- Records ABOUT the board rather than squares of it. Called the "derived layer"
@@ -194,26 +276,25 @@ create table public.cell_dependencies (
 -- table in CONTEXT.md, held against the write surface by
 -- scripts/tests/who-writes-what.test.mjs.
 -- The cell references here are SOFT — no foreign key — so the importer's
--- scenario-scoped delete-and-reinsert cannot cascade into authored rows.
--- Absent from every previous version of this file, which is the drift that made
--- regenerating it worth doing rather than patching.
+-- scenario-scoped delete-and-reinsert cannot cascade into authored rows. The
+-- paired *_cell_keys columns are how those rows find their cells again.
 
 create table public.evidence (
   id uuid primary key default gen_random_uuid(),
   service_id uuid not null references public.services (id) on delete cascade,
   cell_id uuid,
-  cell_key text,
+  cell_key text,   -- check ((cell_id is null) = (cell_key is null))
   -- A row attaches to a CELL or to one of the three validation questions,
   -- never both: check (num_nonnulls(cell_id, proposition_question_key) = 1).
-  proposition_question_key text check (proposition_question_key in ('understand','value','usability')),
-  kind text not null,
+  proposition_question_key text check (proposition_question_key is null or proposition_question_key in ('understand','value','usability')),
+  kind text not null check (kind in ('interview','survey','analytics','doc','meeting','decision','observation','other')),
   title text not null,
   -- The one prose column. `ref` was dropped and `excerpt` renamed to this by
   -- 20260909060000, which is why the word is back after 20260830190000 took it.
   note text,
   observed_at date,
   added_by text,   -- agent name or participant code. Never the interviewee.
-  created_by uuid,
+  created_by uuid default auth.uid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -222,32 +303,37 @@ create table public.audit_findings (
   id uuid primary key default gen_random_uuid(),
   service_id uuid not null references public.services (id) on delete cascade,
   run_id uuid not null,
-  source text not null,
+  source text not null check (source in ('audit','whatif','import-sweep')),
   check_key text not null,
-  severity text not null,
+  severity text not null check (severity in ('info','warn','critical')),
   cell_ids uuid[] not null default '{}',
-  cell_keys text[] not null default '{}',
-  note text,
-  fingerprint text not null,
-  status text not null default 'open',
+  cell_keys text[] not null default '{}',   -- check (cardinality(cell_ids) = cardinality(cell_keys))
+  summary text,   -- the finding itself, in one line
+  fingerprint text not null,   -- dedupe across runs
+  status text not null default 'open' check (status in ('open','resolved','dismissed')),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  -- 20261011120000. What fixing it is worth, and what it costs; null = unrated.
+  impact text check (impact in ('low','medium','high')),
+  effort text check (effort in ('low','medium','high'))
 );
+create unique index audit_findings_open_fingerprint_idx
+  on public.audit_findings (service_id, fingerprint) where status = 'open';
 
 create table public.slices (
   id uuid primary key default gen_random_uuid(),
   service_id uuid not null references public.services (id) on delete cascade,
-  kind text not null,
+  kind text not null check (kind in ('journey','step','lane','cell','custom')),
   title text not null,
   summary text,
   actor text,   -- display text; a trigger keeps it equal to the linked name
-  stakeholder_id uuid references public.stakeholders (id),
   locale text not null default 'en',
-  position integer not null default 0,
   authorship text not null default 'generated' check (authorship in ('generated','customized','human')),
-  created_by uuid,
+  position integer not null default 0,
+  created_by uuid default auth.uid(),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  stakeholder_id uuid references public.stakeholders (id)
 );
 
 create table public.slides (
@@ -255,18 +341,16 @@ create table public.slides (
   slice_id uuid not null references public.slices (id) on delete cascade,
   position integer not null,
   cell_ids uuid[] not null default '{}',
-  cell_keys text[] not null default '{}',
+  cell_keys text[] not null default '{}',   -- check (cardinality(cell_ids) = cardinality(cell_keys))
   title text,
   caption text,
-  -- `illustration jsonb` stood here until this line replaced it. It was
-  -- dropped by 20260830270000, four days after this snapshot was generated,
-  -- and left behind here — which mattered once `shows_all_images` arrived
-  -- beside it, because the two together read as a slide with a picture of its
-  -- own AND a set. It has one: the set.
-  shows_all_images boolean not null default true,
-  created_by uuid,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  created_by uuid default auth.uid(),
+  -- `illustration jsonb` was dropped by 20260830270000. A slide has one image
+  -- source: the set, which is every cited cell's frame while this is true.
+  shows_all_images boolean not null default true,
+  constraint slides_position_unique unique (slice_id, position) deferrable initially deferred
 );
 
 -- 20260910030000. The ordered set a slide shows once an author has picked;
@@ -286,17 +370,16 @@ create table public.slide_images (
 -- structural one and would have warned six times per scenario.
 create table public.stakeholders (
   id uuid primary key default gen_random_uuid(),
-  part_of_id uuid references public.stakeholders (id) on delete set null,
-  name text not null,
-  -- `team` is a container, not a person: a team holds its people via part_of_id.
-  kind text not null check (kind in ('recipient','staff','partner','provider','team')),
-  note text,
-  aliases text[] not null default '{}',   -- other spellings seen in THIS blueprint
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
   -- Deployment-level catalog: the name is the identity, unique across the whole
   -- deployment and owned by no one service (ADR 0014).
-  unique (name)
+  name text not null unique,
+  -- `team` is a container, not a person: a team holds its people via part_of_id.
+  kind text not null check (kind in ('recipient','staff','partner','provider','team')),
+  summary text,   -- the definition; `note` until 20260830170000
+  aliases text[] not null default '{}',   -- other spellings this deployment has seen
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  part_of_id uuid references public.stakeholders (id)
 );
 
 -- One business-model record per service. The three validation questions live as
@@ -304,22 +387,43 @@ create table public.stakeholders (
 -- which is why `evidence.proposition_question_key` keeps the word `proposition`
 -- after the table stopped being called that. The rename moved the container,
 -- not the concept.
-create table public.business_model (
+create table public.business_models (
   service_id uuid primary key references public.services (id) on delete cascade,
-  pricing text,
-  revenue_model text,
   funding text,
+  pricing text,
   delivery_cost text,
+  revenue_model text,
   partners text,
-  created_by uuid,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  created_by uuid default auth.uid()
+);
+
+-- ── Authoring ledger ─────────────────────────────────────────────────────────
+-- 20260830200000. Every authoring write leaves a row here, with its captured
+-- inverse; a delete also keeps the row as it was, which is what the `trash`
+-- view reads. It replaced `deleted_structure`, which recorded deletes alone.
+create table public.authoring_changes (
+  id uuid primary key default gen_random_uuid(),
+  at timestamptz not null default now(),
+  author text not null default 'human' check (author in ('human','agent')),
+  author_id uuid default auth.uid(),
+  -- No foreign key on purpose: the record outlives the session.
+  -- check ((author = 'agent') = (agent_session_id is not null))
+  agent_session_id uuid,
+  fn text not null check (btrim(fn) <> ''),   -- the authoring RPC, or a mutation name
+  args jsonb not null default '{}'::jsonb check (jsonb_typeof(args) = 'object'),
+  revert jsonb check (revert is null or jsonb_typeof(revert) = 'object'),   -- {fn, args}
+  deleted_kind text check (deleted_kind in ('scenario','path','lane','step','cell')),
+  label text,
+  payload jsonb,   -- check ((deleted_kind is null) = (payload is null))
+  affected_slices jsonb not null default '[]'::jsonb check (jsonb_typeof(affected_slices) = 'array')
 );
 
 -- ── Agent session ledger (unrelated to the blueprint tree) ───────────────────
 create table public.agent_sessions (
   id uuid primary key,
-  title text not null default '',
+  title text not null default 'New session',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- 20260828120000. NULL = written before ownership was recorded; service
@@ -334,17 +438,11 @@ create table public.agent_messages (
   seq bigint not null,
   kind text not null check (kind in ('user','assistant','tool','status')),
   payload jsonb not null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (session_id, seq)
 );
 
--- ── Deletion ledger ──────────────────────────────────────────────────────────
-create table public.deleted_structure (
-  id uuid primary key default gen_random_uuid(),
-  deleted_at timestamptz not null default now(),
-  deleted_by uuid,
-  kind text not null,
-  label text not null,
-  payload jsonb not null,
-  affected_slices jsonb not null default '[]'::jsonb
-);
-
+-- ── Views ────────────────────────────────────────────────────────────────────
+-- `trash` (over authoring_changes' delete rows) and `evidence_counts`. Their
+-- definitions are in the migrations that create them, 20260830200000 and
+-- 20260729120000 onward.

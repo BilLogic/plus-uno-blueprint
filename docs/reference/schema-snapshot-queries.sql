@@ -1,5 +1,5 @@
--- The two queries that produce docs/reference/erd.mmd and
--- supabase/schema.reference.sql.
+-- The queries that produce docs/reference/erd.mmd and
+-- supabase/schema.reference.sql: 1–3 and 5–8. Query 4 is a diagnostic.
 --
 -- Both of those files are SNAPSHOTS of the live schema, and both had drifted
 -- for five weeks before 2026-08-20 — each claimed to be "verified through
@@ -97,3 +97,50 @@ where n.nspname = 'public' and p.prokind = 'f'
   and (p.prosecdef
        or pg_get_functiondef(p.oid) ~* '(insert\s+into|update\s+(only\s+)?[\w."]+\s+set|delete\s+from)')
   and has_function_privilege('anon', p.oid, 'EXECUTE');
+
+-- ── 5. Defaults and generated columns, in the table's own column order ──────
+-- Query 1 says what a column is; this says what it starts as. `attnum` is the
+-- order the snapshot keeps, which is the order columns were added.
+select c.relname as tbl, a.attnum, a.attname,
+       pg_get_expr(d.adbin, d.adrelid) as default_or_expression,
+       case a.attgenerated when 's' then 'GENERATED ALWAYS … STORED' end as generated
+from pg_class c
+join pg_namespace n on n.oid = c.relnamespace
+join pg_attribute a on a.attrelid = c.oid and a.attnum > 0 and not a.attisdropped
+left join pg_attrdef d on d.adrelid = c.oid and d.adnum = a.attnum
+where n.nspname = 'public' and c.relkind = 'r'
+order by 1, 2;
+
+-- ── 6. PRIMARY KEY, UNIQUE and EXCLUDE constraints, with their deferral ─────
+-- An EXCLUDE is how a uniqueness rule gets both a predicate and a deferral,
+-- which no unique index can carry; `deferrable` is what a reorder relies on.
+select rel.relname as tbl, c.contype, c.conname,
+       pg_get_constraintdef(c.oid) as def,
+       c.condeferrable as deferrable, c.condeferred as initially_deferred
+from pg_constraint c
+join pg_class rel on rel.oid = c.conrelid
+join pg_namespace n on n.oid = rel.relnamespace
+where n.nspname = 'public' and c.contype in ('p', 'u', 'x')
+order by 1, 2, 3;
+
+-- ── 7. Unique indexes that back no constraint — the partial ones ────────────
+select tablename as tbl, indexname, indexdef
+from pg_indexes i
+where schemaname = 'public'
+  and indexdef like 'CREATE UNIQUE INDEX%'
+  and not exists (select 1 from pg_constraint k
+                  where k.conindid = (quote_ident(i.schemaname) || '.' || quote_ident(i.indexname))::regclass)
+order by 1, 2;
+
+-- ── 8. Domains and views, which the snapshot names but does not draw ────────
+select t.typname as domain, pg_get_constraintdef(con.oid) as def
+from pg_type t
+join pg_namespace n on n.oid = t.typnamespace
+left join pg_constraint con on con.contypid = t.oid
+where n.nspname = 'public' and t.typtype = 'd';
+
+select c.relname as view, pg_get_viewdef(c.oid) as def
+from pg_class c
+join pg_namespace n on n.oid = c.relnamespace
+where n.nspname = 'public' and c.relkind in ('v', 'm')
+order by 1;

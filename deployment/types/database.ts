@@ -55,7 +55,7 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  * privilege the CLI lacks and needs neither, so it is the path that works
  * today — and the one to use again.
  *
- * THREE LAYERS ARE RE-APPLIED BY HAND, deliberately, and they are the whole of
+ * FOUR LAYERS ARE RE-APPLIED BY HAND, deliberately, and they are the whole of
  * what is not the generator's:
  *
  *  1. `paths.kind` is typed `PathKind`, rather than the generator's `string`.
@@ -79,17 +79,26 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  *     `set_placement_touchpoint(p_touchpoint_id, p_name)` are the ones that
  *     bite immediately. The rule is mechanical: read the defaults out of
  *     `pg_get_function_arguments` and widen the ones that say `DEFAULT NULL`.
+ *  4. `restore_cell_dependency(dependency_id, name, note)` types `name` and
+ *     `note` as `string | null`, not the generator's `string`. They have no
+ *     default, so layer 3 does not reach them, but NULL is the value the
+ *     function exists to write: it is the undo of an upserting
+ *     `set_cell_dependency`, its body ASSIGNS both columns rather than
+ *     coalescing (20260909070000, whose rehearsal restores a note back to
+ *     null), and the ledger feeds it `previous.name` / `previous.note` straight
+ *     off a `CellDependencyRow`, where both are `string | null`. Narrowing them
+ *     would declare that an edge which had no note can never be put back.
  *
- * Re-apply all three after any regeneration, or the app silently loses a check
+ * Re-apply all four after any regeneration, or the app silently loses a check
  * it had — or stops compiling. Nothing else in this file is hand-written; if a
- * fourth layer appears, it belongs in this list or it does not belong at all.
+ * fifth layer appears, it belongs in this list or it does not belong at all.
  *
  * ONE THING THE GENERATOR EMITS AND THIS FILE DOES NOT KEEP: the trailing
  * helper block — `Tables<>`, `TablesInsert<>`, `TablesUpdate<>`, `Enums<>`,
  * `CompositeTypes<>` and `Constants`. This file's lineage carried it once
  * (`dad47c08`) and lost it at `b2e92a99`; it has not been back since. Those
  * helpers exist to be imported at a call site and this file has no importers
- * at all, which is the whole point of it. Dropping them is not a fourth layer,
+ * at all, which is the whole point of it. Dropping them is not a fifth layer,
  * because nothing is re-applied — but leaving it unsaid would make the next
  * regeneration look like a hundred lines of drift. Drop it again.
  *
@@ -122,7 +131,7 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  * applies to production before the code that reads it is merged, so this file
  * sometimes has to describe the schema on the far side of an apply that may
  * not have happened yet, and a generator cannot be run against a database that
- * has not been changed. Such an edit is never a fourth layer and is never
+ * has not been changed. Such an edit is never a fifth layer and is never
  * re-applied: the next regeneration emits it, and its entry goes with the run
  * that proves it. This run did that to the five the list last held.
  *
