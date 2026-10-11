@@ -29,6 +29,8 @@
 %%   audit_findings.severity  ∈ (info | warn | critical)
 %%   audit_findings.source    ∈ (audit | whatif | import-sweep)
 %%   audit_findings.status    ∈ (open | resolved | dismissed)
+%%   audit_findings.impact    ∈ (low | medium | high); null means unrated
+%%   audit_findings.effort    ∈ (low | medium | high); null means unrated
 %%   slices.kind              ∈ (journey | step | lane | cell | custom)
 %%   slices.authorship        ∈ (generated | customized | human)
 %%   services.origin          ∈ (import | app)
@@ -205,6 +207,8 @@ erDiagram
     text source
     text check_key
     text severity
+    text impact "low | medium | high; null = unrated"
+    text effort "low | medium | high; null = unrated"
     uuid_array cell_ids "soft, no FK"
     text_array cell_keys "same cardinality as cell_ids, enforced"
     text summary "the finding itself, in one line"

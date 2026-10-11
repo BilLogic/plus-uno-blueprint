@@ -237,8 +237,11 @@ async function loadAppSurface() {
     `data:text/javascript;base64,${Buffer.from(output[0].code).toString('base64')}`
   )
 }
-const { TOOL_SPECS, WRITE_TOOL_NAMES, MOBILE_READ_TOOL_NAMES, REFERENCE_NAMES } =
-  await loadAppSurface()
+const APP_SURFACE = await loadAppSurface()
+const { TOOL_SPECS, WRITE_TOOL_NAMES, MOBILE_READ_TOOL_NAMES, REFERENCE_NAMES } = APP_SURFACE
+// The findings formatter `list_findings` answers with, so the harness ranks
+// the ledger by the app's order rather than a second statement of it.
+const { FINDINGS_SHOWN, formatFindingsList } = APP_SURFACE
 
 // `ui_command` is interface-only EXCEPT the commands the live list marks
 // "[changes data]" — the app asks the registry (agentUiCommandMutates);
@@ -369,6 +372,44 @@ async function realListOwnerTags() {
     if (row.perceived_owner) tags.add(row.perceived_owner)
   }
   return `Existing owner tags: ${[...tags].sort().join(', ')}`
+}
+
+/**
+ * The findings, in the app's words, under a total the app cannot state.
+ *
+ * The rows and every empty state are `formatFindingsList` — the same function
+ * `list_findings` answers with, given every matching row, read a page at a
+ * time as the app's read does, so the ranking runs over the whole set before
+ * any cap. The header above them is the harness's own: this read asks
+ * PostgREST for `count=exact`, so it can state the total outright.
+ */
+async function realListFindings(statusFilter) {
+  const PAGE = 500
+  const rows = []
+  let total
+  for (let offset = 0; ; offset += PAGE) {
+    const query = `audit_findings?select=id,source,check_key,severity,impact,effort,fingerprint,summary,status,cell_ids,created_at&order=created_at.desc,id&limit=${PAGE}&offset=${offset}${statusFilter === 'all' ? '' : `&status=eq.${encodeURIComponent(statusFilter)}`}`
+    const response = await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/${query}`, {
+      headers: {
+        apikey: env.VITE_SUPABASE_ANON_KEY,
+        authorization: `Bearer ${env.VITE_SUPABASE_ANON_KEY}`,
+        prefer: 'count=exact',
+      },
+    })
+    if (!response.ok) throw new Error(`postgrest ${response.status}`)
+    const page = (await response.json()) ?? []
+    const range = response.headers.get('content-range')
+    if (range?.includes('/')) total = Number(range.split('/')[1])
+    rows.push(...page)
+    if (page.length < PAGE) break
+  }
+  const listed = formatFindingsList(rows, { filter: statusFilter })
+  if (!rows.length) return listed
+  const label = statusFilter === 'all' ? 'findings' : `${statusFilter} findings`
+  const header = Number.isFinite(total)
+    ? `${total} ${label} total; listing ${Math.min(rows.length, total, FINDINGS_SHOWN)} in priority order. Answer count questions from the TOTAL, not by counting the rows below.`
+    : `Listing ${Math.min(rows.length, FINDINGS_SHOWN)} of ${rows.length} ${label} in priority order.`
+  return [header, listed].join('\n')
 }
 
 async function realListSlices() {
@@ -586,16 +627,9 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
         record.result = `slice "${slice.title}" (${slice.id}) kind=${slice.kind}\n${slides.join('\n') || '(no slides)'}`
         return record.result
       }
-      case 'list_findings': {
-        const filter = typeof args.status === 'string' ? args.status : 'open'
-        const rows = await rest(
-          `audit_findings?select=id,source,check_key,severity,summary,status,cell_ids,created_at&order=created_at.desc&limit=100${filter === 'all' ? '' : `&status=eq.${encodeURIComponent(filter)}`}`,
-        )
-        record.result = rows?.length
-          ? rows.map((r) => `${r.id} [${r.severity}] ${r.check_key} (${r.source}, ${r.status}, ${String(r.created_at).slice(0, 10)}) cells:${(r.cell_ids ?? []).length}${r.summary ? ` — ${r.summary}` : ''}`).join('\n')
-          : filter === 'all' ? 'No findings recorded yet.' : `No ${filter} findings.`
+      case 'list_findings':
+        record.result = await realListFindings(typeof args.status === 'string' ? args.status : 'open')
         return record.result
-      }
       case 'open_cell_panel': record.result = 'Opened the cell detail panel.'; return record.result
       case 'set_canvas_mode': record.result = `Canvas mode is now ${args.mode === 'design' ? 'design' : 'view'}.`; return record.result
       case 'set_sidebar': record.result = args.collapsed === true ? 'Sidebar collapsed.' : 'Sidebar expanded.'; return record.result

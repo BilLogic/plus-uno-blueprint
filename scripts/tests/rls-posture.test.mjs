@@ -545,6 +545,7 @@ const GRANT_MIGRATION_FILES = [
   `${GRANT_MIGRATION}_a_panel_writes_its_own_columns`,
   '20260902220000_the_service_panel_writes_its_examples_column',
   '20260910030000_a_slide_shows_a_set_of_its_cells_frames',
+  '20261011120000_a_finding_says_what_fixing_it_is_worth',
 ]
 
 /**

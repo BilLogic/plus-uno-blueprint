@@ -40,3 +40,9 @@ export const MOBILE_READ_TOOL_NAMES = new Set(
  * list rather than a second copy the harness would have to keep in step.
  */
 export { REFERENCE_NAMES } from '@/lib/agent/tools/referenceNames'
+/**
+ * The findings formatter `list_findings` answers with, and the cap it ranks
+ * under, so the harness's read groups and orders the ledger the way the app's
+ * does — Do first, Plan, Quick wins, Later — rather than restating the order.
+ */
+export { FINDINGS_SHOWN, formatFindingsList } from '@/lib/agent/tools/format'
