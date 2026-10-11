@@ -119,10 +119,24 @@ test('harness imports the app tool specs instead of forking them', () => {
     /export\s*\{\s*REFERENCE_NAMES\s*\}\s*from\s*'@\/lib\/agent\/tools\/referenceNames'/,
     'app-surface.entry.ts no longer re-exports REFERENCE_NAMES from referenceNames.ts',
   )
+  // The findings formatter as well, so the harness's `list_findings` ranks the
+  // ledger by the app's own order rather than a second statement of it.
+  assert.match(
+    surfaceEntry,
+    /export\s*\{\s*FINDINGS_SHOWN,\s*formatFindingsList\s*\}\s*from\s*'@\/lib\/agent\/tools\/format'/,
+    'app-surface.entry.ts no longer re-exports FINDINGS_SHOWN and formatFindingsList from format.ts',
+  )
+  // One destructure of the bundle: the four tool-surface names lead it, and
+  // further names the harness reads from the same bundle may follow them.
   assert.match(
     harness,
-    /\{\s*TOOL_SPECS,\s*WRITE_TOOL_NAMES,\s*MOBILE_READ_TOOL_NAMES,\s*REFERENCE_NAMES\s*\}/,
+    /\{\s*TOOL_SPECS,\s*WRITE_TOOL_NAMES,\s*MOBILE_READ_TOOL_NAMES,\s*REFERENCE_NAMES\s*(?:,[\s\w,]*)?\}\s*=\s*await\s+loadAppSurface\(\)/,
     'run.mjs no longer imports TOOL_SPECS/WRITE_TOOL_NAMES/MOBILE_READ_TOOL_NAMES/REFERENCE_NAMES from the bundled surface',
+  )
+  assert.match(
+    harness,
+    /\{[\s\w,]*\bFINDINGS_SHOWN,\s*formatFindingsList\b[\s\w,]*\}\s*=\s*await\s+loadAppSurface\(\)/,
+    'run.mjs no longer reads FINDINGS_SHOWN/formatFindingsList from the bundled surface',
   )
   // And no fork crept back: a local spec array would re-declare tool
   // objects (`name: '...'` entries) and a local write set would shadow the

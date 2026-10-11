@@ -237,11 +237,14 @@ async function loadAppSurface() {
     `data:text/javascript;base64,${Buffer.from(output[0].code).toString('base64')}`
   )
 }
-const APP_SURFACE = await loadAppSurface()
-const { TOOL_SPECS, WRITE_TOOL_NAMES, MOBILE_READ_TOOL_NAMES, REFERENCE_NAMES } = APP_SURFACE
-// The findings formatter `list_findings` answers with, so the harness ranks
-// the ledger by the app's order rather than a second statement of it.
-const { FINDINGS_SHOWN, formatFindingsList } = APP_SURFACE
+const {
+  TOOL_SPECS,
+  WRITE_TOOL_NAMES,
+  MOBILE_READ_TOOL_NAMES,
+  REFERENCE_NAMES,
+  FINDINGS_SHOWN,
+  formatFindingsList,
+} = await loadAppSurface()
 
 // `ui_command` is interface-only EXCEPT the commands the live list marks
 // "[changes data]" — the app asks the registry (agentUiCommandMutates);
@@ -396,7 +399,7 @@ async function realListFindings(statusFilter) {
         prefer: 'count=exact',
       },
     })
-    if (!response.ok) throw new Error(`postgrest ${response.status}`)
+    if (!response.ok) throw new Error(`postgrest ${response.status}: ${(await response.text()).slice(0, 200)}`)
     const page = (await response.json()) ?? []
     const range = response.headers.get('content-range')
     if (range?.includes('/')) total = Number(range.split('/')[1])
