@@ -157,7 +157,7 @@ One canvas-agent conversation. Ledger entries reference it via agentSessionId (c
 ### `audit_findings`
 Audit / whatif / import-sweep outputs. Written by skills (IDE service key or canvas authenticated agent); humans triage by status. Prefixed on 2026-08-30 because the bare word `findings` gave a reader no clue which process produces the rows; the CONCEPT is still a finding everywhere else.
 
-4 of 13 columns described.
+6 of 15 columns described.
 
 | Column | Meaning |
 |---|---|
@@ -174,6 +174,8 @@ Audit / whatif / import-sweep outputs. Written by skills (IDE service key or can
 | `status` | — |
 | `created_at` | — |
 | `updated_at` | — |
+| `impact` | How much fixing this finding matters to the service: low, medium or high. Null on a finding recorded before the rating existed, which reads as unrated. |
+| `effort` | How much work the fix takes: low, medium or high. Null on a finding recorded before the rating existed, which reads as unrated. |
 
 ### `authoring_changes`
 Append-only record of every authoring write. Audit-only: the in-memory stack in src/lib/authoringSession.ts is still the undo affordance, and nothing replays `revert` from here. A row with `deleted_kind` set is a deletion and carries the rows it destroyed; `public.trash` is the view over exactly those.
