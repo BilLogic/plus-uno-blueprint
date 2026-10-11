@@ -35,14 +35,14 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  * schema drift. `scripts/tests/database-types.test.mjs` asserts the resolved
  * owner is this deployment so that the deletion fails `npm test` instead.
  *
- * GENERATED, 2026-09-14, from the production project through the Supabase
+ * GENERATED, 2026-10-11, from the production project through the Supabase
  * connector, by the same path as the first run. That first run, on 2026-09-08,
  * is why every hand-edited block this file once carried is gone: the two
  * placement RPCs, the two rename RPCs, `touchpoints`, `cell_touchpoints`,
  * `resources`, `services.entity_examples` and the rest read the way the
  * generator emits them, and the whole `Functions` map — forty-six entries
  * where the hand-maintained file had thirteen — arrived at once. It holds
- * fifty today; what has arrived since is named in the list below.
+ * fifty-one today; what has arrived since is named in the list below.
  *
  * The hand edits were not wrong. `cells_layer_id_fkey` and `layers_path_id_fkey`
  * were, and they had survived a migration that renamed both constraints,
@@ -103,17 +103,20 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  * by machine. As of this change it does again.
  *
  * WHAT THIS GENERATION HOLDS THAT THE LAST ONE DID NOT:
- * `set_cell_featured_image(cell_id, image_url)` (20260913150000), the entry
- * that takes the `Functions` map to fifty. It is the single disagreement that
- * took the scheduled `live-schema` job red — the database held it and this
- * file did not name it. It arrived in the generation like the other
- * forty-nine, so it is not drift and does not belong in the list below.
- *
- * DRIFT SINCE THIS GENERATION: one function.
  *
  * - `update_touchpoint(p_touchpoint_id, p_name, p_kind, p_summary, p_url,
- *   p_icon_url)` (20261005120000), written ahead of its apply. It is the
- *   template's signature, which the pinned application posts by key.
+ *   p_icon_url)` (20261005120000), the entry that takes the `Functions` map
+ *   to fifty-one. The last generation's drift list held it as written ahead
+ *   of its apply; this run emits it exactly as it was written, so the entry
+ *   leaves that list.
+ * - `audit_findings.impact` and `audit_findings.effort` (20261011120000),
+ *   each `string | null` on all three shapes. They were written in by hand
+ *   beside that apply and never named below; the generator emits them the
+ *   same way, so they are not drift either.
+ * - `agent_sessions.created_by` in the generator's alphabetical place rather
+ *   than last, where a hand edit had appended it. Order only.
+ *
+ * DRIFT SINCE THIS GENERATION: none.
  *
  * That line is a list because a migration in this repository's own series
  * applies to production before the code that reads it is merged, so this file
@@ -127,8 +130,8 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  * statement of how far the file has travelled from its last generated state,
  * so an edit left out of it is invisible — which is exactly what happened
  * twice: three functions and two renames landed here while the paragraph went
- * on saying two. It holds one entry today, and the regeneration that follows
- * the apply takes it back out.
+ * on saying two — and a third time, when the two finding ratings went in by
+ * hand and the list went on saying one. It holds no entries today.
  */
 
 export type Json =
@@ -191,24 +194,24 @@ export type Database = {
       agent_sessions: {
         Row: {
           created_at: string
+          created_by: string | null
           id: string
           title: string
           updated_at: string
-          created_by: string | null
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           id: string
           title?: string
           updated_at?: string
-          created_by?: string | null
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           id?: string
           title?: string
           updated_at?: string
-          created_by?: string | null
         }
         Relationships: []
       }
