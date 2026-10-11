@@ -65,8 +65,11 @@ const APP = `${PACKAGE}/src`
 const TOKENS = { read: '{{read_tools}}', write: '{{write_tools}}' }
 
 const RENDERED = [
-  '| Edit IR JSON | call write tools: {{write_tools}} — plus `ui_command`\'s few commands marked "[changes data]". That is the FULL write surface; nothing else writes. |',
-  '| Read the blueprint | call read tools: {{read_tools}} — none of them move the user\'s canvas. That is the FULL read surface; nothing else reads. |',
+  '| Edit IR JSON | call write tools: {{write_tools}} — plus `ui_command`\'s few commands marked "[changes data]" |',
+  '| Read the blueprint | call read tools: {{read_tools}} — they read without moving the user\'s canvas or changing a row |',
+  '',
+  'The Edit IR JSON and Read the blueprint rows are your whole write and read',
+  'surface. Each tool\'s rules live in the tool descriptions.',
 ].join('\n')
 
 test('a document whose rows are rendered reports no fault', () => {
@@ -107,8 +110,21 @@ test('a missing surface row is a failure, not an empty list', () => {
   // The bug: a renamed or deleted row would otherwise report nothing at all —
   // a document with no surface mapping in it, passing green.
   const faults = surfaceRowFaults('# nothing here\n', TOKENS).map((fault) => fault.problem)
-  assert.equal(faults.length, 2)
-  assert.match(faults[0], /no "That is the FULL write surface" row at all/)
+  assert.equal(faults.length, 3)
+  assert.match(faults[0], /no "Edit IR JSON" row at all/)
+  assert.match(faults[2], /no longer says "The Edit IR JSON and Read the blueprint rows are your whole/)
+})
+
+test('both rows rendered but the whole-surface sentence gone still fails', () => {
+  // The bug: the two rows check out on their own, so a document that keeps
+  // them and drops the sentence passes every row test above — while nothing
+  // any longer tells the agent that a tool outside the two rows does not exist.
+  const withoutClaim = RENDERED.split('\n').slice(0, 2).join('\n')
+  assert.ok(withoutClaim.includes('| Edit IR JSON |'))
+  assert.ok(withoutClaim.includes('| Read the blueprint |'))
+  const faults = surfaceRowFaults(withoutClaim, TOKENS).map((fault) => fault.problem)
+  assert.equal(faults.length, 1)
+  assert.match(faults[0], /no longer says "The Edit IR JSON and Read the blueprint rows are your whole/)
 })
 
 test('the placeholder tokens are read out of the application, not spelled here', () => {

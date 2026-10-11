@@ -87,8 +87,10 @@ it and then bundles. `npm run check:harness` holds every file under
 `blueprint/`, `editor/`, `cover/` and `mobile/` to exactly one composition doc,
 so a surface nobody documented fails it. The three router checks —
 `npm run check:budget`, `check:negation`, `check:pointers` — hold `AGENTS.md` to
-its char budget, its recorded prohibition count and its pointer shape; each
-script's header carries the reasoning. `npm run check:glossary` does the same
+its char budget, its recorded prohibition count and its pointer shape, and the
+first two also count every skill and agent description a plugin host loads
+(none here, so their budget is zero); each script's header carries the
+reasoning. `npm run check:glossary` does the same
 for `CONTEXT.md`, which is the first pointer the router fires: headings, prose
 and `**term** — definition` rows, failing on a code fence, on a table naming a
 column, and on a section that defines no term. `npm run check:interface-map`

@@ -30,20 +30,39 @@ export const repoConfig = {
     budget: 6000,
     /** How far under `budget` the tier may sit before the budget is stale. */
     slack: 1200,
-    /**
-     * The prohibition-token baseline across the tier (`check-negation-ratchet.mjs`):
-     * the files it was measured over, and the count it scored.
-     */
-    prohibitions: { files: 1, tokens: 4 },
   },
 
   /**
+   * The skill and agent descriptions' ceiling, in characters
+   * (`check-router-budget.mjs`): every description a plugin host puts in
+   * front of a session on every turn, counted apart from the router. Zero,
+   * and that is a measurement: the census reads `skills/<skill>/SKILL.md` and
+   * `agents/<agent>.md` where a plugin host finds them, and this deployment
+   * holds neither folder — the `ub` plugin's are authored upstream and the
+   * template's budget holds them — so it counts nothing. A skill or agent
+   * added here is counted, and fails the check until it is budgeted.
+   */
+  descriptions: {
+    budget: 0,
+    /** How far under `budget` the descriptions may sit before the budget is stale. */
+    slack: 0,
+  },
+
+  /**
+   * The prohibition-token baseline across the router and the descriptions
+   * (`check-negation-ratchet.mjs`): the files it was measured over — the
+   * router plus one per description, of which this deployment has none — and
+   * the count it scored.
+   */
+  prohibitions: { files: 1, tokens: 4 },
+
+  /**
    * Folders whose markdown every prose sweep reads, beside the root docs
-   * (the sweep's `docs` subject, `sweep.mjs`). One folder here: this deployment
-   * ships no plugin surface, so it has no `references/`, `skills/` or `agents/`
-   * at the root. A folder named here that this tree does not have is a skip
-   * said out loud rather than a silent nothing, so a misspelt name cannot pass
-   * as one: check it against the tree.
+   * (the sweep's `docs` subject, `sweep.mjs`). This deployment ships no plugin
+   * surface, so it has no `references/`, `skills/` or `agents/` at the root,
+   * and `docs` is the whole of it. The description census (`descriptions`
+   * above, `always-loaded.mjs`) finds skills and agents on its own, so neither
+   * folder is named here for its sake.
    */
   sweptDirs: ['docs'],
 
