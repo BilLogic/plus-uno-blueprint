@@ -35,14 +35,14 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  * schema drift. `scripts/tests/database-types.test.mjs` asserts the resolved
  * owner is this deployment so that the deletion fails `npm test` instead.
  *
- * GENERATED, 2026-10-11, from the production project through the Supabase
+ * GENERATED, 2026-10-12, from the production project through the Supabase
  * connector, by the same path as the first run. That first run, on 2026-09-08,
  * is why every hand-edited block this file once carried is gone: the two
  * placement RPCs, the two rename RPCs, `touchpoints`, `cell_touchpoints`,
  * `resources`, `services.entity_examples` and the rest read the way the
  * generator emits them, and the whole `Functions` map — forty-six entries
  * where the hand-maintained file had thirteen — arrived at once. It holds
- * fifty-one today; what has arrived since is named in the list below.
+ * fifty-four today; what has arrived since is named in the list below.
  *
  * The hand edits were not wrong. `cells_layer_id_fkey` and `layers_path_id_fkey`
  * were, and they had survived a migration that renamed both constraints,
@@ -113,17 +113,12 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  *
  * WHAT THIS GENERATION HOLDS THAT THE LAST ONE DID NOT:
  *
- * - `update_touchpoint(p_touchpoint_id, p_name, p_kind, p_summary, p_url,
- *   p_icon_url)` (20261005120000), the entry that takes the `Functions` map
- *   to fifty-one. The last generation's drift list held it as written ahead
- *   of its apply; this run emits it exactly as it was written, so the entry
- *   leaves that list.
- * - `audit_findings.impact` and `audit_findings.effort` (20261011120000),
- *   each `string | null` on all three shapes. They were written in by hand
- *   beside that apply and never named below; the generator emits them the
- *   same way, so they are not drift either.
- * - `agent_sessions.created_by` in the generator's alphabetical place rather
- *   than last, where a hand edit had appended it. Order only.
+ * - `create_slice(p_service_id, p_title, p_summary, p_kind, p_actor,
+ *   p_slides)` and `replace_slides(p_slice_id, p_slides)` (20261012120000),
+ *   and `restore_slides(p_slice_id, p_rows)` (20261012130000), the three
+ *   entries that take the `Functions` map to fifty-four. Each is copied from
+ *   this run's output as the generator emits it, beside the apply; none of
+ *   their arguments has a SQL default, so layer 3 reaches none of them.
  *
  * DRIFT SINCE THIS GENERATION: none.
  *
@@ -1336,6 +1331,17 @@ export type Database = {
         }
         Returns: Json
       }
+      create_slice: {
+        Args: {
+          p_actor: string
+          p_kind: string
+          p_service_id: string
+          p_slides: Json
+          p_summary: string
+          p_title: string
+        }
+        Returns: Json
+      }
       delete_cell: { Args: { cell_id: string }; Returns: string }
       delete_path: { Args: { path_id: string }; Returns: string }
       delete_scenario: { Args: { scenario_id: string }; Returns: string }
@@ -1416,6 +1422,10 @@ export type Database = {
         Args: { path_id: string; step_ids: string[] }
         Returns: undefined
       }
+      replace_slides: {
+        Args: { p_slice_id: string; p_slides: Json }
+        Returns: Json
+      }
       restore_cell_content: {
         Args: { cell_id: string; content: string }
         Returns: undefined
@@ -1431,6 +1441,10 @@ export type Database = {
       restore_featured_resources: { Args: { p_rows: Json }; Returns: undefined }
       restore_placement: {
         Args: { p_resources?: Json; p_row: Json }
+        Returns: Json
+      }
+      restore_slides: {
+        Args: { p_rows: Json; p_slice_id: string }
         Returns: Json
       }
       schema_comments: {
