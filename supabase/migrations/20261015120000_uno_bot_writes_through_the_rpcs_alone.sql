@@ -339,13 +339,15 @@ comment on function public.set_path_status(uuid, public.entity_status, uuid) is
 -- `create_path` with a status: the same lanes and step order copied from the
 -- source path (the scenario's first path when none is named), and the status
 -- written by the insert that creates the row. Returns the id, as
--- `create_path` does.
+-- `create_path` does. `kind` defaults to `variant`, which `paths_kind_check`
+-- admits; `create_path`'s own default, `alternative`, is not among happy,
+-- variant and exception, so copying it would refuse every call that omits it.
 -- ---------------------------------------------------------------------------
 create or replace function public.create_path_at_status(
   scenario_id uuid,
   name text,
   status public.entity_status,
-  kind text default 'alternative',
+  kind text default 'variant',
   lane_source_path_id uuid default null,
   agent_session_id uuid default null
 )
@@ -375,7 +377,7 @@ begin
 
   insert into public.paths (scenario_id, name, kind, status, origin)
   values (create_path_at_status.scenario_id, create_path_at_status.name,
-          coalesce(create_path_at_status.kind, 'alternative'),
+          coalesce(create_path_at_status.kind, 'variant'),
           create_path_at_status.status, 'app')
   returning id into new_path_id;
 
@@ -393,7 +395,7 @@ begin
     jsonb_build_object(
       'scenario_id', create_path_at_status.scenario_id,
       'name', create_path_at_status.name,
-      'kind', coalesce(create_path_at_status.kind, 'alternative'),
+      'kind', coalesce(create_path_at_status.kind, 'variant'),
       'status', create_path_at_status.status,
       'lane_source_path_id', source_path_id,
       'path_id', new_path_id),
