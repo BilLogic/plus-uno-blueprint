@@ -18,7 +18,7 @@ enforcement view.
 | Anonymous visitor (deployed site, anon key) | yes | no | no | no | RLS public-SELECT-only; RPC `EXECUTE` revoked from `anon`/`public`; UI hides everything (`canWrite`/`canAgent` false) |
 | Signed-in viewer (`app_metadata.role` ≠ `service`) | yes (+ evidence/business model) | yes, read-only tools | no | no | RESTRICTIVE RLS policies (`*_service_only`); tier guard inside every authoring RPC; agent roster filters write tools out |
 | Service account (`app_metadata.role` = `service`) | yes | yes, full roster | yes, through wrappers only | human-only, via confirm dialogs | RLS + RPC guards pass; UI shows authoring surfaces |
-| uno-bot, the plus-uno Slack Worker (`app_metadata.role` = `rpc_writer`) | yes | — | through the authoring RPCs only; a status through `upsert_cell_at_status` / `set_path_status`, which record themselves | **never** — a statement trigger refuses it | `is_service_account()` passes an `rpc_writer` only inside a SECURITY DEFINER body, so every RPC guard admits it and every write policy refuses it (`20261015120000`); `rpc_writers_do_not_delete` on the six structural tables |
+| uno-bot, the plus-uno Slack Worker (`app_metadata.role` = `rpc_writer`) | yes | — | through the authoring RPCs only; a status through `upsert_cell_at_status` / `set_path_status`, which record themselves | yes, through the delete RPCs | `is_service_account()` passes an `rpc_writer` only inside a SECURITY DEFINER body, so every RPC guard admits it and every write policy refuses it; `authoring_changes_name_uno_bot` stamps `author = 'uno-bot'` on every log row it causes and refuses that author to anyone else (`20261015120000`) |
 | In-app agent (under any of the above) | as its session | — | as its session, minus deletes | **never** — no delete tool exists | tool roster (`specs.ts`), loop refusals, then the same server walls as its session |
 | IDE agents / local dev | yes | — | as the dev auth user | discouraged; confirm with the human | dev sign-in is a real `authenticated` session — same RLS, same RPC guards |
 | Mobile shell (any tier) | yes | yes, reading roster | no | no | UX gate only (`MobileShell` has no editors; agent roster whitelist) — the server walls above are what actually hold |
@@ -426,6 +426,9 @@ What the wrappers buy, and why bypassing them is never acceptable:
   the UI routes deletes through impact preview (`deletionImpact()` in
   `authoringRpc.ts`, via `deletionSafety.ts`) and a confirm dialog. The agent's
   read-only counterpart is `measure_deletion_impact`. Never automate one.
+  That rule is the application's. uno-bot, the plus-uno Slack Worker, is the
+  one other deleter (Bill, 2026-10-15): it calls the same delete RPCs after a
+  person approves its card in Slack, and its trash rows read `uno-bot`.
 
 The non-negotiable invariants are inline in `AGENTS.md` — they hold even
 if this doc is never read.

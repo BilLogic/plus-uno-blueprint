@@ -16,7 +16,8 @@
 -- So uno-bot gets a third tier, `app_metadata.role = 'rpc_writer'`: an
 -- ordinary Auth user whose JWT opens the SECURITY DEFINER authoring RPCs and
 -- nothing else. Every write it makes is an operation, every operation is in
--- `authoring_changes`, and `author_id` on that row is the bot's own account.
+-- `authoring_changes`, and the row says `author = 'uno-bot'` with the bot's
+-- own account as `author_id`.
 --
 -- ---------------------------------------------------------------------------
 -- HOW ONE CLAIM OPENS THE RPCS AND NOT THE TABLES
@@ -45,11 +46,17 @@
 -- WHAT ELSE IT ADDS, AND WHY EACH IS HERE
 -- ---------------------------------------------------------------------------
 --
--- DELETES STAY HUMAN-ONLY. The canvas agent holds no delete tool and the
--- access doc says never automate one. The delete RPCs pass the same gate, so
--- a statement trigger on the six structural tables refuses any delete made
--- under an `rpc_writer` JWT, whichever function or cascade issues it.
---
+-- THE BOT DELETES, AND SAYS SO. Bill's call (2026-10-15): uno-bot may delete,
+-- as a human service account may, through the same delete RPCs. Those six
+-- functions write their own `authoring_changes` row and have always stamped it
+-- `author = 'human'`, because they cannot see who called. So the log gets a
+-- third author, `uno-bot`, and a BEFORE INSERT trigger stamps it on every row
+-- appended under an `rpc_writer` JWT — the delete functions' rows, the two
+-- RPCs below, and the bot's own `record_authoring_change` calls alike. The
+-- same trigger refuses `uno-bot` from anyone else, so the tier cannot be
+-- claimed by passing the word. A bot row may name an agent session (the Slack
+-- card it belongs to) and need not: a delete RPC has no way to pass one.
+
 -- A STATUS IS WRITTEN BY AN RPC. No authoring RPC writes `status` today — the
 -- panel sets it through a column grant — and `upsert_cell` inserts at the
 -- column default, `live`. A bot that drafted a `proposed` cell with it would
@@ -62,19 +69,19 @@
 -- calling `record_authoring_change` afterwards. The Worker runs under a
 -- 50-subrequest cap, and a write whose record is a second request is a write
 -- that can land unrecorded. So these two append their own row in the same
--- transaction, `author = 'agent'`, and REQUIRE the agent session id the
--- `authoring_changes_agent_session_check` biconditional demands. No caller
--- appends for them; were the canvas ever to call them, they belong in its
+-- transaction: `agent` when a session id is passed, `human` when not, and the
+-- trigger turns either into `uno-bot` under the bot's JWT. No caller appends
+-- for them; were the canvas ever to call them, they belong in its
 -- `ARCHIVED_BY_THE_DATABASE` set.
 --
 -- ---------------------------------------------------------------------------
 -- WHAT THIS DELIBERATELY DOES NOT DO
 -- ---------------------------------------------------------------------------
 --
--- IT DOES NOT CHANGE `authoring_changes.author`. The check admits `human` and
--- `agent`; uno-bot writes `agent`, and `author_id` (default `auth.uid()`,
--- which reads the caller's JWT inside a definer body) names the account. A
--- third author tier is a template change, not a deployment's.
+-- IT STAYS IN THIS DEPLOYMENT. The `uno-bot` author, the tier and the two
+-- RPCs are this deployment's (Bill, 2026-10-15: not the template's yet). The
+-- application never reads `authoring_changes` — its change list is the
+-- in-memory session stack — so a third author value reaches no code it ships.
 --
 -- IT DOES NOT RECORD THE OLDER RPCS FOR THE BOT. `add_step`, `create_path`
 -- and the rest still leave their record to the caller, so a Worker that calls
@@ -107,36 +114,52 @@ comment on function public.is_service_account() is
   'True when the JWT app_metadata.role is service, or is rpc_writer and the caller is a SECURITY DEFINER body (current_user is not a client role). So an rpc_writer passes every authoring RPC guard and no write policy. Set via auth.users.raw_app_meta_data — users cannot self-assign (user_metadata is ignored on purpose).';
 
 -- ---------------------------------------------------------------------------
--- Deletes are human-only.
+-- The log's third author.
 -- ---------------------------------------------------------------------------
-create or replace function public.rpc_writers_do_not_delete()
+alter table public.authoring_changes
+  drop constraint authoring_changes_author_check,
+  add constraint authoring_changes_author_check
+    check (author in ('human', 'agent', 'uno-bot'));
+
+-- Was a biconditional, author = 'agent' iff a session. It still holds for
+-- those two; a `uno-bot` row may carry the Slack card's session or none,
+-- because the delete functions that append for it cannot pass one.
+alter table public.authoring_changes
+  drop constraint authoring_changes_agent_session_check,
+  add constraint authoring_changes_agent_session_check
+    check (case author
+             when 'agent' then agent_session_id is not null
+             when 'human' then agent_session_id is null
+             else true
+           end);
+
+comment on column public.authoring_changes.author is
+  'Who wrote it: human, agent (the in-app agent, under a human''s session), or uno-bot (the plus-uno Slack Worker, its rpc_writer account). uno-bot is stamped by a trigger from the JWT and cannot be claimed by anyone else.';
+
+create or replace function public.authoring_changes_name_uno_bot()
 returns trigger
 language plpgsql
 set search_path = pg_catalog, pg_temp
 as $$
 begin
   if (auth.jwt() -> 'app_metadata' ->> 'role') = 'rpc_writer' then
-    raise exception 'Deletes are human-only: this account writes through the authoring RPCs and cannot delete from %', tg_table_name
+    new.author := 'uno-bot';
+    new.author_id := auth.uid();
+  elsif new.author = 'uno-bot' then
+    raise exception 'Only the uno-bot account writes as uno-bot'
       using errcode = '42501';
   end if;
-  return null;
+  return new;
 end;
 $$;
 
-comment on function public.rpc_writers_do_not_delete() is
-  'Statement trigger on the six structural tables: refuses a delete made under an rpc_writer JWT, whichever RPC or cascade issues it. Deletes are human-only.';
+comment on function public.authoring_changes_name_uno_bot() is
+  'Stamps author = uno-bot (and author_id) on every authoring_changes row appended under an rpc_writer JWT, whichever function appends it, and refuses uno-bot from any other caller.';
 
-do $$
-declare
-  t text;
-begin
-  foreach t in array array['phases', 'scenarios', 'paths', 'steps', 'lanes', 'cells'] loop
-    execute format('drop trigger if exists rpc_writers_do_not_delete on public.%I', t);
-    execute format(
-      'create trigger rpc_writers_do_not_delete before delete on public.%I '
-      'for each statement execute function public.rpc_writers_do_not_delete()', t);
-  end loop;
-end $$;
+drop trigger if exists authoring_changes_name_uno_bot on public.authoring_changes;
+create trigger authoring_changes_name_uno_bot
+  before insert on public.authoring_changes
+  for each row execute function public.authoring_changes_name_uno_bot();
 
 -- ---------------------------------------------------------------------------
 -- A cell at a status, in one write.
@@ -147,7 +170,7 @@ create or replace function public.upsert_cell_at_status(
   step_id uuid,
   content text,
   status public.entity_status,
-  agent_session_id uuid
+  agent_session_id uuid default null
 )
 returns jsonb
 language plpgsql security definer
@@ -163,10 +186,6 @@ begin
   if not public.is_service_account() then
     raise exception 'This account cannot edit the blueprint'
       using errcode = '42501';
-  end if;
-  if upsert_cell_at_status.agent_session_id is null then
-    raise exception 'An agent write names the agent session it belongs to'
-      using errcode = '22004';
   end if;
   if upsert_cell_at_status.status is null then
     raise exception 'A cell written at a status has to name the status'
@@ -225,7 +244,7 @@ begin
         'content', previous.content,
         'status', previous.status))
     end,
-    'agent',
+    case when upsert_cell_at_status.agent_session_id is null then 'human' else 'agent' end,
     upsert_cell_at_status.agent_session_id
   )
   returning id into change_id;
@@ -243,7 +262,7 @@ end;
 $$;
 
 comment on function public.upsert_cell_at_status(uuid, uuid, uuid, text, public.entity_status, uuid) is
-  'upsert_cell plus the status, in one statement, so a drafted cell is never live for a moment. Agent-only: requires the agent session id and appends its own authoring_changes row (author agent) in the same transaction — callers do not record it.';
+  'upsert_cell plus the status, in one statement, so a drafted cell is never live for a moment. Appends its own authoring_changes row in the same transaction (agent with a session id, human without; uno-bot under its JWT) — callers do not record it.';
 
 -- ---------------------------------------------------------------------------
 -- A path's status, in one write.
@@ -251,7 +270,7 @@ comment on function public.upsert_cell_at_status(uuid, uuid, uuid, text, public.
 create or replace function public.set_path_status(
   path_id uuid,
   status public.entity_status,
-  agent_session_id uuid
+  agent_session_id uuid default null
 )
 returns jsonb
 language plpgsql security definer
@@ -264,10 +283,6 @@ begin
   if not public.is_service_account() then
     raise exception 'This account cannot edit the blueprint'
       using errcode = '42501';
-  end if;
-  if set_path_status.agent_session_id is null then
-    raise exception 'An agent write names the agent session it belongs to'
-      using errcode = '22004';
   end if;
   if set_path_status.status is null then
     raise exception 'A path written at a status has to name the status'
@@ -291,7 +306,7 @@ begin
     jsonb_build_object('path_id', set_path_status.path_id, 'status', set_path_status.status),
     jsonb_build_object('fn', 'set_path_status', 'args',
       jsonb_build_object('path_id', set_path_status.path_id, 'status', previous_status)),
-    'agent',
+    case when set_path_status.agent_session_id is null then 'human' else 'agent' end,
     set_path_status.agent_session_id
   )
   returning id into change_id;
@@ -304,7 +319,7 @@ end;
 $$;
 
 comment on function public.set_path_status(uuid, public.entity_status, uuid) is
-  'Sets one path''s status. Agent-only: requires the agent session id and appends its own authoring_changes row (author agent) in the same transaction — callers do not record it.';
+  'Sets one path''s status. Appends its own authoring_changes row in the same transaction (agent with a session id, human without; uno-bot under its JWT) — callers do not record it.';
 
 revoke execute on function public.upsert_cell_at_status(uuid, uuid, uuid, text, public.entity_status, uuid)
   from public, anon;
