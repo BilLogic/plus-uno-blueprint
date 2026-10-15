@@ -63,9 +63,12 @@
 -- publish it as live for the length of a second request, and for ever if the
 -- second request failed. `upsert_cell_at_status` writes content and status in
 -- one statement; `set_path_status` does the same for a path, whose create
--- RPC also defaults to `live`.
+-- RPC also defaults to `live`; and `create_path_at_status` creates a path —
+-- uno-bot's proposal, a variant beside today's path rather than an overwrite
+-- of its live cells — at its status from its first insert, so it is never live
+-- for a moment and never left live by a second call that failed.
 --
--- BOTH NEW RPCS RECORD THEMSELVES. A client RPC is recorded by the client
+-- THE THREE NEW RPCS RECORD THEMSELVES. A client RPC is recorded by the client
 -- calling `record_authoring_change` afterwards. The Worker runs under a
 -- 50-subrequest cap, and a write whose record is a second request is a write
 -- that can land unrecorded. So these two append their own row in the same
@@ -330,6 +333,82 @@ $$;
 comment on function public.set_path_status(uuid, public.entity_status, uuid) is
   'Sets one path''s status. Appends its own authoring_changes row in the same transaction (agent with a session id, human without; uno-bot under its JWT) — callers do not record it.';
 
+-- ---------------------------------------------------------------------------
+-- A path at a status, from its first insert.
+--
+-- `create_path` with a status: the same lanes and step order copied from the
+-- source path (the scenario's first path when none is named), and the status
+-- written by the insert that creates the row. Returns the id, as
+-- `create_path` does.
+-- ---------------------------------------------------------------------------
+create or replace function public.create_path_at_status(
+  scenario_id uuid,
+  name text,
+  status public.entity_status,
+  kind text default 'alternative',
+  lane_source_path_id uuid default null,
+  agent_session_id uuid default null
+)
+returns uuid
+language plpgsql security definer
+set search_path = public, pg_catalog, pg_temp
+as $$
+declare
+  new_path_id uuid;
+  source_path_id uuid;
+begin
+  if not public.is_service_account() then
+    raise exception 'This account cannot edit the blueprint'
+      using errcode = '42501';
+  end if;
+  if create_path_at_status.status is null then
+    raise exception 'A path created at a status has to name the status'
+      using errcode = '22004';
+  end if;
+
+  source_path_id := coalesce(
+    create_path_at_status.lane_source_path_id,
+    (select p.id from public.paths p
+      where p.scenario_id = create_path_at_status.scenario_id
+      order by p.created_at limit 1)
+  );
+
+  insert into public.paths (scenario_id, name, kind, status, origin)
+  values (create_path_at_status.scenario_id, create_path_at_status.name,
+          coalesce(create_path_at_status.kind, 'alternative'),
+          create_path_at_status.status, 'app')
+  returning id into new_path_id;
+
+  insert into public.lanes (path_id, name, lane_role, position, origin)
+  select new_path_id, l.name, l.lane_role, l.position, 'app'
+  from public.lanes l where l.path_id = source_path_id;
+
+  insert into public.path_steps (path_id, step_id, position)
+  select new_path_id, ps.step_id, ps.position
+  from public.path_steps ps where ps.path_id = source_path_id;
+
+  insert into public.authoring_changes (fn, args, revert, author, agent_session_id)
+  values (
+    'create_path_at_status',
+    jsonb_build_object(
+      'scenario_id', create_path_at_status.scenario_id,
+      'name', create_path_at_status.name,
+      'kind', coalesce(create_path_at_status.kind, 'alternative'),
+      'status', create_path_at_status.status,
+      'lane_source_path_id', source_path_id,
+      'path_id', new_path_id),
+    jsonb_build_object('fn', 'delete_path', 'args', jsonb_build_object('path_id', new_path_id)),
+    case when create_path_at_status.agent_session_id is null then 'human' else 'agent' end,
+    create_path_at_status.agent_session_id
+  );
+
+  return new_path_id;
+end;
+$$;
+
+comment on function public.create_path_at_status(uuid, text, public.entity_status, text, uuid, uuid) is
+  'create_path plus the status, written by the insert that creates the path, so a proposed variant is never live for a moment. Copies lanes and step order from the source path as create_path does. Appends its own authoring_changes row (agent with a session id, human without; uno-bot under its JWT), inverse delete_path — callers do not record it.';
+
 revoke execute on function public.upsert_cell_at_status(uuid, uuid, uuid, text, public.entity_status, uuid)
   from public, anon;
 revoke execute on function public.set_path_status(uuid, public.entity_status, uuid)
@@ -337,6 +416,10 @@ revoke execute on function public.set_path_status(uuid, public.entity_status, uu
 grant execute on function public.upsert_cell_at_status(uuid, uuid, uuid, text, public.entity_status, uuid)
   to authenticated;
 grant execute on function public.set_path_status(uuid, public.entity_status, uuid)
+  to authenticated;
+revoke execute on function public.create_path_at_status(uuid, text, public.entity_status, text, uuid, uuid)
+  from public, anon;
+grant execute on function public.create_path_at_status(uuid, text, public.entity_status, text, uuid, uuid)
   to authenticated;
 
 -- ---------------------------------------------------------------------------
