@@ -113,6 +113,12 @@ $$;
 comment on function public.is_service_account() is
   'True when the JWT app_metadata.role is service, or is rpc_writer and the caller is a SECURITY DEFINER body (current_user is not a client role). So an rpc_writer passes every authoring RPC guard and no write policy. Set via auth.users.raw_app_meta_data — users cannot self-assign (user_metadata is ignored on purpose).';
 
+-- Only the write policies for `authenticated` and the definer bodies ask it.
+-- A new function in `public` arrives executable by anon, and `from public`
+-- does not take that away, so anon is named.
+revoke execute on function public.is_service_account() from public, anon;
+grant execute on function public.is_service_account() to authenticated;
+
 -- ---------------------------------------------------------------------------
 -- The log's third author.
 -- ---------------------------------------------------------------------------
@@ -160,6 +166,9 @@ drop trigger if exists authoring_changes_name_uno_bot on public.authoring_change
 create trigger authoring_changes_name_uno_bot
   before insert on public.authoring_changes
   for each row execute function public.authoring_changes_name_uno_bot();
+
+-- A trigger fires whatever the caller's EXECUTE; nobody calls this directly.
+revoke execute on function public.authoring_changes_name_uno_bot() from public, anon;
 
 -- ---------------------------------------------------------------------------
 -- A cell at a status, in one write.
