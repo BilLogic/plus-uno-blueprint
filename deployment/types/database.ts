@@ -35,14 +35,14 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  * schema drift. `scripts/tests/database-types.test.mjs` asserts the resolved
  * owner is this deployment so that the deletion fails `npm test` instead.
  *
- * GENERATED, 2026-10-12, from the production project through the Supabase
+ * GENERATED, 2026-10-15, from the production project through the Supabase
  * connector, by the same path as the first run. That first run, on 2026-09-08,
  * is why every hand-edited block this file once carried is gone: the two
  * placement RPCs, the two rename RPCs, `touchpoints`, `cell_touchpoints`,
  * `resources`, `services.entity_examples` and the rest read the way the
  * generator emits them, and the whole `Functions` map — forty-six entries
  * where the hand-maintained file had thirteen — arrived at once. It holds
- * fifty-four today; what has arrived since is named in the list below.
+ * fifty-seven today; what has arrived since is named in the list below.
  *
  * The hand edits were not wrong. `cells_layer_id_fkey` and `layers_path_id_fkey`
  * were, and they had survived a migration that renamed both constraints,
@@ -65,11 +65,13 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  *     instead of a Postgres error at runtime.
  *
  *     `cells.status` and `paths.status` are typed `EntityStatus` on the same
- *     reasoning, but WITHOUT the same backing: both are `text not null default
- *     'live'` and no migration constrains them. The narrowing is a promise the
- *     application keeps, not one the database enforces, so a row written by
- *     anything else can hold a value this type says is impossible. Making it
- *     true is a migration, not an edit here.
+ *     reasoning, and with the same backing: both columns are the
+ *     `entity_status` domain (20260821240000), whose check names exactly
+ *     the six values, and the generator reads a domain as its base type,
+ *     `string`. The `status` argument of `create_path_at_status`,
+ *     `set_path_status` and `upsert_cell_at_status` is typed `EntityStatus`
+ *     too: it is the same domain, and there the generator cannot even resolve
+ *     the base type, so it emits `unknown`.
  *  2. The row aliases at the foot of the file — `Cell`, `Lane`, `Path` and the
  *     rest — are this app's vocabulary over the generated shapes and have no
  *     generated equivalent.
@@ -113,12 +115,17 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  *
  * WHAT THIS GENERATION HOLDS THAT THE LAST ONE DID NOT:
  *
- * - `create_slice(p_service_id, p_title, p_summary, p_kind, p_actor,
- *   p_slides)` and `replace_slides(p_slice_id, p_slides)` (20261012120000),
- *   and `restore_slides(p_slice_id, p_rows)` (20261012130000), the three
- *   entries that take the `Functions` map to fifty-four. Each is copied from
- *   this run's output as the generator emits it, beside the apply; none of
- *   their arguments has a SQL default, so layer 3 reaches none of them.
+ * - `create_path_at_status(scenario_id, name, status, kind,
+ *   lane_source_path_id, agent_session_id)`, `set_path_status(path_id,
+ *   status, agent_session_id)` and `upsert_cell_at_status(path_id, lane_id,
+ *   step_id, content, status, agent_session_id)` (20261015120000), the three
+ *   entries that take the `Functions` map to fifty-seven. Each is copied from
+ *   this run's output as the generator emits it; layer 3 widens
+ *   `agent_session_id` and `lane_source_path_id`, and layer 1 narrows
+ *   `status`. The same migration's `uno-bot` author on
+ *   `authoring_changes.author` is a check constraint and changes no type
+ *   here. Every other table, view and function was checked column by column
+ *   and argument by argument against the live catalog and is unchanged.
  *
  * DRIFT SINCE THIS GENERATION: none.
  *
@@ -1315,6 +1322,17 @@ export type Database = {
         }
         Returns: string
       }
+      create_path_at_status: {
+        Args: {
+          agent_session_id?: string | null
+          kind?: string
+          lane_source_path_id?: string | null
+          name: string
+          scenario_id: string
+          status: EntityStatus
+        }
+        Returns: string
+      }
       create_phase: {
         Args: { name: string; service_id: string; summary?: string | null }
         Returns: string
@@ -1506,6 +1524,14 @@ export type Database = {
         Args: { p_featured: boolean; p_resource_id: string }
         Returns: Json
       }
+      set_path_status: {
+        Args: {
+          agent_session_id?: string | null
+          path_id: string
+          status: EntityStatus
+        }
+        Returns: Json
+      }
       set_path_steps: {
         Args: { path_id: string; step_ids: string[] }
         Returns: undefined
@@ -1560,6 +1586,17 @@ export type Database = {
           content: string
           lane_id: string
           path_id: string
+          step_id: string
+        }
+        Returns: Json
+      }
+      upsert_cell_at_status: {
+        Args: {
+          agent_session_id?: string | null
+          content: string
+          lane_id: string
+          path_id: string
+          status: EntityStatus
           step_id: string
         }
         Returns: Json
