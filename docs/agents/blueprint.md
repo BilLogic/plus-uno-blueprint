@@ -180,13 +180,13 @@ Audit / whatif / import-sweep outputs. Written by skills (IDE service key or can
 ### `authoring_changes`
 Append-only record of every authoring write. Audit-only: the in-memory stack in src/lib/authoringSession.ts is still the undo affordance, and nothing replays `revert` from here. A row with `deleted_kind` set is a deletion and carries the rows it destroyed; `public.trash` is the view over exactly those.
 
-4 of 12 columns described.
+5 of 12 columns described.
 
 | Column | Meaning |
 |---|---|
 | `id` | — |
 | `at` | — |
-| `author` | — |
+| `author` | Who wrote it: human, agent (the in-app agent, under a human's session), or uno-bot (the plus-uno Slack Worker, its rpc_writer account). uno-bot is stamped by a trigger from the JWT and cannot be claimed by anyone else. |
 | `author_id` | — |
 | `agent_session_id` | The agent conversation this write belongs to. No foreign key on purpose: the record has to outlive the session it names. |
 | `fn` | The operation: an authoring RPC name, or one of the direct-table mutation names the client logs under. Matches the WriteFn union in src/lib/authoringSession.ts. |
