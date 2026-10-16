@@ -37,7 +37,7 @@
 %%   slices.authorship        ∈ (generated | customized | human)
 %%   services.origin          ∈ (import | app)
 %%   authoring_changes.deleted_kind ∈ (scenario | path | lane | step | cell)
-%%   authoring_changes.author ∈ (human | agent)
+%%   authoring_changes.author ∈ (human | agent | uno-bot)
 %%   agent_messages.kind      ∈ (user | assistant | tool | status)
 %%   origin (cells | lanes | paths | phases | scenarios | steps | touchpoints |
 %%           cell_touchpoints | resources) ∈ (import | app)
@@ -312,7 +312,7 @@ erDiagram
   authoring_changes {
     uuid id PK
     timestamptz at
-    text author "human | agent"
+    text author "human | agent | uno-bot"
     uuid author_id
     uuid agent_session_id "no FK on purpose; the record outlives the session"
     text fn "the authoring RPC, or a direct-table mutation name"
