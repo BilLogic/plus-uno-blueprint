@@ -2,8 +2,11 @@
 -- anon on a hosted project are taken back, and the rule is asserted over the
 -- whole schema.
 --
--- Authored 2026-10-17. The template's 21000308000000 under this repository's
--- own version number, unchanged below this paragraph. Here neither function
+-- Authored 2026-10-17. The template's
+-- `21000308000000_anon_runs_no_authoring_write.sql` under this repository's
+-- own version number, unchanged below this paragraph — so the 2100… numbers
+-- it cites are the template's (this repository's `add_lane` rename was
+-- `20260820130100_add_lane_at_row_to_at_position.sql`). Here neither function
 -- is executable by anon (checked against the live project), so the two
 -- revokes change nothing and the file lands for its proof: no authoring write
 -- — this deployment's own definer functions included — is open to anon. The
