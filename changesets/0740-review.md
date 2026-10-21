@@ -51,3 +51,11 @@ No data in this batch has been applied. Apply requires Bill's approval of the
 posted exact diff/hash, followed by fresh preflight, durable inverse read-back
 and a separate verify invocation. The final all-content stacked/merged render
 report remains due on #737; no fresh visual result is claimed here.
+
+## Independent review
+
+The reused read-only reviewer checked commit 09416b8 against the pinned runner
+base 82d7c769248f6a3e0ca26cf71a18566adeca64cc, including working-tree changes.
+Standards: no actionable findings. Spec: no actionable findings. The reviewer
+independently read the Figma shipped-app note. It ran no apply, hosted
+verification or tests; the author-side test evidence above is separate.
