@@ -1,6 +1,7 @@
 # Review record for #739
 
-Prepared October 21, 2026. No #739 data has been applied. Scope and exact
+Completed October 21, 2026. The approved supported batch is applied and
+separately verified. Scope and exact
 approval live on [#739](https://github.com/BilLogic/plus-uno-blueprint/issues/739).
 
 ## Supported batch
@@ -110,3 +111,20 @@ Before apply, post the final diff/hash and wait for Bill's approval. After
 apply, separately verify the final data, all durable inverses, the calendar
 placement name and deferred-row preservation. Post every skipped item.
 The parent-wide stacked/merged render check remains due after all batches.
+
+## Completed apply and read-back
+
+Bill explicitly approved the posted 62-operation diff through Codex. The
+exact hash `6bb208c00d80cf059f7e8488287a4cfc22b6c77fe696ff648e7dcf3d3b28db80`
+passed a fresh preflight with ledger138→138, then all 62 operations applied
+successfully. All 62 durable changes have captured inverses. A separate
+verifier run passed with no failures.
+
+The additional joined read-back confirms exactly one calendar placement at
+position 1, linked to “Calendar feed subscription”. The five deferred cells,
+the school-channel step's name and all six 12+ path-membership rows match
+their pre-apply snapshots. No deferred #752 operation was performed.
+
+The original missing-operation blocker remains explicit in #752, and the
+parent-wide final render check is still due. Closing supported #739 does not
+close that follow-up, unblock its dependents, complete #737, or merge #753.
