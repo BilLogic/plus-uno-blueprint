@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "issue": 738,
+  "operations": [
+    {
+      "key": "tracer",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "1a79e45e"
+      },
+      "expected": {
+        "content": "Creates and edits sessions in Admin › Sessions.",
+        "summary": "PLANNED (not shipped as of Aug 2026): supervisors build and adjust the semester schedule directly in the app instead of the DB-import pipeline. In-app session creation is coming per Bill; edit scopes (single / all recurring / date range) and revert are already merged on dev but not deployed — no session/shift creation UI exists anywhere today.",
+        "status": "built",
+        "path_id": "f0000000-0000-4000-8000-000000000806",
+        "lane_id": "0eae4ce7-b974-4dbc-b1c3-49ce19ab12e0",
+        "step_id": "f0000000-0000-4000-8000-000000000861",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null
+      },
+      "value": {
+        "content": "Creates sessions in Admin › Sessions.",
+        "summary": "Card 2451 archived 2026-09-30; revive or remove at next roadmap review. Editing is live on Schedule as issued.",
+        "status": "proposed"
+      },
+      "evidence": [
+        "Notion card 2451 — archived 2026-09-30",
+        "Figma 11272:161738 — no shipped session creation",
+        "Figma 11276:161862 — no shipped session creation"
+      ]
+    },
+    {
+      "key": "evidence-1",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "tracer"
+          },
+          "cell_key": "plus-tutoring/standard-scheduling/created-in-the-app/back-stage-actions/creates-edits-sessions-in-app",
+          "title": "Notion card 2451 — archived 2026-09-30"
+        }
+      },
+      "expected": null,
+      "value": {
+        "title": "Notion card 2451 — archived 2026-09-30",
+        "kind": "decision",
+        "note": "Card 2451 is archived. Keep session creation proposed; revive or remove at the next roadmap review. Source: 2026-10-20 knowledge-base audit, https://github.com/BilLogic/plus-uno-blueprint/issues/738"
+      },
+      "evidence": [
+        "Notion card 2451 — archived 2026-09-30",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/738"
+      ]
+    },
+    {
+      "key": "evidence-2",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "tracer"
+          },
+          "cell_key": "plus-tutoring/standard-scheduling/created-in-the-app/back-stage-actions/creates-edits-sessions-in-app",
+          "title": "Figma 11272:161738 — no shipped session creation"
+        }
+      },
+      "expected": null,
+      "value": {
+        "title": "Figma 11272:161738 — no shipped session creation",
+        "kind": "doc",
+        "note": "No create-session flow in the shipped app, per the 2026-10-20 audit (#738). https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161738"
+      },
+      "evidence": [
+        "Figma 11272:161738 — no shipped session creation",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/738"
+      ]
+    },
+    {
+      "key": "evidence-3",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "tracer"
+          },
+          "cell_key": "plus-tutoring/standard-scheduling/created-in-the-app/back-stage-actions/creates-edits-sessions-in-app",
+          "title": "Figma 11276:161862 — no shipped session creation"
+        }
+      },
+      "expected": null,
+      "value": {
+        "title": "Figma 11276:161862 — no shipped session creation",
+        "kind": "doc",
+        "note": "No create-session flow in the shipped app, per the 2026-10-20 audit (#738). https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11276-161862"
+      },
+      "evidence": [
+        "Figma 11276:161862 — no shipped session creation",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/738"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "f0000000-0000-4000-8000-000000000806"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "1a79e45e-37f8-4224-b27f-0f5f6d56b2fe"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 6
+    }
+  ]
+}

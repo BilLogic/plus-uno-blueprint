@@ -331,6 +331,10 @@ by both the browser (`src/lib/agent/embedQuestion.ts`) and the backfill.
 
 Single owner of the write path — other docs link here.
 
+Reviewed ticket batches use the same surface through the
+[content changeset runner](content-changesets.md), which documents preflight,
+approval, durable-log read-back and partial-failure handling.
+
 Every **blueprint-content** write goes through one of the wrapper modules,
 never a raw table write from a component, a context or a hook:
 
