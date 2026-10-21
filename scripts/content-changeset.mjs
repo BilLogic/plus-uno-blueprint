@@ -90,8 +90,8 @@ export function validateChangeset(changeset) {
   }
 }
 
-function resolveRefs(value, known) {
-  if (Array.isArray(value)) return value.map((v) => resolveRefs(v, known))
+async function resolveRefs(value, known, database) {
+  if (Array.isArray(value)) return Promise.all(value.map((v) => resolveRefs(v, known, database)))
   if (value && typeof value === 'object') {
     if (Object.hasOwn(value, 'ref')) {
       if (!known.has(value.ref)) throw new Error(`Expected a preceding operation for ref ${value.ref}`)
@@ -99,7 +99,16 @@ function resolveRefs(value, known) {
       if (!row || !Object.hasOwn(row, value.field ?? 'id')) throw new Error(`Cannot resolve ${value.ref}.${value.field ?? 'id'}`)
       return row[value.field ?? 'id']
     }
-    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, resolveRefs(v, known)]))
+    if (Object.hasOwn(value, 'lookup')) {
+      const target = await resolveRefs(value.lookup, known, database)
+      validateTarget(target)
+      if (pending(target)) return { $pending: 'lookup' }
+      const rows = await database.read(target)
+      if (rows.length !== 1) throw new Error(`lookup ${JSON.stringify(target)}: expected exactly one row, found ${rows.length}`)
+      if (typeof rows[0].id !== 'string' || !rows[0].id) throw new Error(`lookup ${JSON.stringify(target)}: missing id`)
+      return rows[0].id
+    }
+    return Object.fromEntries(await Promise.all(Object.entries(value).map(async ([k, v]) => [k, await resolveRefs(v, known, database)])))
   }
   return value
 }
@@ -158,7 +167,7 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
   const known = new Map()
   const auditCounts = mode === 'dry-run' && database.auditCount ? { before: await database.auditCount() } : null
   for (const source of changeset.operations) {
-    const op = resolveRefs(source, known)
+    const op = await resolveRefs(source, known, database)
     const rows = await observe(database, op.target)
     const creating = op.expected === null && mode !== 'verify'
     if (creating ? rows.length !== 0 : rows.length !== 1) {
@@ -183,12 +192,12 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
     })
   }
   for (const check of changeset.checks ?? []) {
-    const rows = await observe(database, resolveRefs(check.target, known))
+    const rows = await observe(database, await resolveRefs(check.target, known, database))
     const count = mode === 'verify' ? check.afterCount : check.beforeCount
     if (rows.length !== count) failures.push(`count ${JSON.stringify(check.target)}: expected ${count}, found ${rows.length}`)
     const field = mode === 'verify' ? 'afterRows' : 'beforeRows'
     const remaining = [...rows]
-    for (const expected of resolveRefs(check[field] ?? [], known)) {
+    for (const expected of await resolveRefs(check[field] ?? [], known, database)) {
       const index = remaining.findIndex((row) => differences(row, expected, field).length === 0)
       if (index === -1) failures.push(`${field} ${JSON.stringify(check.target)}: missing ${JSON.stringify(expected)}`)
       else remaining.splice(index, 1)
@@ -197,8 +206,8 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
   if (mode === 'apply' && failures.length === 0) {
     known.clear()
     for (const { source, before } of planned) {
-      const op = resolveRefs(source, known)
       try {
+        const op = await resolveRefs(source, known, database)
         const current = await database.read(op.target)
         if (before === null ? current.length !== 0 : current.length !== 1 || !isDeepStrictEqual(current[0], before))
           throw new Error('Target changed since preflight; no write attempted for this operation')
@@ -219,7 +228,7 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
         }
         if (failures.length) break
       } catch (error) {
-        failures.push(`${op.key}: ${error.message}; batch stopped, inspect partial writes before retrying`)
+        failures.push(`${source.key}: ${error.message}; batch stopped, inspect partial writes before retrying`)
         break
       }
     }
@@ -230,7 +239,7 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
   }
   if (mode === 'dry-run') {
     for (const { source, before } of planned) {
-      const op = resolveRefs(source, known)
+      const op = await resolveRefs(source, known, database)
       const rows = await observe(database, op.target)
       if (!isDeepStrictEqual(rows, before === null ? [] : [before]))
         failures.push(`${op.key}: dry-run read-back changed; inspect concurrent edits`)
