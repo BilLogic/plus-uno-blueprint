@@ -177,7 +177,10 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
         catch (error) { failures.push(`${op.key}: ${error.message}`) }
       }
     }
-    known.set(op.key, rows[0] ?? { ...op.target.where, ...op.value, id: { $pending: op.key } })
+    known.set(op.key, rows[0] ?? {
+      ...op.target.where, ...op.value, id: { $pending: op.key },
+      ...(op.target.table === 'cells' ? { cell_key: { $pending: `${op.key}.cell_key` } } : {}),
+    })
   }
   for (const check of changeset.checks ?? []) {
     const rows = await observe(database, resolveRefs(check.target, known))

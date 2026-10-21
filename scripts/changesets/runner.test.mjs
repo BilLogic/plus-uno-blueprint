@@ -148,16 +148,23 @@ test('creation preflights absent children under a new parent, then verifies thei
       key: 'cell', operation: 'upsert_cell_at_status',
       target: { table: 'cells', where: { path_id: { ref: 'path' }, lane_id: 'lane-1', step_id: 'step-1', position: 0 } },
       expected: null, value: { content: 'Requests tutors.', status: 'live' }, evidence: ['Training'],
+    }, {
+      key: 'citation', operation: 'add_evidence',
+      target: { table: 'evidence', where: {
+        service_id: 'service-1', cell_id: { ref: 'cell' },
+        cell_key: { ref: 'cell', field: 'cell_key' }, title: 'Training',
+      } },
+      expected: null, value: { kind: 'doc', title: 'Training', note: 'Shipped procedure.' }, evidence: ['Training'],
     }],
     checks: [{ target: { table: 'paths', where: { scenario_id: 'scenario-1' } }, beforeCount: 0, afterCount: 1 }],
   }
-  const stored = { paths: [], cells: [], authoring_changes: [] }
+  const stored = { paths: [], cells: [], evidence: [], authoring_changes: [] }
   const database = {
     read: async (target) => stored[target.table].filter((row) =>
       Object.entries(target.where ?? (target.id ? { id: target.id } : {})).every(([key, value]) => row[key] === value)),
     write: async (op) => {
       const id = `${op.key}-1`
-      stored[op.target.table].push({ id, ...op.target.where, ...op.value })
+      stored[op.target.table].push({ id, ...op.target.where, ...op.value, ...(op.target.table === 'cells' ? { cell_key: 'actual/cell-key' } : {}) })
       stored.authoring_changes.push({
         id: `log-${id}`, fn: op.operation, args: {}, author: 'human',
         revert: { fn: 'delete', args: { id } },
@@ -171,6 +178,7 @@ test('creation preflights absent children under a new parent, then verifies thei
   const result = await runChangeset(batch, 'apply', database)
   assert.equal(result.ok, true, result.failures.join('\n'))
   assert.equal(stored.cells[0].path_id, 'path-1')
+  assert.equal(stored.evidence[0].cell_key, 'actual/cell-key')
   const verified = await runChangeset(batch, 'verify', database)
   assert.equal(verified.ok, true, verified.failures.join('\n'))
   stored.cells[0].position = 2
