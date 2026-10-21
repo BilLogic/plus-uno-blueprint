@@ -2448,6 +2448,764 @@
       "target": {
         "table": "cell_touchpoints",
         "where": {
+          "cell_id": "802ecb88-257b-47a9-be10-dee9d320daf3"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "daeb6cd5-6d76-4945-bd3e-2da02ff1ba57",
+          "cell_id": "802ecb88-257b-47a9-be10-dee9d320daf3",
+          "touchpoint_id": "e469e871-33ba-4d7b-abee-20abe017593f",
+          "position": 1,
+          "summary": "Session record",
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "daeb6cd5-6d76-4945-bd3e-2da02ff1ba57",
+          "cell_id": "802ecb88-257b-47a9-be10-dee9d320daf3",
+          "touchpoint_id": "e469e871-33ba-4d7b-abee-20abe017593f",
+          "position": 1,
+          "summary": "Session record",
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "92429dbd-93e3-4319-ad8c-605b1d932b92"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "91197629-8eb7-4cb1-8c91-a33781847810",
+          "cell_id": "92429dbd-93e3-4319-ad8c-605b1d932b92",
+          "touchpoint_id": "8a89d4f1-6db6-4622-bfa4-cb0e28ae092c",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "91197629-8eb7-4cb1-8c91-a33781847810",
+          "cell_id": "92429dbd-93e3-4319-ad8c-605b1d932b92",
+          "touchpoint_id": "8a89d4f1-6db6-4622-bfa4-cb0e28ae092c",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "9d8bd23d-51e0-497b-9e2c-818511eb9b78"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180101"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180102"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180103"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180106"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "ccd56ff9-bee8-49dc-b9c7-ee4b3a0557cf",
+          "cell_id": "a0000000-0000-4000-8000-000000180106",
+          "touchpoint_id": "e469e871-33ba-4d7b-abee-20abe017593f",
+          "position": 1,
+          "summary": "The tutors open the session detail page in the PLUS app to join the session.",
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "ccd56ff9-bee8-49dc-b9c7-ee4b3a0557cf",
+          "cell_id": "a0000000-0000-4000-8000-000000180106",
+          "touchpoint_id": "e469e871-33ba-4d7b-abee-20abe017593f",
+          "position": 1,
+          "summary": "The tutors open the session detail page in the PLUS app to join the session.",
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180107"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180109"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180110"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180201"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180202"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180203"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180206"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "f8427216-6902-4a79-95ad-b98b816ec975",
+          "cell_id": "a0000000-0000-4000-8000-000000180206",
+          "touchpoint_id": "e469e871-33ba-4d7b-abee-20abe017593f",
+          "position": 1,
+          "summary": "The tutors join the Zoom/Pencil page via the join session modal in the session dashboard.",
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "f8427216-6902-4a79-95ad-b98b816ec975",
+          "cell_id": "a0000000-0000-4000-8000-000000180206",
+          "touchpoint_id": "e469e871-33ba-4d7b-abee-20abe017593f",
+          "position": 1,
+          "summary": "The tutors join the Zoom/Pencil page via the join session modal in the session dashboard.",
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180207"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180209"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180210"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180301"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180302"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180303"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180306"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "6623ad3d-e4ad-4180-a52e-1fa3db83c162",
+          "cell_id": "a0000000-0000-4000-8000-000000180306",
+          "touchpoint_id": "20b2043a-2fe5-48cb-916b-4b156bdca4ee",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "6623ad3d-e4ad-4180-a52e-1fa3db83c162",
+          "cell_id": "a0000000-0000-4000-8000-000000180306",
+          "touchpoint_id": "20b2043a-2fe5-48cb-916b-4b156bdca4ee",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180310"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180401"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180402"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180406"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "fd4eaf80-517f-4659-9729-f933f0403f4e",
+          "cell_id": "a0000000-0000-4000-8000-000000180406",
+          "touchpoint_id": "20b2043a-2fe5-48cb-916b-4b156bdca4ee",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "fd4eaf80-517f-4659-9729-f933f0403f4e",
+          "cell_id": "a0000000-0000-4000-8000-000000180406",
+          "touchpoint_id": "20b2043a-2fe5-48cb-916b-4b156bdca4ee",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180410"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180501"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180502"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180503"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180506"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "71403d30-f0b0-44e4-aa12-92c597d710cf",
+          "cell_id": "a0000000-0000-4000-8000-000000180506",
+          "touchpoint_id": "e469e871-33ba-4d7b-abee-20abe017593f",
+          "position": 1,
+          "summary": "The tutors review the student list for the session in the PLUS app.",
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "71403d30-f0b0-44e4-aa12-92c597d710cf",
+          "cell_id": "a0000000-0000-4000-8000-000000180506",
+          "touchpoint_id": "e469e871-33ba-4d7b-abee-20abe017593f",
+          "position": 1,
+          "summary": "The tutors review the student list for the session in the PLUS app.",
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180509"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180510"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180601"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180602"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180603"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180606"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "51d79b75-4a45-42cd-8b5f-bc9f81813cc1",
+          "cell_id": "a0000000-0000-4000-8000-000000180606",
+          "touchpoint_id": "20b2043a-2fe5-48cb-916b-4b156bdca4ee",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "51d79b75-4a45-42cd-8b5f-bc9f81813cc1",
+          "cell_id": "a0000000-0000-4000-8000-000000180606",
+          "touchpoint_id": "20b2043a-2fe5-48cb-916b-4b156bdca4ee",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180610"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "d9fd5f57-0960-43e0-8475-3cc1b51263ae"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "119d0374-af38-4348-b696-7a7238ba7921",
+          "cell_id": "d9fd5f57-0960-43e0-8475-3cc1b51263ae",
+          "touchpoint_id": "20b2043a-2fe5-48cb-916b-4b156bdca4ee",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "119d0374-af38-4348-b696-7a7238ba7921",
+          "cell_id": "d9fd5f57-0960-43e0-8475-3cc1b51263ae",
+          "touchpoint_id": "20b2043a-2fe5-48cb-916b-4b156bdca4ee",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "e5ca2c87-8090-402b-bdf8-7aab481126d2"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "e0eadb11-256a-46d1-9b2d-a94be9ec5d95",
+          "cell_id": "e5ca2c87-8090-402b-bdf8-7aab481126d2",
+          "touchpoint_id": "20b2043a-2fe5-48cb-916b-4b156bdca4ee",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "e0eadb11-256a-46d1-9b2d-a94be9ec5d95",
+          "cell_id": "e5ca2c87-8090-402b-bdf8-7aab481126d2",
+          "touchpoint_id": "20b2043a-2fe5-48cb-916b-4b156bdca4ee",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "0f73cd93-5dc7-4514-b046-dd0ae0b56c5d"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "1e3b9d6c-caa3-4c40-9ccb-b612412184eb"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "802a4305-c8d1-4cd8-bebd-8c5788c1e8ac",
+          "cell_id": "1e3b9d6c-caa3-4c40-9ccb-b612412184eb",
+          "touchpoint_id": "e469e871-33ba-4d7b-abee-20abe017593f",
+          "position": 1,
+          "summary": "Profile page",
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "802a4305-c8d1-4cd8-bebd-8c5788c1e8ac",
+          "cell_id": "1e3b9d6c-caa3-4c40-9ccb-b612412184eb",
+          "touchpoint_id": "e469e871-33ba-4d7b-abee-20abe017593f",
+          "position": 1,
+          "summary": "Profile page",
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "26e3513a-e1cf-42e7-919e-e9539323f17d"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "3c9d9d28-15f1-49e2-b3d4-fa94a594da33"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
           "cell_id": "45596a59-7bf2-40fc-8012-eb11c38fb817"
         }
       },
@@ -2482,6 +3240,170 @@
       "target": {
         "table": "cell_touchpoints",
         "where": {
+          "cell_id": "a54e2f42-ab1c-4454-97d7-d5c3d7f035f9"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a6d81c59-8e8c-4a9f-af65-2c78c3243819"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "e7895077-b8d9-492c-a9e0-d38a88c4b53a"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "50440ab8-e2d9-42b1-845f-c32be9ddba0c",
+          "cell_id": "e7895077-b8d9-492c-a9e0-d38a88c4b53a",
+          "touchpoint_id": "16e53605-0e4d-42b9-ac28-5a4b6bae4e61",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "50440ab8-e2d9-42b1-845f-c32be9ddba0c",
+          "cell_id": "e7895077-b8d9-492c-a9e0-d38a88c4b53a",
+          "touchpoint_id": "16e53605-0e4d-42b9-ac28-5a4b6bae4e61",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "ec1c737c-fc37-4841-ab9a-09bade7069cc"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "050f9580-3811-4c9e-bed6-c385ac468c4a"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "d13188bd-256c-4610-9a43-7972909de2a6",
+          "cell_id": "050f9580-3811-4c9e-bed6-c385ac468c4a",
+          "touchpoint_id": "e81dfafc-89d1-4e03-81b0-4fd4ea57996d",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "d13188bd-256c-4610-9a43-7972909de2a6",
+          "cell_id": "050f9580-3811-4c9e-bed6-c385ac468c4a",
+          "touchpoint_id": "e81dfafc-89d1-4e03-81b0-4fd4ea57996d",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "1099b78d-e056-4ab0-b6e2-7eb0e8a733e0"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "11184a22-242c-4e80-808f-c5cb7b67b792"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "3351f41b-13c3-4323-8b11-536b202974a5"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "3649eff8-2a8e-425b-80b2-2ac12b468934"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "49d5700f-5225-42cb-b368-f1a17ddc6087"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
           "cell_id": "6afc27c3-e692-42d6-b868-f4bd2c453b07"
         }
       },
@@ -2494,7 +3416,75 @@
       "target": {
         "table": "cell_touchpoints",
         "where": {
-          "cell_id": "a0000000-0000-4000-8000-000000180603"
+          "cell_id": "b0cc2c00-474c-49d5-9a35-08c7339e9cc0"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "464e702c-cff2-4ca4-b0cd-c0e4fec4658a",
+          "cell_id": "b0cc2c00-474c-49d5-9a35-08c7339e9cc0",
+          "touchpoint_id": "83f05cc6-6963-466d-b85d-3fb8fb63c145",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "464e702c-cff2-4ca4-b0cd-c0e4fec4658a",
+          "cell_id": "b0cc2c00-474c-49d5-9a35-08c7339e9cc0",
+          "touchpoint_id": "83f05cc6-6963-466d-b85d-3fb8fb63c145",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b76e47fe-f424-44c4-98f8-64a134ecfb2c"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "f9894bda-e9ee-484b-b0dd-e52c77331d1d",
+          "cell_id": "b76e47fe-f424-44c4-98f8-64a134ecfb2c",
+          "touchpoint_id": "1a16336e-0f7b-4ec6-b524-a46c33c209f6",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "f9894bda-e9ee-484b-b0dd-e52c77331d1d",
+          "cell_id": "b76e47fe-f424-44c4-98f8-64a134ecfb2c",
+          "touchpoint_id": "1a16336e-0f7b-4ec6-b524-a46c33c209f6",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "dbfb6712-7312-4737-a1a2-1cbd78adab9e"
         }
       },
       "beforeCount": 0,

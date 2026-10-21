@@ -30,8 +30,9 @@ is retained while the obsolete clearance-job replacement claim is removed.
 
 The runner guards 59 cells across the three affected paths (40, 9 and 10),
 including the four changed cells and the unchanged authored fields of their
-neighbors. It also guards existing placements on each edited cell, exact
-evidence counts, and the four operations' full before values. Generated
+neighbors. It also guards placements on all 59 cells: 17 existing rows and
+42 empty cell scopes, so additions to previously empty scopes are detected.
+It guards exact evidence counts and the four operations' full before values. Generated
 timestamps and search-index fields are excluded from equality checks.
 The expected values are the authenticated live read, not an updated expected
 state chosen to bypass a mismatch.
@@ -75,6 +76,12 @@ close this ticket on a keyword count alone.
 - Sequential Spec review: the reviewed data matches the four summary edits;
   apply, post-apply verification, contradiction review and visual proof remain
   pending. This is not a recommendation to close or merge automatically.
+- Independent review found that the initial placement snapshots covered only
+  four edited cells, leaving 55 neighboring scopes unchecked. Guard coverage
+  failed before the correction (4 of 59 scopes), then passed after expanding
+  the unchanged placement snapshots to all 59 scopes. The eight mutation
+  operations and proposed wording are unchanged; the revised changeset hash
+  requires a fresh dry-run and approval.
 
 Before apply, Bill must reply **approved** on #750 for the posted dry-run.
 After approval, apply that exact hash, run the verifier, repeat the source
