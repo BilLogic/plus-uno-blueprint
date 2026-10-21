@@ -100,6 +100,12 @@ ledger138→138; a fresh exact-file dry-run is required after review changes.
 Typecheck and the two runner/mutation test files passed. These checks do not
 claim that the batch is applied or visually verified.
 
+Independent review of commit 0331752 found no actionable Standards or Spec
+issues. A read-only authenticated resource query confirmed the old calendar
+placement has zero resource rows; with its null summary/role, the sync RPC
+replaces that empty placement rather than retaining a second name-only row.
+The reviewer did not apply anything or perform a new Figma annotation audit.
+
 Before apply, post the final diff/hash and wait for Bill's approval. After
 apply, separately verify the final data, all durable inverses, the calendar
 placement name and deferred-row preservation. Post every skipped item.
