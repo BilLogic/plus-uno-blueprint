@@ -1,8 +1,9 @@
 # Review record for #750
 
-Updated October 21, 2026. The approved initial batch partially applied: the
-first summary landed, then the first evidence insertion failed. The recovery
-changeset is pending separate review and approval. The authoritative scope and closure criteria are
+Completed October 21, 2026. All four summary corrections and four evidence
+additions are applied and verified. The approved initial batch partially
+applied; the separately approved recovery completed the remaining operations.
+The authoritative scope and closure criteria are
 [issue #750](https://github.com/BilLogic/plus-uno-blueprint/issues/750).
 
 ## Sources and scope
@@ -65,7 +66,7 @@ and CPO email/sheet wording. Confirm the four corrected summaries match their
 sources and report the existing #739 account-flow issue separately. Do not
 close this ticket on a keyword count alone.
 
-## Validation and remaining gates
+## Validation at the preparation stage
 
 - Dry-run: passed; eight operations, no expected-current mismatch, no writes.
   The authoring log stayed at 130 rows before and after.
@@ -122,3 +123,40 @@ partial outcome, and additionally asserts the first durable row and inverse
 before and after recovery. The intended four final summaries are unchanged.
 Recovery must receive a separately posted dry-run and approval; the ticket
 stays open until the complete post-state and all closure checks pass.
+
+## Completed recovery and closure checks
+
+Bill explicitly approved the reviewed recovery through the Codex approval
+prompt. Approval provenance is recorded on #750. The exact recovery hash
+`8bc043796dccc09d299f719e9e457c20b84e1bddad5e3c600802b5e05847cf8c` applied all
+seven remaining operations successfully. A separate verifier run passed with
+zero failures, including all 59 cell/placement scopes, evidence counts,
+seven recovery inverses and the original completed write's inverse.
+
+The post-apply scan read 1,021 accessible cells and found no remaining
+in-scope contradictions in the four corrected summaries. The existing
+Employment & Access account-creation claim remains separately owned by #739.
+This bounded scan is not a claim that every board issue is resolved.
+
+Read-only browser checks rendered the three affected scenarios with both
+stacked and merged addresses, with no page/console errors and no attempted
+Data API writes. Interview & Offer's two-path comparison rendered in both
+distinct layouts. Before Students Join and Tutor Profile & Maintenance each
+have one path, so the two requested layout addresses render equivalent boards
+and offer no layout toggle. Screenshots were inspected; step/lane/cell content
+and the addressed scenario were checked. The final all-ticket render check on
+#737 is still due after the remaining content batches.
+
+Original plus recovery durable change IDs:
+
+- `85026d63-a815-4f4b-89be-776f369659b7` — first summary.
+- `d80512aa-1e0e-4c7a-9a3b-1850b01ea1bf` — first evidence.
+- `e2727b3e-de3d-475a-814c-8bf5c70f4a89` — clearance summary.
+- `e677649a-dc7a-4443-8f01-a0cf44b6c6b5` — clearance evidence.
+- `038964ce-059b-4cc5-9cc5-b810e2e1efa7` — invitation summary.
+- `6d11adf8-483d-4ba7-b36e-00c58e06b761` — invitation evidence.
+- `ea2d2b36-a8c1-4072-9c9b-e866d6f77b6b` — tutor-list summary.
+- `ca3fb360-fa91-4d98-a80b-96c950832ceb` — tutor-list evidence.
+
+Both the original partial receipt and completed recovery receipt remain in
+the isolated worktree. No inverse was executed and no schema/grant changed.
