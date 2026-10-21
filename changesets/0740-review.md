@@ -47,9 +47,10 @@ Dry-run passes with no expected-current mismatch or durable-log growth.
 Typecheck and both runner/mutation seam test files pass (five Vitest tests,
 including the embedded twelve-case Node runner suite).
 
-No data in this batch has been applied. Apply requires Bill's approval of the
-posted exact diff/hash, followed by fresh preflight, durable inverse read-back
-and a separate verify invocation. The final all-content stacked/merged render
+Bill approved the exact posted diff/hash in Codex. Fresh preflight passed
+with ledger 200→200; all sixteen operations were then applied through the
+dev-authenticated runner. A separate verify invocation passed all post-state,
+scoped and durable-inverse checks. The final all-content stacked/merged render
 report remains due on #737; no fresh visual result is claimed here.
 
 ## Independent review
@@ -59,3 +60,10 @@ base 82d7c769248f6a3e0ca26cf71a18566adeca64cc, including working-tree changes.
 Standards: no actionable findings. Spec: no actionable findings. The reviewer
 independently read the Figma shipped-app note. It ran no apply, hosted
 verification or tests; the author-side test evidence above is separate.
+
+## Applied result
+
+[Completion and compact verifier output](https://github.com/BilLogic/plus-uno-blueprint/issues/740#issuecomment-6325537233).
+Eight cell corrections and eight evidence additions have sixteen verified
+durable inverses. No expected-current mismatches. #740 is closed; #754 and
+#737 remain open. Final stacked/merged render verification remains pending.
