@@ -1,7 +1,8 @@
 # Review record for #750
 
-Prepared October 21, 2026. This report describes a pending changeset, not an
-applied correction. The authoritative scope and closure criteria are
+Updated October 21, 2026. The approved initial batch partially applied: the
+first summary landed, then the first evidence insertion failed. The recovery
+changeset is pending separate review and approval. The authoritative scope and closure criteria are
 [issue #750](https://github.com/BilLogic/plus-uno-blueprint/issues/750).
 
 ## Sources and scope
@@ -83,10 +84,41 @@ close this ticket on a keyword count alone.
   operations and proposed wording are unchanged; the revised changeset hash
   requires a fresh dry-run and approval.
 
-Before apply, Bill must reply **approved** on #750 for the posted dry-run.
-After approval, apply that exact hash, run the verifier, repeat the source
+Before recovery apply, Bill must approve its posted dry-run. The original
+batch and partial receipt must not be retried, deleted or silently replaced.
+After approval, apply the exact recovery hash, run the verifier, repeat the source
 review, and check **Before Students Join**, **Tutor Profile & Maintenance**
 and **Interview & Offer** in both stacked and merged views. Post the results
 and every skipped/unverified item on #750, then link the report from #737.
 The original full touched-scenario render check remains due after the last
 content ticket. No post-apply or visual success is claimed here.
+
+## Partial application and recovery
+
+Bill conditionally approved the independently reviewed PR in chat. The
+approval provenance was recorded on #750 before applying the unchanged
+approved hash `4a8e20f40e33b09ab58f9b2df39e63bf313964d551cc0ad631e387ff30ca0342`.
+
+The first summary (`0877d3e4-55ed-4eba-a0fd-5aef8a5bd219`) landed, with durable
+change `85026d63-a815-4f4b-89be-776f369659b7` and its captured inverse. The
+first evidence operation failed and the runner stopped. Authenticated
+read-back confirmed that no new evidence exists on any of the four cells and
+the other three summaries remain unchanged. The original verifier correctly
+fails on the incomplete batch. No rollback or blind retry was attempted.
+
+The initial changeset supplied null evidence keys for three cells without
+canonical keys. The checked-in `evidence_cell_key_paired` constraint requires
+a non-null evidence key when cell_id is present. Both the repository's cell
+panel and agent evidence operation use the cell UUID as a documented
+placeholder. The initial dry-run and independent review missed this
+constraint. The runner's generic error did not preserve the raw database
+message, so the hosted error itself is not claimed as independently decoded.
+
+`0750-recovery.json` expresses the seven remaining operations, using the same
+UUID-placeholder convention for the three missing evidence keys. It does not
+rewrite the already-landed summary. It preserves all 59 cell and placement
+guards, updates only the first summary's expected before-state to the proven
+partial outcome, and additionally asserts the first durable row and inverse
+before and after recovery. The intended four final summaries are unchanged.
+Recovery must receive a separately posted dry-run and approval; the ticket
+stays open until the complete post-state and all closure checks pass.
