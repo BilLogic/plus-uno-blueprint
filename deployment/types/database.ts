@@ -127,7 +127,10 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  *   here. Every other table, view and function was checked column by column
  *   and argument by argument against the live catalog and is unchanged.
  *
- * DRIFT SINCE THIS GENERATION: none.
+ * DRIFT SINCE THIS GENERATION: `move_cell(cell_id, expected_source, destination)`
+ * returns jsonb (20261022150821). Forward declaration for the prepared RPC;
+ * not deployed or regenerated from hosted production. The next regeneration
+ * after an authorized deployment emits this entry and removes this note.
  *
  * That line is a list because a migration in this repository's own series
  * applies to production before the code that reads it is merged, so this file
@@ -1382,6 +1385,10 @@ export type Database = {
         Returns: string
       }
       is_service_account: { Args: never; Returns: boolean }
+      move_cell: {
+        Args: { cell_id: string; destination: Json; expected_source: Json }
+        Returns: Json
+      }
       key_slug: { Args: { value: string }; Returns: string }
       mint_cell_key: {
         Args: { lane_id: string; path_id: string; step_id: string }
