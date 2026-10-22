@@ -127,7 +127,10 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  *   here. Every other table, view and function was checked column by column
  *   and argument by argument against the live catalog and is unchanged.
  *
- * DRIFT SINCE THIS GENERATION: none.
+ * DRIFT SINCE THIS GENERATION: `rename_step(step_id, expected_name, new_name)`
+ * returns jsonb (20261022145813). Forward declaration for the prepared RPC;
+ * not deployed or regenerated from hosted production. The next regeneration
+ * after an authorized deployment emits this entry and removes this note.
  *
  * That line is a list because a migration in this repository's own series
  * applies to production before the code that reads it is merged, so this file
@@ -1427,6 +1430,10 @@ export type Database = {
       rename_scenario: {
         Args: { new_name: string; scenario_id: string }
         Returns: undefined
+      }
+      rename_step: {
+        Args: { expected_name: string; new_name: string; step_id: string }
+        Returns: Json
       }
       rename_touchpoint: {
         Args: { p_name: string; p_touchpoint_id: string }
