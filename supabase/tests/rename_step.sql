@@ -134,7 +134,7 @@ begin
     raise exception 'zero-row rename was allowed';
   exception when no_data_found then null;
   end;
-  foreach claims in array array['', '   ', 'New step', null] loop
+  foreach claims in array array['', '   ', E'\t', E'\n\r', E' \t\n ', 'New step', null] loop
     begin
       perform public.rename_step(fixture.step_id, 'New step', claims);
       raise exception 'blank or no-op name was allowed';

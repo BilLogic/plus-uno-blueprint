@@ -25,7 +25,8 @@ begin
      or (auth.jwt() -> 'app_metadata' ->> 'role') is distinct from 'service' then
     raise exception 'This account cannot edit the blueprint' using errcode = '42501';
   end if;
-  if rename_step.expected_name is null or nullif(btrim(rename_step.new_name), '') is null then
+  if rename_step.expected_name is null or rename_step.new_name is null
+     or rename_step.new_name !~ '[^[:space:]]' then
     raise exception 'A step rename requires its expected name and nonempty new name' using errcode = '22023';
   end if;
 
