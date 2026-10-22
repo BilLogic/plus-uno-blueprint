@@ -97,3 +97,14 @@ apply, separate receipt verification, and missing/ambiguous/id-less rejection.
 All fourteen Node runner cases pass; both Vitest runner/mutation files pass
 (five wrapper/integration tests). Typecheck and scoped ESLint pass. Final full
 gates and stacked/merged rendering over all touched scenarios remain due.
+
+## Independent review
+
+The reused reviewer completed Standards and Spec review at head2d8fd42 against
+merged runner base4af48fba. Both axes found no actionable findings. It confirmed
+pending-lane lookup behavior, current-practice scope, evidence mappings and
+deferred preservation. It ran no tests or hosted writes/verification.
+
+Approval must use the runner's canonical JSON hash:
+`5ec0f5ded96d74d452a243fe0670b55ba0775aaed8dc840ada8470843168c7ed`.
+The differently formatted file's raw-byte hash is not the runner approval hash.
