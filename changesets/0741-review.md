@@ -2,8 +2,8 @@
 
 This supported batch has 118 operations: 56 existing-cell edits, 58 evidence
 additions, two new cells, one new path and one existing path-summary update.
-No content has been applied. Exact approval and separate post-apply
-verification are still required.
+Bill approved the exact canonical diff in Codex. All 118 operations have been
+applied, and separate post-apply verification passed with 121 durable inverses.
 
 ## Sources and boundaries
 
@@ -108,3 +108,14 @@ deferred preservation. It ran no tests or hosted writes/verification.
 Approval must use the runner's canonical JSON hash:
 `5ec0f5ded96d74d452a243fe0670b55ba0775aaed8dc840ada8470843168c7ed`.
 The differently formatted file's raw-byte hash is not the runner approval hash.
+
+## Applied result
+
+[Completion and compact verifier output](https://github.com/BilLogic/plus-uno-blueprint/issues/741#issuecomment-6331096668).
+All four CI checks passed at the approved code head before apply. Fresh
+preflight passed with ledger216→216. Separate verify passed all145 scoped
+checks and121 durable inverse records. Additional joined read-back confirmed
+the two renamed mandatory-goal placements and the new Slack placement, plus
+the new exception path's exact shape. No expected-current mismatches.
+#741 is closed; #756 and #737 remain open. Final parent-wide stacked/merged
+render checking remains pending; pre-apply browser CI is not that proof.
