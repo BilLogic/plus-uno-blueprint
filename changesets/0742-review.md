@@ -2,7 +2,8 @@
 
 This final supported batch has two operations: rename/update the existing
 Goal Setting email cell and add its source evidence. Status live and every
-structural key remain unchanged. No #742 data has been applied.
+structural key remain unchanged. Bill approved the exact source-only diff; both
+operations are applied with two durable inverses verified.
 
 ## Sources
 
@@ -59,9 +60,9 @@ Fresh dry-run passes two operations, no expected-current mismatches, durable
 log337→337. Separate pre-apply verify must fail on the changed post-state,
 missing evidence and absent complete receipt. The runner code is unchanged
 from approved #741; no new operation or package change was added here.
-No #742 apply or post-apply visual check has run. Exact-diff approval, fresh
-preflight, durable inverse read-back, joined-name checks and final parent-wide
-stacked/merged rendering remain required.
+Bill approved the exact diff in Codex. Fresh preflight, apply, separate durable
+inverse/read-back verification and joined-name checks pass. Final parent-wide
+stacked/merged rendering remains due; no post-apply visual proof is claimed.
 
 ## Independent review
 
@@ -71,3 +72,14 @@ scenario creation from this supported batch; scenario implementation remains
 pending in #759. No new findings. It confirmed canonical runner hash
 `1239ba23e06ee1b8c585b319bfe932c1ff5e7397afa5583a0e1c04497e1f1538`
 and a clean working tree. It ran no tests or hosted writes.
+
+## Applied result
+
+[Completion and separate-verifier output](https://github.com/BilLogic/plus-uno-blueprint/issues/742#issuecomment-6342678364).
+Both operations applied after fresh preflight (ledger337→337), with no
+expected-current mismatch. Separate verify passed two complete inverse rows
+and all eight scoped checks. Additional read-back confirmed the exact joined
+Weekly Class Report email placement, preserved live status, absent scenario
+and zero outgoing source edges. All four CI checks passed at the reviewed
+code head before apply; privileged live/probe checks were skipped. Supported
+#742 is closed; scenario #759, edge #758 and parent #737 remain open.
