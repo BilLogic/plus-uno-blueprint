@@ -62,3 +62,12 @@ from approved #741; no new operation or package change was added here.
 No #742 apply or post-apply visual check has run. Exact-diff approval, fresh
 preflight, durable inverse read-back, joined-name checks and final parent-wide
 stacked/merged rendering remain required.
+
+## Independent review
+
+The reused reviewer rechecked head015a0bc1 against baseb53733b8. Standards:
+no actionable findings. Spec: the initial P1 is resolved by removing unsafe
+scenario creation from this supported batch; scenario implementation remains
+pending in #759. No new findings. It confirmed canonical runner hash
+`1239ba23e06ee1b8c585b319bfe932c1ff5e7397afa5583a0e1c04497e1f1538`
+and a clean working tree. It ran no tests or hosted writes.
