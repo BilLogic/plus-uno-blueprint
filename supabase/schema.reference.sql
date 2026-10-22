@@ -27,6 +27,8 @@
 -- columns were added, not any design), and defaults are shown where they exist.
 -- Triggers, functions, policies and grants are not reproduced: the migrations
 -- say them, and `check:rls-posture:live` asks the database about the last two.
+-- Prepared capability 20261022150821 adds move_cell only (not deployed).
+-- No table/domain/view shape changes; the migration owns its function/grants.
 --
 -- `entity_status` is a DOMAIN over text, not a per-table CHECK:
 --   proposed | planned | built | live | at_risk | deprecated
