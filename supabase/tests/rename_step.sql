@@ -19,7 +19,7 @@ begin
   insert into public.scenarios(phase_id, name) values (phase, 'fixture') returning id into scenario;
   insert into public.paths(scenario_id, name, kind) values (scenario, 'one', 'happy') returning id into path_one;
   insert into public.paths(scenario_id, name, kind) values (scenario, 'two', 'variant') returning id into path_two;
-  insert into public.steps(scenario_id, name, summary) values (scenario, 'Old step', 'Keep summary') returning id into moment;
+  insert into public.steps(scenario_id, name, summary) values (scenario, ' Old step ', 'Keep summary') returning id into moment;
   insert into public.path_steps(path_id, step_id, position) values (path_one, moment, 0), (path_two, moment, 0);
   insert into public.lanes(path_id, name, position) values (path_one, 'Tutor', 0) returning id into lane_one;
   insert into public.lanes(path_id, name, position) values (path_two, 'Tutor', 0) returning id into lane_two;
@@ -44,11 +44,11 @@ declare
   logged public.authoring_changes%rowtype;
 begin
   select * into strict fixture from rename_fixture;
-  outcome := public.rename_step(fixture.step_id, 'Old step', 'New step');
+  outcome := public.rename_step(fixture.step_id, ' Old step ', ' New step ');
   if outcome->>'id' is distinct from fixture.step_id::text or outcome->>'change_id' is null then
     raise exception 'rename returned no row identity or durable change id';
   end if;
-  if (select name from public.steps where id = fixture.step_id) is distinct from 'New step' then
+  if (select name from public.steps where id = fixture.step_id) is distinct from ' New step ' then
     raise exception 'read-back: step was not renamed';
   end if;
   if (select to_jsonb(s) - 'name' - 'updated_at' from public.steps s where id = fixture.step_id)
@@ -64,7 +64,7 @@ begin
   select * into strict logged from public.authoring_changes where id = (outcome->>'change_id')::uuid;
   if logged.fn <> 'rename_step' or logged.args->>'step_id' <> fixture.step_id::text
       or logged.revert is distinct from jsonb_build_object('fn', 'rename_step', 'args',
-        jsonb_build_object('step_id', fixture.step_id, 'expected_name', 'New step', 'new_name', 'Old step'))
+        jsonb_build_object('step_id', fixture.step_id, 'expected_name', ' New step ', 'new_name', ' Old step '))
       or outcome->'revert' is distinct from logged.revert then
     raise exception 'read-back: inverse does not restore the actual prior name';
   end if;
@@ -111,7 +111,7 @@ begin
   ] loop
     perform set_config('request.jwt.claims', claims, true);
     begin
-      perform public.rename_step(fixture.step_id, 'New step', 'Forbidden');
+      perform public.rename_step(fixture.step_id, ' New step ', 'Forbidden');
       raise exception 'unauthorized caller was allowed: %', claims;
     exception when insufficient_privilege then null;
     end;
@@ -119,24 +119,24 @@ begin
   perform set_config('request.jwt.claims', '{"role":"authenticated","app_metadata":{"role":"service"}}', true);
   perform set_config('request.jwt.claim.sub', '', true);
   begin
-    perform public.rename_step(fixture.step_id, 'New step', 'Forbidden');
+    perform public.rename_step(fixture.step_id, ' New step ', 'Forbidden');
     raise exception 'missing user identity was allowed';
   exception when insufficient_privilege then null;
   end;
   perform set_config('request.jwt.claim.sub', 'd7620000-0000-4000-8000-000000000001', true);
   begin
-    perform public.rename_step(fixture.step_id, 'Old step', 'Stale overwrite');
+    perform public.rename_step(fixture.step_id, ' Old step ', 'Stale overwrite');
     raise exception 'stale expected name was allowed';
   exception when serialization_failure then null;
   end;
   begin
-    perform public.rename_step('d7620000-0000-4000-8000-000000000099', 'Old step', 'Missing');
+    perform public.rename_step('d7620000-0000-4000-8000-000000000099', ' Old step ', 'Missing');
     raise exception 'zero-row rename was allowed';
   exception when no_data_found then null;
   end;
-  foreach claims in array array['', '   ', E'\t', E'\n\r', E' \t\n ', 'New step', null] loop
+  foreach claims in array array['', '   ', E'\t', E'\n\r', E' \t\n ', ' New step ', null] loop
     begin
-      perform public.rename_step(fixture.step_id, 'New step', claims);
+      perform public.rename_step(fixture.step_id, ' New step ', claims);
       raise exception 'blank or no-op name was allowed';
     exception when invalid_parameter_value then null;
     end;
@@ -146,7 +146,7 @@ begin
     raise exception 'missing expectation was allowed';
   exception when invalid_parameter_value then null;
   end;
-  if (select name from public.steps where id = fixture.step_id) <> 'New step'
+  if (select name from public.steps where id = fixture.step_id) <> ' New step '
       or (select count(*) from public.authoring_changes where fn = 'rename_step' and args->>'step_id' = fixture.step_id::text) <> 1 then
     raise exception 'a refused call changed the step or ledger';
   end if;
@@ -173,17 +173,17 @@ declare fixture rename_fixture%rowtype;
 begin
   select * into strict fixture from rename_fixture;
   begin
-    perform public.rename_step(fixture.step_id, 'New step', 'Ledger exception');
+    perform public.rename_step(fixture.step_id, ' New step ', 'Ledger exception');
     raise exception 'ledger error did not abort';
   exception when check_violation then null;
   end;
   begin
-    perform public.rename_step(fixture.step_id, 'New step', 'Ledger zero rows');
+    perform public.rename_step(fixture.step_id, ' New step ', 'Ledger zero rows');
     raise exception 'zero-row ledger append did not abort';
   exception when raise_exception then
     if sqlerrm <> 'Step rename produced no durable change id' then raise; end if;
   end;
-  if (select name from public.steps where id = fixture.step_id) <> 'New step'
+  if (select name from public.steps where id = fixture.step_id) <> ' New step '
       or (select count(*) from public.authoring_changes where fn = 'rename_step' and args->>'step_id' = fixture.step_id::text) <> 1 then
     raise exception 'ledger failure left an unrecorded rename';
   end if;
@@ -199,10 +199,29 @@ do $$
 declare fixture rename_fixture%rowtype;
 begin
   select * into strict fixture from rename_fixture;
-  perform public.rename_step(fixture.step_id, 'New step', 'Old step');
+  perform public.rename_step(fixture.step_id, ' New step ', ' Old step ');
   if (select to_jsonb(s) - 'updated_at' from public.steps s where id = fixture.step_id)
       is distinct from fixture.original_step - 'updated_at' then
     raise exception 'inverse did not restore the original step';
+  end if;
+end $$;
+reset role;
+-- A blank pre-state cannot be restored through this operation, so refuse it
+-- before writing rather than minting an unusable inverse.
+update public.steps set name = E' \t ' where id = (select step_id from rename_fixture);
+set local role authenticated;
+do $$
+declare fixture rename_fixture%rowtype;
+begin
+  select * into strict fixture from rename_fixture;
+  begin
+    perform public.rename_step(fixture.step_id, E' \t ', 'Would lose the blank pre-state');
+    raise exception 'unrestorable blank pre-state was allowed';
+  exception when invalid_parameter_value then null;
+  end;
+  if (select name from public.steps where id = fixture.step_id) is distinct from E' \t '
+      or (select count(*) from public.authoring_changes where fn = 'rename_step' and args->>'step_id' = fixture.step_id::text) <> 2 then
+    raise exception 'blank pre-state refusal changed the step or ledger';
   end if;
 end $$;
 reset role;

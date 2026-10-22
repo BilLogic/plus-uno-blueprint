@@ -26,7 +26,8 @@ begin
     raise exception 'This account cannot edit the blueprint' using errcode = '42501';
   end if;
   if rename_step.expected_name is null or rename_step.new_name is null
-     or rename_step.new_name !~ '[^[:space:]]' then
+     or rename_step.new_name !~ '[^[:space:]]'
+     or rename_step.expected_name !~ '[^[:space:]]' then
     raise exception 'A step rename requires its expected name and nonempty new name' using errcode = '22023';
   end if;
 
@@ -40,19 +41,19 @@ begin
   if previous_name is distinct from rename_step.expected_name then
     raise exception 'Step name changed; refresh before renaming' using errcode = '40001';
   end if;
-  if previous_name = btrim(rename_step.new_name) then
+  if previous_name = rename_step.new_name then
     raise exception 'A step rename must change the name' using errcode = '22023';
   end if;
 
   inverse := jsonb_build_object('fn', 'rename_step', 'args', jsonb_build_object(
-    'step_id', rename_step.step_id, 'expected_name', btrim(rename_step.new_name), 'new_name', previous_name));
-  update public.steps s set name = btrim(rename_step.new_name), updated_at = now()
+    'step_id', rename_step.step_id, 'expected_name', rename_step.new_name, 'new_name', previous_name));
+  update public.steps s set name = rename_step.new_name, updated_at = now()
     where s.id = rename_step.step_id returning s.id into written_id;
   if not found then
     raise exception 'No step written' using errcode = 'P0002';
   end if;
   change_id := public.record_authoring_change('rename_step', jsonb_build_object(
-    'step_id', rename_step.step_id, 'expected_name', previous_name, 'new_name', btrim(rename_step.new_name)), inverse);
+    'step_id', rename_step.step_id, 'expected_name', previous_name, 'new_name', rename_step.new_name), inverse);
   if change_id is null then
     raise exception 'Step rename produced no durable change id';
   end if;
