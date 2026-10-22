@@ -69,7 +69,7 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  *     `entity_status` domain (20260821240000), whose check names exactly
  *     the six values, and the generator reads a domain as its base type,
  *     `string`. The `status` argument of `create_path_at_status`,
- *     `set_path_status` and `upsert_cell_at_status` is typed `EntityStatus`
+ *     `set_path_status`, `upsert_cell_at_status` and `insert_cell_at_position` is typed `EntityStatus`
  *     too: it is the same domain, and there the generator cannot even resolve
  *     the base type, so it emits `unknown`.
  *  2. The row aliases at the foot of the file — `Cell`, `Lane`, `Path` and the
@@ -127,7 +127,11 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  *   here. Every other table, view and function was checked column by column
  *   and argument by argument against the live catalog and is unchanged.
  *
- * DRIFT SINCE THIS GENERATION: none.
+ * DRIFT SINCE THIS GENERATION: `insert_cell_at_position(path_id, lane_id,
+ * step_id, at_position, content, status)` returns jsonb (20261022151832).
+ * Forward declaration only; not deployed or regenerated from hosted data.
+ * The next regeneration after authorized deployment emits this entry and
+ * removes this note; layer 1 narrows the status domain argument as above.
  *
  * That line is a list because a migration in this repository's own series
  * applies to production before the code that reads it is merged, so this file
@@ -1382,6 +1386,17 @@ export type Database = {
         Returns: string
       }
       is_service_account: { Args: never; Returns: boolean }
+      insert_cell_at_position: {
+        Args: {
+          at_position: number
+          content: string
+          lane_id: string
+          path_id: string
+          status: EntityStatus
+          step_id: string
+        }
+        Returns: Json
+      }
       key_slug: { Args: { value: string }; Returns: string }
       mint_cell_key: {
         Args: { lane_id: string; path_id: string; step_id: string }
