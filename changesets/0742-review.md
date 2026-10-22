@@ -1,80 +1,64 @@
-# #742 Weekly Class Report
+# #742 supported Weekly Class Report email correction
 
-Prepared supported batch:26 operations, no hosted writes. One new scenario,
-one initial happy Report sent path, five steps and nine cells, plus the
-existing Goal Setting email-cell correction and ten evidence additions.
+This final supported batch has two operations: rename/update the existing
+Goal Setting email cell and add its source evidence. Status live and every
+structural key remain unchanged. No #742 data has been applied.
 
 ## Sources
 
-- [Weekly Class Report card2106](https://www.notion.so/2abb7cca498280c5933ef42984de7374)
-  is Deployed. Full Markdown describes a weekly static email/PDF report, one
-  report per class, previous-week records and goal/attendance/engagement data.
-- [Teacher overview](https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78)
-  and [finding reports](https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b)
+- Teacher Help Center [overview](https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78)
+  and [inbox guide](https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b)
   directly corroborate one email per week with a separate PDF per class.
-  Markdown flags truncated alias blocks; the cited visible text was read,
-  and no missing alias contents are claimed as inspected.
-- [Rewards](https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7)
-  names the Eligible for Rewards list and first tutoring session of the week.
-  [Contact guidance](https://www.notion.so/379b7cca498280b09e01fe0e9ac65754)
-  explicitly uses support@tutors.plus for goal data and snack-delivery issues.
-  These pages also have unread alias tails; the visible relevant text is clear.
+  Markdown flags truncated alias tails; the relevant visible text was read,
+  and missing alias contents are not claimed as inspected.
 - [Fall preparation](https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756)
-  is Testing. Its full body describes per-school timing, participating-class
-  flags, sheet updates and teacher-name joins. It supports qualified timing
-  and configuration context, not a claim that all fall changes are deployed.
-- [Implementation notes](https://www.notion.so/37ab7cca4982805588cdddee3e4c3647)
-  were read as workstream/history context, not newer shipping proof.
-- Figma12666:58 metadata confirms the Weekly Class Report section. Detailed
-  ideal/school-average comparisons are from the explicit audited #742 table;
-  no fresh annotation-layer or production-data verification is claimed.
-- The older combined read-report article395b still contains the old tutor
-  email. Current dedicated contact/rewards pages are used for contact copy.
+  is Testing. Its full body describes school-specific schedules, participating
+  classrooms and sheet/name joins. The new summary says per school, usually
+  its first tutoring day; it does not claim every fall configuration shipped.
+- Card2106 is Deployed and the Weekly Class Report context was read. Existing
+  status stays live; no new product status is introduced by this correction.
 
-## Representation and missing relationship
+## Rejected creation candidate and deferred scope
 
-The scenario uses the Program Administration phase, layout stacked, one
-happy path Report sent, and exactly the five requested steps. Lanes copy the
-existing nine-lane vocabulary from No prior goals through createScenario;
-no new role names or mobile path are introduced. Its empty initial columns
-are filled by five add_step operations, explicitly positioned1–5.
+Independent review rejected the initial26-operation candidate before apply.
+The current create_scenario RPC clamps step_count to at least1, producing
+Step1 at position0. Five subsequent named steps would leave six steps and
+fail the five-step verification. A passing dry-run alone did not prove the
+RPC's structural side effects; source review caught this before writes.
 
-At Build report, one BST cell contains the two requested registry names on
-separate lines: plus_etl send-student-reports and Goal setting sheet. The
-actual content sync creates two touchpoint placements on that cell. This
-preserves both names within the sanctioned position0 creation operation.
-Other touchpoint-bearing cells have one name. Each new cell gets evidence.
-
-The existing source cell3c359d25 retains status live and all structural keys;
-its Monday-only summary becomes per-school, usually first-tutoring-day timing.
-Its old placement has no summary, role or resources, so actual mutation sync
-replaces that empty placement with one Weekly Class Report email placement.
-Post-apply joined-name checks must confirm the source and new email placement
-reuse that same registry name, and the two Build report names remain distinct.
+[Follow-up #759](https://github.com/BilLogic/plus-uno-blueprint/issues/759)
+retains original row80, new Weekly Class Report scenario creation. The pinned
+surface cannot rename the generated placeholder and deletion is human-only.
+No schema/grant change, automated delete, orphan placeholder or substituted
+step label is used. A reviewed staged human workflow or separately authorized
+capability is needed. The rejected candidate remains in commitfeb442c2 for
+audit context and must not be applied.
 
 [Follow-up #758](https://github.com/BilLogic/plus-uno-blueprint/issues/758)
-retains the requested cross-scenario leads_to edge. The sanctioned dependency
-operation requires a common path and rejects these endpoints. No raw edge,
-schema/grant change or deep-link substitute is implemented. Its native blocker
-is supported #742; no original downstream issue depends on #742. Parent #737
-must stay open while this relationship remains unresolved.
+retains the original cross-scenario leads_to edge. The sanctioned operation
+requires one path and cannot express its endpoints; no raw edge or deep-link
+substitute is used. #758 depends on #759 as well as supported #742. Both
+follow-ups remain sub-issues of #737. Parent completion is not implied by
+closing only this supported source correction.
 
-## Verification
+## Representation and verification
 
-Dry-run passes26 operations with no expected-current mismatch and ledger
-337→337. Thirty scoped checks cover evidence, placement counts, full unchanged
-source-path neighbors, source identity/status, source lane/path-step structure,
-zero outgoing source dependencies, new scenario/path parent identity, nine
-copied lane names/roles/positions, five step names/positions, nine cell slots
-and exactly one happy path (no mobile variant).
+Cell3c359d25-ac54-4310-bfe6-e458a916ec1d changes Teacher goal email to
+Weekly Class Report email. The Monday-only summary becomes weekly per-school
+PDF delivery with qualified first-tutoring-day timing. Its old placement has
+no summary, role or resources. Actual cellContentMutations sync replaces that
+empty placement; post-apply joined-name read-back must confirm exactly one
+Weekly Class Report email placement at position1.
 
-Separate pre-apply verification is expected to fail on absent new rows,
-changed post-state, evidence and complete receipt. The previous approved #741
-code head passed all four CI gates including browser render; this PR changes
-only JSON and notes. Its fresh CI result is separate and is not presumed.
-The existing runner/mutation seam tests cover copied-lane lookups; no new
-write operations or package changes were introduced.
+Eight scoped checks preserve the entire source path's cells/identity/status,
+lanes and path-step structure, its zero outgoing dependencies, exact existing
+Program Administration scenarios, and absence of Weekly Class Report. They
+also assert one new evidence row and the replacement placement's shape.
 
-No apply or post-apply visual check has run for #742. Exact-diff approval,
-fresh preflight, durable inverse read-back, joined-name checks and final
-parent-wide stacked/merged renders remain required.
+Fresh dry-run passes two operations, no expected-current mismatches, durable
+log337→337. Separate pre-apply verify must fail on the changed post-state,
+missing evidence and absent complete receipt. The runner code is unchanged
+from approved #741; no new operation or package change was added here.
+No #742 apply or post-apply visual check has run. Exact-diff approval, fresh
+preflight, durable inverse read-back, joined-name checks and final parent-wide
+stacked/merged rendering remain required.
