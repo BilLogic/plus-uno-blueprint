@@ -72,6 +72,19 @@ preflight; creation is still checked against the actual scope before writing.
 Supply new rows' prose in their creation operation. The runner cannot preflight
 an edit to a row that does not exist yet.
 
+When a path RPC copies lanes with fresh ids, use a scoped read-only lookup for
+the cell's lane id, for example:
+
+```json
+{ "lookup": { "table": "lanes", "where": { "path_id": { "ref": "new-path" }, "name": "Regular Tutor" } } }
+```
+
+A lookup resolves exactly one row's id; missing, ambiguous or id-less results
+fail. During preflight a lookup under a pending new parent stays pending.
+Apply resolves it after that parent is created, and separate verify resolves
+it again from the database. This adds reads, not a new write operation. Keep
+parent ids in the scope; a name alone does not identify a lane across paths.
+
 `checks` is an array of `{ target, beforeCount, afterCount }`. Use it for
 every touched path/scenario's paths, steps, lanes and cells, and for evidence
 counts. Optional `beforeRows` and `afterRows` describe every row in that scoped
