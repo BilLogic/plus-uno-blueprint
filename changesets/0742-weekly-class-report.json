@@ -1,0 +1,4358 @@
+{
+  "version": 1,
+  "issue": 742,
+  "operations": [
+    {
+      "key": "scenario",
+      "operation": "create_scenario",
+      "target": {
+        "table": "scenarios",
+        "where": {
+          "phase_id": "f1000000-0000-4000-8000-000000000001",
+          "name": "Weekly Class Report"
+        }
+      },
+      "expected": null,
+      "value": {
+        "name": "Weekly Class Report",
+        "layout": "stacked",
+        "summary": "Teachers receive a weekly email with one PDF per participating class, review goal rewards, Zoom attendance and engagement, distribute rewards and contact support when data or delivery looks wrong."
+      },
+      "input": {
+        "lane_source_path_id": "a0000000-0000-4000-8000-000000000811",
+        "step_count": 0,
+        "path_name": "Report sent"
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "step-1",
+      "operation": "add_step",
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": {
+            "ref": "scenario"
+          },
+          "name": "Build report"
+        }
+      },
+      "expected": null,
+      "value": {
+        "name": "Build report",
+        "summary": "Tutor attendance, engagement and goal records feed a scheduled per-class PDF report."
+      },
+      "input": {
+        "path_id": {
+          "lookup": {
+            "table": "paths",
+            "where": {
+              "scenario_id": {
+                "ref": "scenario"
+              },
+              "name": "Report sent"
+            }
+          }
+        },
+        "at_position": 1
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "step-2",
+      "operation": "add_step",
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": {
+            "ref": "scenario"
+          },
+          "name": "Receive email"
+        }
+      },
+      "expected": null,
+      "value": {
+        "name": "Receive email",
+        "summary": "The teacher receives one weekly email containing a PDF report for each participating class."
+      },
+      "input": {
+        "path_id": {
+          "lookup": {
+            "table": "paths",
+            "where": {
+              "scenario_id": {
+                "ref": "scenario"
+              },
+              "name": "Report sent"
+            }
+          }
+        },
+        "at_position": 2
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "step-3",
+      "operation": "add_step",
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": {
+            "ref": "scenario"
+          },
+          "name": "Read report"
+        }
+      },
+      "expected": null,
+      "value": {
+        "name": "Read report",
+        "summary": "The teacher reviews goal rewards, Zoom absences and student engagement."
+      },
+      "input": {
+        "path_id": {
+          "lookup": {
+            "table": "paths",
+            "where": {
+              "scenario_id": {
+                "ref": "scenario"
+              },
+              "name": "Report sent"
+            }
+          }
+        },
+        "at_position": 3
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "step-4",
+      "operation": "add_step",
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": {
+            "ref": "scenario"
+          },
+          "name": "Distribute rewards"
+        }
+      },
+      "expected": null,
+      "value": {
+        "name": "Distribute rewards",
+        "summary": "The teacher distributes rewards to students who met their goals."
+      },
+      "input": {
+        "path_id": {
+          "lookup": {
+            "table": "paths",
+            "where": {
+              "scenario_id": {
+                "ref": "scenario"
+              },
+              "name": "Report sent"
+            }
+          }
+        },
+        "at_position": 4
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "step-5",
+      "operation": "add_step",
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": {
+            "ref": "scenario"
+          },
+          "name": "Contact support"
+        }
+      },
+      "expected": null,
+      "value": {
+        "name": "Contact support",
+        "summary": "The teacher contacts support about data or snack-delivery problems, using the Teacher Help Center."
+      },
+      "input": {
+        "path_id": {
+          "lookup": {
+            "table": "paths",
+            "where": {
+              "scenario_id": {
+                "ref": "scenario"
+              },
+              "name": "Report sent"
+            }
+          }
+        },
+        "at_position": 5
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "build-tutor",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Regular Tutor"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-1"
+          },
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Records attendance, engagement and goals that feed the teacher report.",
+        "summary": "Tutors record attendance and observed engagement, and support student goals. These records inform the following week’s class report.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "build-tutor-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "build-tutor"
+          },
+          "cell_key": {
+            "ref": "build-tutor",
+            "field": "cell_key"
+          },
+          "title": "KB audit #742 row80 — build-tutor"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #742 row80 — build-tutor",
+        "note": "Sources: https://www.notion.so/2abb7cca498280c5933ef42984de7374 ; https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78 ; https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b ; https://www.notion.so/379b7cca498280b09e01fe0e9ac65754 ; https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7 ; https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58 ; https://github.com/BilLogic/plus-uno-blueprint/issues/742 . Card2106 is Deployed; current Teacher Help Center text corroborates weekly email/PDF delivery, rewards and support. Fall-preparation card3d6b is Testing: it supports school-specific timing/configuration context, not a claim that all fall changes shipped. Figma metadata confirms the Weekly Class Report section; detailed report comparisons follow the audited #742 edit table, not a fresh annotation-layer read. Read October21,2026. Cross-scenario leads_to remains #758."
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "build-job",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Back Stage Actions"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-1"
+          },
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "A weekly scheduled job builds one PDF per class from the previous week's records for participating schools.",
+        "summary": "Reports use existing goal-setting and session data. Participating schools and classes are configured separately; this does not claim every fall schedule change on the Testing preparation card is deployed.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "build-job-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "build-job"
+          },
+          "cell_key": {
+            "ref": "build-job",
+            "field": "cell_key"
+          },
+          "title": "KB audit #742 row80 — build-job"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #742 row80 — build-job",
+        "note": "Sources: https://www.notion.so/2abb7cca498280c5933ef42984de7374 ; https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78 ; https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b ; https://www.notion.so/379b7cca498280b09e01fe0e9ac65754 ; https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7 ; https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58 ; https://github.com/BilLogic/plus-uno-blueprint/issues/742 . Card2106 is Deployed; current Teacher Help Center text corroborates weekly email/PDF delivery, rewards and support. Fall-preparation card3d6b is Testing: it supports school-specific timing/configuration context, not a claim that all fall changes shipped. Figma metadata confirms the Weekly Class Report section; detailed report comparisons follow the audited #742 edit table, not a fresh annotation-layer read. Read October21,2026. Cross-scenario leads_to remains #758."
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "build-systems",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Back Stage Touchpoints"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-1"
+          },
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "plus_etl send-student-reports\nGoal setting sheet",
+        "summary": "The scheduled plus_etl send-student-reports task uses the goal-setting sheet and session records to build the participating classes’ reports.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "build-systems-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "build-systems"
+          },
+          "cell_key": {
+            "ref": "build-systems",
+            "field": "cell_key"
+          },
+          "title": "KB audit #742 row80 — build-systems"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #742 row80 — build-systems",
+        "note": "Sources: https://www.notion.so/2abb7cca498280c5933ef42984de7374 ; https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78 ; https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b ; https://www.notion.so/379b7cca498280b09e01fe0e9ac65754 ; https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7 ; https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58 ; https://github.com/BilLogic/plus-uno-blueprint/issues/742 . Card2106 is Deployed; current Teacher Help Center text corroborates weekly email/PDF delivery, rewards and support. Fall-preparation card3d6b is Testing: it supports school-specific timing/configuration context, not a claim that all fall changes shipped. Figma metadata confirms the Weekly Class Report section; detailed report comparisons follow the audited #742 edit table, not a fresh annotation-layer read. Read October21,2026. Cross-scenario leads_to remains #758."
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "receive-teacher",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Teacher"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-2"
+          },
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Receives one weekly email with a PDF report for each class: Zoom attendance and full engagement against the ideal and the school average, and the students who were missing or not fully engaged.",
+        "summary": "One weekly email contains a separate PDF for each participating class. The report includes goal progress and reward eligibility as well as attendance, engagement and highlighted students.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "receive-teacher-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "receive-teacher"
+          },
+          "cell_key": {
+            "ref": "receive-teacher",
+            "field": "cell_key"
+          },
+          "title": "KB audit #742 row80 — receive-teacher"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #742 row80 — receive-teacher",
+        "note": "Sources: https://www.notion.so/2abb7cca498280c5933ef42984de7374 ; https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78 ; https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b ; https://www.notion.so/379b7cca498280b09e01fe0e9ac65754 ; https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7 ; https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58 ; https://github.com/BilLogic/plus-uno-blueprint/issues/742 . Card2106 is Deployed; current Teacher Help Center text corroborates weekly email/PDF delivery, rewards and support. Fall-preparation card3d6b is Testing: it supports school-specific timing/configuration context, not a claim that all fall changes shipped. Figma metadata confirms the Weekly Class Report section; detailed report comparisons follow the audited #742 edit table, not a fresh annotation-layer read. Read October21,2026. Cross-scenario leads_to remains #758."
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "receive-email",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Front Stage Touchpoints"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-2"
+          },
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Weekly Class Report email",
+        "summary": "One weekly email contains one PDF report per participating class. Reports are sent per school, usually on its first tutoring day of the week; Monday is not a universal schedule.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "receive-email-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "receive-email"
+          },
+          "cell_key": {
+            "ref": "receive-email",
+            "field": "cell_key"
+          },
+          "title": "KB audit #742 row80 — receive-email"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #742 row80 — receive-email",
+        "note": "Sources: https://www.notion.so/2abb7cca498280c5933ef42984de7374 ; https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78 ; https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b ; https://www.notion.so/379b7cca498280b09e01fe0e9ac65754 ; https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7 ; https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58 ; https://github.com/BilLogic/plus-uno-blueprint/issues/742 . Card2106 is Deployed; current Teacher Help Center text corroborates weekly email/PDF delivery, rewards and support. Fall-preparation card3d6b is Testing: it supports school-specific timing/configuration context, not a claim that all fall changes shipped. Figma metadata confirms the Weekly Class Report section; detailed report comparisons follow the audited #742 edit table, not a fresh annotation-layer read. Read October21,2026. Cross-scenario leads_to remains #758."
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "read-teacher",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Teacher"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-3"
+          },
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Checks reward eligibility, Zoom absences and engagement issues.",
+        "summary": "The teacher reviews students who met their effort or progress goal, Zoom absences and engagement issues reported by tutors. The report is a record-based snapshot, not complete or independently validated attendance.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "read-teacher-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "read-teacher"
+          },
+          "cell_key": {
+            "ref": "read-teacher",
+            "field": "cell_key"
+          },
+          "title": "KB audit #742 row80 — read-teacher"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #742 row80 — read-teacher",
+        "note": "Sources: https://www.notion.so/2abb7cca498280c5933ef42984de7374 ; https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78 ; https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b ; https://www.notion.so/379b7cca498280b09e01fe0e9ac65754 ; https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7 ; https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58 ; https://github.com/BilLogic/plus-uno-blueprint/issues/742 . Card2106 is Deployed; current Teacher Help Center text corroborates weekly email/PDF delivery, rewards and support. Fall-preparation card3d6b is Testing: it supports school-specific timing/configuration context, not a claim that all fall changes shipped. Figma metadata confirms the Weekly Class Report section; detailed report comparisons follow the audited #742 edit table, not a fresh annotation-layer read. Read October21,2026. Cross-scenario leads_to remains #758."
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "reward-teacher",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Teacher"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-4"
+          },
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Hands out rewards to students who met their goals.",
+        "summary": "Use the report’s Eligible for Rewards list and distribute rewards during the first tutoring session of the week. Rewards are typically fruit snacks; the school’s arrangement may vary.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "reward-teacher-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "reward-teacher"
+          },
+          "cell_key": {
+            "ref": "reward-teacher",
+            "field": "cell_key"
+          },
+          "title": "KB audit #742 row80 — reward-teacher"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #742 row80 — reward-teacher",
+        "note": "Sources: https://www.notion.so/2abb7cca498280c5933ef42984de7374 ; https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78 ; https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b ; https://www.notion.so/379b7cca498280b09e01fe0e9ac65754 ; https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7 ; https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58 ; https://github.com/BilLogic/plus-uno-blueprint/issues/742 . Card2106 is Deployed; current Teacher Help Center text corroborates weekly email/PDF delivery, rewards and support. Fall-preparation card3d6b is Testing: it supports school-specific timing/configuration context, not a claim that all fall changes shipped. Figma metadata confirms the Weekly Class Report section; detailed report comparisons follow the audited #742 edit table, not a fresh annotation-layer read. Read October21,2026. Cross-scenario leads_to remains #758."
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "support-teacher",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Teacher"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-5"
+          },
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Emails support@tutors.plus when data or snack delivery looks wrong.",
+        "summary": "The teacher contacts the tutor team about missing or unexpected goal data, technical problems, or snack delivery and distribution issues.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "support-teacher-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "support-teacher"
+          },
+          "cell_key": {
+            "ref": "support-teacher",
+            "field": "cell_key"
+          },
+          "title": "KB audit #742 row80 — support-teacher"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #742 row80 — support-teacher",
+        "note": "Sources: https://www.notion.so/2abb7cca498280c5933ef42984de7374 ; https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78 ; https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b ; https://www.notion.so/379b7cca498280b09e01fe0e9ac65754 ; https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7 ; https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58 ; https://github.com/BilLogic/plus-uno-blueprint/issues/742 . Card2106 is Deployed; current Teacher Help Center text corroborates weekly email/PDF delivery, rewards and support. Fall-preparation card3d6b is Testing: it supports school-specific timing/configuration context, not a claim that all fall changes shipped. Figma metadata confirms the Weekly Class Report section; detailed report comparisons follow the audited #742 edit table, not a fresh annotation-layer read. Read October21,2026. Cross-scenario leads_to remains #758."
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "support-guide",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Support Actions"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-5"
+          },
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Teacher Help Center",
+        "summary": "Teacher guidance explains the report, weekly reward distribution and contacting support@tutors.plus about goal-setting or snack issues.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "support-guide-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "support-guide"
+          },
+          "cell_key": {
+            "ref": "support-guide",
+            "field": "cell_key"
+          },
+          "title": "KB audit #742 row80 — support-guide"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #742 row80 — support-guide",
+        "note": "Sources: https://www.notion.so/2abb7cca498280c5933ef42984de7374 ; https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78 ; https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b ; https://www.notion.so/379b7cca498280b09e01fe0e9ac65754 ; https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7 ; https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58 ; https://github.com/BilLogic/plus-uno-blueprint/issues/742 . Card2106 is Deployed; current Teacher Help Center text corroborates weekly email/PDF delivery, rewards and support. Fall-preparation card3d6b is Testing: it supports school-specific timing/configuration context, not a claim that all fall changes shipped. Figma metadata confirms the Weekly Class Report section; detailed report comparisons follow the audited #742 edit table, not a fresh annotation-layer read. Read October21,2026. Cross-scenario leads_to remains #758."
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "row52-source",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "3c359d25-ac54-4310-bfe6-e458a916ec1d"
+      },
+      "expected": {
+        "content": "Teacher goal email",
+        "summary": "Teacher-facing goal emails go out Mondays, after the Sunday ETL run.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000815",
+        "lane_id": "a0000000-0000-4000-8000-0000000008d7",
+        "step_id": "a0000000-0000-4000-8000-000000009d04",
+        "position": 1,
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": null,
+        "frame": null
+      },
+      "value": {
+        "content": "Weekly Class Report email",
+        "summary": "The teacher receives a weekly email with one PDF per participating class, sent per school, usually on its first tutoring day of the week."
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    },
+    {
+      "key": "row52-source-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "3c359d25-ac54-4310-bfe6-e458a916ec1d",
+          "cell_key": "3c359d25-ac54-4310-bfe6-e458a916ec1d",
+          "title": "KB audit #742 row52 — Weekly Class Report email"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #742 row52 — Weekly Class Report email",
+        "note": "Sources: https://www.notion.so/2abb7cca498280c5933ef42984de7374 ; https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78 ; https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b ; https://www.notion.so/379b7cca498280b09e01fe0e9ac65754 ; https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7 ; https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58 ; https://github.com/BilLogic/plus-uno-blueprint/issues/742 . Card2106 is Deployed; current Teacher Help Center text corroborates weekly email/PDF delivery, rewards and support. Fall-preparation card3d6b is Testing: it supports school-specific timing/configuration context, not a claim that all fall changes shipped. Figma metadata confirms the Weekly Class Report section; detailed report comparisons follow the audited #742 edit table, not a fresh annotation-layer read. Read October21,2026. Cross-scenario leads_to remains #758."
+      },
+      "evidence": [
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78",
+        "https://www.notion.so/3aab7cca498280a8a89cd0b06a7bd51b",
+        "https://www.notion.so/379b7cca498280b09e01fe0e9ac65754",
+        "https://www.notion.so/3aab7cca4982802d9ef8d4e36db13dd7",
+        "https://www.notion.so/3d6b7cca4982805d9463e8e7dd8e3756",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12666-58",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "build-tutor"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "build-tutor"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "build-job"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "build-job"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "build-systems"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "build-systems"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "receive-teacher"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "receive-teacher"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "receive-email"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "receive-email"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "read-teacher"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "read-teacher"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "reward-teacher"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "reward-teacher"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "support-teacher"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "support-teacher"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "support-guide"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "support-guide"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "3c359d25-ac54-4310-bfe6-e458a916ec1d"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "3c359d25-ac54-4310-bfe6-e458a916ec1d"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "9820a79a-9a4a-4508-a5f3-6dcc371fc14e",
+          "cell_id": "3c359d25-ac54-4310-bfe6-e458a916ec1d",
+          "touchpoint_id": "8ad03906-4e4b-47ff-98fe-81aae0621b3a",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "created_at": "2026-08-31T02:00:13.607441+00:00",
+          "updated_at": "2026-08-31T02:00:13.607441+00:00",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "cell_id": "3c359d25-ac54-4310-bfe6-e458a916ec1d",
+          "position": 1,
+          "summary": null,
+          "role": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000815"
+        }
+      },
+      "beforeCount": 68,
+      "afterCount": 68,
+      "beforeRows": [
+        {
+          "id": "16b9ca09-d241-479b-8ede-f2e0ed2a3ff5",
+          "content": "PLUS App",
+          "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 1,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/once-student-understands-starts-updating-goal-for-the-next-goal-cycle-while-sharing-screen-2",
+          "frame": null
+        },
+        {
+          "id": "3520a92d-2b98-48b2-a810-c3efb45966d0",
+          "content": "PLUS App",
+          "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d08",
+          "position": 1,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/save-goal-2",
+          "frame": null
+        },
+        {
+          "id": "3c359d25-ac54-4310-bfe6-e458a916ec1d",
+          "content": "Teacher goal email",
+          "summary": "Teacher-facing goal emails go out Mondays, after the Sunday ETL run.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d7",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 1,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "4a98cdeb-750a-41a0-8ec9-edd905374989",
+          "content": "PLUS App",
+          "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d06",
+          "position": 1,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/fills-out-goal-settings-and-quantity-with-the-student-2",
+          "frame": null
+        },
+        {
+          "id": "68d60077-bb99-435a-874b-427df175dbb9",
+          "content": "Goal-update ETL",
+          "summary": "Goal-update ETL scripts run Sundays to compute cycle progress and system suggestions. A teacher-set-goal warm-up phase precedes some cycles.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d7",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00101",
+          "content": "Circulates and quietly observes the students.",
+          "summary": "The teacher moves between breakout rooms without joining any one conversation, keeping a classroom-level view while tutors run goal setting one-on-one. This oversight is what lets the teacher catch a stuck student or tech problem before it derails a pairing.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d1",
+          "step_id": "a0000000-0000-4000-8000-000000009d01",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/partner-action-teacher/join-breakout-session",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040101/9d01ca1e-57fd-c8f4-c9db-eb5260ec32ee.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00102",
+          "content": "Renames students to match roster names.",
+          "summary": "The lead tutor corrects a student's display name to match the roster so attendance and pairing stay tied to the right student record, not a Zoom nickname or typo.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d2",
+          "step_id": "a0000000-0000-4000-8000-000000009d01",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/lead-tutor/join-breakout-session",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040102/74a1e3b0-2b4f-1510-f169-2efd835d2d4b.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00103",
+          "content": "Joins the student's breakout session.",
+          "summary": "The tutor enters the student's individual breakout room in Zoom, which is what starts the one-on-one goal-setting conversation for that pairing. Nothing else in this scenario happens before this join.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d01",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/join-breakout-session",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00103/8eb330ed-8fbc-9621-1b0f-cc2b3555447b.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00106",
+          "content": "Zoom",
+          "summary": "The tutor connects with student via Zoom in individual breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d01",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/join-breakout-session",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00110",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d01",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/join-breakout-session",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00201",
+          "content": "Reminds students to keep working while waiting.",
+          "summary": "While a tutor is still occupied with another student, the teacher keeps waiting students on task rather than idle, so the room does not lose momentum before goal setting starts for them.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d1",
+          "step_id": "a0000000-0000-4000-8000-000000009d02",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/partner-action-teacher/click-on-update-goals-cta-in-the-action-column",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040201/45a51cb4-1ae3-d2c2-5f15-49fd1b4c00f2.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00202",
+          "content": "Adds any un-rostered students to the attendance list.",
+          "summary": "The lead tutor accounts for a student who joined the session without a matching roster entry, so that student is not dropped from attendance or left unpaired for goal setting. This keeps the session's records accurate even when enrollment data is out of sync.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d2",
+          "step_id": "a0000000-0000-4000-8000-000000009d02",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/lead-tutor/click-on-update-goals-cta-in-the-action-column",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0202/0911e936-fd5a-3171-9338-9e57d694b158.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00203",
+          "content": "Clicks the 'Update Goals' CTA in the Action column.",
+          "summary": "The tutor starts the update flow from the dashboard's Action column rather than navigating there manually. The CTA only appears when the app has determined this student is due for a goal update.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d02",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/click-on-update-goals-cta-in-the-action-column",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00203/4aa33926-ccf0-ef17-a73f-dde32e77e56f.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00206",
+          "content": "PLUS App",
+          "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d02",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/click-on-update-goals-cta-in-the-action-column",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00206/e635048b-18fe-be8a-0b8a-621e726b1b66.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00209",
+          "content": "Dev Team\nDesign Team",
+          "summary": "Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d8",
+          "step_id": "a0000000-0000-4000-8000-000000009d02",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00210",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d02",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/click-on-update-goals-cta-in-the-action-column",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00301",
+          "content": "Checks if all students are in the correct breakout room.",
+          "summary": "Before the tutor pairs settle in, the teacher confirms every student landed in their assigned breakout room rather than a wrong or empty one. This catch happens before goal setting starts, since a misrouted student has no tutor to set goals with.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d1",
+          "step_id": "a0000000-0000-4000-8000-000000009d03",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/partner-action-teacher/share-screen",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040301/0c96ea1a-4331-9912-e78a-3cca3a3f8c53.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00302",
+          "content": "Manually assigns unpaired students to available tutors.",
+          "summary": "When automatic pairing leaves a student without a tutor, the lead tutor steps in to assign one by hand so goal setting is not skipped for that student. This is the fallback for whatever caused the pairing to fail in the first place.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d2",
+          "step_id": "a0000000-0000-4000-8000-000000009d03",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/lead-tutor/share-screen",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0302/d451bb96-0858-37e8-9e3c-588df38cfb2b.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00303",
+          "content": "Shares screen.",
+          "summary": "The tutor shares their screen so the student can see the same goal-setting view the tutor is working from, rather than describing it verbally. This is what lets the tutor walk the student through the exact fields being filled in.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d03",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/share-screen",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00303/715e7771-4740-1895-e9b9-1fb78b0d6462.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00306",
+          "content": "Zoom",
+          "summary": "The tutor shares screen via Zoom screen share feature.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d03",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/share-screen",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00309",
+          "content": "Dev Team\nDesign Team",
+          "summary": "Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d8",
+          "step_id": "a0000000-0000-4000-8000-000000009d03",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00310",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d03",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/share-screen",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00401",
+          "content": "Receives information that a student is absent from the session.",
+          "summary": "The teacher is the one told when a student does not show, which is what triggers roster and pairing adjustments for the rest of the session. This is the first step in reconciling attendance against the goal-setting plan for that class.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d1",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/partner-action-teacher/review-last-goal-cycle-overview-and-system-suggestion",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0401/df4eeba7-5747-4aa2-1d62-dde366548029.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00402",
+          "content": "Inform classroom teacher about students that are absent.",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d2",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0402/db5f36b0-90a1-dbfe-92eb-07af60fb4bc0.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00403",
+          "content": "Reviews the last goal cycle overview and system suggestion.",
+          "summary": "Before updating anything, the tutor and student look at how the previous cycle went and the app's suggested next goal, so the new goal is informed by actual progress rather than set cold. The suggestion is generated by the app, not chosen by the tutor.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/review-last-goal-cycle-overview-and-system-suggestion",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00403/5ebcb585-16ab-0e79-86b8-6bee2fa72b4c.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00406",
+          "content": "Zoom",
+          "summary": "The tutor connects with student via Zoom in individual breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/review-last-goal-cycle-overview-and-system-suggestion",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00407",
+          "content": "PLUS App provides goal support for every school.",
+          "summary": "Goal setting is mandatory for every school since October 2026. The dashboard Action column routes the student to Set goals, Update goals or Check goals according to their goal-cycle state.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d6",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/back-stage-actions/review-last-goal-cycle-overview-and-system-suggestion",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00410",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/review-last-goal-cycle-overview-and-system-suggestion",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00501",
+          "content": "Alerts lead tutor about unassigned or miss-assigned students using the \"ask for help\" alert.",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d1",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0501/610fd0d7-ee32-6f6e-8d3c-7d56c796381e.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00502",
+          "content": "Respond to classroom teachers \"ask for help\" request.",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d2",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0502/63b222f0-1142-8cd8-0979-aa8e4ba2bcc2.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00503",
+          "content": "Starts updating the goal for the new goal cycle while sharing screen once the student understands.",
+          "summary": "The tutor reviews the previous cycle's outcome and the student's preference before updating goals for the new cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/once-student-understands-starts-updating-goal-for-the-next-goal-cycle-while-sharing-screen",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00503/aabe64a7-2f00-f6e5-3f0f-068a1062e350.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00506",
+          "content": "Zoom",
+          "summary": "The tutor connects with student via Zoom in individual breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/once-student-understands-starts-updating-goal-for-the-next-goal-cycle-while-sharing-screen",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00507",
+          "content": "PLUS App provides goal support for every school.",
+          "summary": "Goal setting is mandatory for every school since October 2026. The dashboard Action column routes the student to Set goals, Update goals or Check goals according to their goal-cycle state.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d6",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/back-stage-actions/once-student-understands-starts-updating-goal-for-the-next-goal-cycle-while-sharing-screen",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00509",
+          "content": "Dev Team\nDesign Team",
+          "summary": "Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d8",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00510",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/once-student-understands-starts-updating-goal-for-the-next-goal-cycle-while-sharing-screen",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00601",
+          "content": "Handles student tech problems as they arise.",
+          "summary": "The teacher is the first responder for device or connection issues during the breakout, so a tutor can stay focused on the goal-setting conversation instead of troubleshooting. Without this, a tech problem would either interrupt the tutor or go unresolved.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d1",
+          "step_id": "a0000000-0000-4000-8000-000000009d06",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/partner-action-teacher/fills-out-goal-settings-and-quantity-with-the-student",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0601/70caf55e-72b8-3f2e-73e3-c419a60a501c.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00603",
+          "content": "Explains each suggested value, asks if it feels right, and enters the student's choice for the effort and progress goals.",
+          "summary": "System recommendations are starting points. The tutor explains each suggested goal and gives the student time to respond, then records the student's preference within the app's limits.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d06",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/fills-out-goal-settings-and-quantity-with-the-student",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00603/781b5024-abab-4e96-5d65-9bf862060364.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00606",
+          "content": "Zoom",
+          "summary": "The tutor connects with student via Zoom in individual breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d06",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/fills-out-goal-settings-and-quantity-with-the-student",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00607",
+          "content": "PLUS App provides goal support for every school.",
+          "summary": "Goal setting is mandatory for every school since October 2026. The dashboard Action column routes the student to Set goals, Update goals or Check goals according to their goal-cycle state.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d6",
+          "step_id": "a0000000-0000-4000-8000-000000009d06",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/back-stage-actions/fills-out-goal-settings-and-quantity-with-the-student",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00609",
+          "content": "Dev Team\nDesign Team",
+          "summary": "Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d8",
+          "step_id": "a0000000-0000-4000-8000-000000009d06",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00610",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d06",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/fills-out-goal-settings-and-quantity-with-the-student",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00701",
+          "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+          "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to support@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d1",
+          "step_id": "a0000000-0000-4000-8000-000000009d07",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/partner-action-teacher/if-prompted-fill-out-goal-achievement-strategy-with-the-student",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0701/3a876ff6-fdbe-77c5-7a7f-1c7d1c305198.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00703",
+          "content": "Creates or reviews an If/Then strategy with the student, without pushing for an obstacle.",
+          "summary": "The tutor helps the student choose a concrete If/Then plan. If the student identifies no obstacle, accept that answer rather than asking them to invent one.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d07",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/if-prompted-fill-out-goal-achievement-strategy-with-the-student",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00703/90815f48-cdd3-0deb-8eed-ac363f154004.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00706",
+          "content": "Zoom",
+          "summary": "The tutor connects with student via Zoom in individual breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d07",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/if-prompted-fill-out-goal-achievement-strategy-with-the-student",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00707",
+          "content": "PLUS App provides goal support for every school.",
+          "summary": "Goal setting is mandatory for every school since October 2026. The dashboard Action column routes the student to Set goals, Update goals or Check goals according to their goal-cycle state.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d6",
+          "step_id": "a0000000-0000-4000-8000-000000009d07",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/back-stage-actions/if-prompted-fill-out-goal-achievement-strategy-with-the-student",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00709",
+          "content": "Dev Team\nDesign Team",
+          "summary": "Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d8",
+          "step_id": "a0000000-0000-4000-8000-000000009d07",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00710",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d07",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/if-prompted-fill-out-goal-achievement-strategy-with-the-student",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00803",
+          "content": "Saves the goal.",
+          "summary": "The tutor commits the goal to the student's record, which is what makes it visible to the teacher and available for review in the next goal cycle. An unsaved goal only exists for the length of this session.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d08",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/save-goal",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00803/fac43cb7-d5df-f3e9-66bd-4161f7ae5880.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00806",
+          "content": "Zoom",
+          "summary": "The tutor connects with student via Zoom in individual breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d08",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/save-goal",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00807",
+          "content": "PLUS App provides goal support for every school.",
+          "summary": "Goal setting is mandatory for every school since October 2026. The dashboard Action column routes the student to Set goals, Update goals or Check goals according to their goal-cycle state.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d6",
+          "step_id": "a0000000-0000-4000-8000-000000009d08",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/back-stage-actions/save-goal",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00809",
+          "content": "Dev Team\nDesign Team",
+          "summary": "Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d8",
+          "step_id": "a0000000-0000-4000-8000-000000009d08",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00810",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d08",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/save-goal",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00903",
+          "content": "Finalizes updating the goal with the student.",
+          "summary": "The tutor and student close out the goal-update conversation together, confirming the revised goal before the tutor leaves the breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d09",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/finalize-updating-goal-with-the-student",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00903/dfcb70a5-37cd-ccea-9f7e-87095222177b.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00906",
+          "content": "Zoom",
+          "summary": "The tutor connects with student via Zoom in individual breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d09",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/finalize-updating-goal-with-the-student",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00907",
+          "content": "PLUS App provides goal support for every school.",
+          "summary": "Goal setting is mandatory for every school since October 2026. The dashboard Action column routes the student to Set goals, Update goals or Check goals according to their goal-cycle state.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d6",
+          "step_id": "a0000000-0000-4000-8000-000000009d09",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/back-stage-actions/finalize-updating-goal-with-the-student",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00909",
+          "content": "Dev Team\nDesign Team",
+          "summary": "Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d8",
+          "step_id": "a0000000-0000-4000-8000-000000009d09",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00910",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d09",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/finalize-updating-goal-with-the-student",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b01003",
+          "content": "Leaves the student's breakout room.",
+          "summary": "The tutor exits the student's breakout room once the goal activity for that student is finished, freeing them to move to the next paired student.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d0a",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/leave-breakout-room",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b01003/8ce7ce83-1120-08c7-47c7-589f01fc2a2d.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b01006",
+          "content": "Zoom",
+          "summary": "The tutor leaves the student's Zoom breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d0a",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/leave-breakout-room",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b01010",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d0a",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/leave-breakout-room",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b01103",
+          "content": "Moves to the next student down the dashboard.",
+          "summary": "The tutor starts at the top of the dashboard and works down its list, using the Status and Action columns to decide which goal support the student needs.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d0b",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/move-on-to-the-next-student-in-sorted-order-set-by-researchers",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b01103/3e769557-1233-13be-9bb7-3ac0d0a439a6.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b01106",
+          "content": "PLUS App",
+          "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d0b",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/move-on-to-the-next-student-in-sorted-order-set-by-researchers",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b01106/5594d61a-2ce1-5f22-a866-6fdb24121938.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b01107",
+          "content": "PLUS App sorts students by status.",
+          "summary": "The dashboard order and Status and Action columns guide the tutor through students who need goals set, updated or checked.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d6",
+          "step_id": "a0000000-0000-4000-8000-000000009d0b",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/back-stage-actions/move-on-to-the-next-student-in-sorted-order-set-by-researchers",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b01109",
+          "content": "Dev Team, Design Team",
+          "summary": "Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d8",
+          "step_id": "a0000000-0000-4000-8000-000000009d0b",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b01110",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d0b",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/move-on-to-the-next-student-in-sorted-order-set-by-researchers",
+          "frame": null
+        },
+        {
+          "id": "b585354a-6d15-4124-a693-a4db24ae0670",
+          "content": "PLUS App",
+          "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d07",
+          "position": 1,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/if-prompted-fill-out-goal-achievement-strategy-with-the-student-2",
+          "frame": null
+        },
+        {
+          "id": "bce92a12-494c-43ed-9dc6-dad127ab5465",
+          "content": "PLUS App",
+          "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d03",
+          "position": 1,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/share-screen-2",
+          "frame": null
+        },
+        {
+          "id": "f6e774b7-eb3e-4c4d-b581-46ffe8166d97",
+          "content": "PLUS App",
+          "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d09",
+          "position": 1,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/finalize-updating-goal-with-the-student-2",
+          "frame": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "16b9ca09-d241-479b-8ede-f2e0ed2a3ff5",
+          "content": "PLUS App",
+          "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 1,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/once-student-understands-starts-updating-goal-for-the-next-goal-cycle-while-sharing-screen-2",
+          "frame": null
+        },
+        {
+          "id": "3520a92d-2b98-48b2-a810-c3efb45966d0",
+          "content": "PLUS App",
+          "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d08",
+          "position": 1,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/save-goal-2",
+          "frame": null
+        },
+        {
+          "id": "3c359d25-ac54-4310-bfe6-e458a916ec1d",
+          "content": "Weekly Class Report email",
+          "summary": "The teacher receives a weekly email with one PDF per participating class, sent per school, usually on its first tutoring day of the week.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d7",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 1,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "4a98cdeb-750a-41a0-8ec9-edd905374989",
+          "content": "PLUS App",
+          "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d06",
+          "position": 1,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/fills-out-goal-settings-and-quantity-with-the-student-2",
+          "frame": null
+        },
+        {
+          "id": "68d60077-bb99-435a-874b-427df175dbb9",
+          "content": "Goal-update ETL",
+          "summary": "Goal-update ETL scripts run Sundays to compute cycle progress and system suggestions. A teacher-set-goal warm-up phase precedes some cycles.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d7",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00101",
+          "content": "Circulates and quietly observes the students.",
+          "summary": "The teacher moves between breakout rooms without joining any one conversation, keeping a classroom-level view while tutors run goal setting one-on-one. This oversight is what lets the teacher catch a stuck student or tech problem before it derails a pairing.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d1",
+          "step_id": "a0000000-0000-4000-8000-000000009d01",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/partner-action-teacher/join-breakout-session",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040101/9d01ca1e-57fd-c8f4-c9db-eb5260ec32ee.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00102",
+          "content": "Renames students to match roster names.",
+          "summary": "The lead tutor corrects a student's display name to match the roster so attendance and pairing stay tied to the right student record, not a Zoom nickname or typo.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d2",
+          "step_id": "a0000000-0000-4000-8000-000000009d01",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/lead-tutor/join-breakout-session",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040102/74a1e3b0-2b4f-1510-f169-2efd835d2d4b.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00103",
+          "content": "Joins the student's breakout session.",
+          "summary": "The tutor enters the student's individual breakout room in Zoom, which is what starts the one-on-one goal-setting conversation for that pairing. Nothing else in this scenario happens before this join.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d01",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/join-breakout-session",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00103/8eb330ed-8fbc-9621-1b0f-cc2b3555447b.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00106",
+          "content": "Zoom",
+          "summary": "The tutor connects with student via Zoom in individual breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d01",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/join-breakout-session",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00110",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d01",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/join-breakout-session",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00201",
+          "content": "Reminds students to keep working while waiting.",
+          "summary": "While a tutor is still occupied with another student, the teacher keeps waiting students on task rather than idle, so the room does not lose momentum before goal setting starts for them.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d1",
+          "step_id": "a0000000-0000-4000-8000-000000009d02",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/partner-action-teacher/click-on-update-goals-cta-in-the-action-column",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040201/45a51cb4-1ae3-d2c2-5f15-49fd1b4c00f2.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00202",
+          "content": "Adds any un-rostered students to the attendance list.",
+          "summary": "The lead tutor accounts for a student who joined the session without a matching roster entry, so that student is not dropped from attendance or left unpaired for goal setting. This keeps the session's records accurate even when enrollment data is out of sync.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d2",
+          "step_id": "a0000000-0000-4000-8000-000000009d02",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/lead-tutor/click-on-update-goals-cta-in-the-action-column",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0202/0911e936-fd5a-3171-9338-9e57d694b158.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00203",
+          "content": "Clicks the 'Update Goals' CTA in the Action column.",
+          "summary": "The tutor starts the update flow from the dashboard's Action column rather than navigating there manually. The CTA only appears when the app has determined this student is due for a goal update.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d02",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/click-on-update-goals-cta-in-the-action-column",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00203/4aa33926-ccf0-ef17-a73f-dde32e77e56f.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00206",
+          "content": "PLUS App",
+          "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d02",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/click-on-update-goals-cta-in-the-action-column",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00206/e635048b-18fe-be8a-0b8a-621e726b1b66.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00209",
+          "content": "Dev Team\nDesign Team",
+          "summary": "Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d8",
+          "step_id": "a0000000-0000-4000-8000-000000009d02",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00210",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d02",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/click-on-update-goals-cta-in-the-action-column",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00301",
+          "content": "Checks if all students are in the correct breakout room.",
+          "summary": "Before the tutor pairs settle in, the teacher confirms every student landed in their assigned breakout room rather than a wrong or empty one. This catch happens before goal setting starts, since a misrouted student has no tutor to set goals with.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d1",
+          "step_id": "a0000000-0000-4000-8000-000000009d03",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/partner-action-teacher/share-screen",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040301/0c96ea1a-4331-9912-e78a-3cca3a3f8c53.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00302",
+          "content": "Manually assigns unpaired students to available tutors.",
+          "summary": "When automatic pairing leaves a student without a tutor, the lead tutor steps in to assign one by hand so goal setting is not skipped for that student. This is the fallback for whatever caused the pairing to fail in the first place.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d2",
+          "step_id": "a0000000-0000-4000-8000-000000009d03",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/lead-tutor/share-screen",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0302/d451bb96-0858-37e8-9e3c-588df38cfb2b.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00303",
+          "content": "Shares screen.",
+          "summary": "The tutor shares their screen so the student can see the same goal-setting view the tutor is working from, rather than describing it verbally. This is what lets the tutor walk the student through the exact fields being filled in.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d03",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/share-screen",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00303/715e7771-4740-1895-e9b9-1fb78b0d6462.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00306",
+          "content": "Zoom",
+          "summary": "The tutor shares screen via Zoom screen share feature.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d03",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/share-screen",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00309",
+          "content": "Dev Team\nDesign Team",
+          "summary": "Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d8",
+          "step_id": "a0000000-0000-4000-8000-000000009d03",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00310",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d03",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/share-screen",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00401",
+          "content": "Receives information that a student is absent from the session.",
+          "summary": "The teacher is the one told when a student does not show, which is what triggers roster and pairing adjustments for the rest of the session. This is the first step in reconciling attendance against the goal-setting plan for that class.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d1",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/partner-action-teacher/review-last-goal-cycle-overview-and-system-suggestion",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0401/df4eeba7-5747-4aa2-1d62-dde366548029.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00402",
+          "content": "Inform classroom teacher about students that are absent.",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d2",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0402/db5f36b0-90a1-dbfe-92eb-07af60fb4bc0.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00403",
+          "content": "Reviews the last goal cycle overview and system suggestion.",
+          "summary": "Before updating anything, the tutor and student look at how the previous cycle went and the app's suggested next goal, so the new goal is informed by actual progress rather than set cold. The suggestion is generated by the app, not chosen by the tutor.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/review-last-goal-cycle-overview-and-system-suggestion",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00403/5ebcb585-16ab-0e79-86b8-6bee2fa72b4c.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00406",
+          "content": "Zoom",
+          "summary": "The tutor connects with student via Zoom in individual breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/review-last-goal-cycle-overview-and-system-suggestion",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00407",
+          "content": "PLUS App provides goal support for every school.",
+          "summary": "Goal setting is mandatory for every school since October 2026. The dashboard Action column routes the student to Set goals, Update goals or Check goals according to their goal-cycle state.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d6",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/back-stage-actions/review-last-goal-cycle-overview-and-system-suggestion",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00410",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/review-last-goal-cycle-overview-and-system-suggestion",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00501",
+          "content": "Alerts lead tutor about unassigned or miss-assigned students using the \"ask for help\" alert.",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d1",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0501/610fd0d7-ee32-6f6e-8d3c-7d56c796381e.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00502",
+          "content": "Respond to classroom teachers \"ask for help\" request.",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d2",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0502/63b222f0-1142-8cd8-0979-aa8e4ba2bcc2.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00503",
+          "content": "Starts updating the goal for the new goal cycle while sharing screen once the student understands.",
+          "summary": "The tutor reviews the previous cycle's outcome and the student's preference before updating goals for the new cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/once-student-understands-starts-updating-goal-for-the-next-goal-cycle-while-sharing-screen",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00503/aabe64a7-2f00-f6e5-3f0f-068a1062e350.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00506",
+          "content": "Zoom",
+          "summary": "The tutor connects with student via Zoom in individual breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/once-student-understands-starts-updating-goal-for-the-next-goal-cycle-while-sharing-screen",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00507",
+          "content": "PLUS App provides goal support for every school.",
+          "summary": "Goal setting is mandatory for every school since October 2026. The dashboard Action column routes the student to Set goals, Update goals or Check goals according to their goal-cycle state.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d6",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/back-stage-actions/once-student-understands-starts-updating-goal-for-the-next-goal-cycle-while-sharing-screen",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00509",
+          "content": "Dev Team\nDesign Team",
+          "summary": "Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d8",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00510",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/once-student-understands-starts-updating-goal-for-the-next-goal-cycle-while-sharing-screen",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00601",
+          "content": "Handles student tech problems as they arise.",
+          "summary": "The teacher is the first responder for device or connection issues during the breakout, so a tutor can stay focused on the goal-setting conversation instead of troubleshooting. Without this, a tech problem would either interrupt the tutor or go unresolved.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d1",
+          "step_id": "a0000000-0000-4000-8000-000000009d06",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/partner-action-teacher/fills-out-goal-settings-and-quantity-with-the-student",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0601/70caf55e-72b8-3f2e-73e3-c419a60a501c.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00603",
+          "content": "Explains each suggested value, asks if it feels right, and enters the student's choice for the effort and progress goals.",
+          "summary": "System recommendations are starting points. The tutor explains each suggested goal and gives the student time to respond, then records the student's preference within the app's limits.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d06",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/fills-out-goal-settings-and-quantity-with-the-student",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00603/781b5024-abab-4e96-5d65-9bf862060364.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00606",
+          "content": "Zoom",
+          "summary": "The tutor connects with student via Zoom in individual breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d06",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/fills-out-goal-settings-and-quantity-with-the-student",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00607",
+          "content": "PLUS App provides goal support for every school.",
+          "summary": "Goal setting is mandatory for every school since October 2026. The dashboard Action column routes the student to Set goals, Update goals or Check goals according to their goal-cycle state.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d6",
+          "step_id": "a0000000-0000-4000-8000-000000009d06",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/back-stage-actions/fills-out-goal-settings-and-quantity-with-the-student",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00609",
+          "content": "Dev Team\nDesign Team",
+          "summary": "Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d8",
+          "step_id": "a0000000-0000-4000-8000-000000009d06",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00610",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d06",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/fills-out-goal-settings-and-quantity-with-the-student",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00701",
+          "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+          "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to support@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d1",
+          "step_id": "a0000000-0000-4000-8000-000000009d07",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/partner-action-teacher/if-prompted-fill-out-goal-achievement-strategy-with-the-student",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0701/3a876ff6-fdbe-77c5-7a7f-1c7d1c305198.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00703",
+          "content": "Creates or reviews an If/Then strategy with the student, without pushing for an obstacle.",
+          "summary": "The tutor helps the student choose a concrete If/Then plan. If the student identifies no obstacle, accept that answer rather than asking them to invent one.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d07",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/if-prompted-fill-out-goal-achievement-strategy-with-the-student",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00703/90815f48-cdd3-0deb-8eed-ac363f154004.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00706",
+          "content": "Zoom",
+          "summary": "The tutor connects with student via Zoom in individual breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d07",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/if-prompted-fill-out-goal-achievement-strategy-with-the-student",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00707",
+          "content": "PLUS App provides goal support for every school.",
+          "summary": "Goal setting is mandatory for every school since October 2026. The dashboard Action column routes the student to Set goals, Update goals or Check goals according to their goal-cycle state.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d6",
+          "step_id": "a0000000-0000-4000-8000-000000009d07",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/back-stage-actions/if-prompted-fill-out-goal-achievement-strategy-with-the-student",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00709",
+          "content": "Dev Team\nDesign Team",
+          "summary": "Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d8",
+          "step_id": "a0000000-0000-4000-8000-000000009d07",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00710",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d07",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/if-prompted-fill-out-goal-achievement-strategy-with-the-student",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00803",
+          "content": "Saves the goal.",
+          "summary": "The tutor commits the goal to the student's record, which is what makes it visible to the teacher and available for review in the next goal cycle. An unsaved goal only exists for the length of this session.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d08",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/save-goal",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00803/fac43cb7-d5df-f3e9-66bd-4161f7ae5880.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00806",
+          "content": "Zoom",
+          "summary": "The tutor connects with student via Zoom in individual breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d08",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/save-goal",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00807",
+          "content": "PLUS App provides goal support for every school.",
+          "summary": "Goal setting is mandatory for every school since October 2026. The dashboard Action column routes the student to Set goals, Update goals or Check goals according to their goal-cycle state.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d6",
+          "step_id": "a0000000-0000-4000-8000-000000009d08",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/back-stage-actions/save-goal",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00809",
+          "content": "Dev Team\nDesign Team",
+          "summary": "Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d8",
+          "step_id": "a0000000-0000-4000-8000-000000009d08",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00810",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d08",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/save-goal",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00903",
+          "content": "Finalizes updating the goal with the student.",
+          "summary": "The tutor and student close out the goal-update conversation together, confirming the revised goal before the tutor leaves the breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d09",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/finalize-updating-goal-with-the-student",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00903/dfcb70a5-37cd-ccea-9f7e-87095222177b.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00906",
+          "content": "Zoom",
+          "summary": "The tutor connects with student via Zoom in individual breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d09",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/finalize-updating-goal-with-the-student",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00907",
+          "content": "PLUS App provides goal support for every school.",
+          "summary": "Goal setting is mandatory for every school since October 2026. The dashboard Action column routes the student to Set goals, Update goals or Check goals according to their goal-cycle state.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d6",
+          "step_id": "a0000000-0000-4000-8000-000000009d09",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/back-stage-actions/finalize-updating-goal-with-the-student",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00909",
+          "content": "Dev Team\nDesign Team",
+          "summary": "Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d8",
+          "step_id": "a0000000-0000-4000-8000-000000009d09",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b00910",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d09",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/finalize-updating-goal-with-the-student",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b01003",
+          "content": "Leaves the student's breakout room.",
+          "summary": "The tutor exits the student's breakout room once the goal activity for that student is finished, freeing them to move to the next paired student.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d0a",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/leave-breakout-room",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b01003/8ce7ce83-1120-08c7-47c7-589f01fc2a2d.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b01006",
+          "content": "Zoom",
+          "summary": "The tutor leaves the student's Zoom breakout room.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d0a",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/leave-breakout-room",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b01010",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d0a",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/leave-breakout-room",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b01103",
+          "content": "Moves to the next student down the dashboard.",
+          "summary": "The tutor starts at the top of the dashboard and works down its list, using the Status and Action columns to decide which goal support the student needs.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d0b",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/move-on-to-the-next-student-in-sorted-order-set-by-researchers",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b01103/3e769557-1233-13be-9bb7-3ac0d0a439a6.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b01106",
+          "content": "PLUS App",
+          "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d0b",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/move-on-to-the-next-student-in-sorted-order-set-by-researchers",
+          "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b01106/5594d61a-2ce1-5f22-a866-6fdb24121938.png"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b01107",
+          "content": "PLUS App sorts students by status.",
+          "summary": "The dashboard order and Status and Action columns guide the tutor through students who need goals set, updated or checked.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d6",
+          "step_id": "a0000000-0000-4000-8000-000000009d0b",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/back-stage-actions/move-on-to-the-next-student-in-sorted-order-set-by-researchers",
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b01109",
+          "content": "Dev Team, Design Team",
+          "summary": "Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d8",
+          "step_id": "a0000000-0000-4000-8000-000000009d0b",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": null,
+          "frame": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000b01110",
+          "content": "",
+          "summary": null,
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+          "step_id": "a0000000-0000-4000-8000-000000009d0b",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/visual/move-on-to-the-next-student-in-sorted-order-set-by-researchers",
+          "frame": null
+        },
+        {
+          "id": "b585354a-6d15-4124-a693-a4db24ae0670",
+          "content": "PLUS App",
+          "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d07",
+          "position": 1,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/if-prompted-fill-out-goal-achievement-strategy-with-the-student-2",
+          "frame": null
+        },
+        {
+          "id": "bce92a12-494c-43ed-9dc6-dad127ab5465",
+          "content": "PLUS App",
+          "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d03",
+          "position": 1,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/share-screen-2",
+          "frame": null
+        },
+        {
+          "id": "f6e774b7-eb3e-4c4d-b581-46ffe8166d97",
+          "content": "PLUS App",
+          "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
+          "status": "live",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+          "step_id": "a0000000-0000-4000-8000-000000009d09",
+          "position": 1,
+          "owner": null,
+          "perceived_owner": null,
+          "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/finalize-updating-goal-with-the-student-2",
+          "frame": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000815"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 9,
+      "beforeRows": [
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d0",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Storyboard",
+          "lane_role": "storyboard",
+          "position": 0
+        },
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d1",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Teacher",
+          "lane_role": "partner_actions",
+          "position": 1
+        },
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d2",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Lead Tutor",
+          "lane_role": "customer_actions",
+          "position": 2
+        },
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d3",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Regular Tutor",
+          "lane_role": "customer_actions",
+          "position": 3
+        },
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d4",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Front Stage Touchpoints",
+          "lane_role": "frontstage_touchpoints",
+          "position": 4
+        },
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d5",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Front Stage Actions",
+          "lane_role": "frontstage_actions",
+          "position": 5
+        },
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d6",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Back Stage Actions",
+          "lane_role": "backstage_actions",
+          "position": 7
+        },
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d7",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Back Stage Touchpoints",
+          "lane_role": "backstage_touchpoints",
+          "position": 6
+        },
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d8",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Support Actions",
+          "lane_role": "support_actions",
+          "position": 8
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d0",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Storyboard",
+          "lane_role": "storyboard",
+          "position": 0
+        },
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d1",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Teacher",
+          "lane_role": "partner_actions",
+          "position": 1
+        },
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d2",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Lead Tutor",
+          "lane_role": "customer_actions",
+          "position": 2
+        },
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d3",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Regular Tutor",
+          "lane_role": "customer_actions",
+          "position": 3
+        },
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d4",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Front Stage Touchpoints",
+          "lane_role": "frontstage_touchpoints",
+          "position": 4
+        },
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d5",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Front Stage Actions",
+          "lane_role": "frontstage_actions",
+          "position": 5
+        },
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d6",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Back Stage Actions",
+          "lane_role": "backstage_actions",
+          "position": 7
+        },
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d7",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Back Stage Touchpoints",
+          "lane_role": "backstage_touchpoints",
+          "position": 6
+        },
+        {
+          "id": "a0000000-0000-4000-8000-0000000008d8",
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "name": "Support Actions",
+          "lane_role": "support_actions",
+          "position": 8
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000815"
+        }
+      },
+      "beforeCount": 11,
+      "afterCount": 11,
+      "beforeRows": [
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d01",
+          "position": 1
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d02",
+          "position": 2
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d03",
+          "position": 3
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 4
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 5
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d06",
+          "position": 6
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d07",
+          "position": 7
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d08",
+          "position": 8
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d09",
+          "position": 9
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d0a",
+          "position": 10
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d0b",
+          "position": 11
+        }
+      ],
+      "afterRows": [
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d01",
+          "position": 1
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d02",
+          "position": 2
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d03",
+          "position": 3
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 4
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d05",
+          "position": 5
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d06",
+          "position": 6
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d07",
+          "position": 7
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d08",
+          "position": 8
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d09",
+          "position": 9
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d0a",
+          "position": 10
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "step_id": "a0000000-0000-4000-8000-000000009d0b",
+          "position": 11
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 9,
+      "afterRows": [
+        {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "name": "Storyboard",
+          "lane_role": "storyboard",
+          "position": 0
+        },
+        {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "name": "Teacher",
+          "lane_role": "partner_actions",
+          "position": 1
+        },
+        {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "name": "Lead Tutor",
+          "lane_role": "customer_actions",
+          "position": 2
+        },
+        {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "name": "Regular Tutor",
+          "lane_role": "customer_actions",
+          "position": 3
+        },
+        {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "name": "Front Stage Touchpoints",
+          "lane_role": "frontstage_touchpoints",
+          "position": 4
+        },
+        {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "name": "Front Stage Actions",
+          "lane_role": "frontstage_actions",
+          "position": 5
+        },
+        {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "name": "Back Stage Actions",
+          "lane_role": "backstage_actions",
+          "position": 7
+        },
+        {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "name": "Back Stage Touchpoints",
+          "lane_role": "backstage_touchpoints",
+          "position": 6
+        },
+        {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "name": "Support Actions",
+          "lane_role": "support_actions",
+          "position": 8
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": {
+            "ref": "scenario"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1,
+      "afterRows": [
+        {
+          "id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "scenario_id": {
+            "ref": "scenario"
+          },
+          "name": "Report sent",
+          "kind": "happy",
+          "status": "live"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": {
+            "ref": "scenario"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 5,
+      "afterRows": [
+        {
+          "id": {
+            "ref": "step-1"
+          },
+          "scenario_id": {
+            "ref": "scenario"
+          },
+          "name": "Build report"
+        },
+        {
+          "id": {
+            "ref": "step-2"
+          },
+          "scenario_id": {
+            "ref": "scenario"
+          },
+          "name": "Receive email"
+        },
+        {
+          "id": {
+            "ref": "step-3"
+          },
+          "scenario_id": {
+            "ref": "scenario"
+          },
+          "name": "Read report"
+        },
+        {
+          "id": {
+            "ref": "step-4"
+          },
+          "scenario_id": {
+            "ref": "scenario"
+          },
+          "name": "Distribute rewards"
+        },
+        {
+          "id": {
+            "ref": "step-5"
+          },
+          "scenario_id": {
+            "ref": "scenario"
+          },
+          "name": "Contact support"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 5,
+      "afterRows": [
+        {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-1"
+          },
+          "position": 1
+        },
+        {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-2"
+          },
+          "position": 2
+        },
+        {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-3"
+          },
+          "position": 3
+        },
+        {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-4"
+          },
+          "position": 4
+        },
+        {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-5"
+          },
+          "position": 5
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 9,
+      "afterRows": [
+        {
+          "id": {
+            "ref": "build-tutor"
+          },
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Regular Tutor"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-1"
+          },
+          "position": 0,
+          "status": "live"
+        },
+        {
+          "id": {
+            "ref": "build-job"
+          },
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Back Stage Actions"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-1"
+          },
+          "position": 0,
+          "status": "live"
+        },
+        {
+          "id": {
+            "ref": "build-systems"
+          },
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Back Stage Touchpoints"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-1"
+          },
+          "position": 0,
+          "status": "live"
+        },
+        {
+          "id": {
+            "ref": "receive-teacher"
+          },
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Teacher"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-2"
+          },
+          "position": 0,
+          "status": "live"
+        },
+        {
+          "id": {
+            "ref": "receive-email"
+          },
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Front Stage Touchpoints"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-2"
+          },
+          "position": 0,
+          "status": "live"
+        },
+        {
+          "id": {
+            "ref": "read-teacher"
+          },
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Teacher"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-3"
+          },
+          "position": 0,
+          "status": "live"
+        },
+        {
+          "id": {
+            "ref": "reward-teacher"
+          },
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Teacher"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-4"
+          },
+          "position": 0,
+          "status": "live"
+        },
+        {
+          "id": {
+            "ref": "support-teacher"
+          },
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Teacher"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-5"
+          },
+          "position": 0,
+          "status": "live"
+        },
+        {
+          "id": {
+            "ref": "support-guide"
+          },
+          "path_id": {
+            "lookup": {
+              "table": "paths",
+              "where": {
+                "scenario_id": {
+                  "ref": "scenario"
+                },
+                "name": "Report sent"
+              }
+            }
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "lookup": {
+                    "table": "paths",
+                    "where": {
+                      "scenario_id": {
+                        "ref": "scenario"
+                      },
+                      "name": "Report sent"
+                    }
+                  }
+                },
+                "name": "Support Actions"
+              }
+            }
+          },
+          "step_id": {
+            "ref": "step-5"
+          },
+          "position": 0,
+          "status": "live"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "scenarios",
+        "where": {
+          "phase_id": "f1000000-0000-4000-8000-000000000001"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "source_cell_id": "3c359d25-ac54-4310-bfe6-e458a916ec1d"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    }
+  ]
+}
