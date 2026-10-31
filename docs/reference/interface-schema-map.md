@@ -59,8 +59,6 @@ relation rather than one field of it.
 | **Revenue model** | `business_models.revenue_model` | — |
 | **Partners** | `business_models.partners` | — |
 | **Examples** | `services.entity_examples` | The section heads a jsonb map, not a field, and the column carries an `entity_` qualifier the label drops: on the service panel the only examples in question are the board’s six entity kinds, so the qualifier is understood and the heading says the plain word. The six inputs beneath it name the kinds, not columns, so they carry no row of their own; this one row binds the whole map. |
-| **Position** | `path_steps.position` | — |
-| **Storyboard** | `lanes.lane_role` | The one row whose right-hand side is a VALUE rather than the name of a place to put one: `storyboard` is one of the eight `lane_role` admits, and this label heads the frames of the lane carrying it. The word is in the schema; it is simply not a column name. |
 
 <!-- /generated:binding -->
 
@@ -102,7 +100,7 @@ and the sentence behind it are read from one place and cannot drift into two.
 
 <!-- generated:catalog — npm run interface-map -->
 
-27 of 42 names carry a comment in the catalog.
+25 of 40 names carry a comment in the catalog.
 
 | The schema says | What the catalog says |
 |---|---|
@@ -146,8 +144,6 @@ and the sentence behind it are read from one place and cannot drift into two.
 | `business_models.revenue_model` | — |
 | `business_models.partners` | — |
 | `services.entity_examples` | Per-service authored examples, one free-text value per core kind (service, phase, scenario, path, step, lane), shown under each kind's definition to ground it in this deployment. Blueprint data, not app config: it rides the service block so a re-map round-trips it. A jsonb object with no CHECK — the six-key shape is the app's, and an unwritten key simply does not render. |
-| `path_steps.position` | Blueprint column index for this step on this path |
-| `lanes.lane_role` | Semantic role key that drives rendering (pill cells, storyboard rows, divider anchoring), deliberately separate from the free-form display name. Canonical values: customer_actions, |
 
 <!-- /generated:catalog -->
 
