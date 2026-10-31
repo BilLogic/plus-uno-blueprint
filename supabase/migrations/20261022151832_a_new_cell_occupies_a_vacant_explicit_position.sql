@@ -1,4 +1,6 @@
 -- Explicit-position insertion never upserts the existing goal conversation.
+-- Content is stored and recorded exactly as sent, surrounding spaces included;
+-- only an empty or whitespace-only content is refused.
 -- Identity keys use the existing descriptive stem plus a server-minted UUID
 -- suffix: a key must stay unique even after a cell moves out of its old slot.
 create or replace function public.insert_cell_at_position(
@@ -49,12 +51,12 @@ begin
   -- No ON CONFLICT UPDATE: a collision must leave the old row untouched.
   insert into public.cells(id,path_id,lane_id,step_id,position,content,status,origin,cell_key)
     values(created_id,insert_cell_at_position.path_id,insert_cell_at_position.lane_id,insert_cell_at_position.step_id,
-      at_position,btrim(insert_cell_at_position.content),insert_cell_at_position.status,'app',created_key)
+      at_position,insert_cell_at_position.content,insert_cell_at_position.status,'app',created_key)
     returning id into written_id;
   if not found then raise exception 'No cell inserted' using errcode='P0002'; end if;
   change_id := public.record_authoring_change('insert_cell_at_position',jsonb_build_object(
     'path_id',path_id,'lane_id',lane_id,'step_id',step_id,'position',at_position,
-    'content',btrim(insert_cell_at_position.content),'status',insert_cell_at_position.status,'cell_id',written_id),inverse);
+    'content',insert_cell_at_position.content,'status',insert_cell_at_position.status,'cell_id',written_id),inverse);
   if change_id is null then raise exception 'Cell insertion produced no durable change id'; end if;
   return jsonb_build_object('id',written_id,'cell_key',created_key,'change_id',change_id,'revert',inverse);
 end;

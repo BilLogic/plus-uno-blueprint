@@ -156,5 +156,20 @@ begin
   end if;
 end $$;
 reset role;
+drop trigger insert_proof_fail_log on public.authoring_changes;
+set local role authenticated;
+-- Content is an exact string: surrounding spaces survive the row and the ledger.
+do $$
+declare f insert_fixture%rowtype; outcome jsonb;
+begin
+  select * into strict f from insert_fixture;
+  outcome := public.insert_cell_at_position(f.path_id,f.lane_id,f.step_id,3,'  Keeps its spaces  ','built');
+  if (select content from public.cells where id=(outcome->>'id')::uuid) is distinct from '  Keeps its spaces  '
+      or (select args->>'content' from public.authoring_changes where id=(outcome->>'change_id')::uuid)
+         is distinct from '  Keeps its spaces  ' then
+    raise exception 'insertion did not store and record content exactly as sent';
+  end if;
+end $$;
+reset role;
 rollback;
 \echo insert_cell_at_position public read-back proof PASS (fixture rolled back)
