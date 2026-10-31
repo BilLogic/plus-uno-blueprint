@@ -186,10 +186,3 @@ The normal `npm test` gate includes both. Run the usual typecheck/lint/build
 and documentation gates before opening the PR. After the final content ticket,
 run the render checker over every touched scenario in stacked and merged views
 and post the report on #737.
-
-For a local offline render walk, set `RENDER_WALK_STORAGE_PREFIX` to the
-namespace configured in `deployment/bootstrap.ts`, as the CI workflow does.
-Otherwise the template seeds its own browser-storage namespace and the
-deployment cannot read the seeded agent session. Build with the Supabase URL
-and anon key empty before running the walk; it verifies the exported sample
-board, not hosted authoring or the final applied content batches.
