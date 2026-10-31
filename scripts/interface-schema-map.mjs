@@ -145,13 +145,6 @@ export const LABEL_COLUMNS = Object.freeze(
       because:
         'The section heads a jsonb map, not a field, and the column carries an `entity_` qualifier the label drops: on the service panel the only examples in question are the board’s six entity kinds, so the qualifier is understood and the heading says the plain word. The six inputs beneath it name the kinds, not columns, so they carry no row of their own; this one row binds the whole map.',
     },
-    { label: 'Position', names: ['path_steps.position'], because: '' },
-    {
-      label: 'Storyboard',
-      names: ['lanes.lane_role'],
-      because:
-        'The one row whose right-hand side is a VALUE rather than the name of a place to put one: `storyboard` is one of the eight `lane_role` admits, and this label heads the frames of the lane carrying it. The word is in the schema; it is simply not a column name.',
-    },
   ].map((row) => Object.freeze({ ...row, names: Object.freeze(row.names) })),
 )
 
