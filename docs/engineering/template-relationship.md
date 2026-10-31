@@ -334,6 +334,12 @@ keeps a precondition in front of it — if the two halves ever stop sharing an i
 the walk says so through the `unverified` register rather than failing as though
 the application were broken.
 
+Run locally, the walk needs `RENDER_WALK_STORAGE_PREFIX` set to the namespace
+configured in `deployment/bootstrap.ts`, as the CI workflow sets it. Otherwise
+the template seeds its own browser-storage namespace and the deployment cannot
+read the seeded agent session. The walk verifies the exported sample board, not
+hosted authoring.
+
 ## What is genuinely this deployment's
 
 "Coupled" no longer means what it meant when this repository held its own copy
