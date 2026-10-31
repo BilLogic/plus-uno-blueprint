@@ -4,8 +4,9 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  * `supabase gen types --db-url "$SUPABASE_DB_URL" --schema public`.
  * This declares the prepared schema, including the v2.8.11 migration adoption;
  * it is not a claim that these migrations have run on the hosted deployment.
- * It also declares `insert_cell_at_position` from prepared migration
- * 20261031140000, regenerated the same way and likewise not applied to the
+ * It also declares `rename_step` (migration 20261031120000) and `move_cell`
+ * (20261031130000), both applied, and `insert_cell_at_position` from prepared
+ * migration 20261031140000, regenerated the same way and not yet applied to the
  * hosted deployment; its status argument takes layer 1 below.
  *
  * The complete migration series replays with the existing baseline of 157
@@ -1392,6 +1393,10 @@ export type Database = {
         Args: { lane_id: string; path_id: string; step_id: string }
         Returns: string
       }
+      move_cell: {
+        Args: { cell_id: string; destination: Json; expected_source: Json }
+        Returns: Json
+      }
       owns_agent_session: { Args: { session_owner: string }; Returns: boolean }
       read_cell_storyboard: { Args: { p_cell_id: string }; Returns: Json }
       record_authoring_change: {
@@ -1441,6 +1446,10 @@ export type Database = {
       rename_scenario: {
         Args: { new_name: string; scenario_id: string }
         Returns: undefined
+      }
+      rename_step: {
+        Args: { expected_name: string; new_name: string; step_id: string }
+        Returns: Json
       }
       rename_step_name: {
         Args: { new_name: string; step_id: string }

@@ -29,8 +29,9 @@
 -- columns were added, not any design), and defaults are shown where they exist.
 -- Triggers, functions, policies and grants are not reproduced: the migrations
 -- say them, and `check:rls-posture:live` asks the database about the last two.
--- Prepared capability 20261031140000 adds insert_cell_at_position only (not
--- deployed). Table/domain/view shape is unchanged; the migration owns the RPC.
+-- Capabilities 20261031120000 (rename_step), 20261031130000 (move_cell) and
+-- 20261031140000 (insert_cell_at_position, prepared) change no table/domain/view
+-- shape; each migration owns its function body and execution grants.
 --
 -- `entity_status` is a DOMAIN over text, not a per-table CHECK:
 --   proposed | planned | built | live | at_risk | deprecated
