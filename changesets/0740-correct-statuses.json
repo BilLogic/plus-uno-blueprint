@@ -1,0 +1,891 @@
+{
+  "version": 1,
+  "issue": 740,
+  "operations": [
+    {
+      "key": "row-21-1",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000140204"
+      },
+      "expected": {
+        "content": "Notifies affected tutors of session changes in-app and by email.",
+        "summary": "Cancellations are routine rather than exceptional — 22–41% of sessions were cancelled per month in spring 2026. PLANNED (in QA for release 11.4): edited and reverted sessions additionally ask affected tutors to reconfirm availability.",
+        "status": "built",
+        "path_id": "a0000000-0000-4000-8000-000000000806",
+        "lane_id": "a0000000-0000-4000-8000-000000000887",
+        "step_id": "a0000000-0000-4000-8000-000000000896",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": "plus-application/standard-scheduling/happy-path/front-stage-actions/receive-schedule"
+      },
+      "value": {
+        "content": "Alerts affected tutors in the app when a session is cancelled or its time changes.",
+        "summary": "Cancellations are routine rather than exceptional — 22–41% of sessions were cancelled per month in spring 2026. Editing a session time or reverting a cancellation with notification enabled asks affected tutors to reconfirm availability.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737"
+      ]
+    },
+    {
+      "key": "row-21-1-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000140204",
+          "cell_key": "plus-application/standard-scheduling/happy-path/front-stage-actions/receive-schedule",
+          "title": "KB audit #740 row 21 — …00140204"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #740 row 21 — …00140204",
+        "note": "Sources: https://www.notion.so/d11b7cca498283dba80881e9217de2a8 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737 . Checked October 21, 2026. Card 2452 is Deployed in 12.0; Figma node 11272:161737 explicitly says ReconfirmState shipped August 2026, Unavailable drops the tutor without a call-off, and the batch modal lives on Home. Card QA sections 10–12 distinguish notify-on reconfirmation from notify-off alerts. This does not make calendar subscription live. Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/740 (audit row 21)."
+      },
+      "evidence": [
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737"
+      ]
+    },
+    {
+      "key": "row-21-3",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000140206"
+      },
+      "expected": {
+        "content": "PLUS App",
+        "summary": "My Sessions shows upcoming sessions; the calendar-sync modals offer Subscribe, an auto-updating feed, or Add event only. Session changes surface as cancelled or time-change alerts. PLANNED (in QA for release 11.4): those alerts would also ask the tutor to re-state availability.",
+        "status": "built",
+        "path_id": "a0000000-0000-4000-8000-000000000806",
+        "lane_id": "a0000000-0000-4000-8000-000000000888",
+        "step_id": "a0000000-0000-4000-8000-000000000896",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": "plus-application/standard-scheduling/happy-path/front-stage-tech/receive-schedule"
+      },
+      "value": {
+        "summary": "My Sessions shows upcoming sessions. Session changes surface as cancelled or time-change alerts; time edits and reverted cancellations with notification enabled also ask affected tutors to reconfirm availability.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737"
+      ]
+    },
+    {
+      "key": "row-21-3-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000140206",
+          "cell_key": "plus-application/standard-scheduling/happy-path/front-stage-tech/receive-schedule",
+          "title": "KB audit #740 row 21 — …00140206"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #740 row 21 — …00140206",
+        "note": "Sources: https://www.notion.so/d11b7cca498283dba80881e9217de2a8 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737 . Checked October 21, 2026. Card 2452 is Deployed in 12.0; Figma node 11272:161737 explicitly says ReconfirmState shipped August 2026, Unavailable drops the tutor without a call-off, and the batch modal lives on Home. Card QA sections 10–12 distinguish notify-on reconfirmation from notify-off alerts. This does not make calendar subscription live. Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/740 (audit row 21)."
+      },
+      "evidence": [
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737"
+      ]
+    },
+    {
+      "key": "row-22-5",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b0000000-0000-4000-8000-000000140303"
+      },
+      "expected": {
+        "content": "Reconfirms availability when a session is edited or reverted.",
+        "summary": "PLANNED (in QA for release 11.4): when a supervisor edits a session's time or reverts a cancellation, the tutor gets a reconfirmation prompt, singly or in a batch. Confirming keeps them on the roster; marking Unavailable removes them from the session without a call-off record.",
+        "status": "built",
+        "path_id": "a0000000-0000-4000-8000-000000000806",
+        "lane_id": "a0000000-0000-4000-8000-000000000886",
+        "step_id": "b0000000-0000-4000-8000-000000000901",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "summary": "When a supervisor edits a session time or reverts a cancellation with notification enabled, the tutor receives a reconfirmation prompt, singly or in a batch. Confirming keeps them on the roster; answering Unavailable removes them without a call-off record.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737"
+      ]
+    },
+    {
+      "key": "row-22-5-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b0000000-0000-4000-8000-000000140303",
+          "cell_key": "b0000000-0000-4000-8000-000000140303",
+          "title": "KB audit #740 row 22 — …00140303"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #740 row 22 — …00140303",
+        "note": "Sources: https://www.notion.so/d11b7cca498283dba80881e9217de2a8 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737 . Checked October 21, 2026. Card 2452 is Deployed in 12.0; Figma node 11272:161737 explicitly says ReconfirmState shipped August 2026, Unavailable drops the tutor without a call-off, and the batch modal lives on Home. Card QA sections 10–12 distinguish notify-on reconfirmation from notify-off alerts. This does not make calendar subscription live. Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/740 (audit row 22)."
+      },
+      "evidence": [
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737"
+      ]
+    },
+    {
+      "key": "row-22-7",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b0000000-0000-4000-8000-000000140306"
+      },
+      "expected": {
+        "content": "PLUS App",
+        "summary": "Alerts about cancelled and rescheduled sessions reach the tutor here. PLANNED (in QA for release 11.4): reconfirmation requests would arrive on the same surface.",
+        "status": "built",
+        "path_id": "a0000000-0000-4000-8000-000000000806",
+        "lane_id": "a0000000-0000-4000-8000-000000000888",
+        "step_id": "b0000000-0000-4000-8000-000000000901",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "summary": "The PLUS App shows cancelled and rescheduled session alerts. Reconfirmation prompts appear when a session time is edited or a cancellation is reverted with notification enabled; batch prompts appear on Home.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737"
+      ]
+    },
+    {
+      "key": "row-22-7-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b0000000-0000-4000-8000-000000140306",
+          "cell_key": "b0000000-0000-4000-8000-000000140306",
+          "title": "KB audit #740 row 22 — …00140306"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #740 row 22 — …00140306",
+        "note": "Sources: https://www.notion.so/d11b7cca498283dba80881e9217de2a8 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737 . Checked October 21, 2026. Card 2452 is Deployed in 12.0; Figma node 11272:161737 explicitly says ReconfirmState shipped August 2026, Unavailable drops the tutor without a call-off, and the batch modal lives on Home. Card QA sections 10–12 distinguish notify-on reconfirmation from notify-off alerts. This does not make calendar subscription live. Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/740 (audit row 22)."
+      },
+      "evidence": [
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737"
+      ]
+    },
+    {
+      "key": "row-22-9",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b0000000-0000-4000-8000-000000140308"
+      },
+      "expected": {
+        "content": "Reconfirmation state",
+        "summary": "PLANNED (in QA for release 11.4): each affected TutorSession would carry a ReconfirmState of PENDING and tutor responses would apply to the roster. Production tutor_session has no reconfirm column.",
+        "status": "built",
+        "path_id": "a0000000-0000-4000-8000-000000000806",
+        "lane_id": "a0000000-0000-4000-8000-000000000890",
+        "step_id": "b0000000-0000-4000-8000-000000000901",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "summary": "Each tutor affected by a time edit or reverted cancellation with notification enabled has a PENDING ReconfirmState. Available keeps the tutor on the roster; Unavailable removes them without creating a call-off record.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737"
+      ]
+    },
+    {
+      "key": "row-22-9-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b0000000-0000-4000-8000-000000140308",
+          "cell_key": "b0000000-0000-4000-8000-000000140308",
+          "title": "KB audit #740 row 22 — …00140308"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #740 row 22 — …00140308",
+        "note": "Sources: https://www.notion.so/d11b7cca498283dba80881e9217de2a8 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737 . Checked October 21, 2026. Card 2452 is Deployed in 12.0; Figma node 11272:161737 explicitly says ReconfirmState shipped August 2026, Unavailable drops the tutor without a call-off, and the batch modal lives on Home. Card QA sections 10–12 distinguish notify-on reconfirmation from notify-off alerts. This does not make calendar subscription live. Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/740 (audit row 22)."
+      },
+      "evidence": [
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737"
+      ]
+    },
+    {
+      "key": "row-24-11",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000140107"
+      },
+      "expected": {
+        "content": "Reviews and adjusts sessions in Admin › Sessions.",
+        "summary": "Edit scopes: this session, all recurring, or all recurring within a date range, each with an optional notify toggle. Cancel scopes: this session, this recurring series within a date range, or all sessions at the school within a date range. Revert restores a cancelled session through the same three scopes. PLANNED (in QA for release 11.4): revert and the reconfirmation prompt are built and testing, not yet deployed to production.",
+        "status": "built",
+        "path_id": "a0000000-0000-4000-8000-000000000806",
+        "lane_id": "a0000000-0000-4000-8000-000000000889",
+        "step_id": "a0000000-0000-4000-8000-000000000894",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": "plus-application/standard-scheduling/happy-path/back-stage-actions/review-schedules"
+      },
+      "value": {
+        "summary": "Edit scopes: this session, all recurring, or all recurring within a date range, with an optional notify toggle. Cancel and revert share one picker: this session, this recurring series within a date range, or all sessions at the school within a date range. Shipped in Release 12.0.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737"
+      ]
+    },
+    {
+      "key": "row-24-11-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000140107",
+          "cell_key": "plus-application/standard-scheduling/happy-path/back-stage-actions/review-schedules",
+          "title": "KB audit #740 row 24 — …00140107"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #740 row 24 — …00140107",
+        "note": "Sources: https://www.notion.so/d11b7cca498283dba80881e9217de2a8 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737 . Checked October 21, 2026. Card 2452 is Deployed in 12.0; Figma node 11272:161737 explicitly says ReconfirmState shipped August 2026, Unavailable drops the tutor without a call-off, and the batch modal lives on Home. Card QA sections 10–12 distinguish notify-on reconfirmation from notify-off alerts. This does not make calendar subscription live. Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/740 (audit row 24)."
+      },
+      "evidence": [
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737"
+      ]
+    },
+    {
+      "key": "row-58-13",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "172c92fc-655b-4231-8ed0-1ffd6ea7005e"
+      },
+      "expected": {
+        "content": "Videoconf attendance",
+        "summary": "After the meeting ends, videoconference attendance is matched against SessionAttendance; gaps from co-host room moves show up here, which feeds the completeness stats supervisors track (2026 actuals: 83.4% of rostered students recorded, only 31.8% of sessions fully covered).",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-00000000080e",
+        "lane_id": "a0000000-0000-4000-8000-000000000877",
+        "step_id": "a0000000-0000-4000-8000-000000000983",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "summary": "After the meeting ends, videoconference attendance is matched against SessionAttendance; gaps from co-host room moves show up here, which feeds the completeness stats supervisors track (2026 actuals: 83.4% of rostered students recorded, only 31.8% of sessions fully covered). As of Oct 2026, most sessions are never linked to their Zoom call, non-standard meeting names are skipped, and matching compares attendees across all schools. A fix is in testing.",
+        "status": "at_risk"
+      },
+      "evidence": [
+        "https://www.notion.so/3abb7cca4982802db108fb2b73f563fa",
+        "https://www.notion.so/3f0b7cca498280cda4daedafea927817"
+      ]
+    },
+    {
+      "key": "row-58-13-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "172c92fc-655b-4231-8ed0-1ffd6ea7005e",
+          "cell_key": "172c92fc-655b-4231-8ed0-1ffd6ea7005e",
+          "title": "KB audit #740 row 58 — 172c92fc"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #740 row 58 — 172c92fc",
+        "note": "Sources: https://www.notion.so/3abb7cca4982802db108fb2b73f563fa ; https://www.notion.so/3f0b7cca498280cda4daedafea927817 . Checked October 21, 2026. Cards 2551 and 2668 are Testing for 12.1. They document missing session links, cross-school attendee matching and skipped non-standard meeting names. These fixes are not represented as deployed. Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/740 (audit row 58)."
+      },
+      "evidence": [
+        "https://www.notion.so/3abb7cca4982802db108fb2b73f563fa",
+        "https://www.notion.so/3f0b7cca498280cda4daedafea927817"
+      ]
+    },
+    {
+      "key": "row-74-15",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b4556df8-9f49-4dbf-990a-8a7a88b13a02"
+      },
+      "expected": {
+        "content": "Reconfirmation fan-out",
+        "summary": "PLANNED (in QA for release 11.4): editing sessions with notification enabled would fan reconfirm requests out to signed-up tutors, and a tutor answering Unavailable would drop off the roster.",
+        "status": "built",
+        "path_id": "f1000000-0000-4000-8000-000000000003",
+        "lane_id": "f1000000-0000-4000-8000-000000000008",
+        "step_id": "f1000000-0000-4000-8000-000000000012",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "summary": "Editing a session time with notification enabled sends reconfirmation requests to affected signed-up tutors. A tutor answering Unavailable drops off the roster without a call-off record.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737"
+      ]
+    },
+    {
+      "key": "row-74-15-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b4556df8-9f49-4dbf-990a-8a7a88b13a02",
+          "cell_key": "b4556df8-9f49-4dbf-990a-8a7a88b13a02",
+          "title": "KB audit #740 row 74 — b4556df8"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #740 row 74 — b4556df8",
+        "note": "Sources: https://www.notion.so/d11b7cca498283dba80881e9217de2a8 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737 . Checked October 21, 2026. Card 2452 is Deployed in 12.0; Figma node 11272:161737 explicitly says ReconfirmState shipped August 2026, Unavailable drops the tutor without a call-off, and the batch modal lives on Home. Card QA sections 10–12 distinguish notify-on reconfirmation from notify-off alerts. This does not make calendar subscription live. Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/740 (audit row 74)."
+      },
+      "evidence": [
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000140204"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000140204"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000140206"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000140206"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "782b725b-bfe1-42ac-9610-3c253f90c84a",
+          "cell_id": "a0000000-0000-4000-8000-000000140206",
+          "touchpoint_id": "e469e871-33ba-4d7b-abee-20abe017593f",
+          "position": 1,
+          "summary": "The tutor supervisor team sends the semester schedule to tutors through the PLUS app.",
+          "role": null,
+          "origin": "import",
+          "created_at": "2026-08-31T02:00:13.607441+00:00",
+          "updated_at": "2026-08-31T02:00:13.607441+00:00",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "782b725b-bfe1-42ac-9610-3c253f90c84a",
+          "cell_id": "a0000000-0000-4000-8000-000000140206",
+          "touchpoint_id": "e469e871-33ba-4d7b-abee-20abe017593f",
+          "position": 1,
+          "summary": "The tutor supervisor team sends the semester schedule to tutors through the PLUS app.",
+          "role": null,
+          "origin": "import",
+          "created_at": "2026-08-31T02:00:13.607441+00:00",
+          "updated_at": "2026-08-31T02:00:13.607441+00:00",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-000000140303"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-000000140303"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-000000140306"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-000000140306"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "219b640b-e181-48b9-a30f-60f41059da20",
+          "cell_id": "b0000000-0000-4000-8000-000000140306",
+          "touchpoint_id": "e469e871-33ba-4d7b-abee-20abe017593f",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "created_at": "2026-08-31T02:00:13.607441+00:00",
+          "updated_at": "2026-08-31T02:00:13.607441+00:00",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "219b640b-e181-48b9-a30f-60f41059da20",
+          "cell_id": "b0000000-0000-4000-8000-000000140306",
+          "touchpoint_id": "e469e871-33ba-4d7b-abee-20abe017593f",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "created_at": "2026-08-31T02:00:13.607441+00:00",
+          "updated_at": "2026-08-31T02:00:13.607441+00:00",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-000000140308"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-000000140308"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "09c9303e-7b7e-4ab3-87ed-2b571d1964dd",
+          "cell_id": "b0000000-0000-4000-8000-000000140308",
+          "touchpoint_id": "441a1023-ef67-4e93-a086-ee43c522cd9e",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "created_at": "2026-08-31T02:00:13.607441+00:00",
+          "updated_at": "2026-08-31T02:00:13.607441+00:00",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "09c9303e-7b7e-4ab3-87ed-2b571d1964dd",
+          "cell_id": "b0000000-0000-4000-8000-000000140308",
+          "touchpoint_id": "441a1023-ef67-4e93-a086-ee43c522cd9e",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "created_at": "2026-08-31T02:00:13.607441+00:00",
+          "updated_at": "2026-08-31T02:00:13.607441+00:00",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000140107"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000140107"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "172c92fc-655b-4231-8ed0-1ffd6ea7005e"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "172c92fc-655b-4231-8ed0-1ffd6ea7005e"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "fa1debc1-7e5d-4496-a2be-6bd48abbca3b",
+          "cell_id": "172c92fc-655b-4231-8ed0-1ffd6ea7005e",
+          "touchpoint_id": "4765392d-e7f1-4375-83df-7c2b899c6ba5",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "created_at": "2026-08-31T02:00:13.607441+00:00",
+          "updated_at": "2026-08-31T02:00:13.607441+00:00",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "fa1debc1-7e5d-4496-a2be-6bd48abbca3b",
+          "cell_id": "172c92fc-655b-4231-8ed0-1ffd6ea7005e",
+          "touchpoint_id": "4765392d-e7f1-4375-83df-7c2b899c6ba5",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "created_at": "2026-08-31T02:00:13.607441+00:00",
+          "updated_at": "2026-08-31T02:00:13.607441+00:00",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b4556df8-9f49-4dbf-990a-8a7a88b13a02"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b4556df8-9f49-4dbf-990a-8a7a88b13a02"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "e2fbf5d1-dcf3-46a5-81ce-299e7dbb2b8d",
+          "cell_id": "b4556df8-9f49-4dbf-990a-8a7a88b13a02",
+          "touchpoint_id": "962eeb5a-914c-4160-8b8a-fa858c080bc3",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "created_at": "2026-08-31T02:00:13.607441+00:00",
+          "updated_at": "2026-08-31T02:00:13.607441+00:00",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "e2fbf5d1-dcf3-46a5-81ce-299e7dbb2b8d",
+          "cell_id": "b4556df8-9f49-4dbf-990a-8a7a88b13a02",
+          "touchpoint_id": "962eeb5a-914c-4160-8b8a-fa858c080bc3",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "created_at": "2026-08-31T02:00:13.607441+00:00",
+          "updated_at": "2026-08-31T02:00:13.607441+00:00",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000806"
+        }
+      },
+      "beforeCount": 14,
+      "afterCount": 14
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000806"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-00000000080e"
+        }
+      },
+      "beforeCount": 24,
+      "afterCount": 24
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-00000000080e"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 9
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "f1000000-0000-4000-8000-000000000003"
+        }
+      },
+      "beforeCount": 14,
+      "afterCount": 14
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "f1000000-0000-4000-8000-000000000003"
+        }
+      },
+      "beforeCount": 6,
+      "afterCount": 6
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000126"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000126"
+        }
+      },
+      "beforeCount": 4,
+      "afterCount": 4
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000206"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000206"
+        }
+      },
+      "beforeCount": 5,
+      "afterCount": 5
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "f1000000-0000-4000-8000-000000000002"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "f1000000-0000-4000-8000-000000000002"
+        }
+      },
+      "beforeCount": 6,
+      "afterCount": 6
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "734293a2-9018-4a80-a355-4999451c6c82"
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "734293a2-9018-4a80-a355-4999451c6c82",
+          "content": "Unavailable answer releases the tutor from the roster — no call-off record, by design",
+          "summary": "PLANNED (not shipped as of Aug 2026): a tutor answering Unavailable is dropped from the session without a call-off record; the freed slot feeds the fill-in pool. This is by design, confirmed 2026-08-08 — reconfirmation only fires on supervisor-initiated changes, so declining is not a call-off.",
+          "status": "built",
+          "path_id": "f0000000-0000-4000-8000-000000000806",
+          "lane_id": "0eae4ce7-b974-4dbc-b1c3-49ce19ab12e0",
+          "step_id": "b0000000-0000-4000-8000-000000000901",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "frame": null,
+          "cell_key": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "734293a2-9018-4a80-a355-4999451c6c82",
+          "content": "Unavailable answer releases the tutor from the roster — no call-off record, by design",
+          "summary": "PLANNED (not shipped as of Aug 2026): a tutor answering Unavailable is dropped from the session without a call-off record; the freed slot feeds the fill-in pool. This is by design, confirmed 2026-08-08 — reconfirmation only fires on supervisor-initiated changes, so declining is not a call-off.",
+          "status": "built",
+          "path_id": "f0000000-0000-4000-8000-000000000806",
+          "lane_id": "0eae4ce7-b974-4dbc-b1c3-49ce19ab12e0",
+          "step_id": "b0000000-0000-4000-8000-000000000901",
+          "position": 0,
+          "owner": null,
+          "perceived_owner": null,
+          "frame": null,
+          "cell_key": null
+        }
+      ]
+    }
+  ]
+}

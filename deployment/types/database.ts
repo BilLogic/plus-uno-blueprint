@@ -1,153 +1,27 @@
 import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
 /**
- * Supabase database types for the `public` schema — THIS DEPLOYMENT'S.
+ * GENERATED 2026-10-31 from the owned local deployment replay database with
+ * `supabase gen types --db-url "$SUPABASE_DB_URL" --schema public`.
+ * This declares the prepared schema, including the v2.8.11 migration adoption;
+ * it is not a claim that these migrations have run on the hosted deployment.
  *
- * @see supabase/DATABASE.md — full schema, RLS, and connection docs
- * @see docs/reference/erd.mmd — entity relationship diagram
+ * The complete migration series replays with the existing baseline of 157
+ * data/assertion failures and no structural failures. All five new migrations
+ * and their rollback-contained proofs pass. No hosted project was changed.
  *
- * NOTHING IMPORTS THIS FILE, AND NOTHING SHOULD. It is not a module the
- * application compiles against — the application is read out of
- * `uno-blueprint` and is typechecked against the copy that
- * ships with it, which is the right subject for code that ships with it too.
- * This is the DECLARATION: the statement of what schema this deployment's
- * database actually has, read by `check:database-types:live` and by
- * `npm run agent-account`, both through `schemaDeclaration` in
- * `scripts/agent-account.mjs`.
+ * This file describes this deployment, not the package. Application modules
+ * compile against the package's types; checks and agent-account read this
+ * declaration. Keep it even though no application module imports it.
  *
- * WHY IT HAD TO COME BACK. When this repository stopped keeping a copy of the
- * application, this file went with it, on the ground that every import of it
- * was a type import and the package's copy would serve. That is true of the
- * application's compile-time needs and false of this repository's: the
- * package's copy describes the TEMPLATE'S database, and this is not the
- * template's database. Compared against it, this database disagreed thirteen
- * times — three extensions this deployment made (`cells.search_tsv`,
- * `services.origin`, `slices.stakeholder_id`), four functions of its own,
- * two relations the template has and this deployment does not, and two
- * columns spelled differently on each side — each of those last two counting
- * twice, once on each side, which is what carries the total to thirteen. They
- * are aligned now: an actor is `part_of` another, and a session says who
- * `created_by` it. Not one of the thirteen was a defect in either file. A
- * check with no true answer available to it is the thing that was broken.
- *
- * Its own reasoning is why a later cleanup must not delete it for having no
- * importers: deleting it does not break a build, it silently falls back to the
- * package's declaration and takes the live check red in a way that reads like
- * schema drift. `scripts/tests/database-types.test.mjs` asserts the resolved
- * owner is this deployment so that the deletion fails `npm test` instead.
- *
- * GENERATED, 2026-10-15, from the production project through the Supabase
- * connector, by the same path as the first run. That first run, on 2026-09-08,
- * is why every hand-edited block this file once carried is gone: the two
- * placement RPCs, the two rename RPCs, `touchpoints`, `cell_touchpoints`,
- * `resources`, `services.entity_examples` and the rest read the way the
- * generator emits them, and the whole `Functions` map — forty-six entries
- * where the hand-maintained file had thirteen — arrived at once. It holds
- * fifty-seven today; what has arrived since is named in the list below.
- *
- * The hand edits were not wrong. `cells_layer_id_fkey` and `layers_path_id_fkey`
- * were, and they had survived a migration that renamed both constraints,
- * because nothing regenerates a file that is written by hand.
- *
- * HOW IT WAS GENERATED, since neither documented path works here. `npm run
- * supabase:types` needs `--linked`, and the CLI account on this machine has no
- * access to the project; `npm run supabase:types:local` and the `--db-url`
- * form both need Docker, which is not installed. The connector has the
- * privilege the CLI lacks and needs neither, so it is the path that works
- * today — and the one to use again.
- *
- * FOUR LAYERS ARE RE-APPLIED BY HAND, deliberately, and they are the whole of
- * what is not the generator's:
- *
- *  1. `paths.kind` is typed `PathKind`, rather than the generator's `string`.
- *     The column carries a check constraint naming exactly those three values,
- *     and a constraint is the one thing the generator cannot see; narrowing
- *     here is what makes an invalid value a type error at the call site
- *     instead of a Postgres error at runtime.
- *
- *     `cells.status` and `paths.status` are typed `EntityStatus` on the same
- *     reasoning, and with the same backing: both columns are the
- *     `entity_status` domain (20260821240000), whose check names exactly
- *     the six values, and the generator reads a domain as its base type,
- *     `string`. The `status` argument of `create_path_at_status`,
- *     `set_path_status` and `upsert_cell_at_status` is typed `EntityStatus`
- *     too: it is the same domain, and there the generator cannot even resolve
- *     the base type, so it emits `unknown`.
- *  2. The row aliases at the foot of the file — `Cell`, `Lane`, `Path` and the
- *     rest — are this app's vocabulary over the generated shapes and have no
- *     generated equivalent.
- *  3. An argument whose SQL default is NULL is typed `?: T | null`, not the
- *     generator's `?: T`. Postgres accepts NULL for those and call sites pass
- *     it — `record_authoring_change(agent_session_id)` and
- *     `set_placement_touchpoint(p_touchpoint_id, p_name)` are the ones that
- *     bite immediately. The rule is mechanical: read the defaults out of
- *     `pg_get_function_arguments` and widen the ones that say `DEFAULT NULL`.
- *  4. `restore_cell_dependency(dependency_id, name, note)` types `name` and
- *     `note` as `string | null`, not the generator's `string`. They have no
- *     default, so layer 3 does not reach them, but NULL is the value the
- *     function exists to write: it is the undo of an upserting
- *     `set_cell_dependency`, its body ASSIGNS both columns rather than
- *     coalescing (20260909070000, whose rehearsal restores a note back to
- *     null), and the ledger feeds it `previous.name` / `previous.note` straight
- *     off a `CellDependencyRow`, where both are `string | null`. Narrowing them
- *     would declare that an edge which had no note can never be put back.
- *
- * Re-apply all four after any regeneration, or the app silently loses a check
- * it had — or stops compiling. Nothing else in this file is hand-written; if a
- * fifth layer appears, it belongs in this list or it does not belong at all.
- *
- * ONE THING THE GENERATOR EMITS AND THIS FILE DOES NOT KEEP: the trailing
- * helper block — `Tables<>`, `TablesInsert<>`, `TablesUpdate<>`, `Enums<>`,
- * `CompositeTypes<>` and `Constants`. This file's lineage carried it once
- * (`dad47c08`) and lost it at `b2e92a99`; it has not been back since. Those
- * helpers exist to be imported at a call site and this file has no importers
- * at all, which is the whole point of it. Dropping them is not a fifth layer,
- * because nothing is re-applied — but leaving it unsaid would make the next
- * regeneration look like a hundred lines of drift. Drop it again.
- *
- * Regenerate after schema changes through the Supabase connector's type
- * generator, as above. The two npm scripts that used to be offered here,
- * `supabase:types` (needs a linked project) and `supabase:types:local` (needs
- * Docker), wrote to `src/types/database.ts` and left with it: they are the
- * template's scripts and this repository defines neither.
- *
- * `scripts/check-database-names.mjs` rests its argument on this file arriving
- * by machine. As of this change it does again.
- *
- * WHAT THIS GENERATION HOLDS THAT THE LAST ONE DID NOT:
- *
- * - `create_path_at_status(scenario_id, name, status, kind,
- *   lane_source_path_id, agent_session_id)`, `set_path_status(path_id,
- *   status, agent_session_id)` and `upsert_cell_at_status(path_id, lane_id,
- *   step_id, content, status, agent_session_id)` (20261015120000), the three
- *   entries that take the `Functions` map to fifty-seven. Each is copied from
- *   this run's output as the generator emits it; layer 3 widens
- *   `agent_session_id` and `lane_source_path_id`, and layer 1 narrows
- *   `status`. The same migration's `uno-bot` author on
- *   `authoring_changes.author` is a check constraint and changes no type
- *   here. Every other table, view and function was checked column by column
- *   and argument by argument against the live catalog and is unchanged.
- *
- * DRIFT SINCE THIS GENERATION: `move_cell(cell_id, expected_source, destination)`
- * returns jsonb (20261022150821). Forward declaration for the prepared RPC;
- * not deployed or regenerated from hosted production. The next regeneration
- * after an authorized deployment emits this entry and removes this note.
- *
- * That line is a list because a migration in this repository's own series
- * applies to production before the code that reads it is merged, so this file
- * sometimes has to describe the schema on the far side of an apply that may
- * not have happened yet, and a generator cannot be run against a database that
- * has not been changed. Such an edit is never a fifth layer and is never
- * re-applied: the next regeneration emits it, and its entry goes with the run
- * that proves it. This run did that to the five the list last held.
- *
- * KEEP THE LIST WHOLE, AND THE COUNT WITH IT. That one line is the only
- * statement of how far the file has travelled from its last generated state,
- * so an edit left out of it is invisible — which is exactly what happened
- * twice: three functions and two renames landed here while the paragraph went
- * on saying two — and a third time, when the two finding ratings went in by
- * hand and the list went on saying one. It holds no entries today.
+ * Reapplied layers, as required by access-and-security.md:
+ * 1. Path kind and cell/path status use their constrained domain types;
+ *    status arguments on the three status RPCs use EntityStatus too.
+ * 2. The row aliases below, including optional embedded slide_images.
+ * 3. Arguments with DEFAULT NULL accept null, from pg_get_function_arguments.
+ * 4. restore_cell_dependency name and note accept null, which its inverse writes.
+ * The unused generated Tables/Enums/Constants helper tail is omitted as before.
+ * No other generated shapes are hand-written.
  */
-
 export type Json =
   | string
   | number
@@ -156,18 +30,9 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-/**
- * The path kinds this app draws. Hand-written: `paths.kind` is a text column
- * with a check constraint, and the generator cannot see a constraint.
- */
 export type PathKind = 'happy' | 'variant' | 'exception'
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   public: {
     Tables: {
       agent_messages: {
@@ -428,6 +293,41 @@ export type Database = {
           },
         ]
       }
+      cell_storyboard_receipts: {
+        Row: {
+          actor: string
+          after_state: Json
+          before_state: Json
+          cell_id: string
+          id: string
+          uploaded_ids: string[]
+        }
+        Insert: {
+          actor: string
+          after_state: Json
+          before_state: Json
+          cell_id: string
+          id?: string
+          uploaded_ids: string[]
+        }
+        Update: {
+          actor?: string
+          after_state?: Json
+          before_state?: Json
+          cell_id?: string
+          id?: string
+          uploaded_ids?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cell_storyboard_receipts_cell_id_fkey"
+            columns: ["cell_id"]
+            isOneToOne: false
+            referencedRelation: "cells"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cell_touchpoints: {
         Row: {
           cell_id: string
@@ -519,7 +419,7 @@ export type Database = {
           perceived_owner?: string | null
           position?: number
           search_tsv?: unknown
-          status?: EntityStatus
+          status?: string
           step_id: string
           summary?: string | null
           updated_at?: string
@@ -540,7 +440,7 @@ export type Database = {
           perceived_owner?: string | null
           position?: number
           search_tsv?: unknown
-          status?: EntityStatus
+          status?: string
           step_id?: string
           summary?: string | null
           updated_at?: string
@@ -567,6 +467,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lanes"
             referencedColumns: ["id", "path_id"]
+          },
+          {
+            foreignKeyName: "cells_path_step_fkey"
+            columns: ["path_id", "step_id"]
+            isOneToOne: false
+            referencedRelation: "path_steps"
+            referencedColumns: ["path_id", "step_id"]
           },
           {
             foreignKeyName: "cells_step_id_fkey"
@@ -748,24 +655,24 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          kind: PathKind
+          kind: string
           name: string
           note?: string | null
           origin?: string
           scenario_id: string
-          status?: EntityStatus
+          status?: string
           summary?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
-          kind?: PathKind
+          kind?: string
           name?: string
           note?: string | null
           origin?: string
           scenario_id?: string
-          status?: EntityStatus
+          status?: string
           summary?: string | null
           updated_at?: string
         }
@@ -1204,6 +1111,42 @@ export type Database = {
           },
         ]
       }
+      structure_membership_receipts: {
+        Row: {
+          after_state: Json
+          archive: Json
+          before_state: Json
+          created_at: string
+          id: string
+          path_id: string
+          present: boolean
+          reverted: boolean
+          step_id: string
+        }
+        Insert: {
+          after_state: Json
+          archive: Json
+          before_state: Json
+          created_at?: string
+          id?: string
+          path_id: string
+          present: boolean
+          reverted?: boolean
+          step_id: string
+        }
+        Update: {
+          after_state?: Json
+          archive?: Json
+          before_state?: Json
+          created_at?: string
+          id?: string
+          path_id?: string
+          present?: boolean
+          reverted?: boolean
+          step_id?: string
+        }
+        Relationships: []
+      }
       touchpoints: {
         Row: {
           aliases: string[] | null
@@ -1307,11 +1250,55 @@ export type Database = {
         }
         Returns: string[]
       }
+      add_lane_with_details: {
+        Args: {
+          details?: Json
+          lane_role: string
+          name: string
+          path_orders: Json
+          scenario_id: string
+        }
+        Returns: Json
+      }
       add_step: {
         Args: { at_position?: number | null; name: string; path_id: string }
         Returns: string
       }
+      add_step_with_details: {
+        Args: {
+          name: string
+          path_id: string
+          path_orders: Json
+          summary?: string
+        }
+        Returns: Json
+      }
+      apply_structure_order: {
+        Args: {
+          expected_ids: string[]
+          ids: string[]
+          kind: string
+          path_id: string
+        }
+        Returns: Json
+      }
       cell_natural_key: { Args: { cell_id: string }; Returns: string }
+      change_step_path: {
+        Args: {
+          at_position: number
+          confirmed_cells?: Json
+          expected_ids: string[]
+          expected_path_ids: string[]
+          path_id: string
+          present: boolean
+          step_id: string
+        }
+        Returns: Json
+      }
+      check_structure_draft_order: {
+        Args: { current_ids: string[]; requested: Json }
+        Returns: undefined
+      }
       clear_cell_dependency: {
         Args: { dependency_id: string }
         Returns: undefined
@@ -1332,7 +1319,7 @@ export type Database = {
           lane_source_path_id?: string | null
           name: string
           scenario_id: string
-          status: EntityStatus
+          status: unknown
         }
         Returns: string
       }
@@ -1385,23 +1372,20 @@ export type Database = {
         Returns: string
       }
       is_service_account: { Args: never; Returns: boolean }
-      move_cell: {
-        Args: { cell_id: string; destination: Json; expected_source: Json }
-        Returns: Json
-      }
       key_slug: { Args: { value: string }; Returns: string }
       mint_cell_key: {
         Args: { lane_id: string; path_id: string; step_id: string }
         Returns: string
       }
       owns_agent_session: { Args: { session_owner: string }; Returns: boolean }
+      read_cell_storyboard: { Args: { p_cell_id: string }; Returns: Json }
       record_authoring_change: {
         Args: {
           agent_session_id?: string | null
           args?: Json
           author?: string
           fn: string
-          revert?: Json | null
+          revert?: Json
         }
         Returns: string
       }
@@ -1419,6 +1403,14 @@ export type Database = {
         Args: { p_content: string; p_from: string; p_to: string }
         Returns: string
       }
+      rename_lane: {
+        Args: { lane_id: string; new_name: string }
+        Returns: Json
+      }
+      rename_lane_checked: {
+        Args: { lane_id: string; new_name: string }
+        Returns: undefined
+      }
       rename_owner_tag: {
         Args: { from_name: string; to_name: string }
         Returns: string[]
@@ -1435,22 +1427,43 @@ export type Database = {
         Args: { new_name: string; scenario_id: string }
         Returns: undefined
       }
+      rename_step_name: {
+        Args: { new_name: string; step_id: string }
+        Returns: Json
+      }
       rename_touchpoint: {
         Args: { p_name: string; p_touchpoint_id: string }
         Returns: Json
       }
-      reorder_lanes: {
-        Args: { lane_names: string[]; scenario_id: string }
-        Returns: undefined
-      }
-      reorder_steps: {
-        Args: { path_id: string; step_ids: string[] }
-        Returns: undefined
-      }
+      reorder_lanes:
+        | { Args: { lane_ids: string[]; path_id: string }; Returns: Json }
+        | {
+            Args: {
+              expected_ids: string[]
+              lane_ids: string[]
+              path_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: { lane_names: string[]; scenario_id: string }
+            Returns: undefined
+          }
+      reorder_steps:
+        | { Args: { path_id: string; step_ids: string[] }; Returns: Json }
+        | {
+            Args: {
+              expected_ids: string[]
+              path_id: string
+              step_ids: string[]
+            }
+            Returns: Json
+          }
       replace_slides: {
         Args: { p_slice_id: string; p_slides: Json }
         Returns: Json
       }
+      require_structure_author: { Args: never; Returns: undefined }
       restore_cell_content: {
         Args: { cell_id: string; content: string }
         Returns: undefined
@@ -1459,11 +1472,16 @@ export type Database = {
         Args: { dependency_id: string; name: string | null; note: string | null }
         Returns: undefined
       }
+      restore_cell_storyboard: {
+        Args: { p_receipt_id: string }
+        Returns: undefined
+      }
       restore_cell_touchpoints: {
         Args: { p_cell_id: string; p_rows: Json }
         Returns: undefined
       }
       restore_featured_resources: { Args: { p_rows: Json }; Returns: undefined }
+      restore_lane_details: { Args: { snapshot: Json }; Returns: undefined }
       restore_placement: {
         Args: { p_resources?: Json; p_row: Json }
         Returns: Json
@@ -1472,6 +1490,7 @@ export type Database = {
         Args: { p_rows: Json; p_slice_id: string }
         Returns: Json
       }
+      restore_step_details: { Args: { snapshot: Json }; Returns: undefined }
       schema_comments: {
         Args: never
         Returns: {
@@ -1532,11 +1551,7 @@ export type Database = {
         Returns: Json
       }
       set_path_status: {
-        Args: {
-          agent_session_id?: string | null
-          path_id: string
-          status: EntityStatus
-        }
+        Args: { agent_session_id?: string | null; path_id: string; status: EntityStatus }
         Returns: Json
       }
       set_path_steps: {
@@ -1547,11 +1562,15 @@ export type Database = {
         Args: {
           p_name?: string | null
           p_placement_id: string
-          p_touchpoint_id?: string | null
+          p_touchpoint_id?: string
         }
         Returns: Json
       }
       slices_referencing: { Args: { cell_ids: string[] }; Returns: Json }
+      structure_membership_state: {
+        Args: { p_path: string; p_step: string }
+        Returns: Json
+      }
       sync_cell_resources: {
         Args: { p_cell_id: string; p_rows: Json }
         Returns: undefined
@@ -1564,6 +1583,12 @@ export type Database = {
         Args: { p_placement_id: string; p_rows: Json }
         Returns: undefined
       }
+      undo_step_path_change: {
+        Args: { receipt_id: string }
+        Returns: undefined
+      }
+      undo_structure_add: { Args: { snapshot: Json }; Returns: undefined }
+      undo_structure_order: { Args: { snapshot: Json }; Returns: undefined }
       update_cell_dependency: {
         Args: {
           dependency_id: string
@@ -1573,9 +1598,33 @@ export type Database = {
         }
         Returns: Json
       }
+      update_cell_storyboard: {
+        Args: {
+          p_attachments?: Json
+          p_cell_id: string
+          p_content: string
+          p_expected: Json
+          p_frame: string
+          p_summary: string
+        }
+        Returns: Json
+      }
+      update_lane_with_details: {
+        Args: {
+          details: Json
+          lane_id: string
+          lane_ids: string[]
+          name: string
+        }
+        Returns: Json
+      }
       update_scenario_layout: {
         Args: { layout: string; scenario_id: string }
         Returns: undefined
+      }
+      update_step_with_details: {
+        Args: { name: string; step_id: string; summary: string }
+        Returns: Json
       }
       update_touchpoint: {
         Args: {
@@ -1603,7 +1652,7 @@ export type Database = {
           content: string
           lane_id: string
           path_id: string
-          status: EntityStatus
+          status: unknown
           step_id: string
         }
         Returns: Json
@@ -1649,7 +1698,7 @@ export type SlideImage = Database['public']['Tables']['slide_images']['Row']
  * `slide_images` is not a column and PostgREST only returns it when a read
  * asks for the embed, which is why it is optional and why it is written here
  * rather than emitted: the generator describes the TABLE, and this is the
- * shape `useSlice` and `replaceSlides` actually hold. Layer 2 of the three the
+ * shape `useSlice` and `replaceSlides` actually hold. Layer 2 of the four the
  * header lists.
  */
 export type Slide = Database['public']['Tables']['slides']['Row'] & {

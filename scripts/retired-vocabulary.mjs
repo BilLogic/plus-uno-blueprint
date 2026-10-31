@@ -466,7 +466,9 @@ export const RENAME_MAP = Object.freeze(
       is: ['cells.frame'],
       migrations: ['20260830270000'],
       retired: ['picture'],
-      copy: ['picture', 'pictures'],
+      // v2.8.11 calls the image control Picture. The column identifier stays
+      // retired; the ordinary noun is now the approved interface label.
+      copy: [],
     },
     // The table rename is enforceable and the column rename is not, which is
     // the usual split and not an omission. `slice_item` is a substring of

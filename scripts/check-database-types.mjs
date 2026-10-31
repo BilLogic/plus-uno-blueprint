@@ -50,7 +50,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { schemaDeclaration } from './agent-account.mjs'
-import { functionsInFile, tablesInFile, typesDrift } from './database-types.mjs'
+import { functionsInFile, indexFunctions, tablesInFile, typesDrift } from './database-types.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -147,8 +147,8 @@ function main() {
     if (!dbTables.has(row.table_name)) dbTables.set(row.table_name, new Map())
     dbTables.get(row.table_name).set(row.column_name, row.nullable)
   }
-  const dbFunctions = new Map(
-    functions.map((row) => [row.name, parseArguments(row.args ?? '')]),
+  const dbFunctions = indexFunctions(
+    functions.map((row) => ({ name: row.name, args: parseArguments(row.args ?? '') })),
   )
 
   const declaration = schemaDeclaration(ROOT, (candidate) => fs.existsSync(candidate))

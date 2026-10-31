@@ -633,7 +633,7 @@ test('the unmapped-label check goes red on a label nobody bound', () => {
         // Already mapped, and must not be reported: the check is about words
         // with no row, not about words it dislikes.
         '<Field label="Content" />',
-        '<Field label="Storyboard" />',
+        '<Field label="Summary" />',
         // Case and spacing are the label's business, not the map's.
         '<Field label="perceived owner" />',
       ].join('\n'),

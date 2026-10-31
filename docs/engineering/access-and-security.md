@@ -331,6 +331,10 @@ by both the browser (`src/lib/agent/embedQuestion.ts`) and the backfill.
 
 Single owner of the write path — other docs link here.
 
+Reviewed ticket batches use the same surface through the
+[content changeset runner](content-changesets.md), which documents preflight,
+approval, durable-log read-back and partial-failure handling.
+
 Every **blueprint-content** write goes through one of the wrapper modules,
 never a raw table write from a component, a context or a hook:
 
@@ -455,13 +459,20 @@ spelling a relation that had been renamed. Refresh
 
 ### Regenerating `deployment/types/database.ts`
 
-The file is GENERATED, and one generator works here: the Supabase connector's
-type generator. Neither CLI path does — `--linked` wants a project this
-machine's CLI account cannot reach, and the `--local` and `--db-url` forms want
-Docker, which is not installed. The two `supabase:types` npm scripts that
-wrapped them wrote to `src/types/database.ts` and left with it when this
-deployment stopped holding the application, so they are the template's scripts
-and not this repository's.
+The file is GENERATED. Hosted regeneration uses the Supabase connector's
+type generator: `--linked` needs project access the CLI account may not hold.
+The two old `supabase:types` npm scripts wrote to `src/types/database.ts` and
+left with it when this deployment stopped holding the application; this
+repository defines neither. The CLI can generate a prepared local schema as
+well when its Docker requirement is met.
+
+For a prepared migration upgrade, an owned local replay can now use the CLI
+when Docker is available:
+`supabase gen types --db-url "$SUPABASE_DB_URL" --schema public`. Point that
+variable only at the isolated replay database. Such output declares the
+prepared schema, not the hosted schema; label it accordingly and verify it
+with `check:database-types:live` against that same local database. Hosted
+regeneration still uses the connector route above.
 
 After every regeneration, the hand-applied layers listed in the header of
 `deployment/types/database.ts` go back on, and they are the whole of what is not
