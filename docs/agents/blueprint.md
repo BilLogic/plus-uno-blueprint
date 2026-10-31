@@ -536,5 +536,7 @@ The deletions in public.authoring_changes, in the shape the retired deleted_stru
 These exist and a service key reads them. What each is for:
 
 - `business_models` — How the service is funded, priced and delivered. One row per service. Renamed from `propositions` on 2026-08-21 — that word already meant a cell's value proposition, which is a different thing at a different level.
+- `cell_storyboard_receipts` — —
+- `structure_membership_receipts` — —
 
 <!-- /generated:schema -->
