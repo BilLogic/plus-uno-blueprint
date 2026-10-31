@@ -4,9 +4,10 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  * `supabase gen types --db-url "$SUPABASE_DB_URL" --schema public`.
  * This declares the prepared schema, including the v2.8.11 migration adoption;
  * it is not a claim that these migrations have run on the hosted deployment.
- * It also declares `rename_step` from migration 20261031120000 (applied) and
- * `move_cell` from prepared migration 20261031130000,
- * regenerated the same way and likewise not applied to the hosted deployment.
+ * It also declares `rename_step` (migration 20261031120000) and `move_cell`
+ * (20261031130000), both applied, and `insert_cell_at_position` from prepared
+ * migration 20261031140000, regenerated the same way and not yet applied to the
+ * hosted deployment; its status argument takes layer 1 below.
  *
  * The complete migration series replays with the existing baseline of 157
  * data/assertion failures and no structural failures. All five new migrations
@@ -18,7 +19,8 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  *
  * Reapplied layers, as required by access-and-security.md:
  * 1. Path kind and cell/path status use their constrained domain types;
- *    status arguments on the three status RPCs use EntityStatus too.
+ *    status arguments on the three status RPCs and on
+ *    insert_cell_at_position use EntityStatus too.
  * 2. The row aliases below, including optional embedded slide_images.
  * 3. Arguments with DEFAULT NULL accept null, from pg_get_function_arguments.
  * 4. restore_cell_dependency name and note accept null, which its inverse writes.
@@ -1373,6 +1375,17 @@ export type Database = {
       duplicate_scenario: {
         Args: { name: string; source_scenario_id: string }
         Returns: string
+      }
+      insert_cell_at_position: {
+        Args: {
+          at_position: number
+          content: string
+          lane_id: string
+          path_id: string
+          status: EntityStatus
+          step_id: string
+        }
+        Returns: Json
       }
       is_service_account: { Args: never; Returns: boolean }
       key_slug: { Args: { value: string }; Returns: string }
