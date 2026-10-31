@@ -100,7 +100,7 @@ creates as side effects, including copied lanes and a scenario's initial path.
 | `upsert_cell_at_status` | New `cells`; scope path_id/lane_id/step_id/position=0; content/status, optional summary | RPC records creation; optional summary uses the cell mutation and captures a second inverse |
 | `create_path_at_status` | New `paths`; scope scenario_id/name; kind/status, optional summary/note | Optional input.lane_source_path_id; optional prose uses updatePathSpec |
 | `set_path_status` | Existing `paths`; status | RPC records itself |
-| `create_scenario` | New `scenarios`; scope phase_id; name/layout, optional summary | Optional input.lane_source_path_id, lane_set, step_count (default 0), path_name; verify its generated path/lanes in checks |
+| `create_scenario` | New `scenarios`; scope phase_id; name/layout, optional summary | Optional input.lane_source_path_id, lane_set, step_count, path_name; the RPC creates at least one placeholder step even when step_count is 0; verify its generated path/lanes/steps in checks |
 | `add_step` | New `steps`; scope scenario_id/name; name, optional summary | Required input.path_id; optional input.at_position; check path_steps positions |
 | `add_lane` | New `lanes`; scope path_id/name; name/lane_role | Required input.scenario_id; optional input.at_position; creates a lane on every path, so check all of them |
 | `set_path_steps` | `paths`, target.withSteps=true; expected.step_ids and value.step_ids in order | Captures the previous full list before calling the RPC and recordChange |
@@ -115,6 +115,13 @@ An unknown operation is a preflight error. `set_cell_status` is deliberately
 unsupported: the hosted database has no such function. Edit a cell's status
 with `update_cell_content`. A missing sanctioned operation is a ticket blocker,
 not permission to write a table or change grants.
+
+`create_scenario` cannot create a path with zero initial steps. Its RPC clamps
+the requested count to at least one and names the generated columns Step 1,
+Step 2 and so on. Adding named steps afterward does not replace these rows.
+The current surface has no step rename, and deleting a placeholder is
+human-only. Resolve that scope before applying a scenario with specified
+column names; dry-run does not simulate every RPC side effect.
 
 Statuses follow #737: Triage → proposed; Ready for Dev → planned; Code Review,
 Testing, Ready for QA and Ready for Prod → built. Deployed becomes live only
