@@ -113,10 +113,15 @@ begin
   ] loop
     definition := pg_get_functiondef(operation);
     if position(lock_statement in definition) > 0 then continue; end if;
-    if position(guard in definition) = 0 then
-      raise exception 'Expected authorization guard missing from %', operation;
+    -- Exactly one anchor, or the replacement could patch nothing or twice.
+    if (length(definition) - length(replace(definition, guard, ''))) / length(guard) <> 1 then
+      raise exception 'Expected exactly one authorization guard in %', operation;
     end if;
     execute replace(definition, guard, guard || E'\n\n  ' || lock_statement);
+    -- A silent no-op is the failure this block exists to refuse.
+    if position(guard || E'\n\n  ' || lock_statement in pg_get_functiondef(operation)) = 0 then
+      raise exception 'Lock coordination did not reach %', operation;
+    end if;
   end loop;
 end;
 $coordinate_locks$;

@@ -4,6 +4,8 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  * `supabase gen types --db-url "$SUPABASE_DB_URL" --schema public`.
  * This declares the prepared schema, including the v2.8.11 migration adoption;
  * it is not a claim that these migrations have run on the hosted deployment.
+ * It also declares `move_cell` from prepared migration 20261031130000,
+ * regenerated the same way and likewise not applied to the hosted deployment.
  *
  * The complete migration series replays with the existing baseline of 157
  * data/assertion failures and no structural failures. All five new migrations
@@ -1376,6 +1378,10 @@ export type Database = {
       mint_cell_key: {
         Args: { lane_id: string; path_id: string; step_id: string }
         Returns: string
+      }
+      move_cell: {
+        Args: { cell_id: string; destination: Json; expected_source: Json }
+        Returns: Json
       }
       owns_agent_session: { Args: { session_owner: string }; Returns: boolean }
       read_cell_storyboard: { Args: { p_cell_id: string }; Returns: Json }
