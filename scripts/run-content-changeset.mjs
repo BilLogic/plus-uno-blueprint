@@ -55,7 +55,7 @@ async function main() {
     }
     result.ok = result.failures.length === 0
     console.log(JSON.stringify(result, null, 2))
-    if (mode === 'apply' && result.applied.length) persist(result.applied)
+    if (mode === 'apply' && result.applied.length) persist(result.applied, result.failedAttempt ? { started: result.failedAttempt.key, ...result.failedAttempt } : {})
     if (!result.ok) process.exitCode = 1
   } finally {
     database?.close()

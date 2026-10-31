@@ -1,6 +1,11 @@
 import { isDeepStrictEqual } from 'node:util'
+import { verifyChecks, projectChecks, CAPABILITIES, COORDINATES } from './changesets/capabilities.mjs'
 
 const OPERATIONS = {
+  update_cell_status: { table: 'cells', fields: ['status'] },
+  rename_step: { table: 'steps', fields: ['name'] },
+  move_cell: { table: 'cells', fields: COORDINATES },
+  insert_cell_at_position: { table: 'cells', fields: ['content', 'status'], create: true },
   update_cell_content: { table: 'cells', fields: ['content', 'summary', 'status', 'owner', 'perceived_owner'] },
   create_path_at_status: { table: 'paths', fields: ['kind', 'status', 'summary', 'note'], create: true },
   upsert_cell_at_status: { table: 'cells', fields: ['content', 'status', 'summary'], create: true },
@@ -18,6 +23,7 @@ const OPERATIONS = {
 }
 
 const REQUIRED_SCOPE = {
+  insert_cell_at_position: COORDINATES,
   create_path_at_status: ['scenario_id', 'name'],
   upsert_cell_at_status: ['path_id', 'lane_id', 'step_id', 'position'],
   create_scenario: ['phase_id', 'name'],
@@ -43,6 +49,16 @@ export function validateChangeset(changeset) {
     if (!contract || contract.table !== op.target?.table)
       throw new Error(`${op.key}: unsupported operation/table; no sanctioned write operation registered`)
     validateTarget(op.target)
+    if (op.operation === 'rename_step') {
+      const links = op.input?.expected_path_steps
+      if (!Array.isArray(links) || links.some((link) => !link.path_id || !Number.isSafeInteger(link.position) || link.position < 0))
+        throw new Error(`${op.key}: rename requires input.expected_path_steps with every reviewed path and position`)
+    }
+    if (op.operation === 'move_cell') {
+      if (!op.target.id && !op.target.cell_key) throw new Error(`${op.key}: move must address an existing identity`)
+      for (const field of COORDINATES) if (!Object.hasOwn(op.expected ?? {}, field) || !Object.hasOwn(op.value ?? {}, field))
+        throw new Error(`${op.key}: move requires every expected and destination coordinate`)
+    }
     if (op.expected === null) {
       if (op.target.id || op.target.cell_key) throw new Error(`${op.key}: new rows require a named parent scope, not an assigned id`)
       for (const field of REQUIRED_SCOPE[op.operation] ?? []) {
@@ -130,18 +146,27 @@ async function checkLog(database, receipt, { capture = false } = {}) {
   const failures = []
   for (const entry of receipt) {
     if (!entry.changeIds?.length) failures.push(`${entry.key}: no durable change ids`)
-    for (const id of entry.changeIds ?? []) {
+    if (entry.expectedChanges) {
+      if (entry.changeIds.length !== 1 || entry.expectedChanges.length !== 1 || entry.ledgerCounts?.after - entry.ledgerCounts?.before !== 1)
+        failures.push(`${entry.key}: expected exactly one durable record, with no duplicate append or concurrent ledger growth`)
+    }
+    for (const [index, id] of (entry.changeIds ?? []).entries()) {
       const rows = await database.read({ table: 'authoring_changes', id })
       const row = rows[0]
       if (rows.length !== 1 || !row.fn || !row.args || !row.author || !row.revert?.fn || !row.revert?.args) {
         failures.push(`${entry.key}: ${id} missing durable operation, args, author or inverse`)
-      } else if (capture) {
-        entry.changes ??= []
-        entry.changes.push(durableRecord(row))
       } else {
-        const captured = entry.changes?.find((change) => change.id === id)
-        if (!captured || !isDeepStrictEqual(captured, durableRecord(row)))
-          failures.push(`${entry.key}: ${id} differs from the captured durable record`)
+        const expected = entry.expectedChanges?.[index]
+        if (expected && (!isDeepStrictEqual(expected.args, row.args) || !isDeepStrictEqual(expected.revert, row.revert) || expected.fn !== row.fn || row.author !== 'human'))
+          failures.push(`${entry.key}: ${id} does not match the captured pre-write inverse contract`)
+        if (capture) {
+          entry.changes ??= []
+          entry.changes.push(durableRecord(row))
+        } else {
+          const captured = entry.changes?.find((change) => change.id === id)
+          if (!captured || !isDeepStrictEqual(captured, durableRecord(row)))
+            failures.push(`${entry.key}: ${id} differs from the captured durable record`)
+        }
       }
     }
   }
@@ -155,6 +180,7 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
   const diff = []
   const planned = []
   const applied = []
+  let failedAttempt
   const known = new Map()
   const auditCounts = mode === 'dry-run' && database.auditCount ? { before: await database.auditCount() } : null
   for (const source of changeset.operations) {
@@ -171,9 +197,13 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
         before: creating ? null : Object.fromEntries(Object.keys(op.value).map((key) => [key, rows[0][key]])),
         after: op.value, evidence: op.evidence,
       })
-      planned.push({ source, before: rows[0] ?? null })
+      const plan = { source, before: rows[0] ?? null }
+      planned.push(plan)
       if (mode !== 'verify' && database.prepare) {
-        try { await database.prepare(op, rows[0] ?? null) }
+        try {
+          plan.preparation = await database.prepare(op, rows[0] ?? null)
+          if (plan.preparation?.affectedPaths) diff.at(-1).affectedPaths = plan.preparation.affectedPaths
+        }
         catch (error) { failures.push(`${op.key}: ${error.message}`) }
       }
     }
@@ -196,29 +226,40 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
   }
   if (mode === 'apply' && failures.length === 0) {
     known.clear()
-    for (const { source, before } of planned) {
+    for (const { source, before, preparation: preflight } of planned) {
       const op = resolveRefs(source, known)
       try {
         const current = await database.read(op.target)
         if (before === null ? current.length !== 0 : current.length !== 1 || !isDeepStrictEqual(current[0], before))
           throw new Error('Target changed since preflight; no write attempted for this operation')
-        await database.prepare?.(op, before)
+        const preparation = await database.prepare?.(op, before)
+        if (!isDeepStrictEqual(preparation?.affectedPaths, preflight?.affectedPaths)) throw new Error('Affected paths changed since the reviewed preflight')
+        const preservationFailures = await verifyChecks(database.read, preflight?.checks ?? [])
+        if (preservationFailures.length) throw new Error(preservationFailures.join('; '))
         // Mark the attempt before sending it: a connection can fail after the
         // server committed. A receipt prevents a blind retry of that request.
         await onProgress(applied, { started: op.key })
-        const written = await database.write(op, before)
-        const entry = { key: op.key, changeIds: written.changeIds }
+        const written = await database.write(op, before, preparation)
+        const entry = { key: op.key, changeIds: written.changeIds, ...(written.checks ? { checks: written.checks, expectedChanges: written.expectedChanges, ledgerCounts: written.ledgerCounts } : {}) }
         applied.push(entry)
         failures.push(...await checkLog(database, [entry], { capture: true }))
+        if (entry.checks) failures.push(...await verifyChecks(database.read, entry.checks))
         await onProgress(applied, { started: op.key })
         const rows = await database.read(op.target)
         if (rows.length !== 1) failures.push(`${op.key}: zero-row or ambiguous write`)
         else {
           failures.push(...differences(rows[0], op.value, op.key))
           known.set(op.key, rows[0])
+          for (const previous of applied.slice(0, -1)) projectChecks(previous.checks ?? [], op.target.table, before, before ? { ...before, ...op.value } : rows[0])
+          for (const next of planned) projectChecks(next.preparation?.checks ?? [], op.target.table, before, before ? { ...before, ...op.value } : rows[0])
         }
         if (failures.length) break
       } catch (error) {
+        failedAttempt = { key: op.key, message: error.message, before }
+        if (error.entry?.revert) failedAttempt.partial = {
+          fn: error.entry.fn, args: error.entry.args, revert: error.entry.revert,
+        }
+        await onProgress(applied, { started: op.key, ...failedAttempt })
         failures.push(`${op.key}: ${error.message}; batch stopped, inspect partial writes before retrying`)
         break
       }
@@ -229,17 +270,27 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
     }
   }
   if (mode === 'dry-run') {
-    for (const { source, before } of planned) {
+    for (const { source, before, preparation } of planned) {
       const op = resolveRefs(source, known)
       const rows = await observe(database, op.target)
       if (!isDeepStrictEqual(rows, before === null ? [] : [before]))
         failures.push(`${op.key}: dry-run read-back changed; inspect concurrent edits`)
+      failures.push(...await verifyChecks(database.read, preparation?.checks ?? []))
     }
     if (auditCounts) {
       auditCounts.after = await database.auditCount()
       if (auditCounts.before !== auditCounts.after) failures.push('dry-run: durable change count changed')
     }
   }
-  if (mode === 'verify') failures.push(...await checkLog(database, receipt))
-  return { ok: failures.length === 0, mode, failures, diff, applied, ...(auditCounts ? { auditCounts } : {}) }
+  if (mode === 'verify') {
+    failures.push(...await checkLog(database, receipt))
+    const checks = new Map()
+    for (const entry of receipt) for (const check of entry.checks ?? []) checks.set(JSON.stringify(check.target), check)
+    for (const source of changeset.operations.filter((op) => CAPABILITIES.has(op.operation))) {
+      const entry = receipt.find((item) => item.key === source.key)
+      if (!entry?.checks?.length || !entry.expectedChanges?.length) failures.push(`${source.key}: missing captured preservation/inverse receipt`)
+    }
+    failures.push(...await verifyChecks(database.read, [...checks.values()]))
+  }
+  return { ok: failures.length === 0, mode, failures, diff, applied, ...(failedAttempt ? { failedAttempt } : {}), ...(auditCounts ? { auditCounts } : {}) }
 }

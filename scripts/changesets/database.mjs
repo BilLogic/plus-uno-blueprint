@@ -1,3 +1,5 @@
+import { CAPABILITIES, prepareCapability, expectedChange, projectChecks } from './capabilities.mjs'
+
 function checked(result) {
   if (result.error) throw new Error(result.error.message)
   return result.data
@@ -25,7 +27,7 @@ export function createDatabase(client, modules) {
     for (let offset = 0; ; offset += 500) {
       let query = client.from(target.table).select('*').order('id').range(offset, offset + 499)
       if (target.table === 'path_steps') {
-        query = client.from(target.table).select('*').order('position').range(offset, offset + 499)
+        query = client.from(target.table).select('*').order('path_id').order('position').order('step_id').range(offset, offset + 499)
       }
       if (target.cell_key) query = query.eq('cell_key', target.cell_key)
       for (const [key, value] of Object.entries(target.where ?? {})) {
@@ -69,6 +71,7 @@ export function createDatabase(client, modules) {
   }
 
   async function prepare(op, before) {
+    if (CAPABILITIES.has(op.operation)) return prepareCapability(read, op, before)
     if (op.operation === 'update_cell_content' && !before?.content?.trim())
       throw new Error(`${op.key}: the module cannot capture an inverse for a blank prior cell label`)
     const value = { ...op.target.where, ...before, ...op.value }
@@ -116,12 +119,29 @@ export function createDatabase(client, modules) {
     }
   }
 
-  async function write(op, before) {
+  async function write(op, before, preparation) {
     appendResults = []
+    const auditBefore = CAPABILITIES.has(op.operation) ? await auditCount() : null
     const value = { ...op.target.where, ...before, ...op.value }
     const rpc = async (fn, args) => checked(await client.rpc(fn, args))
     let databaseChangeId
+    let hostResult
     switch (op.operation) {
+      case 'insert_cell_at_position':
+        hostResult = await structure.insertCellAtPosition(client, value)
+        databaseChangeId = hostResult.change_id
+        break
+      case 'move_cell':
+        databaseChangeId = (await structure.moveCell(client, { cellId: before.id, expectedSource: before, destination: value })).change_id
+        break
+      case 'rename_step':
+        databaseChangeId = (await structure.renameStep(client, { stepId: before.id, expectedName: before.name, name: value.name })).change_id
+        break
+      case 'update_cell_status':
+        databaseChangeId = await cell.updateCellStatus(client, {
+          cellId: before.id, status: value.status, expectedStatus: before.status,
+        })
+        break
       case 'update_cell_content':
         await cell.updateCellContent(client, before.id, contentValue(value), contentValue(before))
         break
@@ -236,6 +256,17 @@ export function createDatabase(client, modules) {
     if (failed) throw new Error(`Durable append failed after write: ${failed.error.message}`)
     const changeIds = [...results.map((result) => result.id), ...(databaseChangeId ? [databaseChangeId] : [])]
     if (!changeIds.length) throw new Error('Write produced no durable changes')
+    if (CAPABILITIES.has(op.operation)) {
+      const checks = structuredClone(preparation.checks)
+      const after = before ? { ...before, ...op.value } : { ...op.target.where, ...op.value, id: hostResult.id, cell_key: hostResult.cell_key }
+      projectChecks(checks, op.target.table, before, after)
+      if (!before) {
+        checks.push({ target: { table: 'cells', cell_key: after.cell_key }, rows: [after] })
+        for (const table of ['evidence', 'cell_touchpoints', 'resources']) checks.push({ target: { table, where: { cell_id: after.id } }, rows: [] })
+        for (const field of ['source_cell_id', 'target_cell_id']) checks.push({ target: { table: 'cell_dependencies', where: { [field]: after.id } }, rows: [] })
+      }
+      return { changeIds, checks, expectedChanges: [expectedChange(op, before, hostResult)], ledgerCounts: { before: auditBefore, after: await auditCount() } }
+    }
     return { changeIds }
   }
 
