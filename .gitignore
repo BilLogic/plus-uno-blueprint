@@ -33,6 +33,7 @@ dist-ssr
 # The types generators write here first, so a failed run cannot truncate the
 # committed file.
 .database.ts.tmp
+.changeset-receipts/
 
 # The browser render walk. `render-walk-output/` is everything one run writes —
 # a screenshot per view, plus Playwright's own traces — and CI uploads it whole.
