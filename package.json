@@ -45,6 +45,7 @@
     "check:database-types:live": "node scripts/check-database-types.mjs",
     "apply:pending": "node scripts/apply-pending.mjs",
     "replay:migrations": "node scripts/replay-migrations.mjs",
+    "prove:cell-move": "node scripts/prove-cell-move.mjs",
     "prove:step-rename": "node scripts/prove-step-rename.mjs",
     "seed:load": "node scripts/load-seed.mjs",
     "check:seed-load": "node scripts/check-seed-loads.mjs",
