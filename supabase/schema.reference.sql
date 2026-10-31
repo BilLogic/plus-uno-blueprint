@@ -29,7 +29,7 @@
 -- columns were added, not any design), and defaults are shown where they exist.
 -- Triggers, functions, policies and grants are not reproduced: the migrations
 -- say them, and `check:rls-posture:live` asks the database about the last two.
--- Prepared capability 20261022145813 adds rename_step only (not deployed).
+-- Prepared capability 20261031120000 adds rename_step only (not deployed).
 -- It changes no table/domain/view shape in this snapshot; its function body
 -- and execution grants remain declared solely by the migration.
 --

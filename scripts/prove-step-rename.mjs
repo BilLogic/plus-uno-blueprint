@@ -8,7 +8,10 @@ const root = fileURLToPath(new URL('../', import.meta.url))
 const database = `codex_step_rename_${process.pid}_${Date.now()}`
 // A caller's hosted PG environment must never redirect a disposable proof.
 const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('PG')))
-Object.assign(env, { PGHOST: '/tmp', PGPORT: '5432', PGDATABASE: database })
+// PROOF_PGHOST/PROOF_PGPORT pick a local server other than the default socket.
+Object.assign(env, {
+  PGHOST: process.env.PROOF_PGHOST ?? '/tmp', PGPORT: process.env.PROOF_PGPORT ?? '5432', PGDATABASE: database,
+})
 const args = ['-X', '-q', '-v', 'ON_ERROR_STOP=1', '-d', database]
 const sql = (input) => execFileSync('psql', [...args, '-At'], { cwd: root, env, input, encoding: 'utf8' }).trim()
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms))

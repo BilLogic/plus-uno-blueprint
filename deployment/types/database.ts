@@ -4,6 +4,8 @@ import type { EntityStatus } from 'uno-blueprint/src/lib/entityStatus.ts'
  * `supabase gen types --db-url "$SUPABASE_DB_URL" --schema public`.
  * This declares the prepared schema, including the v2.8.11 migration adoption;
  * it is not a claim that these migrations have run on the hosted deployment.
+ * It also declares `rename_step` from prepared migration 20261031120000,
+ * regenerated the same way and likewise not applied to the hosted deployment.
  *
  * The complete migration series replays with the existing baseline of 157
  * data/assertion failures and no structural failures. All five new migrations
@@ -1426,6 +1428,10 @@ export type Database = {
       rename_scenario: {
         Args: { new_name: string; scenario_id: string }
         Returns: undefined
+      }
+      rename_step: {
+        Args: { expected_name: string; new_name: string; step_id: string }
+        Returns: Json
       }
       rename_step_name: {
         Args: { new_name: string; step_id: string }
