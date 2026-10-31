@@ -7,7 +7,10 @@ import { fileURLToPath } from 'node:url'
 const root = fileURLToPath(new URL('../', import.meta.url))
 const database = `codex_cell_insert_${process.pid}_${Date.now()}`
 const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('PG')))
-Object.assign(env, { PGHOST: '/tmp', PGPORT: '5432', PGDATABASE: database })
+// PROOF_PGHOST/PROOF_PGPORT pick a local server other than the default socket.
+Object.assign(env, {
+  PGHOST: process.env.PROOF_PGHOST ?? '/tmp', PGPORT: process.env.PROOF_PGPORT ?? '5432', PGDATABASE: database,
+})
 const args = ['-X', '-q', '-v', 'ON_ERROR_STOP=1', '-d', database]
 const sql = (input) => execFileSync('psql', [...args, '-At'], { cwd: root, env, input, encoding: 'utf8' }).trim()
 const auth = `set local role authenticated;
@@ -39,7 +42,7 @@ try {
   })
   execFileSync('psql', [...args, '-f', 'supabase/tests/insert_cell_at_position.sql'], { cwd: root, env, stdio: 'inherit' })
   execFileSync(process.execPath, ['scripts/check-database-types.mjs'], {
-    cwd: root, env: { ...env, SUPABASE_DB_URL: `postgresql://localhost:5432/${database}` }, stdio: 'inherit',
+    cwd: root, env: { ...env, SUPABASE_DB_URL: `postgresql://${env.PGHOST.startsWith('/') ? 'localhost' : env.PGHOST}:${env.PGPORT}/${database}` }, stdio: 'inherit',
   })
   const [svc, phase, scenario, path, lane, step] = Array.from({ length: 6 }, () => randomUUID())
   sql(`insert into public.services(id,name) values('${svc}','concurrent insertion fixture');
