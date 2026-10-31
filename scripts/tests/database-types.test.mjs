@@ -5,6 +5,7 @@ import { test } from 'vitest'
 import { schemaDeclaration } from '../agent-account.mjs'
 import {
   functionsInFile,
+  indexFunctions,
   tablesInFile,
   typesDrift,
 } from '../database-types.mjs'
@@ -234,4 +235,30 @@ test('the real declaration parses, is this deployment’s, and carries more than
     `only ${functions.size} functions parsed out of the types file`,
   )
   assert.ok(tables.get('cells')?.has('origin'), 'cells.origin is missing again')
+})
+
+
+test('generated overload unions and every catalog overload are compared', () => {
+  const source = FIXTURE.replace(`      value_sets: {`, `      reorder_steps:
+        | { Args: { path_id: string; step_ids: string[] }; Returns: undefined }
+        | { Args: { path_id: string; step_ids: string[]; expected_ids: string[] }; Returns: Json }
+      value_sets: {`)
+  const catalog = indexFunctions([
+    { name: 'reorder_steps', args: new Set(['path_id', 'step_ids']) },
+    { name: 'reorder_steps', args: new Set(['path_id', 'step_ids', 'expected_ids']) },
+  ])
+  const parsed = functionsInFile(source)
+  for (const [name, args] of catalog) assert.deepEqual(parsed.get(name), args)
+  const complete = new Map([...db().dbFunctions, ...catalog])
+  assert.deepEqual(typesDrift({
+    fileTables: tablesInFile(source), fileFunctions: parsed,
+    ...db(), dbFunctions: complete, fileSource: source,
+  }), [])
+  const withoutGuarded = source.replace(
+    `        | { Args: { path_id: string; step_ids: string[]; expected_ids: string[] }; Returns: Json }\n`, '',
+  )
+  assert.ok(typesDrift({
+    fileTables: tablesInFile(withoutGuarded), fileFunctions: functionsInFile(withoutGuarded),
+    ...db(), dbFunctions: complete, fileSource: withoutGuarded,
+  }).some((line) => line.includes('expected_ids')))
 })
