@@ -1,0 +1,2678 @@
+{
+  "version": 1,
+  "issue": 739,
+  "operations": [
+    {
+      "key": "row-1-1",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "e0000000-0000-4000-8000-000000000635"
+      },
+      "expected": {
+        "content": "Tutor supervisor team creates the tutor account in the Admin › Tutors portal (add tutor, set email, assign group).",
+        "summary": "This account creation is the prerequisite for sign-in — the tutor can't authenticate with Google OAuth until an account exists here with their email and group already set.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000800",
+        "lane_id": "a0000000-0000-4000-8000-000000000834",
+        "step_id": "a0000000-0000-4000-8000-000000000829",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Tutor supervisor team emails the tutor a signup code; the tutor registers with it.",
+        "summary": "Supervisors cannot create tutor accounts in the app today. Add tutor and CSV import are built for 12.1 and not yet live."
+      },
+      "evidence": [
+        "https://www.notion.so/3c8b7cca49828165b365e3078599b412",
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 1)"
+      ]
+    },
+    {
+      "key": "row-1-1-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "e0000000-0000-4000-8000-000000000635",
+          "cell_key": "e0000000-0000-4000-8000-000000000635",
+          "title": "KB audit #739 row 1 — signup"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 1 — signup",
+        "note": "Sources: https://www.notion.so/3c8b7cca49828165b365e3078599b412 ; https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2 . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 1). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/3c8b7cca49828165b365e3078599b412",
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2"
+      ]
+    },
+    {
+      "key": "row-1-3",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "e0000000-0000-4000-8000-000000000634"
+      },
+      "expected": {
+        "content": "Google OAuth",
+        "summary": "Tutor authentication is delegated to Google OAuth; the app matches the Google identity to the account the supervisor team created.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000800",
+        "lane_id": "a0000000-0000-4000-8000-000000000835",
+        "step_id": "a0000000-0000-4000-8000-000000000829",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "summary": "Tutor authentication is delegated to Google OAuth; the tutor first registers with the signup code emailed by the supervisor team."
+      },
+      "evidence": [
+        "https://www.notion.so/3c8b7cca49828165b365e3078599b412",
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 1)"
+      ]
+    },
+    {
+      "key": "row-1-3-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "e0000000-0000-4000-8000-000000000634",
+          "cell_key": "e0000000-0000-4000-8000-000000000634",
+          "title": "KB audit #739 row 1 — signup"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 1 — signup",
+        "note": "Sources: https://www.notion.so/3c8b7cca49828165b365e3078599b412 ; https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2 . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 1). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/3c8b7cca49828165b365e3078599b412",
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2"
+      ]
+    },
+    {
+      "key": "row-1-5",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000100803"
+      },
+      "expected": {
+        "content": "Signs in to the PLUS App with their Google account.",
+        "summary": "Once the supervisor team has created their account, the tutor signs in at app.tutors.plus via Google OAuth using the email on file — there is no separate password credential for tutors.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000800",
+        "lane_id": "a0000000-0000-4000-8000-000000000831",
+        "step_id": "a0000000-0000-4000-8000-000000000829",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100803/176ee9b6-01cc-21cc-dfaf-9096c1bcbe80.png",
+        "cell_key": "plus-application/tech-setup/happy-path/regular-tutor/plus-app-login"
+      },
+      "value": {
+        "summary": "The tutor registers with the signup code emailed by the supervisor team, then signs in at app.tutors.plus via Google OAuth using the email on file. No separate password credential is issued."
+      },
+      "evidence": [
+        "https://www.notion.so/3c8b7cca49828165b365e3078599b412",
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 1)"
+      ]
+    },
+    {
+      "key": "row-1-5-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000100803",
+          "cell_key": "plus-application/tech-setup/happy-path/regular-tutor/plus-app-login",
+          "title": "KB audit #739 row 1 — signup"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 1 — signup",
+        "note": "Sources: https://www.notion.so/3c8b7cca49828165b365e3078599b412 ; https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2 . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 1). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/3c8b7cca49828165b365e3078599b412",
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2"
+      ]
+    },
+    {
+      "key": "row-2-7",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000100804"
+      },
+      "expected": {
+        "content": "Tutor supervisor team creates the tutor's account and confirms which email to sign in with.",
+        "summary": "Confirming the email matters because sign-in is Google OAuth against whatever address is on file — there's no password to reset or reissue if the wrong email gets set here.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000800",
+        "lane_id": "a0000000-0000-4000-8000-000000000832",
+        "step_id": "a0000000-0000-4000-8000-000000000829",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": "plus-application/tech-setup/happy-path/front-stage-actions/plus-app-login"
+      },
+      "value": {
+        "content": "Tutor supervisor team emails the signup code and confirms which email to sign in with."
+      },
+      "evidence": [
+        "https://www.notion.so/3c8b7cca49828165b365e3078599b412",
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 2)"
+      ]
+    },
+    {
+      "key": "row-2-7-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000100804",
+          "cell_key": "plus-application/tech-setup/happy-path/front-stage-actions/plus-app-login",
+          "title": "KB audit #739 row 2 — signup"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 2 — signup",
+        "note": "Sources: https://www.notion.so/3c8b7cca49828165b365e3078599b412 ; https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2 . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 2). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/3c8b7cca49828165b365e3078599b412",
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2"
+      ]
+    },
+    {
+      "key": "row-8-9",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000110307"
+      },
+      "expected": {
+        "content": "Instructional design team creates and maintains the lesson modules.",
+        "summary": "The instructional design team writes and maintains module content in Notion, working the module pipeline Tutor Team → Design → Dev; per-module build state and quiz status are tracked in the course dev notes.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000007201",
+        "lane_id": "a0000000-0000-4000-8000-000000000844",
+        "step_id": "a0000000-0000-4000-8000-000000000853",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": "plus-application/onboarding-modules/happy-path/back-stage-actions/reading-lesson"
+      },
+      "value": {
+        "content": "Instructional design team creates and maintains the onboarding modules on the PLUS Tutors Notion site."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca49828000952fd7b346d1b09c",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 8)"
+      ]
+    },
+    {
+      "key": "row-8-9-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000110307",
+          "cell_key": "plus-application/onboarding-modules/happy-path/back-stage-actions/reading-lesson",
+          "title": "KB audit #739 row 8 — modules"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 8 — modules",
+        "note": "Sources: https://www.notion.so/26fb7cca49828000952fd7b346d1b09c . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 8). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca49828000952fd7b346d1b09c"
+      ]
+    },
+    {
+      "key": "row-19-11",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000140203"
+      },
+      "expected": {
+        "content": "Sees the semester schedule in My Sessions and keeps it in sync.",
+        "summary": "The tutor's signed-up sessions appear in Toolkit › Your Sessions › My Sessions. They can subscribe their personal calendar (GCal/iCal) or add single events; calendar events refresh within 8–24 hours, include no student names or Zoom links, and a reminder email goes out 30 minutes before each session.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000806",
+        "lane_id": "a0000000-0000-4000-8000-000000000886",
+        "step_id": "a0000000-0000-4000-8000-000000000896",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000140203/1c4f0033-cf8e-8dba-0257-a590fbdf9aa0.png",
+        "cell_key": "plus-application/standard-scheduling/happy-path/regular-tutor/receive-schedule"
+      },
+      "value": {
+        "content": "Sees the semester schedule in My Sessions.",
+        "summary": "The tutor's signed-up sessions appear in Toolkit › Your Sessions › My Sessions, and a reminder email goes out 30 minutes before each session."
+      },
+      "evidence": [
+        "https://www.notion.so/277b7cca498280609a13d38313b890e4",
+        "https://www.notion.so/3dcb7cca498281a58bb3eaacf44e775c",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 19)"
+      ]
+    },
+    {
+      "key": "row-19-11-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000140203",
+          "cell_key": "plus-application/standard-scheduling/happy-path/regular-tutor/receive-schedule",
+          "title": "KB audit #739 row 19 — calendar"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 19 — calendar",
+        "note": "Sources: https://www.notion.so/277b7cca498280609a13d38313b890e4 ; https://www.notion.so/3dcb7cca498281a58bb3eaacf44e775c . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 19). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/277b7cca498280609a13d38313b890e4",
+        "https://www.notion.so/3dcb7cca498281a58bb3eaacf44e775c"
+      ]
+    },
+    {
+      "key": "row-20-13",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b0000000-0000-4000-8000-000000140208"
+      },
+      "expected": {
+        "content": "Calendar feed",
+        "summary": "The app serves a per-tutor calendar feed (GCal/iCal subscribe); feed events intentionally omit student names and Zoom links.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000806",
+        "lane_id": "a0000000-0000-4000-8000-000000000890",
+        "step_id": "a0000000-0000-4000-8000-000000000896",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Calendar feed subscription",
+        "summary": "Planned feed subscription for Google and Apple Calendar; .ics downloads and one-off event adds are outside v1. Subscription-only calendar sync is Ready for Dev, not live.",
+        "status": "planned"
+      },
+      "evidence": [
+        "https://www.notion.so/277b7cca498280609a13d38313b890e4",
+        "https://www.notion.so/3dcb7cca498281a58bb3eaacf44e775c",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 20)"
+      ]
+    },
+    {
+      "key": "row-20-13-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b0000000-0000-4000-8000-000000140208",
+          "cell_key": "b0000000-0000-4000-8000-000000140208",
+          "title": "KB audit #739 row 20 — calendar"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 20 — calendar",
+        "note": "Sources: https://www.notion.so/277b7cca498280609a13d38313b890e4 ; https://www.notion.so/3dcb7cca498281a58bb3eaacf44e775c . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 20). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/277b7cca498280609a13d38313b890e4",
+        "https://www.notion.so/3dcb7cca498281a58bb3eaacf44e775c"
+      ]
+    },
+    {
+      "key": "row-28-15",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b0000000-0000-4000-8000-000000170104"
+      },
+      "expected": {
+        "content": "Guides the tutor to the right flow: one-time call-off, recurring withdrawal, or (planned) swap into another session.",
+        "summary": "This is the UI decision point: reason and timing determine whether a request auto-approves, queues for supervisor review, or — once the swap prototype ships — offers a trade instead of a vacancy; none of that logic is shown to the tutor as a message, it's simply which screen appears next.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000808",
+        "lane_id": "a0000000-0000-4000-8000-000000000973",
+        "step_id": "a0000000-0000-4000-8000-000000000940",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Guides the tutor to the right flow: a one-time call-off or a recurring withdrawal.",
+        "summary": "The tutor chooses the one-time call-off or recurring withdrawal flow. Swap-in work (card 2204) is archived and is not offered here."
+      },
+      "evidence": [
+        "https://www.notion.so/2eeb7cca498280d592e5d5c06b3b09f9",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 28)"
+      ]
+    },
+    {
+      "key": "row-28-15-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b0000000-0000-4000-8000-000000170104",
+          "cell_key": "b0000000-0000-4000-8000-000000170104",
+          "title": "KB audit #739 row 28 — swap"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 28 — swap",
+        "note": "Sources: https://www.notion.so/2eeb7cca498280d592e5d5c06b3b09f9 . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 28). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/2eeb7cca498280d592e5d5c06b3b09f9"
+      ]
+    },
+    {
+      "key": "row-31-17",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b0000000-0000-4000-8000-000000180507"
+      },
+      "expected": {
+        "content": "Reviews pending call-off requests and records a decision.",
+        "summary": "Recurring withdrawals get Approve/Reject; late one-time call-offs get Excused/Unexcused, both with optional reviewer notes. Review is close to a formality — 96.6% of 2026 requests were approved (32 rejected, 29 withdrawn).",
+        "status": "live",
+        "path_id": "b0000000-0000-4000-8000-000000000809",
+        "lane_id": "b0000000-0000-4000-8000-000000001075",
+        "step_id": "a0000000-0000-4000-8000-000000000944",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Marks the late call-off excused or unexcused; the tutor is already off the roster.",
+        "summary": "The one-time late call-off has already removed the tutor from the roster. The supervisor records Excused or Unexcused, with optional reviewer notes; this review does not approve or reject the roster change."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161738",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 31)"
+      ]
+    },
+    {
+      "key": "row-31-17-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b0000000-0000-4000-8000-000000180507",
+          "cell_key": "b0000000-0000-4000-8000-000000180507",
+          "title": "KB audit #739 row 31 — calloff"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 31 — calloff",
+        "note": "Sources: https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161738 . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 31). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161738"
+      ]
+    },
+    {
+      "key": "row-41-19",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b2000000-0000-4000-8000-000000000032"
+      },
+      "expected": {
+        "content": "Posts in the school Slack channel.",
+        "summary": "Post includes the teacher, session time, and expected student count, and tags the 4 supervisors. Three message templates exist for this situation.",
+        "status": "live",
+        "path_id": "b2000000-0000-4000-8000-000000000001",
+        "lane_id": "b2000000-0000-4000-8000-000000000012",
+        "step_id": "b2000000-0000-4000-8000-000000000022",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Posts in #in-session-support with the school, teacher and session time, tagging the supervisors.",
+        "summary": "The lead includes the school, teacher and session time, tags the supervisors, and waits for their guidance before dismissing the session."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 41)"
+      ]
+    },
+    {
+      "key": "row-41-19-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b2000000-0000-4000-8000-000000000032",
+          "cell_key": "b2000000-0000-4000-8000-000000000032",
+          "title": "KB audit #739 row 41 — support"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 41 — support",
+        "note": "Sources: https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 41). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f"
+      ]
+    },
+    {
+      "key": "row-42-21",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b2000000-0000-4000-8000-000000000035"
+      },
+      "expected": {
+        "content": "Supervisors respond to the school-channel post.",
+        "summary": "Supervisor response is what turns the lead tutor's Slack post into follow-up outside the room - without it, a no-show or low-turnout report just sits unactioned.",
+        "status": "live",
+        "path_id": "b2000000-0000-4000-8000-000000000001",
+        "lane_id": "b2000000-0000-4000-8000-000000000017",
+        "step_id": "b2000000-0000-4000-8000-000000000022",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Supervisors reply in #in-session-support with whether tutors stay, move, or are dismissed."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 42)"
+      ]
+    },
+    {
+      "key": "row-42-21-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b2000000-0000-4000-8000-000000000035",
+          "cell_key": "b2000000-0000-4000-8000-000000000035",
+          "title": "KB audit #739 row 42 — support"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 42 — support",
+        "note": "Sources: https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 42). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f"
+      ]
+    },
+    {
+      "key": "row-53-23",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b3000000-0000-4000-8000-000000000035"
+      },
+      "expected": {
+        "content": "Supervisors monitor school Slack channels during sessions.",
+        "summary": "This is what makes escalation to Slack actually work - an issue routed out of the room only gets picked up because a supervisor is watching the channel live, not because the routing itself guarantees a response.",
+        "status": "live",
+        "path_id": "b3000000-0000-4000-8000-000000000001",
+        "lane_id": "b3000000-0000-4000-8000-000000000017",
+        "step_id": "a0000000-0000-4000-8000-000000000978",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Supervisors monitor #in-session-support while sessions are running."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 53)"
+      ]
+    },
+    {
+      "key": "row-53-23-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b3000000-0000-4000-8000-000000000035",
+          "cell_key": "b3000000-0000-4000-8000-000000000035",
+          "title": "KB audit #739 row 53 — support"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 53 — support",
+        "note": "Sources: https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 53). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f"
+      ]
+    },
+    {
+      "key": "row-56-25",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-0000001b0701"
+      },
+      "expected": {
+        "content": "Escalates unresolved issues to tutors@tutors.plus promptly.",
+        "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to tutors@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-00000000080d",
+        "lane_id": "a0000000-0000-4000-8000-000000000867",
+        "step_id": "a0000000-0000-4000-8000-000000000987",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0701/3a876ff6-fdbe-77c5-7a7f-1c7d1c305198.png",
+        "cell_key": "plus-application/help-request/happy-path/partner-action-teacher/escalates-unresolved-issues-to-tutors-tutor-plus-promptly"
+      },
+      "value": {
+        "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+        "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to support@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 56)"
+      ]
+    },
+    {
+      "key": "row-56-25-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-0000001b0701",
+          "cell_key": "plus-application/help-request/happy-path/partner-action-teacher/escalates-unresolved-issues-to-tutors-tutor-plus-promptly",
+          "title": "KB audit #739 row 56 — email"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 56 — email",
+        "note": "Sources: https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 56). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa"
+      ]
+    },
+    {
+      "key": "row-56-27",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-0000001a0701"
+      },
+      "expected": {
+        "content": "Escalates unresolved issues to tutors@tutors.plus promptly.",
+        "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to tutors@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-00000000080c",
+        "lane_id": "a0000000-0000-4000-8000-000000000857",
+        "step_id": "a0000000-0000-4000-8000-000000000974",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0701/3a876ff6-fdbe-77c5-7a7f-1c7d1c305198.png",
+        "cell_key": "plus-application/goal-setting/happy-path/partner-action-teacher/next-student"
+      },
+      "value": {
+        "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+        "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to support@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 56)"
+      ]
+    },
+    {
+      "key": "row-56-27-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-0000001a0701",
+          "cell_key": "plus-application/goal-setting/happy-path/partner-action-teacher/next-student",
+          "title": "KB audit #739 row 56 — email"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 56 — email",
+        "note": "Sources: https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 56). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa"
+      ]
+    },
+    {
+      "key": "row-56-29",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000a00701"
+      },
+      "expected": {
+        "content": "Escalates unresolved issues to tutors@tutors.plus promptly.",
+        "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to tutors@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000814",
+        "lane_id": "a0000000-0000-4000-8000-0000000008b1",
+        "step_id": "a0000000-0000-4000-8000-000000009b07",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0701/3a876ff6-fdbe-77c5-7a7f-1c7d1c305198.png",
+        "cell_key": "plus-application/goal-setting/check-goals/partner-action-teacher/leave-breakout-room"
+      },
+      "value": {
+        "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+        "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to support@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 56)"
+      ]
+    },
+    {
+      "key": "row-56-29-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000a00701",
+          "cell_key": "plus-application/goal-setting/check-goals/partner-action-teacher/leave-breakout-room",
+          "title": "KB audit #739 row 56 — email"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 56 — email",
+        "note": "Sources: https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 56). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa"
+      ]
+    },
+    {
+      "key": "row-56-31",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000d00701"
+      },
+      "expected": {
+        "content": "Escalates unresolved issues to tutors@tutors.plus promptly.",
+        "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to tutors@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f1",
+        "step_id": "a0000000-0000-4000-8000-000000009e07",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0701/3a876ff6-fdbe-77c5-7a7f-1c7d1c305198.png",
+        "cell_key": "plus-application/goal-setting/update-goals-edge-case/partner-action-teacher/fills-out-goal-settings-and-quantity-with-the-student"
+      },
+      "value": {
+        "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+        "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to support@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 56)"
+      ]
+    },
+    {
+      "key": "row-56-31-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000d00701",
+          "cell_key": "plus-application/goal-setting/update-goals-edge-case/partner-action-teacher/fills-out-goal-settings-and-quantity-with-the-student",
+          "title": "KB audit #739 row 56 — email"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 56 — email",
+        "note": "Sources: https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 56). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa"
+      ]
+    },
+    {
+      "key": "row-56-33",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000c00701"
+      },
+      "expected": {
+        "content": "Escalates unresolved issues to tutors@tutors.plus promptly.",
+        "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to tutors@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e1",
+        "step_id": "a0000000-0000-4000-8000-000000009f07",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0701/3a876ff6-fdbe-77c5-7a7f-1c7d1c305198.png",
+        "cell_key": "plus-application/goal-setting/set-goals-edge-case/partner-action-teacher/fill-out-goal-settings-and-quantity-with-the-student"
+      },
+      "value": {
+        "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+        "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to support@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 56)"
+      ]
+    },
+    {
+      "key": "row-56-33-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000c00701",
+          "cell_key": "plus-application/goal-setting/set-goals-edge-case/partner-action-teacher/fill-out-goal-settings-and-quantity-with-the-student",
+          "title": "KB audit #739 row 56 — email"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 56 — email",
+        "note": "Sources: https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 56). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa"
+      ]
+    },
+    {
+      "key": "row-56-35",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000b00701"
+      },
+      "expected": {
+        "content": "Escalates unresolved issues to tutors@tutors.plus promptly.",
+        "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to tutors@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000815",
+        "lane_id": "a0000000-0000-4000-8000-0000000008d1",
+        "step_id": "a0000000-0000-4000-8000-000000009d07",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0701/3a876ff6-fdbe-77c5-7a7f-1c7d1c305198.png",
+        "cell_key": "plus-application/goal-setting/update-goals/partner-action-teacher/if-prompted-fill-out-goal-achievement-strategy-with-the-student"
+      },
+      "value": {
+        "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+        "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to support@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 56)"
+      ]
+    },
+    {
+      "key": "row-56-35-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000b00701",
+          "cell_key": "plus-application/goal-setting/update-goals/partner-action-teacher/if-prompted-fill-out-goal-achievement-strategy-with-the-student",
+          "title": "KB audit #739 row 56 — email"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 56 — email",
+        "note": "Sources: https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 56). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa"
+      ]
+    },
+    {
+      "key": "row-56-37",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-0000001f0701"
+      },
+      "expected": {
+        "content": "Escalates unresolved issues to tutors@tutors.plus promptly.",
+        "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to tutors@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000811",
+        "lane_id": "a0000000-0000-4000-8000-0000000008a1",
+        "step_id": "a0000000-0000-4000-8000-000000009a07",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0701/3a876ff6-fdbe-77c5-7a7f-1c7d1c305198.png",
+        "cell_key": "plus-application/goal-setting/set-goals/partner-action-teacher/if-prompted-fill-out-goal-achievement-strategy-with-the-student"
+      },
+      "value": {
+        "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+        "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to support@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 56)"
+      ]
+    },
+    {
+      "key": "row-56-37-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-0000001f0701",
+          "cell_key": "plus-application/goal-setting/set-goals/partner-action-teacher/if-prompted-fill-out-goal-achievement-strategy-with-the-student",
+          "title": "KB audit #739 row 56 — email"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 56 — email",
+        "note": "Sources: https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 56). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa"
+      ]
+    },
+    {
+      "key": "row-56-39",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000060701"
+      },
+      "expected": {
+        "content": "Escalates unresolved issues to tutors@tutor.plus promptly.",
+        "summary": null,
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000350",
+        "lane_id": "a0000000-0000-4000-8000-000000000401",
+        "step_id": "a0000000-0000-4000-8000-000000000319",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0701/3a876ff6-fdbe-77c5-7a7f-1c7d1c305198.png",
+        "cell_key": null
+      },
+      "value": {
+        "content": "Escalates unresolved issues to support@tutors.plus promptly."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 56)"
+      ]
+    },
+    {
+      "key": "row-56-39-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000060701",
+          "cell_key": "a0000000-0000-4000-8000-000000060701",
+          "title": "KB audit #739 row 56 — email"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 56 — email",
+        "note": "Sources: https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 56). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa"
+      ]
+    },
+    {
+      "key": "row-56-41",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000040701"
+      },
+      "expected": {
+        "content": "Escalates unresolved issues to tutors@tutor.plus promptly.",
+        "summary": null,
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000300",
+        "lane_id": "a0000000-0000-4000-8000-000000000301",
+        "step_id": "a0000000-0000-4000-8000-000000000317",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0701/3a876ff6-fdbe-77c5-7a7f-1c7d1c305198.png",
+        "cell_key": null
+      },
+      "value": {
+        "content": "Escalates unresolved issues to support@tutors.plus promptly."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 56)"
+      ]
+    },
+    {
+      "key": "row-56-41-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000040701",
+          "cell_key": "a0000000-0000-4000-8000-000000040701",
+          "title": "KB audit #739 row 56 — email"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 56 — email",
+        "note": "Sources: https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 56). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa"
+      ]
+    },
+    {
+      "key": "row-56-43",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b3000000-0000-4000-8000-000000000037"
+      },
+      "expected": {
+        "content": "Escalates unresolved issues to tutors@tutors.plus by email.",
+        "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to tutors@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place.",
+        "status": "live",
+        "path_id": "b3000000-0000-4000-8000-000000000001",
+        "lane_id": "b3000000-0000-4000-8000-000000000011",
+        "step_id": "a0000000-0000-4000-8000-000000000987",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Escalates unresolved issues to support@tutors.plus by email.",
+        "summary": "For issues neither the tutors nor the routing channels resolve in-session, teachers escalate by email to support@tutors.plus. A dedicated ticketing/servicedesk tool is being selected but is not yet in place."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 56)"
+      ]
+    },
+    {
+      "key": "row-56-43-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b3000000-0000-4000-8000-000000000037",
+          "cell_key": "b3000000-0000-4000-8000-000000000037",
+          "title": "KB audit #739 row 56 — email"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 56 — email",
+        "note": "Sources: https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 56). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa"
+      ]
+    },
+    {
+      "key": "row-57-45",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-0000001c0301"
+      },
+      "expected": {
+        "content": "Encourages students to reflect on what they learned or practiced.",
+        "summary": "The classroom-side mirror of the lead's tutor debrief happening at the same moment: students reflect on their own session while tutors, guided by AI-surfaced highlights, do the same on theirs.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-00000000080e",
+        "lane_id": "a0000000-0000-4000-8000-000000000871",
+        "step_id": "a0000000-0000-4000-8000-000000000982",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0301/074e38ef-3305-5d21-da9f-bd664b33736c.png",
+        "cell_key": "plus-application/wrap-up/happy-path/partner-action-teacher/debrief-with-tutors"
+      },
+      "value": {
+        "summary": "The classroom-side mirror of the lead's tutor debrief: students reflect on their own session while tutors debrief with the lead."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 57)"
+      ]
+    },
+    {
+      "key": "row-57-45-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-0000001c0301",
+          "cell_key": "plus-application/wrap-up/happy-path/partner-action-teacher/debrief-with-tutors",
+          "title": "KB audit #739 row 57 — support"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 57 — support",
+        "note": "Sources: https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 57). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f"
+      ]
+    },
+    {
+      "key": "row-62-47",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-0000001d0103"
+      },
+      "expected": {
+        "content": "Reaches out to PLUS staff with any concerns.",
+        "summary": "Same path as the lead: unresolved concerns — student wellbeing, roster errors, recurring tech failures — go to the school or support Slack channel, or email for anything non-urgent, with separate contacts and faster expected response for urgent issues.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-00000000080f",
+        "lane_id": "a0000000-0000-4000-8000-000000000911",
+        "step_id": "a0000000-0000-4000-8000-000000000988",
+        "position": 0,
+        "owner": "Tutor Supervisors",
+        "perceived_owner": "PLUS staff",
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001d0103/ab13b929-6608-ac2b-5268-c16927040a3f.png",
+        "cell_key": "plus-application/reporting-an-issue/happy-path/regular-tutor/reach-out"
+      },
+      "value": {
+        "content": "Messages their supervisor and Alex on Slack about a behavior, wellbeing, or safety concern, during the session when it happens live, and tells the lead tutor.",
+        "summary": "During the session, the tutor alerts their supervisor and Alex directly on Slack. They also tell the lead tutor, escalate their reflection report and upload the recording as soon as possible afterward."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f",
+        "https://www.notion.so/3b2b7cca498280b38e44d5feae614328",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 62)"
+      ]
+    },
+    {
+      "key": "row-62-47-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-0000001d0103",
+          "cell_key": "plus-application/reporting-an-issue/happy-path/regular-tutor/reach-out",
+          "title": "KB audit #739 row 62 — serious"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 62 — serious",
+        "note": "Sources: https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f ; https://www.notion.so/3b2b7cca498280b38e44d5feae614328 . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 62). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f",
+        "https://www.notion.so/3b2b7cca498280b38e44d5feae614328"
+      ]
+    },
+    {
+      "key": "row-65-49",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-0000001e0103"
+      },
+      "expected": {
+        "content": "Reports hours by the weekly deadline.",
+        "summary": "Tutors log their tutoring hours in Workday by the weekly deadline. Hours are self-reported — the PLUS App's session and attendance records are not connected to Workday, so payroll does not automatically reflect sessions worked, called off, or cancelled.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000812",
+        "lane_id": "a0000000-0000-4000-8000-000000000921",
+        "step_id": "a0000000-0000-4000-8000-000000000992",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001e0103/7033cb5d-4202-711e-c9bb-7a9f6d382ccd.png",
+        "cell_key": "plus-application/reporting-hours/happy-path/regular-tutor/report-hours"
+      },
+      "value": {
+        "content": "Reports hours in Workday by end of day Sunday at the close of each biweekly pay period.",
+        "summary": "CMU tutors self-report actual hours worked in Workday by Sunday at the end of each biweekly pay period. PLUS session and attendance records are not connected to Workday. Pitt tutors report weekly; Duquesne tutors report regularly for supervisor approval."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca49828064a32cdde194e36bbd",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 65)"
+      ]
+    },
+    {
+      "key": "row-65-49-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-0000001e0103",
+          "cell_key": "plus-application/reporting-hours/happy-path/regular-tutor/report-hours",
+          "title": "KB audit #739 row 65 — hours"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 65 — hours",
+        "note": "Sources: https://www.notion.so/26fb7cca49828064a32cdde194e36bbd . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 65). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca49828064a32cdde194e36bbd"
+      ]
+    },
+    {
+      "key": "row-65-51",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-0000001e0102"
+      },
+      "expected": {
+        "content": "Reports hours by the weekly deadline.",
+        "summary": "Tutors log their tutoring hours in Workday by the weekly deadline. Hours are self-reported — the PLUS App's session and attendance records are not connected to Workday, so payroll does not automatically reflect sessions worked, called off, or cancelled.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000812",
+        "lane_id": "a0000000-0000-4000-8000-000000000927",
+        "step_id": "a0000000-0000-4000-8000-000000000992",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001e0102/c7eef24c-d9af-c0ba-2217-9ad183056e3d.png",
+        "cell_key": "plus-application/reporting-hours/happy-path/lead-tutor/report-hours"
+      },
+      "value": {
+        "content": "Reports hours in Workday by end of day Sunday at the close of each biweekly pay period.",
+        "summary": "CMU tutors self-report actual hours worked in Workday by Sunday at the end of each biweekly pay period. PLUS session and attendance records are not connected to Workday. Pitt tutors report weekly; Duquesne tutors report regularly for supervisor approval."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca49828064a32cdde194e36bbd",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 65)"
+      ]
+    },
+    {
+      "key": "row-65-51-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-0000001e0102",
+          "cell_key": "plus-application/reporting-hours/happy-path/lead-tutor/report-hours",
+          "title": "KB audit #739 row 65 — hours"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 65 — hours",
+        "note": "Sources: https://www.notion.so/26fb7cca49828064a32cdde194e36bbd . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 65). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca49828064a32cdde194e36bbd"
+      ]
+    },
+    {
+      "key": "row-66-53",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "2c9342a2-7f23-4a19-b85d-29a5c1ffa492"
+      },
+      "expected": {
+        "content": "Supervisors remind tutors of the weekly deadline.",
+        "summary": "Because Workday hours are never checked against PLUS attendance records, this reminder is the only backstop against a missed paycheck — supervisors nudge by Slack or email since the app itself has no deadline notification of its own.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000812",
+        "lane_id": "a0000000-0000-4000-8000-000000000922",
+        "step_id": "a0000000-0000-4000-8000-000000000992",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Supervisors remind tutors of the biweekly Workday deadline."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca49828064a32cdde194e36bbd",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 66)"
+      ]
+    },
+    {
+      "key": "row-66-53-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "2c9342a2-7f23-4a19-b85d-29a5c1ffa492",
+          "cell_key": "2c9342a2-7f23-4a19-b85d-29a5c1ffa492",
+          "title": "KB audit #739 row 66 — hours"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 66 — hours",
+        "note": "Sources: https://www.notion.so/26fb7cca49828064a32cdde194e36bbd . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 66). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca49828064a32cdde194e36bbd"
+      ]
+    },
+    {
+      "key": "row-67-55",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b0000000-0000-4000-8000-0000001e1103"
+      },
+      "expected": {
+        "content": "Misses the weekly Workday deadline.",
+        "summary": "Hours are self-reported in Workday; the PLUS App's session and attendance records are not connected to Workday, so no reminder or cross-check fires when hours go unreported.",
+        "status": "live",
+        "path_id": "b0000000-0000-4000-8000-000000000812",
+        "lane_id": "b0000000-0000-4000-8000-000000000932",
+        "step_id": "b0000000-0000-4000-8000-000000000996",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Misses the biweekly Workday deadline."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca49828064a32cdde194e36bbd",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 67)"
+      ]
+    },
+    {
+      "key": "row-67-55-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b0000000-0000-4000-8000-0000001e1103",
+          "cell_key": "b0000000-0000-4000-8000-0000001e1103",
+          "title": "KB audit #739 row 67 — hours"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 67 — hours",
+        "note": "Sources: https://www.notion.so/26fb7cca49828064a32cdde194e36bbd . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 67). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca49828064a32cdde194e36bbd"
+      ]
+    },
+    {
+      "key": "row-67-57",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b0000000-0000-4000-8000-0000001e1102"
+      },
+      "expected": {
+        "content": "Misses the weekly Workday deadline.",
+        "summary": "Hours are self-reported in Workday; the PLUS App's session and attendance records are not connected to Workday, so no reminder or cross-check fires when hours go unreported.",
+        "status": "live",
+        "path_id": "b0000000-0000-4000-8000-000000000812",
+        "lane_id": "b0000000-0000-4000-8000-000000000931",
+        "step_id": "b0000000-0000-4000-8000-000000000996",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Misses the biweekly Workday deadline."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca49828064a32cdde194e36bbd",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 67)"
+      ]
+    },
+    {
+      "key": "row-67-57-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b0000000-0000-4000-8000-0000001e1102",
+          "cell_key": "b0000000-0000-4000-8000-0000001e1102",
+          "title": "KB audit #739 row 67 — hours"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #739 row 67 — hours",
+        "note": "Sources: https://www.notion.so/26fb7cca49828064a32cdde194e36bbd . Revision scope and audited before/after: https://github.com/BilLogic/plus-uno-blueprint/issues/739 (row 67). Roadmap status is checked before drafting; this evidence does not imply future work is live or establish retirement evidence."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca49828064a32cdde194e36bbd"
+      ]
+    },
+    {
+      "key": "path-row-41",
+      "operation": "update_path_spec",
+      "target": {
+        "table": "paths",
+        "id": "b2000000-0000-4000-8000-000000000001"
+      },
+      "expected": {
+        "summary": "Unhappy path: few or no students have joined by 10 minutes after start. The lead escalates via the school Slack channel and never dismisses the session alone.",
+        "note": "Built from the Help Center article \"When No or Few Students Join\" (Notion). Three message templates exist for the Slack post.",
+        "status": "live",
+        "scenario_id": "a0000000-0000-4000-8000-000000000202"
+      },
+      "value": {
+        "summary": "Few or no students have joined by 10 minutes after start. The lead posts in #in-session-support with the school, teacher and session time, tags the supervisors, and waits for guidance rather than dismissing the session alone."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 41)"
+      ]
+    },
+    {
+      "key": "path-row-53",
+      "operation": "update_path_spec",
+      "target": {
+        "table": "paths",
+        "id": "b3000000-0000-4000-8000-000000000001"
+      },
+      "expected": {
+        "summary": "Alternate path: the issue cannot be resolved in-room and is routed out — classroom-side issues to the school Slack channel, app/tech issues to the support channel, urgent issues to their separate contacts. Items no channel resolves in-session are escalated by the teacher by email to tutors@tutor.plus.",
+        "note": "Routing per the Notion article \"Find the Right Support During a Session\"; each channel has its own message template and privacy rules. A ticketing/servicedesk tool is being selected but is not yet in place.",
+        "status": "live",
+        "scenario_id": "a0000000-0000-4000-8000-000000000205"
+      },
+      "value": {
+        "summary": "Session-wide issues go to #in-session-support, and PLUS App issues go to #plus-app-bug-reporting. Teachers escalate issues unresolved in-session by email to support@tutors.plus."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f",
+        "https://www.notion.so/3e2b7cca498281a7a1d0dce956926cfa",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 53)"
+      ]
+    },
+    {
+      "key": "path-row-62",
+      "operation": "update_path_spec",
+      "target": {
+        "table": "paths",
+        "id": "a0000000-0000-4000-8000-00000000080f"
+      },
+      "expected": {
+        "summary": "Tutor reports an issue after tutoring session.",
+        "note": null,
+        "status": "live",
+        "scenario_id": "a0000000-0000-4000-8000-000000000207"
+      },
+      "value": {
+        "summary": "Tutors report behavior, wellbeing or safety concerns to their supervisor and Alex on Slack during the session, inform the lead tutor, and follow up through an escalated reflection report and recording upload."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f",
+        "https://www.notion.so/3b2b7cca498280b38e44d5feae614328",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 62)"
+      ]
+    },
+    {
+      "key": "path-row-67",
+      "operation": "update_path_spec",
+      "target": {
+        "table": "paths",
+        "id": "b0000000-0000-4000-8000-000000000812"
+      },
+      "expected": {
+        "summary": "Tutor misses the weekly Workday reporting deadline. Hours are self-reported and the PLUS app's session/attendance records are not connected to Workday, so nothing flags the gap automatically. Resolution (decided 2026-08-08): the supervisor follows up manually (Slack/email) AND the tutor can self-correct in Workday the next pay cycle.",
+        "note": null,
+        "status": "live",
+        "scenario_id": "a0000000-0000-4000-8000-000000000208"
+      },
+      "value": {
+        "summary": "Tutor misses the biweekly Workday reporting deadline. Hours are self-reported and the PLUS app's session/attendance records are not connected to Workday, so nothing flags the gap automatically. Resolution (decided 2026-08-08): the supervisor follows up manually (Slack/email) AND the tutor can self-correct in Workday the next pay cycle."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca49828064a32cdde194e36bbd",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 67)"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "e0000000-0000-4000-8000-000000000635"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "e0000000-0000-4000-8000-000000000634"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000100803"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000100804"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000110307"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000140203"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-000000140208"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-000000170104"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-000000180507"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b2000000-0000-4000-8000-000000000032"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b2000000-0000-4000-8000-000000000035"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b3000000-0000-4000-8000-000000000035"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001b0701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001a0701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000a00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000c00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000b00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001f0701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000060701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000040701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b3000000-0000-4000-8000-000000000037"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001c0301"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001d0103"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001e0103"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001e0102"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "2c9342a2-7f23-4a19-b85d-29a5c1ffa492"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-0000001e1103"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-0000001e1102"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000800"
+        }
+      },
+      "beforeCount": 44,
+      "afterCount": 44
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000007201"
+        }
+      },
+      "beforeCount": 37,
+      "afterCount": 37
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000806"
+        }
+      },
+      "beforeCount": 14,
+      "afterCount": 14
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000808"
+        }
+      },
+      "beforeCount": 25,
+      "afterCount": 25
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "b0000000-0000-4000-8000-000000000809"
+        }
+      },
+      "beforeCount": 13,
+      "afterCount": 13
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "b2000000-0000-4000-8000-000000000001"
+        }
+      },
+      "beforeCount": 5,
+      "afterCount": 5
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "b3000000-0000-4000-8000-000000000001"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-00000000080d"
+        }
+      },
+      "beforeCount": 33,
+      "afterCount": 33
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-00000000080c"
+        }
+      },
+      "beforeCount": 47,
+      "afterCount": 47
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000814"
+        }
+      },
+      "beforeCount": 48,
+      "afterCount": 48
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000817"
+        }
+      },
+      "beforeCount": 72,
+      "afterCount": 72
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000816"
+        }
+      },
+      "beforeCount": 70,
+      "afterCount": 70
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000815"
+        }
+      },
+      "beforeCount": 68,
+      "afterCount": 68
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000811"
+        }
+      },
+      "beforeCount": 68,
+      "afterCount": 68
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000350"
+        }
+      },
+      "beforeCount": 43,
+      "afterCount": 43
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000300"
+        }
+      },
+      "beforeCount": 49,
+      "afterCount": 49
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-00000000080e"
+        }
+      },
+      "beforeCount": 24,
+      "afterCount": 24
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-00000000080f"
+        }
+      },
+      "beforeCount": 19,
+      "afterCount": 19
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000812"
+        }
+      },
+      "beforeCount": 13,
+      "afterCount": 13
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "b0000000-0000-4000-8000-000000000812"
+        }
+      },
+      "beforeCount": 11,
+      "afterCount": 11
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000120"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000120"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 9
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000123"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000123"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000126"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000126"
+        }
+      },
+      "beforeCount": 4,
+      "afterCount": 4
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000128"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000128"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000202"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000202"
+        }
+      },
+      "beforeCount": 6,
+      "afterCount": 6
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000205"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000205"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000204"
+        }
+      },
+      "beforeCount": 6,
+      "afterCount": 6
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000204"
+        }
+      },
+      "beforeCount": 60,
+      "afterCount": 60
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000203"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000203"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 9
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000206"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000206"
+        }
+      },
+      "beforeCount": 5,
+      "afterCount": 5
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000207"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000207"
+        }
+      },
+      "beforeCount": 4,
+      "afterCount": 4
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000208"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000208"
+        }
+      },
+      "beforeCount": 6,
+      "afterCount": 6
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "e0000000-0000-4000-8000-000000000635"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "e0000000-0000-4000-8000-000000000634"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "846a8247-f1bf-4488-8dba-0800aef466ce",
+          "cell_id": "e0000000-0000-4000-8000-000000000634",
+          "touchpoint_id": "6d82dfd3-d066-4bcd-8e9a-7be06072d6b5",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "846a8247-f1bf-4488-8dba-0800aef466ce",
+          "cell_id": "e0000000-0000-4000-8000-000000000634",
+          "touchpoint_id": "6d82dfd3-d066-4bcd-8e9a-7be06072d6b5",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000100803"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000100804"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000110307"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000140203"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-000000140208"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "f9d2e51b-7f3d-4c70-9065-06dcc7ec0fdc",
+          "cell_id": "b0000000-0000-4000-8000-000000140208",
+          "touchpoint_id": "519ba067-8947-478e-aa5a-e28d3afe957d",
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "import",
+          "name": null
+        }
+      ],
+      "afterRows": [
+        {
+          "cell_id": "b0000000-0000-4000-8000-000000140208",
+          "name": null,
+          "position": 1,
+          "summary": null,
+          "role": null,
+          "origin": "app"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-000000170104"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-000000180507"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b2000000-0000-4000-8000-000000000032"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b2000000-0000-4000-8000-000000000035"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b3000000-0000-4000-8000-000000000035"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001b0701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001a0701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000a00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000c00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000b00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001f0701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000060701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000040701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b3000000-0000-4000-8000-000000000037"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001c0301"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001d0103"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001e0103"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001e0102"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "2c9342a2-7f23-4a19-b85d-29a5c1ffa492"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-0000001e1103"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-0000001e1102"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0,
+      "beforeRows": [],
+      "afterRows": []
+    }
+  ]
+}
