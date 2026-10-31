@@ -106,6 +106,41 @@ see below.
 The bump is the only way application code changes here. There is no second copy
 to edit, which is the point.
 
+## Prepared upgrade to v2.8.11
+
+The pin and the lockfile target the released `v2.8.11` tag. The five migrations
+under `20261030120000` through `20261030160000` adopt upstream 309–313 together;
+they are prepared for a coordinated database and app upgrade, not evidence of
+an apply to the hosted project. Keep the deployed application and database on
+their matching versions until that upgrade is approved.
+
+Before applying the set, run this read-only preflight on the target database:
+
+```sql
+SELECT c.id, c.path_id, c.step_id
+FROM public.cells c
+LEFT JOIN public.path_steps ps ON ps.path_id=c.path_id AND ps.step_id=c.step_id
+WHERE ps.step_id IS NULL;
+```
+
+If it returns cells, restore their intended memberships with a separately
+approved change. Do not delete content to make the migration pass. The new
+foreign key and triggers refuse orphaned memberships, and old reorder callers
+receive a reload instruction instead of overwriting a newer order.
+
+The adoption preserves this deployment's constraints. Proof owners are
+registered inside rollback-contained fixtures. Membership Undo restores the
+writable cell columns and lets PostgreSQL recompute generated `search_tsv`;
+the proof compares the complete restored cell. Storyboard writes retain the
+absolute-frame constraint and refuse relative URLs with a readable sentence.
+The new receipt tables are private; no RLS policy or column grant is widened.
+
+Prepared database types and the schema additions describe the isolated local
+replay. Regenerate and verify against the target after its approved upgrade.
+This upgrade does not deploy the optional authoring capabilities or apply the
+reviewed content changesets; those keep their separate approval and read-back
+requirements.
+
 ## When the template changes something you depend on
 
 There is no local edit available, and that is the arrangement working rather

@@ -74,14 +74,14 @@ test('a bare marquee replaces; shift-marquee widens', () => {
   assert.equal(pickModeForMarquee({ shiftKey: true }), 'add')
 })
 
-test('outside Edit mode only a shift click reaches the picker', () => {
+test('outside the explicit picker no click changes the selection', () => {
   assert.equal(clickPicks(click(), false), false)
-  assert.equal(clickPicks(click({ shiftKey: true }), false), true)
+  assert.equal(clickPicks(click({ shiftKey: true }), false), false)
   // ⌘/ctrl is the open gesture everywhere; it never picks.
   assert.equal(clickPicks(click({ metaKey: true }), false), false)
   assert.equal(clickPicks(click({ ctrlKey: true }), false), false)
 })
 
-test('in Edit mode every click reaches the picker', () => {
+test('an active picker takes plain clicks', () => {
   assert.equal(clickPicks(click(), true), true)
 })

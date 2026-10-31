@@ -152,9 +152,11 @@ test('the real series is green, and every table it creates since the cutoff is n
   // rather than an exemption.
   assert.deepEqual(created.sort(), [
     'authoring_changes',
+    'cell_storyboard_receipts',
     'cell_touchpoints',
     'resources',
     'slide_images',
+    'structure_membership_receipts',
     'touchpoints',
     // A VIEW, and the reason this list grew a sixth entry. The rule used to
     // read `create table` and nothing else, so `trash` — the view
