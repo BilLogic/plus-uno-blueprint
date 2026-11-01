@@ -161,6 +161,58 @@
       ]
     },
     {
+      "key": "signup-confirmation",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000805",
+          "lane_id": "a0000000-0000-4000-8000-000000000880",
+          "step_id": "a0000000-0000-4000-8000-000000000891",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Emails the tutor a confirmation after each successful recurring sign-up.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca4982811898fcc0449d742569",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "signup-confirmation-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "signup-confirmation"
+          },
+          "cell_key": {
+            "ref": "signup-confirmation",
+            "field": "cell_key"
+          },
+          "title": "KB audit #743 row15 — recurring sign-up confirmation"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row15 — recurring sign-up confirmation",
+        "note": "Card 2566, Transactional emails 1 (Deployed, release 12.0): a recurring signup confirmation is sent only for successful signup IDs, triggered after the sign-up returns, naming school, day of week, start and end time and teacher. Position 0 of this square holds the #747 Sign-Ups count cell, so this cell sits at position 1. Sources: https://www.notion.so/3b2b7cca4982811898fcc0449d742569 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca4982811898fcc0449d742569",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
       "key": "identity-details",
       "operation": "update_cell_content",
       "target": {
@@ -458,59 +510,6 @@
       "evidence": [
         "https://www.notion.so/3abb7cca4982805dacb8d0574ba66235",
         "https://www.notion.so/3b2b7cca498280ae8048c8512640404e",
-        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
-        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
-      ]
-    },
-    {
-      "key": "signup-confirmation",
-      "operation": "upsert_cell_at_status",
-      "target": {
-        "table": "cells",
-        "where": {
-          "path_id": "a0000000-0000-4000-8000-000000000805",
-          "lane_id": "a0000000-0000-4000-8000-000000000880",
-          "step_id": "a0000000-0000-4000-8000-000000000891",
-          "position": 0
-        }
-      },
-      "expected": null,
-      "value": {
-        "content": "Emails the tutor a confirmation after each successful recurring sign-up.",
-        "summary": "After a recurring sign-up succeeds, the app emails the tutor a confirmation with the school, weekday, time and teacher. Nothing is sent for a sign-up that did not succeed.",
-        "status": "live"
-      },
-      "evidence": [
-        "https://www.notion.so/3b2b7cca4982811898fcc0449d742569",
-        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
-        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
-      ]
-    },
-    {
-      "key": "signup-confirmation-evidence",
-      "operation": "add_evidence",
-      "target": {
-        "table": "evidence",
-        "where": {
-          "service_id": "a0000000-0000-4000-8000-000000000001",
-          "cell_id": {
-            "ref": "signup-confirmation"
-          },
-          "cell_key": {
-            "ref": "signup-confirmation",
-            "field": "cell_key"
-          },
-          "title": "KB audit #743 row15 — recurring sign-up confirmation"
-        }
-      },
-      "expected": null,
-      "value": {
-        "kind": "doc",
-        "title": "KB audit #743 row15 — recurring sign-up confirmation",
-        "note": "Card 2566, Transactional emails 1 (Deployed, release 12.0): a recurring signup confirmation is sent only for successful signup IDs, triggered after the sign-up returns, naming school, day of week, start and end time and teacher. Sources: https://www.notion.so/3b2b7cca4982811898fcc0449d742569 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
-      },
-      "evidence": [
-        "https://www.notion.so/3b2b7cca4982811898fcc0449d742569",
         "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
         "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
       ]
@@ -1298,8 +1297,8 @@
           "path_id": "a0000000-0000-4000-8000-000000000805"
         }
       },
-      "beforeCount": 11,
-      "afterCount": 13
+      "beforeCount": 12,
+      "afterCount": 14
     },
     {
       "target": {
@@ -1655,6 +1654,18 @@
       "target": {
         "table": "evidence",
         "where": {
+          "cell_id": {
+            "ref": "signup-confirmation"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
           "cell_id": "a54e2f42-ab1c-4454-97d7-d5c3d7f035f9"
         }
       },
@@ -1711,18 +1722,6 @@
         "where": {
           "cell_id": {
             "ref": "lead-module"
-          }
-        }
-      },
-      "beforeCount": 0,
-      "afterCount": 1
-    },
-    {
-      "target": {
-        "table": "evidence",
-        "where": {
-          "cell_id": {
-            "ref": "signup-confirmation"
           }
         }
       },
@@ -1880,6 +1879,18 @@
         "table": "cell_touchpoints",
         "where": {
           "cell_id": {
+            "ref": "signup-confirmation"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
             "ref": "clearance-sync"
           }
         }
@@ -1905,18 +1916,6 @@
         "where": {
           "cell_id": {
             "ref": "lead-module"
-          }
-        }
-      },
-      "beforeCount": 0,
-      "afterCount": 0
-    },
-    {
-      "target": {
-        "table": "cell_touchpoints",
-        "where": {
-          "cell_id": {
-            "ref": "signup-confirmation"
           }
         }
       },

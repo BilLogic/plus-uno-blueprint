@@ -1,6 +1,6 @@
 # #743 Add missing live Onboarding behaviour
 
-Two batches. Batch a holds every row of the ticket. Batch b finishes three
+Two batches. Batch a holds every row of the ticket. Batch b finishes four
 cells that batch a inserts at an occupied square, and adds the second Regular
 Tutor cell of the new AI path. The runner cannot edit a row in the batch that
 creates it, so this work needs a second batch. Batch b is drafted from a live
@@ -27,7 +27,7 @@ onboarding module pages.
 | 12 | Lesson Modules, new exception path **AI returns no feedback** | create path; RT and BST at Work through questions | RT "Gets a Revise your response prompt…"; BST "LLM feedback service" | card 3e6b scenario table; Figma 12505:199982 and 12505:199987 |
 | 13 | Lesson Modules › Open lesson › FST, and BSA `…00120107` | insert pos 1; content | FST "Lesson assignment email"; BSA "Tutor supervisor team assigns lessons; the app emails the tutor." | Figma 11272:427878 (assignment emails shipped, Email Templates 5.x and 6.x) |
 | 14 | Lesson Modules › Finish lesson › Support Actions | insert pos 1 | "PLUS team tracks Accredible credential use and buys more before the paid limit runs out." | card 3dbb (2632, Deployed): 100 credentials added 2026-10-20 |
-| 15 | Session Sign Up › No conflicts › Sign up › Front Stage Actions | new, pos 0 | "Emails the tutor a confirmation after each successful recurring sign-up." | card 3b2b-8118 (2566, Deployed 12.0) |
+| 15 | Session Sign Up › No conflicts › Sign up › Front Stage Actions | insert pos 1 (pos 0 is the #747 Sign-Ups count cell) | "Emails the tutor a confirmation after each successful recurring sign-up." | card 3b2b-8118 (2566, Deployed 12.0) |
 | 16 | Session Sign Up › No conflicts › Sign up › BST | insert pos 2 | "Clash check" | card 2234 (Deployed 10.1); card 2239 is Triage and cited as context only |
 | 18 | Session Sign Up, new exception path **Onboarding incomplete** | create path; RT, FST and BST at Sign up; edge retype | RT "Cannot reach Your Sessions or the schedule until onboarding modules are complete."; FST "PLUS App"; BST "Onboarding gate"; `9aeb3883` leads_to → enables | card 2494; Figma 11272:427878; card 2530 (Triage) is the path note's open question |
 
@@ -84,7 +84,10 @@ tests.
 ### Verification
 
 - Production dry-run: `ok: true`, no failures. Durable change count is
-  unchanged at 428 → 428.
+  unchanged (663 → 663 on the final pre-apply run). The first draft put row 15
+  at position 0. While it waited for the apply lock, #747 wrote its Sign-Ups
+  count cell into that square, and the in-lock dry-run refused the batch. Row
+  15 moved to position 1, and the snapshot and checks were re-read.
 - `scripts/tests/content-changeset-database.test.mjs` runs this exact file on
   `scripts/tests/fixtures/0743-onboarding-board.json`, a trimmed read-only
   snapshot of the five touched scenarios. It runs dry-run (reads only), then
@@ -101,7 +104,8 @@ This batch is drafted after batch a is applied; see that file and the PR
 comments for its dry-run. It does three things:
 
 - It inserts the row 12 failure cell at position 1 of the new path.
-- It adds summaries to `lesson-email`, `accredible-limit` and `clash-check`.
+- It adds summaries to `lesson-email`, `accredible-limit`, `clash-check` and
+  `signup-confirmation`.
   Each summary edit syncs the cell's placement, so the two touchpoint cells
   land in the registry.
 - It adds the failure cell's evidence row.
