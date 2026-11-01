@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "issue": 752,
+  "operations": [
+    {
+      "key": "row17-move-onboarding-gate",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000130208"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000805",
+        "lane_id": "a0000000-0000-4000-8000-000000000883",
+        "step_id": "a0000000-0000-4000-8000-000000000892",
+        "position": 0,
+        "content": "Onboarding gate",
+        "summary": "Scheduling surfaces stay locked for tutors with incomplete onboarding; the gate lifts automatically on completion of the final module.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": "plus-application/session-sign-up/happy-path/back-stage-tech/review-scheduling",
+        "frame": null
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000805",
+        "lane_id": "a0000000-0000-4000-8000-000000000883",
+        "step_id": "a0000000-0000-4000-8000-000000000891",
+        "position": 1
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 17: Figma 11272:427878; card 2494)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
+      ]
+    },
+    {
+      "key": "row41-rename-slack-step",
+      "operation": "rename_step",
+      "target": {
+        "table": "steps",
+        "id": "b2000000-0000-4000-8000-000000000022"
+      },
+      "expected": {
+        "name": "Post in school Slack channel",
+        "scenario_id": "a0000000-0000-4000-8000-000000000202",
+        "summary": "The lead tutor posts in the school's Slack channel, where supervisors pick it up."
+      },
+      "value": {
+        "name": "Post in #in-session-support"
+      },
+      "input": {
+        "expected_path_steps": [
+          { "path_id": "b2000000-0000-4000-8000-000000000001", "position": 2 }
+        ]
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 41: Module 3; Help Center 333b, 3a2b)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": { "table": "cells", "where": { "path_id": "a0000000-0000-4000-8000-000000000805" } },
+      "beforeCount": 11,
+      "afterCount": 11
+    },
+    {
+      "target": { "table": "cells", "where": { "lane_id": "a0000000-0000-4000-8000-000000000883", "step_id": "a0000000-0000-4000-8000-000000000891" } },
+      "beforeCount": 1,
+      "afterCount": 2,
+      "beforeRows": [
+        { "id": "a0000000-0000-4000-8000-000000130108", "content": "PLUS App database", "position": 0, "status": "live" }
+      ],
+      "afterRows": [
+        { "id": "a0000000-0000-4000-8000-000000130108", "content": "PLUS App database", "position": 0, "status": "live" },
+        { "id": "a0000000-0000-4000-8000-000000130208", "content": "Onboarding gate", "position": 1, "status": "live", "cell_key": "plus-application/session-sign-up/happy-path/back-stage-tech/review-scheduling" }
+      ]
+    },
+    {
+      "target": { "table": "cells", "where": { "lane_id": "a0000000-0000-4000-8000-000000000883", "step_id": "a0000000-0000-4000-8000-000000000892" } },
+      "beforeCount": 1,
+      "afterCount": 0,
+      "beforeRows": [
+        { "id": "a0000000-0000-4000-8000-000000130208", "content": "Onboarding gate", "position": 0, "status": "live" }
+      ],
+      "afterRows": []
+    },
+    {
+      "target": { "table": "cell_touchpoints", "where": { "cell_id": "a0000000-0000-4000-8000-000000130208" } },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        { "id": "a0248c7e-d682-4fba-a8ea-7678215887f3", "touchpoint_id": "2ab5eef0-ae7e-4f97-9019-11788975dcd2", "position": 1, "summary": null, "role": null, "name": null }
+      ],
+      "afterRows": [
+        { "id": "a0248c7e-d682-4fba-a8ea-7678215887f3", "touchpoint_id": "2ab5eef0-ae7e-4f97-9019-11788975dcd2", "position": 1, "summary": null, "role": null, "name": null }
+      ]
+    },
+    {
+      "target": { "table": "evidence", "where": { "cell_id": "a0000000-0000-4000-8000-000000130208" } },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": { "table": "steps", "where": { "scenario_id": "a0000000-0000-4000-8000-000000000202" } },
+      "beforeCount": 6,
+      "afterCount": 6
+    },
+    {
+      "target": { "table": "path_steps", "where": { "step_id": "b2000000-0000-4000-8000-000000000022" } },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [ { "path_id": "b2000000-0000-4000-8000-000000000001", "position": 2 } ],
+      "afterRows": [ { "path_id": "b2000000-0000-4000-8000-000000000001", "position": 2 } ]
+    },
+    {
+      "target": { "table": "cells", "where": { "step_id": "b2000000-0000-4000-8000-000000000022" } },
+      "beforeCount": 3,
+      "afterCount": 3,
+      "beforeRows": [
+        { "id": "b2000000-0000-4000-8000-000000000032", "content": "Posts in #in-session-support with the school, teacher and session time, tagging the supervisors.", "status": "live" },
+        { "id": "b2000000-0000-4000-8000-000000000034", "content": "Slack", "status": "live" },
+        { "id": "b2000000-0000-4000-8000-000000000035", "content": "Supervisors reply in #in-session-support with whether tutors stay, move, or are dismissed.", "status": "live" }
+      ],
+      "afterRows": [
+        { "id": "b2000000-0000-4000-8000-000000000032", "content": "Posts in #in-session-support with the school, teacher and session time, tagging the supervisors.", "status": "live" },
+        { "id": "b2000000-0000-4000-8000-000000000034", "content": "Slack", "status": "live" },
+        { "id": "b2000000-0000-4000-8000-000000000035", "content": "Supervisors reply in #in-session-support with whether tutors stay, move, or are dismissed.", "status": "live" }
+      ]
+    },
+    {
+      "target": { "table": "steps", "where": { "name": "Post in #in-session-support" } },
+      "beforeCount": 0,
+      "afterCount": 1,
+      "beforeRows": [],
+      "afterRows": [ { "id": "b2000000-0000-4000-8000-000000000022", "scenario_id": "a0000000-0000-4000-8000-000000000202" } ]
+    }
+  ]
+}
