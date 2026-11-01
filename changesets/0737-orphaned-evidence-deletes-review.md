@@ -33,4 +33,8 @@ row. So unlike the cell deletes, each can be put back exactly.
 
 | Mode | Result |
 |---|---|
-| Dry-run | `ok`, no failures, 9 entries, ledger 869→869 |
+| Dry-run | `ok` twice, no failures, 9 entries, ledger 869→869 |
+| Apply | 9/9, one `delete_evidence` change each, ledger 869→878 |
+| Separate verify | `ok: true`, no failures |
+
+Changeset SHA-256 `a8a1e67fecfc5e597ade1d163451361c5c4791fd5a42de94da69726359d75582`.
