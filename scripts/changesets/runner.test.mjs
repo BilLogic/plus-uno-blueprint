@@ -412,3 +412,13 @@ test('a dependency edit addresses its edge by id and names a known kind', async 
   await assert.rejects(runChangeset(edit({ table: 'cell_dependencies', where: { source_cell_id: 'cell-1' } }, { kind: 'enables' }), 'dry-run', database), /address the existing edge by id/)
   await assert.rejects(runChangeset(edit({ table: 'cell_dependencies', id: 'edge-1' }, { kind: 'triggers' }), 'dry-run', database), /leads_to or enables/)
 })
+
+test('a content edit advances a later capability’s preservation check without the stale search index', async () => {
+  const { projectChecks, verifyChecks } = await import('./capabilities.mjs')
+  const before = { id: 'edited', path_id: 'p', content: 'Takes tutor attendance.', search_tsv: "'attend':3 'take':1", updated_at: 't0' }
+  const stored = { ...before, content: 'Claims host.', search_tsv: "'claim':1 'host':2", updated_at: 't1' }
+  const checks = [{ target: { table: 'cells', where: { path_id: 'p' } }, rows: [structuredClone(before)] }]
+  projectChecks(checks, 'cells', before, { ...before, content: stored.content })
+  assert.deepEqual(await verifyChecks(async () => [stored], checks), [])
+  assert.notDeepEqual(await verifyChecks(async () => [{ ...stored, summary: 'An unapproved change' }], [{ ...checks[0], rows: [{ ...checks[0].rows[0], summary: null }] }]), [])
+})
