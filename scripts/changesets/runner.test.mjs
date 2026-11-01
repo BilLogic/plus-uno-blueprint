@@ -402,3 +402,80 @@ test('a deferred rename placed before an add_step on its scenario is refused at 
   const ordered = await runChangeset({ version: 1, issue: 1, operations: [scenarioOp, add, rename] }, 'dry-run', noWrites())
   assert.deepEqual(ordered.failures, [])
 })
+
+// A path created at a status copies its source path's step memberships. The
+// copied list is reviewed as expected.step_ids and trimmed by a deferred
+// set_path_steps, read and guarded at apply once the path exists.
+const newPath = { key: 'path', operation: 'create_path_at_status', target: { table: 'paths', where: { scenario_id: 'calloff', name: 'Recurring withdrawal' } },
+  expected: null, value: { kind: 'variant', status: 'live' }, input: { lane_source_path_id: 'twelve' }, evidence: ['Source'] }
+const trim = (expected = ['need', 'file', 'cover', 'review', 'late']) => ({ key: 'trim', operation: 'set_path_steps',
+  target: { table: 'paths', id: { ref: 'path' }, withSteps: true },
+  expected: { step_ids: expected, scenario_id: 'calloff' }, value: { step_ids: ['need', 'file', 'review', 'cover'] }, evidence: ['Source'] })
+function pathBoard({ copied = ['need', 'file', 'cover', 'review', 'late'] } = {}) {
+  const stored = { paths: [], path_steps: [], cells: [], steps: [], authoring_changes: [] }
+  const writes = []
+  const read = async (target) => {
+    let rows = stored[target.table].filter((row) => Object.entries(target.where ?? (target.id ? { id: target.id } : {})).every(([key, value]) => row[key] === value))
+    if (target.withSteps) rows = rows.map((row) => ({ ...row, step_ids: stored.path_steps.filter((link) => link.path_id === row.id).sort((a, b) => a.position - b.position).map((link) => link.step_id) }))
+    return rows
+  }
+  const write = async (op) => {
+    writes.push(op.key)
+    const id = `${op.key}-1`
+    if (op.operation === 'create_path_at_status') {
+      stored.paths.push({ id, ...op.target.where, ...op.value })
+      copied.forEach((step_id, position) => stored.path_steps.push({ path_id: id, step_id, position }))
+    } else {
+      stored.path_steps = stored.path_steps.filter((link) => link.path_id !== op.target.id)
+      op.value.step_ids.forEach((step_id, position) => stored.path_steps.push({ path_id: op.target.id, step_id, position }))
+    }
+    stored.authoring_changes.push({ id: `log-${id}`, fn: op.operation, args: {}, author: 'human', revert: { fn: 'undo', args: { id } } })
+    return { changeIds: [`log-${id}`] }
+  }
+  return { stored, writes, database: { read, write } }
+}
+
+test('a new path’s copied steps are trimmed by a deferred set_path_steps, guarded at apply and verified separately', async () => {
+  const board = pathBoard()
+  const batch = { version: 1, issue: 744, operations: [newPath, trim()] }
+  const dry = await runChangeset(batch, 'dry-run', board.database)
+  assert.deepEqual(dry.failures, [])
+  assert.ok(dry.diff[1].deferred)
+  assert.deepEqual(dry.diff[1].before.step_ids, ['need', 'file', 'cover', 'review', 'late'])
+  assert.deepEqual(board.writes, [])
+  const applied = await runChangeset(batch, 'apply', board.database)
+  assert.equal(applied.ok, true, applied.failures.join('\n'))
+  assert.deepEqual(board.writes, ['path', 'trim'])
+  assert.deepEqual((await board.database.read({ table: 'paths', id: 'path-1', withSteps: true }))[0].step_ids, ['need', 'file', 'review', 'cover'])
+  assert.equal((await runChangeset(batch, 'verify', board.database, { receipt: applied.applied })).ok, true)
+})
+
+test('copied memberships that differ from the reviewed list stop the batch before set_path_steps is sent', async () => {
+  const board = pathBoard({ copied: ['need', 'file', 'cover', 'review'] })
+  const applied = await runChangeset({ version: 1, issue: 744, operations: [newPath, trim()] }, 'apply', board.database)
+  assert.equal(applied.ok, false)
+  assert.deepEqual(board.writes, ['path'])
+  assert.match(applied.failures.join('\n'), /trim\.step_ids: expected .*no write attempted/)
+})
+
+test('a deferred set_path_steps must address a path created earlier in this batch, before any add_step on it', async () => {
+  const cell = { key: 'cell', operation: 'upsert_cell_at_status', target: { table: 'cells', where: { path_id: 'old', lane_id: 'l', step_id: 's', position: 0 } },
+    expected: null, value: { content: 'A cell', status: 'live' }, evidence: ['Source'] }
+  const throughCell = { ...trim(), target: { table: 'paths', id: { lookup: { table: 'cells', where: { id: { ref: 'cell' } } }, field: 'path_id' }, withSteps: true } }
+  const reached = await runChangeset({ version: 1, issue: 744, operations: [cell, throughCell] }, 'dry-run', pathBoard().database)
+  assert.deepEqual(reached.failures, ['trim: a deferred set_path_steps requires target.id to be the ref of a path created earlier in this batch'])
+  const add = { key: 'later-step', operation: 'add_step', target: { table: 'steps', where: { scenario_id: 'calloff', name: 'Later' } },
+    expected: null, value: { name: 'Later' }, input: { path_id: { ref: 'path' } }, evidence: ['Source'] }
+  const late = await runChangeset({ version: 1, issue: 744, operations: [newPath, trim(), add] }, 'dry-run', pathBoard().database)
+  assert.deepEqual(late.failures, ['trim: a deferred set_path_steps must follow every add_step on path path; later-step comes after it'])
+})
+
+test('a content edit advances a later capability’s preservation check without the stale search index', async () => {
+  const { projectChecks, verifyChecks } = await import('./capabilities.mjs')
+  const before = { id: 'edited', path_id: 'p', content: 'Takes tutor attendance.', search_tsv: "'attend':3 'take':1", updated_at: 't0' }
+  const stored = { ...before, content: 'Claims host.', search_tsv: "'claim':1 'host':2", updated_at: 't1' }
+  const checks = [{ target: { table: 'cells', where: { path_id: 'p' } }, rows: [structuredClone(before)] }]
+  projectChecks(checks, 'cells', before, { ...before, content: stored.content })
+  assert.deepEqual(await verifyChecks(async () => [stored], checks), [])
+  assert.notDeepEqual(await verifyChecks(async () => [{ ...stored, summary: 'An unapproved change' }], [{ ...checks[0], rows: [{ ...checks[0].rows[0], summary: null }] }]), [])
+})

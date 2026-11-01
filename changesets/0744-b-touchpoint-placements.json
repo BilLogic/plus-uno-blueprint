@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "issue": 744,
+  "operations": [
+    {
+      "key": "r27-touchpoints-placements",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "031db126-093c-4b3b-b7e8-706d6f39053d"
+      },
+      "expected": {
+        "content": "PLUS App\nSlack",
+        "summary": null,
+        "status": "live",
+        "cell_key": "plus-tutoring/fill-in-request/requested-mid-session/front-stage-touchpoints/session-enters-fill-in-pool",
+        "position": 0,
+        "step_id": "a0000000-0000-4000-8000-000000000897",
+        "path_id": "ac4715c4-dbf7-4056-8c42-9bb67ecfc116",
+        "lane_id": "efaac381-c2a7-4a6e-b20e-a0a12b054b7b"
+      },
+      "value": {
+        "summary": "The lead sends the request from the PLUS App; it posts to #sessions-in-need in Slack with a fill-in link."
+      },
+      "evidence": [
+        "https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec",
+        "https://www.notion.so/32cb7cca498280db9c2ded976950655c",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r27-touchpoints-placements-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "031db126-093c-4b3b-b7e8-706d6f39053d",
+          "cell_key": "plus-tutoring/fill-in-request/requested-mid-session/front-stage-touchpoints/session-enters-fill-in-pool",
+          "title": "KB audit #744 — r27-touchpoints summary"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #744 — r27-touchpoints summary",
+        "note": "Sources: https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec ; https://www.notion.so/32cb7cca498280db9c2ded976950655c ; https://github.com/BilLogic/plus-uno-blueprint/issues/744 . Card 2136 is Deployed in 12.0 (live); When There Are Not Enough Tutors: the request is sent in PLUS and posted to #sessions-in-need. This edit adds the summary, and the same sanctioned mutation places the PLUS App and Slack touchpoints that the creation left unplaced. Row 27."
+      },
+      "evidence": [
+        "https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec",
+        "https://www.notion.so/32cb7cca498280db9c2ded976950655c",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "031db126-093c-4b3b-b7e8-706d6f39053d"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "031db126-093c-4b3b-b7e8-706d6f39053d"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    }
+  ]
+}
