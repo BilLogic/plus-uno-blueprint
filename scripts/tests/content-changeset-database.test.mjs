@@ -944,3 +944,13 @@ test('the posted Onboarding batch dry-runs read-only, applies with one inverse p
     expect((await runChangeset(posted, 'verify', fixture.database, { receipt: applied.applied })).failures).toEqual([])
   } finally { fixture.database.close() }
 })
+
+test('a retype whose durable append fails stops with the append error', async () => {
+  const fixture = linkFixture({ failAppend: true })
+  fixture.tables.cell_dependencies.push({ id: EDGE, source_cell_id: LINK.source.cell, target_cell_id: LINK.target.cell, kind: 'leads_to', name: null, note: null })
+  try {
+    const applied = await runChangeset(retypeBatch(), 'apply', fixture.database)
+    expect(applied.ok).toBe(false)
+    expect(applied.failures.join('\n')).toMatch(/Durable append failed after write: Audit append refused/)
+  } finally { fixture.database.close() }
+})

@@ -291,6 +291,8 @@ export function createDatabase(client, modules) {
         })
         const stood = { id: before.id, source_cell_id: before.source_cell_id, target_cell_id: before.target_cell_id, kind: before.kind, note: before.note }
         const results = await Promise.all(appendResults)
+        const failed = results.find((result) => result.error)
+        if (failed) throw new Error(`Durable append failed after write: ${failed.error.message}`)
         if (!isDeepStrictEqual(previous, stood)) throw new Error('The dependency RPC reported a different prior row than preflight; inspect its recorded inverse')
         // The self-inverse comes from the RPC's own report. Check the logged
         // record against the reviewed pre-state before claiming the write.
