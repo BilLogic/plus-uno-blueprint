@@ -106,7 +106,7 @@ end $$;
 reset role;
 set local role authenticated;
 do $$
-declare f move_fixture%rowtype; claim text; bad jsonb;
+declare f move_fixture%rowtype; claim text; bad jsonb; edge uuid;
 begin
   select * into strict f from move_fixture;
   foreach claim in array array['{"role":"authenticated","app_metadata":{}}',
@@ -131,10 +131,6 @@ begin
     perform public.move_cell(f.cell_id,f.destination,f.destination||'{"position":0}');
     raise exception 'occupied slot was overwritten';
   exception when unique_violation then null; end;
-  begin
-    perform public.move_cell(f.cell_id,f.destination,f.across_path);
-    raise exception 'incident dependency was split across paths';
-  exception when check_violation then null; end;
   for bad in select value from jsonb_array_elements(jsonb_build_array(
       null,'{}'::jsonb,f.destination,f.destination||'{"position":-1}',
       f.destination||'{"position":null}',f.destination||'{"unknown":1}',
@@ -153,6 +149,16 @@ begin
     raise exception 'independent cross-path move failed';
   end if;
   perform public.move_cell(f.independent_id,f.across_path,f.independent_source);
+  -- And when there are: a link may cross paths within one service, and a
+  -- move never leaves its scenario, so the edge stays as it was.
+  edge:=(public.set_cell_dependency(f.independent_id,f.occupied_id)->>'id')::uuid;
+  perform public.move_cell(f.independent_id,f.independent_source,f.across_path);
+  if not exists(select 1 from public.cell_dependencies d where d.id=edge
+      and d.source_cell_id=f.independent_id and d.target_cell_id=f.occupied_id) then
+    raise exception 'cross-path move lost its incident dependency';
+  end if;
+  perform public.move_cell(f.independent_id,f.across_path,f.independent_source);
+  perform public.clear_cell_dependency(edge);
   if (select count(*) from public.authoring_changes where fn='move_cell' and args->>'cell_id'=f.cell_id::text) <> 1 then
     raise exception 'refused move appended a ledger row';
   end if;

@@ -63,7 +63,7 @@ try {
   session(`begin; ${auth} select public.move_cell('${cell}','${source}','${target}'); select pg_sleep(4); commit;`, winnerName)
   await waitFor(`select exists(select 1 from pg_stat_activity where application_name='${winnerName}' and wait_event='PgSleep')`)
   session(`begin; ${auth} select public.move_cell('${cell}','${source}','${alternative}'); commit;`, loserName)
-  await waitFor(`select exists(select 1 from pg_stat_activity where application_name='${loserName}' and wait_event='relation')`)
+  await waitFor(`select exists(select 1 from pg_stat_activity where application_name='${loserName}' and wait_event_type='Lock')`)
   const [first, second] = await Promise.all(sessions.map((item) => item.done))
   if (first.code !== 0 || second.code === 0 || !second.output.includes('Cell coordinates changed; refresh before moving'))
     throw new Error(`Concurrent move outcomes unexpected: ${JSON.stringify([first, second])}`)
@@ -72,22 +72,22 @@ try {
     throw new Error('Concurrent read-back found the wrong destination or ledger count')
   console.log('[cell-move] concurrent stale move refused; one winner and one durable inverse: PASS')
 
-  // An existing edge writer reads cell parents before its INSERT. Without
-  // coordinated locks it can validate the old path, wait for the move, then
-  // insert a cross-path edge. Prove refusal at that actual public seam.
+  // A link writer and a move run concurrently. A link may cross paths within
+  // one service and a move never leaves its scenario, so whatever order they
+  // land in, both succeed and leave exactly one cross-path edge.
   sql(`begin; ${auth} select public.move_cell('${cell}','${target}','${source}'); commit;`)
   const movingName = `${database}_moving`
   const edgeName = `${database}_edge`
   const moving = session(`begin; ${auth} select public.move_cell('${cell}','${source}','${target}'); select pg_sleep(4); commit;`, movingName)
   await waitFor(`select exists(select 1 from pg_stat_activity where application_name='${movingName}' and wait_event='PgSleep')`)
   const edge = session(`begin; ${auth} select public.set_cell_dependency('${cell}','${peer}'); commit;`, edgeName)
-  await waitFor(`select exists(select 1 from pg_stat_activity where application_name='${edgeName}' and wait_event='relation')`)
   const [moveResult, edgeResult] = await Promise.all([moving.done, edge.done])
-  if (moveResult.code !== 0 || edgeResult.code === 0 || !edgeResult.output.includes('Both cells must be in the same path of the journey'))
+  if (moveResult.code !== 0 || edgeResult.code !== 0)
     throw new Error(`Concurrent edge/move outcomes unexpected: ${JSON.stringify([moveResult, edgeResult])}`)
-  if (sql(`select count(*) from public.cell_dependencies where source_cell_id='${cell}' or target_cell_id='${cell}'`) !== '0')
-    throw new Error('Concurrent edge writer left a cross-path dependency')
-  console.log('[cell-move] concurrent edge writer rechecks moved parents and is refused: PASS')
+  if (sql(`select count(*) from public.cell_dependencies where source_cell_id='${cell}' and target_cell_id='${peer}'`) !== '1'
+      || sql(`select path_id from public.cells where id='${cell}'`) !== pathB)
+    throw new Error('Concurrent edge writer did not leave exactly one cross-path link from the moved cell')
+  console.log('[cell-move] concurrent edge writer and move both land, one cross-path link: PASS')
 
   sql(`begin; ${auth} select public.move_cell('${cell}','${target}','${source}'); commit;`)
   sql(`insert into public.cell_dependencies(id,source_cell_id,target_cell_id) values('${edgeId}','${peer}','${anchor}');`)
@@ -96,13 +96,12 @@ try {
   const movingAgain = session(`begin; ${auth} select public.move_cell('${cell}','${source}','${target}'); select pg_sleep(4); commit;`, movingAgainName)
   await waitFor(`select exists(select 1 from pg_stat_activity where application_name='${movingAgainName}' and wait_event='PgSleep')`)
   const update = session(`begin; ${auth} select public.update_cell_dependency('${edgeId}','leads_to','${cell}',null); commit;`, updateName)
-  await waitFor(`select exists(select 1 from pg_stat_activity where application_name='${updateName}' and wait_event='relation')`)
   const [movedAgain, updated] = await Promise.all([movingAgain.done, update.done])
-  if (movedAgain.code !== 0 || updated.code === 0 || !updated.output.includes('Both cells must be in the same path of the journey'))
+  if (movedAgain.code !== 0 || updated.code !== 0)
     throw new Error(`Concurrent edge-update/move outcomes unexpected: ${JSON.stringify([movedAgain, updated])}`)
-  if (sql(`select target_cell_id from public.cell_dependencies where id='${edgeId}'`) !== anchor)
-    throw new Error('Refused edge retargeting changed the existing edge')
-  console.log('[cell-move] concurrent edge retargeting is refused and original edge preserved: PASS')
+  if (sql(`select target_cell_id from public.cell_dependencies where id='${edgeId}'`) !== cell)
+    throw new Error('Edge retargeting onto the moved cell did not land on the same row')
+  console.log('[cell-move] concurrent edge retargeting and move both land, across paths: PASS')
 } finally {
   for (const { child } of sessions) if (child.exitCode === null) child.kill('SIGTERM')
   await Promise.allSettled(sessions.map((item) => item.done))
