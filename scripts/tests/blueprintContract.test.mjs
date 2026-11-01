@@ -8,8 +8,11 @@ import { expectedProbeKeys, probeFailures } from '../check-bot-contract-probe.mj
 import {
   breadcrumbFailure,
   missingColumns,
+  refusesAnon,
+  staticClaimProblem,
   undeclaredKinds,
 } from '../check-blueprint-contract.mjs'
+import { replayMigrations } from '../migration-replay.mjs'
 
 /**
  * The cross-repo contract is a promise about names that live in SQL, and
@@ -355,7 +358,7 @@ test('every direct-read table has a role entry, and every role entry has a table
       `added to the read list with no roles beside it leaves the bot spelling its ` +
       `prose and position columns by hand again; a role entry for a table the bot ` +
       `does not read names columns no live check selects. A table that genuinely has ` +
-      `no role declares an empty entry, as audit_findings does.`,
+      `no role declares an empty entry.`,
   )
 })
 
@@ -392,13 +395,51 @@ test('the touchpoint read keys are all columns the touchpoints read publishes', 
   }
 })
 
-test('the findings table is one the bot declares it reads', () => {
+/**
+ * The signed-in-only surface: what 20261101130000 took off the anon key.
+ *
+ * Declared so a refusal can be told from drift. The live check accepts a
+ * refusal on these where it would fail one on `publicReadTables`, so the list
+ * must hold only relations a migration really closes — a board table slipped in
+ * here would turn its own breakage into a pass.
+ */
+test('every signed-in-only relation was introduced by a migration', () => {
+  for (const relation of contractValues('signedInReadTables')) {
+    assert.ok(
+      introducedByAMigration(relation),
+      `contract declares "${relation}" as signed-in-only but no migration ever names it`,
+    )
+  }
+})
+
+test('a migration revokes the anon key on every signed-in-only relation', () => {
+  const revokedFromAnon = new Set()
+  for (const m of ALL_SQL.matchAll(/revoke\s+[^;]*?\bon\b([^;]*?)\bfrom\s+anon\s*;/gis)) {
+    for (const name of m[1].matchAll(/public\.([a-z_][a-z0-9_]*)/g)) revokedFromAnon.add(name[1])
+  }
+  for (const relation of contractValues('signedInReadTables')) {
+    assert.ok(
+      revokedFromAnon.has(relation),
+      `"${relation}" is declared signed-in-only, but no migration revokes it from anon. ` +
+        `The live check excuses a refusal on this list; it must not excuse one nobody made.`,
+    )
+  }
+})
+
+test('no relation is both public-read and signed-in-only, and the bot reads neither closed one', () => {
+  const closed = new Set(contractValues('signedInReadTables'))
+  for (const name of ['publicReadTables', 'botReadTables']) {
+    for (const table of contractValues(name)) {
+      assert.ok(
+        !closed.has(table),
+        `"${table}" is in both ${name} and signedInReadTables. uno-bot holds the anon ` +
+          `key; a relation the anon key is refused on cannot be one it reads directly.`,
+      )
+    }
+  }
   assert.ok(
-    contractValues('botReadTables').includes(BLUEPRINT_CONTRACT.botFindingsTable),
-    `botFindingsTable is "${BLUEPRINT_CONTRACT.botFindingsTable}" but botReadTables does ` +
-      `not list it, so no /health/blueprint probe key is derived for it and no anon ` +
-      `select is run against it. The table was renamed from "findings" once already ` +
-      `(20260830190000); naming it here is only worth it while the name is checked.`,
+    !Object.keys(BLUEPRINT_CONTRACT.botDirectReadColumns).some((table) => closed.has(table)),
+    'botDirectReadColumns names a signed-in-only relation',
   )
 })
 
@@ -556,6 +597,10 @@ const COVERAGE = {
     by: 'scripts/check-blueprint-contract.mjs',
     how: 'one anon select per table against the live database; introduced-by-a-migration above',
   },
+  signedInReadTables: {
+    by: 'scripts/check-blueprint-contract.mjs',
+    how: 'one anon select per relation: a refusal passes, a missing relation fails, a read is reported as not yet closed',
+  },
   botReadTables: {
     by: 'scripts/check-bot-contract-probe.mjs',
     how: 'each becomes a required table_* probe key on /health/blueprint',
@@ -571,10 +616,6 @@ const COVERAGE = {
   botTouchpointReadKeys: {
     by: 'scripts/tests/blueprintContract.test.mjs',
     how: 'held to a subset of botDirectReadColumns.touchpoints, which is what the live check selects',
-  },
-  botFindingsTable: {
-    by: 'scripts/tests/blueprintContract.test.mjs',
-    how: 'asserted to be one of botReadTables, which is probed live and checked against the migrations',
   },
   fkConstraints: {
     by: 'scripts/check-blueprint-contract.mjs',
@@ -788,4 +829,24 @@ test('the live kind check treats a retired input spelling as a stray', () => {
   // reporting green, which is the failure this whole file exists to refuse.
   // The word is the historical case; writing it down keeps the test about it.
   assert.deepEqual(undeclaredKinds([{ kind: 'layer' }], kinds, include), ['layer'])
+})
+
+test('a refusal of the anon role is told apart from a relation PostgREST does not know', () => {
+  const denied = { code: '42501', message: 'permission denied for table audit_findings' }
+  assert.equal(refusesAnon({ status: 401, ok: false, body: denied }), true)
+  assert.equal(refusesAnon({ status: 403, ok: false, body: denied }), true)
+  assert.equal(
+    refusesAnon({ status: 404, ok: false, body: { code: 'PGRST205', message: 'Could not find the table' } }),
+    false,
+    'a missing relation is drift, never the promised refusal',
+  )
+})
+
+test('a claim on a signed-in-only relation resolves against the migration series', () => {
+  const schema = replayMigrations(resolve('supabase/migrations'))
+  const claim = (table, column) => ({ table, column, token: `${table}.${column}` })
+  assert.equal(staticClaimProblem(claim('audit_findings', 'cell_ids'), schema), null)
+  assert.equal(staticClaimProblem(claim('trash', null), schema), null)
+  assert.match(staticClaimProblem(claim('audit_findings', 'cell_id'), schema), /column/)
+  assert.match(staticClaimProblem(claim('findings', null), schema), /no migration defines/)
 })
