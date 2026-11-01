@@ -468,6 +468,8 @@ test('a deferred set_path_steps must address a path created earlier in this batc
     expected: null, value: { name: 'Later' }, input: { path_id: { ref: 'path' } }, evidence: ['Source'] }
   const late = await runChangeset({ version: 1, issue: 744, operations: [newPath, trim(), add] }, 'dry-run', pathBoard().database)
   assert.deepEqual(late.failures, ['trim: a deferred set_path_steps must follow every add_step on path path; later-step comes after it'])
+})
+
 test('a content edit advances a later capability’s preservation check without the stale search index', async () => {
   const { projectChecks, verifyChecks } = await import('./capabilities.mjs')
   const before = { id: 'edited', path_id: 'p', content: 'Takes tutor attendance.', search_tsv: "'attend':3 'take':1", updated_at: 't0' }
