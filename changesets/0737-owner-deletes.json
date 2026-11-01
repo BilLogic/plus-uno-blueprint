@@ -1,0 +1,612 @@
+{
+  "version": 1,
+  "issue": 737,
+  "title": "Owner-approved deletes: G13 Teacher escalation cells, the 12+ hours late call-off column, the empty Slot gets covered Lead Tutor lane",
+  "operations": [
+    {
+      "key": "G13-clear-1f0701",
+      "operation": "delete_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-0000001f0701"
+      },
+      "expected": {
+        "status": "live",
+        "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+        "cell_key": "plus-application/goal-setting/set-goals/partner-action-teacher/if-prompted-fill-out-goal-achievement-strategy-with-the-student",
+        "path_id": "a0000000-0000-4000-8000-000000000811",
+        "lane_id": "a0000000-0000-4000-8000-0000000008a1",
+        "step_id": "a0000000-0000-4000-8000-000000009a07",
+        "position": 0
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: apply the deletes the content reviews left for the owner",
+        "changesets/0756-review.md G13 rule R7: clear, no step fits",
+        "changesets/0756-g13-review.md: Clears left for the owner (R7)"
+      ]
+    },
+    {
+      "key": "G13-clear-a00701",
+      "operation": "delete_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000a00701"
+      },
+      "expected": {
+        "status": "live",
+        "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+        "cell_key": "plus-application/goal-setting/check-goals/partner-action-teacher/leave-breakout-room",
+        "path_id": "a0000000-0000-4000-8000-000000000814",
+        "lane_id": "a0000000-0000-4000-8000-0000000008b1",
+        "step_id": "a0000000-0000-4000-8000-000000009b07",
+        "position": 0
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: apply the deletes the content reviews left for the owner",
+        "changesets/0756-review.md G13 rule R7: clear, no step fits",
+        "changesets/0756-g13-review.md: Clears left for the owner (R7)"
+      ]
+    },
+    {
+      "key": "G13-clear-b00701",
+      "operation": "delete_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000b00701"
+      },
+      "expected": {
+        "status": "live",
+        "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+        "cell_key": "plus-application/goal-setting/update-goals/partner-action-teacher/if-prompted-fill-out-goal-achievement-strategy-with-the-student",
+        "path_id": "a0000000-0000-4000-8000-000000000815",
+        "lane_id": "a0000000-0000-4000-8000-0000000008d1",
+        "step_id": "a0000000-0000-4000-8000-000000009d07",
+        "position": 0
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: apply the deletes the content reviews left for the owner",
+        "changesets/0756-review.md G13 rule R7: clear, no step fits",
+        "changesets/0756-g13-review.md: Clears left for the owner (R7)"
+      ]
+    },
+    {
+      "key": "G13-clear-c00701",
+      "operation": "delete_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000c00701"
+      },
+      "expected": {
+        "status": "live",
+        "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+        "cell_key": "plus-application/goal-setting/set-goals-edge-case/partner-action-teacher/fill-out-goal-settings-and-quantity-with-the-student",
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e1",
+        "step_id": "a0000000-0000-4000-8000-000000009f07",
+        "position": 0
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: apply the deletes the content reviews left for the owner",
+        "changesets/0756-review.md G13 rule R7: clear, no step fits",
+        "changesets/0756-g13-review.md: Clears left for the owner (R7)"
+      ]
+    },
+    {
+      "key": "G13-clear-d00701",
+      "operation": "delete_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000d00701"
+      },
+      "expected": {
+        "status": "live",
+        "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+        "cell_key": "plus-application/goal-setting/update-goals-edge-case/partner-action-teacher/fills-out-goal-settings-and-quantity-with-the-student",
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f1",
+        "step_id": "a0000000-0000-4000-8000-000000009e07",
+        "position": 0
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: apply the deletes the content reviews left for the owner",
+        "changesets/0756-review.md G13 rule R7: clear, no step fits",
+        "changesets/0756-g13-review.md: Clears left for the owner (R7)"
+      ]
+    },
+    {
+      "key": "row29-delete-170303",
+      "operation": "delete_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170303"
+      },
+      "expected": {
+        "status": "deprecated",
+        "content": "If it is less than 12 hours before session, tutor emails supervisor.",
+        "cell_key": null,
+        "path_id": "a0000000-0000-4000-8000-000000000808",
+        "lane_id": "a0000000-0000-4000-8000-000000000972",
+        "step_id": "a0000000-0000-4000-8000-000000000942",
+        "position": 0
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: apply the deletes the content reviews left for the owner",
+        "changesets/0752-row29-review.md: the step leaves 12+ hours ahead; deprecated by #752 row 29",
+        "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138"
+      ]
+    },
+    {
+      "key": "row29-delete-170304",
+      "operation": "delete_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170304"
+      },
+      "expected": {
+        "status": "deprecated",
+        "content": "Tutor supervisor receives email request for shift swap.",
+        "cell_key": null,
+        "path_id": "a0000000-0000-4000-8000-000000000808",
+        "lane_id": "a0000000-0000-4000-8000-000000000973",
+        "step_id": "a0000000-0000-4000-8000-000000000942",
+        "position": 0
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: apply the deletes the content reviews left for the owner",
+        "changesets/0752-row29-review.md: the step leaves 12+ hours ahead; deprecated by #752 row 29",
+        "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138"
+      ]
+    },
+    {
+      "key": "row29-delete-170306",
+      "operation": "delete_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170306"
+      },
+      "expected": {
+        "status": "deprecated",
+        "content": "Email",
+        "cell_key": null,
+        "path_id": "a0000000-0000-4000-8000-000000000808",
+        "lane_id": "a0000000-0000-4000-8000-000000000974",
+        "step_id": "a0000000-0000-4000-8000-000000000942",
+        "position": 0
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: apply the deletes the content reviews left for the owner",
+        "changesets/0752-row29-review.md: the step leaves 12+ hours ahead; deprecated by #752 row 29",
+        "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138"
+      ]
+    },
+    {
+      "key": "row29-delete-170310",
+      "operation": "delete_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170310"
+      },
+      "expected": {
+        "status": "deprecated",
+        "content": "",
+        "cell_key": null,
+        "path_id": "a0000000-0000-4000-8000-000000000808",
+        "lane_id": "a0000000-0000-4000-8000-000000000971",
+        "step_id": "a0000000-0000-4000-8000-000000000942",
+        "position": 0
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: apply the deletes the content reviews left for the owner",
+        "changesets/0752-row29-review.md: the step leaves 12+ hours ahead; deprecated by #752 row 29",
+        "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138"
+      ]
+    },
+    {
+      "key": "row29-remove-12plus-membership",
+      "operation": "remove_step",
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000808",
+          "step_id": "a0000000-0000-4000-8000-000000000942"
+        }
+      },
+      "expected": {
+        "position": 6
+      },
+      "value": {
+        "deleted": true
+      },
+      "input": {
+        "expected_path_steps": [
+          {
+            "path_id": "a0000000-0000-4000-8000-000000000808",
+            "position": 6
+          },
+          {
+            "path_id": "b0000000-0000-4000-8000-000000000809",
+            "position": 2
+          }
+        ],
+        "cells_deleted_earlier": [
+          "a0000000-0000-4000-8000-000000170303",
+          "a0000000-0000-4000-8000-000000170304",
+          "a0000000-0000-4000-8000-000000170306",
+          "a0000000-0000-4000-8000-000000170310"
+        ]
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: apply the deletes the content reviews left for the owner",
+        "changesets/0752-row29-review.md: Not in this batch: removing the step from 12+ hours ahead"
+      ]
+    },
+    {
+      "key": "fill-in-remove-empty-lead-tutor-lane",
+      "operation": "remove_lane",
+      "target": {
+        "table": "lanes",
+        "id": "6afdaba8-7d74-4d20-9ce3-a3946aacbc60"
+      },
+      "expected": {
+        "name": "Lead Tutor",
+        "path_id": "a0000000-0000-4000-8000-000000000807",
+        "lane_role": "customer_actions",
+        "position": 1
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: apply the deletes the content reviews left for the owner",
+        "changesets/0744-review.md: Left for the owner, remove the empty Lead Tutor lane from Slot gets covered",
+        "changesets/0737-cleanup-review.md: Optional deletes for the owner"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000811"
+        }
+      },
+      "beforeCount": 72,
+      "afterCount": 71
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000814"
+        }
+      },
+      "beforeCount": 53,
+      "afterCount": 52
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000815"
+        }
+      },
+      "beforeCount": 72,
+      "afterCount": 71
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000816"
+        }
+      },
+      "beforeCount": 74,
+      "afterCount": 73
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000817"
+        }
+      },
+      "beforeCount": 75,
+      "afterCount": 74
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001f0701"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000a00701"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000b00701"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000c00701"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00701"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170303"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170304"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170306"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170310"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000808"
+        }
+      },
+      "beforeCount": 27,
+      "afterCount": 23
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "step_id": "a0000000-0000-4000-8000-000000000942"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 3,
+      "afterRows": [
+        {
+          "id": "b0000000-0000-4000-8000-000000180303",
+          "status": "live"
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000180306",
+          "status": "live"
+        },
+        {
+          "id": "5132e442-8794-41de-b025-37a079149d84",
+          "status": "live"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "step_id": "a0000000-0000-4000-8000-000000000942"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000808",
+          "position": 6
+        },
+        {
+          "path_id": "b0000000-0000-4000-8000-000000000809",
+          "position": 2
+        }
+      ],
+      "afterRows": [
+        {
+          "path_id": "b0000000-0000-4000-8000-000000000809",
+          "position": 2
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "steps",
+        "id": "a0000000-0000-4000-8000-000000000942"
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "afterRows": [
+        {
+          "name": "Files late call-off (<12h, immediate removal)"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000808"
+        }
+      },
+      "beforeCount": 6,
+      "afterCount": 5,
+      "beforeRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000940",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000941",
+          "position": 2
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000943",
+          "position": 3
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000944",
+          "position": 4
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000945",
+          "position": 5
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000942",
+          "position": 6
+        }
+      ],
+      "afterRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000940",
+          "position": 0
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000941",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000943",
+          "position": 2
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000944",
+          "position": 3
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000945",
+          "position": 4
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000807"
+        }
+      },
+      "beforeCount": 8,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000807"
+        }
+      },
+      "beforeCount": 23,
+      "afterCount": 23
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "ac4715c4-dbf7-4056-8c42-9bb67ecfc116",
+          "name": "Lead Tutor"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "afterRows": [
+        {
+          "id": "02363ff7-81b2-4d86-9a4e-59fa112bcc95"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "lane_id": "02363ff7-81b2-4d86-9a4e-59fa112bcc95"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3
+    }
+  ]
+}

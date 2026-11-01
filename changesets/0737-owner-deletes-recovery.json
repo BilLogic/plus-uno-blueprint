@@ -1,0 +1,796 @@
+{
+  "version": 1,
+  "issue": 737,
+  "title": "Owner-approved deletes, recovery: the empty Slot gets covered Lead Tutor lane, with the first batch's end state checked",
+  "operations": [
+    {
+      "key": "fill-in-remove-empty-lead-tutor-lane",
+      "operation": "remove_lane",
+      "target": {
+        "table": "lanes",
+        "id": "6afdaba8-7d74-4d20-9ce3-a3946aacbc60"
+      },
+      "expected": {
+        "name": "Lead Tutor",
+        "path_id": "a0000000-0000-4000-8000-000000000807",
+        "lane_role": "customer_actions",
+        "position": 1
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: apply the deletes the content reviews left for the owner",
+        "changesets/0744-review.md: Left for the owner, remove the empty Lead Tutor lane from Slot gets covered",
+        "changesets/0737-cleanup-review.md: Optional deletes for the owner"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000811"
+        }
+      },
+      "beforeCount": 71,
+      "afterCount": 71
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000814"
+        }
+      },
+      "beforeCount": 52,
+      "afterCount": 52
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000815"
+        }
+      },
+      "beforeCount": 71,
+      "afterCount": 71
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000816"
+        }
+      },
+      "beforeCount": 73,
+      "afterCount": 73
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000817"
+        }
+      },
+      "beforeCount": 74,
+      "afterCount": 74
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001f0701"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000a00701"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000b00701"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000c00701"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00701"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170303"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170304"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170306"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170310"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000808"
+        }
+      },
+      "beforeCount": 23,
+      "afterCount": 23
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "step_id": "a0000000-0000-4000-8000-000000000942"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3,
+      "afterRows": [
+        {
+          "id": "b0000000-0000-4000-8000-000000180303",
+          "status": "live"
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000180306",
+          "status": "live"
+        },
+        {
+          "id": "5132e442-8794-41de-b025-37a079149d84",
+          "status": "live"
+        }
+      ],
+      "beforeRows": [
+        {
+          "id": "b0000000-0000-4000-8000-000000180303",
+          "status": "live"
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000180306",
+          "status": "live"
+        },
+        {
+          "id": "5132e442-8794-41de-b025-37a079149d84",
+          "status": "live"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "step_id": "a0000000-0000-4000-8000-000000000942"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "afterRows": [
+        {
+          "path_id": "b0000000-0000-4000-8000-000000000809",
+          "position": 2
+        }
+      ],
+      "beforeRows": [
+        {
+          "path_id": "b0000000-0000-4000-8000-000000000809",
+          "position": 2
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "steps",
+        "id": "a0000000-0000-4000-8000-000000000942"
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "afterRows": [
+        {
+          "name": "Files late call-off (<12h, immediate removal)"
+        }
+      ],
+      "beforeRows": [
+        {
+          "name": "Files late call-off (<12h, immediate removal)"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000808"
+        }
+      },
+      "beforeCount": 5,
+      "afterCount": 5,
+      "afterRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000940",
+          "position": 0
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000941",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000943",
+          "position": 2
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000944",
+          "position": 3
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000945",
+          "position": 4
+        }
+      ],
+      "beforeRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000940",
+          "position": 0
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000941",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000943",
+          "position": 2
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000944",
+          "position": 3
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000945",
+          "position": 4
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000807"
+        }
+      },
+      "beforeCount": 8,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000807"
+        }
+      },
+      "beforeCount": 23,
+      "afterCount": 23
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "ac4715c4-dbf7-4056-8c42-9bb67ecfc116",
+          "name": "Lead Tutor"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "afterRows": [
+        {
+          "id": "02363ff7-81b2-4d86-9a4e-59fa112bcc95"
+        }
+      ],
+      "beforeRows": [
+        {
+          "id": "02363ff7-81b2-4d86-9a4e-59fa112bcc95"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "lane_id": "02363ff7-81b2-4d86-9a4e-59fa112bcc95"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-0000001f0701"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "source_cell_id": "a0000000-0000-4000-8000-0000001f0701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "target_cell_id": "a0000000-0000-4000-8000-0000001f0701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001f0701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "resources",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001f0701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000a00701"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "source_cell_id": "a0000000-0000-4000-8000-000000a00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "target_cell_id": "a0000000-0000-4000-8000-000000a00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000a00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "resources",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000a00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000b00701"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "source_cell_id": "a0000000-0000-4000-8000-000000b00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "target_cell_id": "a0000000-0000-4000-8000-000000b00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000b00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "resources",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000b00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000c00701"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "source_cell_id": "a0000000-0000-4000-8000-000000c00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "target_cell_id": "a0000000-0000-4000-8000-000000c00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000c00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "resources",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000c00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000d00701"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "source_cell_id": "a0000000-0000-4000-8000-000000d00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "target_cell_id": "a0000000-0000-4000-8000-000000d00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "resources",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00701"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170303"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "source_cell_id": "a0000000-0000-4000-8000-000000170303"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "target_cell_id": "a0000000-0000-4000-8000-000000170303"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170303"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "resources",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170303"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170304"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "source_cell_id": "a0000000-0000-4000-8000-000000170304"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "target_cell_id": "a0000000-0000-4000-8000-000000170304"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170304"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "resources",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170304"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170306"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "source_cell_id": "a0000000-0000-4000-8000-000000170306"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "target_cell_id": "a0000000-0000-4000-8000-000000170306"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170306"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "resources",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170306"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170310"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "source_cell_id": "a0000000-0000-4000-8000-000000170310"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "target_cell_id": "a0000000-0000-4000-8000-000000170310"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170310"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "resources",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170310"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    }
+  ]
+}
