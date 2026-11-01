@@ -1,0 +1,852 @@
+{
+  "version": 1,
+  "issue": 745,
+  "operations": [
+    {
+      "key": "R34-180302",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "…00180302"
+      },
+      "expected": {
+        "content": "Takes tutor attendance.",
+        "summary": "Lead marks which tutors have arrived. In 2026 production data, 83.4% of rostered students end up with an attendance record but only 31.8% of sessions are fully covered — the roster check here is the first defense.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000809",
+        "lane_id": "a0000000-0000-4000-8000-000000002012",
+        "step_id": "a0000000-0000-4000-8000-000000000952",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null
+      },
+      "value": {
+        "content": "Claims host with the host key from View session info, gives tutors co-host, and marks them Present, Absent, or Late in Manage session.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3b1b7cca498280909264cf0bb51239fb",
+        "https://www.notion.so/26fb7cca498280c8b700e462fa340ddb",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R34-180302-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "R34-180302"
+          },
+          "title": "KB audit #745 row 34",
+          "cell_key": "plus-application/before-students-join/happy-path/lead-tutor/share-zoom-link"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #745 row 34",
+        "note": "Module 11 (Before a Session, steps 3-6): the lead claims host with the Host Key from … → View session info, gives tutors co-host, marks them Present in Manage session, Absent if they have not joined and Late if they join after students are in rooms. Module 7 places the Host Key under View session info. Card 328b (Session Controls Consolidation) is Deployed in 12.0 (live). Sources: https://www.notion.so/3b1b7cca498280909264cf0bb51239fb ; https://www.notion.so/26fb7cca498280c8b700e462fa340ddb . Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      },
+      "evidence": [
+        "https://www.notion.so/3b1b7cca498280909264cf0bb51239fb",
+        "https://www.notion.so/26fb7cca498280c8b700e462fa340ddb",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R35-teacher",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000809",
+          "lane_id": "a0000000-0000-4000-8000-000000002011",
+          "step_id": "a0000000-0000-4000-8000-000000000952",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Joins the Zoom as the classroom teacher and asks the host for co-host.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/dd0b7cca49828315bf7101a13c237db1",
+        "https://www.notion.so/379b7cca498280228b42cd3dc13914b3",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R35-teacher-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "R35-teacher"
+          },
+          "title": "KB audit #745 row 35",
+          "cell_key": {
+            "ref": "R35-teacher",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #745 row 35",
+        "note": "Teacher Help Center 'How do I join as a co-host?': open the Zoom link, rename yourself as the classroom teacher, ask the lead tutor or host for co-host. 'What to do once I'm a co-host?' covers the co-host role. Sources: https://www.notion.so/dd0b7cca49828315bf7101a13c237db1 ; https://www.notion.so/379b7cca498280228b42cd3dc13914b3 . Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      },
+      "evidence": [
+        "https://www.notion.so/dd0b7cca49828315bf7101a13c237db1",
+        "https://www.notion.so/379b7cca498280228b42cd3dc13914b3",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R36-180402",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "…00180402"
+      },
+      "expected": {
+        "content": "Creates breakout rooms.",
+        "summary": "Lead creates breakout rooms in Zoom using the breakout calculator from training, grants co-host to regular tutors, and starts the recording. Rooms are visited sequentially per tutor.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000809",
+        "lane_id": "a0000000-0000-4000-8000-000000002012",
+        "step_id": "a0000000-0000-4000-8000-000000000953",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null
+      },
+      "value": {
+        "content": "Runs the Tutor-Student Assignment tool, then creates the number of breakout rooms shown in the Rooms count.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3b1b7cca498280909264cf0bb51239fb",
+        "https://www.notion.so/26fb7cca498280e4aae2f73e8739388e",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R36-180402-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "R36-180402"
+          },
+          "title": "KB audit #745 row 36",
+          "cell_key": "plus-application/before-students-join/happy-path/lead-tutor/prepare-breakout-rooms"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #745 row 36",
+        "note": "Module 11 (Before a Session, steps 7-8): run the Tutor-Student Assignment tool in Manage session, then create the number of rooms shown in the Rooms count, which shows — until assignment and already includes spare rooms. Module 6 describes the lead-only Rooms count. Sources: https://www.notion.so/3b1b7cca498280909264cf0bb51239fb ; https://www.notion.so/26fb7cca498280e4aae2f73e8739388e . Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      },
+      "evidence": [
+        "https://www.notion.so/3b1b7cca498280909264cf0bb51239fb",
+        "https://www.notion.so/26fb7cca498280e4aae2f73e8739388e",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R37-fsa",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000809",
+          "lane_id": "a0000000-0000-4000-8000-000000002014",
+          "step_id": "a0000000-0000-4000-8000-000000000950",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Shows lead tutors Manage session plus a … menu (request tutors, view session info, copy assignments); regular tutors get a Tutor tools menu (request lead tutor, view session info, copy assignments).",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/328b7cca498280c88cdace8b049e3527",
+        "https://www.notion.so/383b7cca498280c8af3bea05b67d2b95",
+        "https://www.notion.so/26fb7cca498280e4aae2f73e8739388e",
+        "https://www.notion.so/26fb7cca498280c8b700e462fa340ddb",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R37-fsa-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "R37-fsa"
+          },
+          "title": "KB audit #745 row 37",
+          "cell_key": {
+            "ref": "R37-fsa",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #745 row 37",
+        "note": "Card 328b (Session Controls Consolidation, RM-2357) is Deployed in 12.0 (live). Modules 6 and 7 list the role menus: lead Manage session and … (Request tutors, View session info, Copy assignments); regular Tutor tools (Request lead tutor, View session info, Copy assignments). The ticket's proposed text omitted View session info from the lead menu; added to match the sources. Help Center 'Reassign Tutor–Student Pairings During a Session' uses the same menus. Sources: https://www.notion.so/328b7cca498280c88cdace8b049e3527 ; https://www.notion.so/383b7cca498280c8af3bea05b67d2b95 ; https://www.notion.so/26fb7cca498280e4aae2f73e8739388e ; https://www.notion.so/26fb7cca498280c8b700e462fa340ddb . Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      },
+      "evidence": [
+        "https://www.notion.so/328b7cca498280c88cdace8b049e3527",
+        "https://www.notion.so/383b7cca498280c8af3bea05b67d2b95",
+        "https://www.notion.so/26fb7cca498280e4aae2f73e8739388e",
+        "https://www.notion.so/26fb7cca498280c8b700e462fa340ddb",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R38-fsa",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000809",
+          "lane_id": "a0000000-0000-4000-8000-000000002014",
+          "step_id": "a0000000-0000-4000-8000-000000000955",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Adds a late or fill-in tutor to the roster without moving any students; the lead tutor assigns their students by hand.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3cfb7cca49828027a04ceaf1d9c33b7d",
+        "https://www.notion.so/383b7cca498280c8af3bea05b67d2b95",
+        "https://www.notion.so/3b1b7cca498280909264cf0bb51239fb",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R38-fsa-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "R38-fsa"
+          },
+          "title": "KB audit #745 row 38",
+          "cell_key": {
+            "ref": "R38-fsa",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #745 row 38",
+        "note": "Card 3cfb (RM-2616, disable automatic reassignment on Add Tutor) is Deployed in 12.0 (live). Help Center 'Reassign Tutor–Student Pairings During a Session': PLUS does not move students to a late or fill-in tutor automatically. Module 11 step 9: nobody's students move automatically. Consistent with the #750 summaries on the Live rebalancing and Distribute breakout list cells; does not restore any unrestricted late-join reassignment claim. The ticket's second Help Center citation (392b) resolves to two pages, neither about Add Tutor, so it is not cited. Sources: https://www.notion.so/3cfb7cca49828027a04ceaf1d9c33b7d ; https://www.notion.so/383b7cca498280c8af3bea05b67d2b95 ; https://www.notion.so/3b1b7cca498280909264cf0bb51239fb . Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      },
+      "evidence": [
+        "https://www.notion.so/3cfb7cca49828027a04ceaf1d9c33b7d",
+        "https://www.notion.so/383b7cca498280c8af3bea05b67d2b95",
+        "https://www.notion.so/3b1b7cca498280909264cf0bb51239fb",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R39-fsa",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-00000000080b",
+          "lane_id": "a0000000-0000-4000-8000-000000002024",
+          "step_id": "a0000000-0000-4000-8000-000000000960",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Shows live student and tutor counts, present out of rostered, in the session header.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/333b7cca4982816b8144cc8b24e5d525",
+        "https://www.notion.so/383b7cca498280c8af3bea05b67d2b95",
+        "https://www.notion.so/26fb7cca498280e4aae2f73e8739388e",
+        "https://www.notion.so/26fb7cca498280c8b700e462fa340ddb",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R39-fsa-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "R39-fsa"
+          },
+          "title": "KB audit #745 row 39",
+          "cell_key": {
+            "ref": "R39-fsa",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #745 row 39",
+        "note": "Card 333b (Session Counts on Headers, RM-2371) is Deployed in 12.0 (live). Module 6: Students and Tutors counts are marked present / on the roster and update as attendance is recorded; Module 7 calls them live counts. Help Center 'Reassign Tutor–Student Pairings During a Session' points leads to the header counts. Sources: https://www.notion.so/333b7cca4982816b8144cc8b24e5d525 ; https://www.notion.so/383b7cca498280c8af3bea05b67d2b95 ; https://www.notion.so/26fb7cca498280e4aae2f73e8739388e ; https://www.notion.so/26fb7cca498280c8b700e462fa340ddb . Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      },
+      "evidence": [
+        "https://www.notion.so/333b7cca4982816b8144cc8b24e5d525",
+        "https://www.notion.so/383b7cca498280c8af3bea05b67d2b95",
+        "https://www.notion.so/26fb7cca498280e4aae2f73e8739388e",
+        "https://www.notion.so/26fb7cca498280c8b700e462fa340ddb",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R40-190303",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "…00190303"
+      },
+      "expected": {
+        "content": "Moves the student into their breakout room.",
+        "summary": "The tutor (as co-host) moves the student into their breakout room. Any co-host can move any student, so out-of-list moves are a known source of attendance drift.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-00000000080b",
+        "lane_id": "a0000000-0000-4000-8000-000000002023",
+        "step_id": "a0000000-0000-4000-8000-000000000962",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null
+      },
+      "value": {
+        "content": "Moves the student into their breakout room, and marks them late in attendance if they joined more than 10 minutes in.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/33db7cca498280a09594e5ecc7d3c3f1",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R40-190303-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "R40-190303"
+          },
+          "title": "KB audit #745 row 40",
+          "cell_key": "plus-application/student-just-joined/happy-path/regular-tutor/raise-hand-for-help"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #745 row 40",
+        "note": "Help Center 'Handle Students Who Join Late': move the student into the correct breakout room first; if they join more than 10 minutes into the session the assigned regular tutor marks them late in attendance. Sources: https://www.notion.so/33db7cca498280a09594e5ecc7d3c3f1 . Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      },
+      "evidence": [
+        "https://www.notion.so/33db7cca498280a09594e5ecc7d3c3f1",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R43-040103",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "…00040103"
+      },
+      "expected": {
+        "content": "Enters the student's breakout room.",
+        "summary": "This is the tutor's one-on-one window opening - the room where attendance, engagement, and help all get recorded for this student, distinct from the shared main room.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000300",
+        "lane_id": "a0000000-0000-4000-8000-000000000303",
+        "step_id": "a0000000-0000-4000-8000-000000000311",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null
+      },
+      "value": {
+        "content": "Enters the student's breakout room within 5 minutes of placing them and starts the Zoom recording in the first room.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca498280f3af02ffc07b5171e7",
+        "https://www.notion.so/3b1b7cca498280909264cf0bb51239fb",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R43-040103-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "R43-040103"
+          },
+          "title": "KB audit #745 row 43",
+          "cell_key": "plus-application/warm-up/happy-path/regular-tutor/enter-breakout-room"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #745 row 43",
+        "note": "Module 4: check in with each student within 5 minutes of placing them in a breakout room, and start the Zoom recording when you enter your first breakout room; it continues across rooms. Module 11 gives leads the same rule. Sources: https://www.notion.so/26fb7cca498280f3af02ffc07b5171e7 ; https://www.notion.so/3b1b7cca498280909264cf0bb51239fb . Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca498280f3af02ffc07b5171e7",
+        "https://www.notion.so/3b1b7cca498280909264cf0bb51239fb",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R44-040603",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "…00040603"
+      },
+      "expected": {
+        "content": "Selects the engagement level.",
+        "summary": "Engagement is defined as observable Zoom behavior only, with sub-options such as joined late, unresponsive, left early. The control is disabled (not hidden) until attendance is recorded. Internally this field is being renamed from Engagement to Responsiveness.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000300",
+        "lane_id": "a0000000-0000-4000-8000-000000000303",
+        "step_id": "a0000000-0000-4000-8000-000000000316",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null
+      },
+      "value": {
+        "content": "Selects the engagement level, including sub-reasons such as Left zoom early or Unresponsive on zoom.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/36fb7cca498280349101f4f7651aa74e",
+        "https://www.notion.so/36eb7cca49828096af8fd674441d7a45",
+        "https://www.notion.so/26fb7cca498280f3af02ffc07b5171e7",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R44-040603-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "R44-040603"
+          },
+          "title": "KB audit #745 row 44",
+          "cell_key": "plus-application/warm-up/happy-path/regular-tutor/select-engagement-level"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #745 row 44",
+        "note": "Help Center 'When Students Leave Tutoring Early' (Partially engaged → Left zoom early) and 'When Students Are Unresponsive' (Partially engaged → Unresponsive on zoom). Module 4 lists the full set: Joined late (10+ min), Unresponsive on zoom, Left zoom early, Other. Sources: https://www.notion.so/36fb7cca498280349101f4f7651aa74e ; https://www.notion.so/36eb7cca49828096af8fd674441d7a45 ; https://www.notion.so/26fb7cca498280f3af02ffc07b5171e7 . Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      },
+      "evidence": [
+        "https://www.notion.so/36fb7cca498280349101f4f7651aa74e",
+        "https://www.notion.so/36eb7cca49828096af8fd674441d7a45",
+        "https://www.notion.so/26fb7cca498280f3af02ffc07b5171e7",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R44-060603",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "…00060603"
+      },
+      "expected": {
+        "content": "Selects the engagement level.",
+        "summary": "Engagement is defined as observable Zoom behavior only, with sub-options such as joined late, unresponsive, left early. The control is disabled (not hidden) until attendance is recorded. Internally this field is being renamed from Engagement to Responsiveness.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000350",
+        "lane_id": "a0000000-0000-4000-8000-000000000403",
+        "step_id": "a0000000-0000-4000-8000-000000000316",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null
+      },
+      "value": {
+        "content": "Selects the engagement level, including sub-reasons such as Left zoom early or Unresponsive on zoom.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/36fb7cca498280349101f4f7651aa74e",
+        "https://www.notion.so/36eb7cca49828096af8fd674441d7a45",
+        "https://www.notion.so/26fb7cca498280f3af02ffc07b5171e7",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R44-060603-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "R44-060603"
+          },
+          "title": "KB audit #745 row 44",
+          "cell_key": "plus-application/warm-up/alternate-path/regular-tutor/select-engagement-level"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #745 row 44",
+        "note": "Help Center 'When Students Leave Tutoring Early' (Partially engaged → Left zoom early) and 'When Students Are Unresponsive' (Partially engaged → Unresponsive on zoom). Module 4 lists the full set: Joined late (10+ min), Unresponsive on zoom, Left zoom early, Other. Sources: https://www.notion.so/36fb7cca498280349101f4f7651aa74e ; https://www.notion.so/36eb7cca49828096af8fd674441d7a45 ; https://www.notion.so/26fb7cca498280f3af02ffc07b5171e7 . Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      },
+      "evidence": [
+        "https://www.notion.so/36fb7cca498280349101f4f7651aa74e",
+        "https://www.notion.so/36eb7cca49828096af8fd674441d7a45",
+        "https://www.notion.so/26fb7cca498280f3af02ffc07b5171e7",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R54-rt",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "b3000000-0000-4000-8000-000000000001",
+          "lane_id": "b3000000-0000-4000-8000-000000000013",
+          "step_id": "a0000000-0000-4000-8000-000000000978",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Uses Tutor tools › Request lead tutor when no lead is on the call, which posts to #in-session-support and tags the supervisors.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec",
+        "https://www.notion.so/3a2b7cca4982801283b9f129bbf89444",
+        "https://www.notion.so/26fb7cca498280e4aae2f73e8739388e",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R54-rt-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "R54-rt"
+          },
+          "title": "KB audit #745 row 54",
+          "cell_key": {
+            "ref": "R54-rt",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #745 row 54",
+        "note": "Card 2c5b (In-session Fill-In Request, RM-2136) is Deployed in 12.0 (live); the ticket cites its QA section E for Request lead tutor. Help Center 'Find the Right Support During a Session': Lead tutor not present → Tutor tools → Request lead tutor, which posts in #in-session-support and tags supervisors. Module 6 lists Request lead tutor in Tutor tools. Placement: the ticket names no path or step; placed on Routed out › Resolve issue beside 'Routes the issue out of the room', the Slack touchpoint and the supervisors-monitor-#in-session-support back-stage cell. Sources: https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec ; https://www.notion.so/3a2b7cca4982801283b9f129bbf89444 ; https://www.notion.so/26fb7cca498280e4aae2f73e8739388e . Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      },
+      "evidence": [
+        "https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec",
+        "https://www.notion.so/3a2b7cca4982801283b9f129bbf89444",
+        "https://www.notion.so/26fb7cca498280e4aae2f73e8739388e",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R55-b3036",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b3…036"
+      },
+      "expected": {
+        "content": "Support channel triage (ticketing tool pending)",
+        "summary": "App and tech problems a tutor cannot resolve in-room get triaged through the support Slack channel, the only mechanism that exists today since a dedicated ticketing tool is still being selected. Once one ships, this is the cell that changes.",
+        "status": "live",
+        "path_id": "b3000000-0000-4000-8000-000000000001",
+        "lane_id": "b3000000-0000-4000-8000-000000000018",
+        "step_id": "a0000000-0000-4000-8000-000000000978",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null
+      },
+      "value": {
+        "content": "#plus-app-bug-reporting triage for PLUS App issues (ticketing tool pending)",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3a2b7cca4982801283b9f129bbf89444",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    },
+    {
+      "key": "R55-b3036-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "R55-b3036"
+          },
+          "title": "KB audit #745 row 55",
+          "cell_key": "b3000000-0000-4000-8000-000000000036"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #745 row 55",
+        "note": "Help Center 'Find the Right Support During a Session': problems with the PLUS Application (missing students, buttons not working) go to #plus-app-bug-reporting. Sources: https://www.notion.so/3a2b7cca4982801283b9f129bbf89444 . Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      },
+      "evidence": [
+        "https://www.notion.so/3a2b7cca4982801283b9f129bbf89444",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/745"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "b3000000-0000-4000-8000-000000000001"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 8
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000350"
+        }
+      },
+      "beforeCount": 43,
+      "afterCount": 43
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000300"
+        }
+      },
+      "beforeCount": 49,
+      "afterCount": 49
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-00000000080b"
+        }
+      },
+      "beforeCount": 17,
+      "afterCount": 18
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000809"
+        }
+      },
+      "beforeCount": 40,
+      "afterCount": 43
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "R34-180302"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "R35-teacher"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "R36-180402"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "R37-fsa"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "R38-fsa"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "R39-fsa"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "R40-190303"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "R43-040103"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "R44-040603"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "R44-060603"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "R54-rt"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "R55-b3036"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    }
+  ]
+}
