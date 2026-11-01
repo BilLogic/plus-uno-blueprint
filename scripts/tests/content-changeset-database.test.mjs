@@ -154,6 +154,44 @@ function databaseFixture({ zeroRows = false, failAppend = false, corruptCell = f
       tables.cell_dependencies.push(row)
       return answer({ id: row.id, inserted: true, previous: null })
     }
+    if (url.pathname.endsWith('/rpc/create_path_at_status')) {
+      // The hosted RPC: a path at its status, lanes and step order copied from
+      // the source path, and its own durable row with a delete_path inverse.
+      const pathId = uuid('a1000000')
+      tables.paths.push({ id: pathId, scenario_id: body.scenario_id, name: body.name, kind: body.kind ?? 'variant', status: body.status, summary: null, note: null })
+      for (const lane of tables.lanes.filter((row) => row.path_id === body.lane_source_path_id))
+        tables.lanes.push({ id: uuid('a2000000'), path_id: pathId, name: lane.name, lane_role: lane.lane_role, position: lane.position })
+      for (const link of tables.path_steps.filter((row) => row.path_id === body.lane_source_path_id))
+        tables.path_steps.push({ path_id: pathId, step_id: link.step_id, position: link.position })
+      tables.authoring_changes.push({ id: uuid('50000000'), fn: 'create_path_at_status', author: 'human',
+        args: { scenario_id: body.scenario_id, name: body.name, kind: body.kind, status: body.status, lane_source_path_id: body.lane_source_path_id, path_id: pathId },
+        revert: { fn: 'delete_path', args: { path_id: pathId } } })
+      return answer(pathId)
+    }
+    if (url.pathname.endsWith('/rpc/update_cell_dependency')) {
+      // The hosted RPC: edits one row where it sits (kind, target, note),
+      // keeps the one-service rule, refuses a duplicate of another row, and
+      // returns the row as it stood for the self-inverse.
+      const serviceOf = (cellId) => {
+        const cell = tables.cells.find((row) => row.id === cellId)
+        const path = tables.paths.find((row) => row.id === cell?.path_id)
+        const scenario = tables.scenarios.find((row) => row.id === path?.scenario_id)
+        return tables.phases.find((row) => row.id === scenario?.phase_id)?.service_id
+      }
+      const row = tables.cell_dependencies.find((edge) => edge.id === body.dependency_id)
+      if (!row) return answer({ message: 'That connection no longer exists', code: 'P0001' }, 400)
+      if (!['leads_to', 'enables'].includes(body.kind)) return answer({ message: 'Unknown dependency kind', code: 'P0001' }, 400)
+      if (row.source_cell_id === body.target_cell_id) return answer({ message: 'A cell cannot depend on itself', code: 'P0001' }, 400)
+      const [sourceService, targetService] = [serviceOf(row.source_cell_id), serviceOf(body.target_cell_id)]
+      if (!sourceService || !targetService) return answer({ message: 'Both cells must exist', code: 'P0001' }, 400)
+      if (sourceService !== targetService) return answer({ message: 'Both cells must be in the same service', code: 'P0001' }, 400)
+      if (tables.cell_dependencies.some((edge) => edge.id !== row.id && edge.source_cell_id === row.source_cell_id
+        && edge.target_cell_id === body.target_cell_id && edge.kind === body.kind))
+        return answer({ message: 'That connection already exists', code: 'P0001' }, 400)
+      const previous = { id: row.id, source_cell_id: row.source_cell_id, target_cell_id: row.target_cell_id, kind: row.kind, note: row.note }
+      Object.assign(row, { target_cell_id: body.target_cell_id, kind: body.kind, note: body.note?.trim() || null })
+      return answer(previous)
+    }
     if (url.pathname.endsWith('/rpc/record_authoring_change')) {
       if (failAppend) return answer({ message: 'Audit append refused', code: '42501' }, 403)
       const change = { id: `20000000-0000-4000-8000-${String(counter++).padStart(12, '0')}`, ...body }
@@ -793,6 +831,116 @@ test('the posted Goal Setting to Weekly Class Report link dry-runs, applies with
       ['set_cell_dependency', 'clear_cell_dependency'], ['add_evidence', expect.any(String)],
     ])
     expect(tables.evidence.filter((row) => row.cell_id === linkEvidence.target.where.cell_id)).toHaveLength(2)
+    expect((await runChangeset(posted, 'verify', fixture.database, { receipt: applied.applied })).failures).toEqual([])
+  } finally { fixture.database.close() }
+})
+
+// An existing edge between two scenarios of one service, retyped in place.
+const EDGE = '90000000-0000-4000-8000-0000000000e1'
+function retypeFixture(edge = {}) {
+  const fixture = linkFixture()
+  fixture.tables.cell_dependencies.push({ id: EDGE, source_cell_id: LINK.source.cell, target_cell_id: LINK.target.cell, kind: 'leads_to', name: null, note: null, ...edge })
+  return fixture
+}
+const retypeBatch = (input = {}, value = { kind: 'enables', note: 'Finishing onboarding unlocks sign-up; it is not a handoff.' }) => ({ version: 1, issue: 743, operations: [{
+  key: 'retype', operation: 'update_cell_dependency', target: { table: 'cell_dependencies', id: EDGE },
+  expected: { source_cell_id: LINK.source.cell, target_cell_id: LINK.target.cell, kind: 'leads_to', note: null }, value,
+  input: { expected_source: endpoint(LINK.source, 'source cell'), expected_target: endpoint(LINK.target, 'target cell'), ...input },
+  evidence: ['Fixture source'],
+}], checks: [{ target: { table: 'cell_dependencies', where: { source_cell_id: LINK.source.cell } }, beforeCount: 1, afterCount: 1,
+  beforeRows: [{ id: EDGE, kind: 'leads_to' }], afterRows: [{ id: EDGE, kind: value.kind }] }] })
+
+test('an edge is retyped in place with its self-inverse, keeps its identity and verifies separately', async () => {
+  const fixture = retypeFixture()
+  const batch = retypeBatch()
+  try {
+    expect((await runChangeset(batch, 'verify', fixture.database)).ok).toBe(false)
+    const dry = await runChangeset(batch, 'dry-run', fixture.database)
+    expect(dry.failures).toEqual([])
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+    expect(dry.diff[0]).toMatchObject({ before: { kind: 'leads_to', note: null }, after: batch.operations[0].value })
+    expect(dry.diff[0].endpoints).toMatchObject({ service_id: LINK.services[0], source: { cell_id: LINK.source.cell }, target: { cell_id: LINK.target.cell } })
+    const applied = await runChangeset(batch, 'apply', fixture.database)
+    expect(applied.failures).toEqual([])
+    expect(fixture.tables.cell_dependencies).toEqual([expect.objectContaining({
+      id: EDGE, source_cell_id: LINK.source.cell, target_cell_id: LINK.target.cell, kind: 'enables', note: 'Finishing onboarding unlocks sign-up; it is not a handoff.',
+    })])
+    expect(fixture.tables.authoring_changes).toEqual([expect.objectContaining({
+      fn: 'update_cell_dependency', author: 'human',
+      args: { dependency_id: EDGE, kind: 'enables', target_cell_id: LINK.target.cell, note: 'Finishing onboarding unlocks sign-up; it is not a handoff.' },
+      revert: { fn: 'update_cell_dependency', args: { dependency_id: EDGE, kind: 'leads_to', target_cell_id: LINK.target.cell, note: null } },
+    })])
+    expect((await runChangeset(batch, 'verify', fixture.database, { receipt: applied.applied })).failures).toEqual([])
+  } finally { fixture.database.close() }
+})
+
+const retypeRefusals = [
+  ['a retype that changes nothing', () => retypeFixture(), () => retypeBatch({}, { kind: 'leads_to', note: null }), /would write no change/],
+  ['a retype onto an edge that already exists', () => {
+    const fixture = retypeFixture()
+    fixture.tables.cell_dependencies.push({ id: '90000000-0000-4000-8000-0000000000e2', source_cell_id: LINK.source.cell, target_cell_id: LINK.target.cell, kind: 'enables', name: null, note: null })
+    return fixture
+  }, () => retypeBatch(), /an enables edge already joins these cells/i],
+  ['a source moved since review', () => retypeFixture(), () => retypeBatch({ expected_source: { ...endpoint(LINK.source, 'source cell'), lane_id: LINK.target.lane } }), /source cell no longer matches the reviewed endpoint: lane_id/],
+  ['a missing reviewed endpoint', () => retypeFixture(), () => retypeBatch({ expected_target: undefined }), /requires input.expected_source and input.expected_target/],
+]
+test.each(retypeRefusals)('%s is refused at dry-run and apply before any write', async (_name, seed, batch, reason) => {
+  const fixture = seed()
+  const edges = structuredClone(fixture.tables.cell_dependencies)
+  try {
+    const dry = await runChangeset(batch(), 'dry-run', fixture.database)
+    expect(dry.failures.join('\n')).toMatch(reason)
+    const applied = await runChangeset(batch(), 'apply', fixture.database)
+    expect(applied.failures.join('\n')).toMatch(reason)
+    expect(applied.applied).toEqual([])
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+    expect(fixture.tables.cell_dependencies).toEqual(edges)
+  } finally { fixture.database.close() }
+})
+
+test('a retype refuses an edge that changed between preflight and write', async () => {
+  const fixture = retypeFixture()
+  const prepare = fixture.database.prepare
+  let calls = 0
+  fixture.database.prepare = async (...args) => {
+    const prepared = await prepare(...args)
+    if (++calls === 1) fixture.tables.cell_dependencies[0].note = 'A concurrent note.'
+    return prepared
+  }
+  try {
+    const applied = await runChangeset(retypeBatch(), 'apply', fixture.database)
+    expect(applied.ok).toBe(false)
+    expect(applied.failures.join('\n')).toMatch(/Target changed since preflight/)
+    expect(applied.applied).toEqual([])
+    expect(fixture.tables.cell_dependencies[0]).toMatchObject({ kind: 'leads_to', note: 'A concurrent note.' })
+    expect(fixture.tables.authoring_changes).toEqual([])
+  } finally { fixture.database.close() }
+})
+
+test('the posted Onboarding batch dry-runs read-only, applies with one inverse per write and verifies on its board snapshot', async () => {
+  const posted = JSON.parse(readFileSync(new URL('../../changesets/0743-a-onboarding-behaviour.json', import.meta.url), 'utf8'))
+  const board = JSON.parse(readFileSync(new URL('./fixtures/0743-onboarding-board.json', import.meta.url), 'utf8'))
+  const fixture = databaseFixture()
+  const { tables } = fixture
+  // The read-only snapshot of the five touched scenarios on 2026-11-01.
+  for (const table of ['cells', 'paths', 'lanes', 'steps']) tables[table] = []
+  for (const [table, rows] of Object.entries(board)) tables[table].push(...structuredClone(rows))
+  tables.services.push({ id: SERVICE })
+  try {
+    const dry = await runChangeset(posted, 'dry-run', fixture.database)
+    expect(dry.failures).toEqual([])
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+    const applied = await runChangeset(posted, 'apply', fixture.database)
+    expect(applied.failures).toEqual([])
+    expect(applied.applied.map(({ key }) => key)).toEqual(posted.operations.map(({ key }) => key))
+    // Every durable row carries an inverse; nothing is ever deleted.
+    expect(tables.authoring_changes.every(({ revert }) => revert?.fn)).toBe(true)
+    expect(tables.authoring_changes.filter(({ fn }) => fn === 'update_cell_dependency')).toHaveLength(1)
+    const edge = tables.cell_dependencies.find(({ id }) => id === '9aeb3883-1ec5-4c23-9305-2a339d311af6')
+    expect(edge).toMatchObject({ kind: 'enables', source_cell_id: 'a0000000-0000-4000-8000-000000110703', target_cell_id: 'a0000000-0000-4000-8000-000000130103' })
+    expect(tables.cell_dependencies.filter(({ source_cell_id, target_cell_id }) => source_cell_id === edge.source_cell_id && target_cell_id === edge.target_cell_id)).toHaveLength(1)
+    expect(tables.paths.filter(({ kind }) => kind === 'exception').map(({ name, status }) => [name, status])).toEqual([['AI returns no feedback', 'live'], ['Onboarding incomplete', 'live']])
+    expect(tables.cells.length).toBe(board.cells.length + 12)
     expect((await runChangeset(posted, 'verify', fixture.database, { receipt: applied.applied })).failures).toEqual([])
   } finally { fixture.database.close() }
 })

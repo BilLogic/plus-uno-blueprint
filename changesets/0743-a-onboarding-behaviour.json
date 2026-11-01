@@ -1,0 +1,2047 @@
+{
+  "version": 1,
+  "issue": 743,
+  "operations": [
+    {
+      "key": "lesson-email",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000802",
+          "lane_id": "a0000000-0000-4000-8000-000000001243",
+          "step_id": "a0000000-0000-4000-8000-000000000861",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Lesson assignment email",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "lesson-email-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "lesson-email"
+          },
+          "cell_key": {
+            "ref": "lesson-email",
+            "field": "cell_key"
+          },
+          "title": "KB audit #743 row13 — lesson assignment email"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row13 — lesson assignment email",
+        "note": "The 2026-08-08 spec correction on Figma 11272:427878 records that lesson and strategy assignment emails are shipped (MISC / Email Templates 5.x and 6.x). The existing Back Stage Actions cell already says assignment fires a notification email to the tutor. Sources: https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "accredible-limit",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000802",
+          "lane_id": "a0000000-0000-4000-8000-000000001246",
+          "step_id": "a0000000-0000-4000-8000-000000000863",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "PLUS team tracks Accredible credential use and buys more before the paid limit runs out.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3dbb7cca498280c9a91accaa6f77067c",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "accredible-limit-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "accredible-limit"
+          },
+          "cell_key": {
+            "ref": "accredible-limit",
+            "field": "cell_key"
+          },
+          "title": "KB audit #743 row14 — Accredible credential limit"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row14 — Accredible credential limit",
+        "note": "Card 2632 (Deployed) tracks credentials issued against the paid Accredible recipient limit so the team renews before it runs out: 74/100 on 2026-09-21, 77/100 on 2026-10-13, and 100 more credentials added on 2026-10-20. Sources: https://www.notion.so/3dbb7cca498280c9a91accaa6f77067c ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.notion.so/3dbb7cca498280c9a91accaa6f77067c",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "clash-check",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000805",
+          "lane_id": "a0000000-0000-4000-8000-000000000883",
+          "step_id": "a0000000-0000-4000-8000-000000000891",
+          "position": 2
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Clash check",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/2f8b7cca498280a681ebd8e143080e07",
+        "https://www.notion.so/2fdb7cca4982803f86d8dff90e4c3f4f",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "clash-check-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "clash-check"
+          },
+          "cell_key": {
+            "ref": "clash-check",
+            "field": "cell_key"
+          },
+          "title": "KB audit #743 row16 — clash check"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row16 — clash check",
+        "note": "Card 2234 (Deployed, release 10.1) adds the backend check that stops a tutor holding two recurring sign-ups on the same weekday and start time; fill-ins are outside it. Card 2239 (Triage) proposes improving the check and is not shipped. The cell is named for the registry; the rule (same weekday and start time, recurring sign-ups only) is recorded here and in the follow-up summary. Sources: https://www.notion.so/2f8b7cca498280a681ebd8e143080e07 ; https://www.notion.so/2fdb7cca4982803f86d8dff90e4c3f4f ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.notion.so/2f8b7cca498280a681ebd8e143080e07",
+        "https://www.notion.so/2fdb7cca4982803f86d8dff90e4c3f4f",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "identity-details",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a54e2f42-ab1c-4454-97d7-d5c3d7f035f9"
+      },
+      "expected": {
+        "content": "Keeps name, pronouns, and photo current.",
+        "summary": "The tutor edits preferred name, pronouns, and profile photo at any time from the Profile page — this is the same surface used for full profile completion at onboarding.",
+        "status": "live"
+      },
+      "value": {
+        "content": "Keeps preferred name, pronouns, photo, and additional email current.",
+        "summary": "The tutor edits preferred name, pronouns, profile photo and an optional additional email at any time from the Profile page, the same surface used to complete the profile at onboarding. The additional email receives PLUS communications; it is not used to sign in."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-430456",
+        "https://www.notion.so/2c0b7cca49828006b661e1006f80ebb4",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "identity-details-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a54e2f42-ab1c-4454-97d7-d5c3d7f035f9",
+          "cell_key": "a54e2f42-ab1c-4454-97d7-d5c3d7f035f9",
+          "title": "KB audit #743 row4 — identity details"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row4 — identity details",
+        "note": "Figma 11272:430456 (2026-08-08 spec correction) lists the shipped profile fields from card 2134 / PR #1132: preferred name, pronouns, photo, additional email, Slack email, position, university, grad semester and languages. Card 2134 (Deployed, 11.3) makes the additional email optional and tutor-entered, used for message delivery and not authentication. Sources: https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-430456 ; https://www.notion.so/2c0b7cca49828006b661e1006f80ebb4 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-430456",
+        "https://www.notion.so/2c0b7cca49828006b661e1006f80ebb4",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "work-through-questions",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000120203"
+      },
+      "expected": {
+        "content": "Works through the lesson questions.",
+        "summary": "The tutor answers open-response lesson questions in the app. Responses get automated feedback from the LLM service, so tutors see strengths and gaps per answer rather than just right/wrong.",
+        "status": "live"
+      },
+      "value": {
+        "content": "Works through the lesson questions and rates each piece of AI feedback before revising or moving on.",
+        "summary": "The tutor answers open-response lesson questions in the app and gets AI feedback on each review. The answer locks until the tutor rates that feedback, with an optional comment; the rating cannot be changed. Next stays disabled until every required item is done."
+      },
+      "evidence": [
+        "https://www.notion.so/3e6b7cca49828084b5d5d591e4650bbc",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12469-531005",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "work-through-questions-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000120203",
+          "cell_key": "plus-application/lesson-modules/happy-path/regular-tutor/work-through-questions",
+          "title": "KB audit #743 row11 — required AI feedback rating"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row11 — required AI feedback rating",
+        "note": "Card 2651 (Deployed, release 12.0), Change 3: tutors rate every AI feedback they receive before they can revise their answer or move on; the rating sits under the feedback, the comment is optional, and a submitted rating is saved and cannot be changed. The audit also cites the lesson_llm_feedback production table; it was not re-queried for this batch. Sources: https://www.notion.so/3e6b7cca49828084b5d5d591e4650bbc ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12469-531005 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.notion.so/3e6b7cca49828084b5d5d591e4650bbc",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12469-531005",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "assign-lessons",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000120107"
+      },
+      "expected": {
+        "content": "Tutor supervisor team assigns lessons.",
+        "summary": "The tutor supervisor team assigns lessons (individually or by mapping a group to a lesson with a time goal); assignment fires a notification email to the tutor.",
+        "status": "live"
+      },
+      "value": {
+        "content": "Tutor supervisor team assigns lessons; the app emails the tutor."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "assign-lessons-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000120107",
+          "cell_key": "plus-application/lesson-modules/happy-path/back-stage-actions/open-lesson",
+          "title": "KB audit #743 row13 — lesson assignment"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row13 — lesson assignment",
+        "note": "Figma 11272:427878 (2026-08-08 spec correction): lesson and strategy assignment emails are shipped, see MISC / Email Templates 5.x and 6.x. The cell summary already records that assignment fires a notification email to the tutor. Sources: https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "clearance-sync",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000800",
+          "lane_id": "a0000000-0000-4000-8000-000000000834",
+          "step_id": "a0000000-0000-4000-8000-000000000823",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "A script reads the CPO's shared clearance Google Sheet and updates each tutor's clearance status in PLUS.",
+        "summary": "The CPO keeps a shared Google Sheet of tutor clearances. A script reads it and updates each tutor’s clearance status, which the tutor sees on the read-only Status & Clearance card. A post-release report on September 9, 2026 recorded 19 tutors updated.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3c0b7cca498280c3bb6afb801e47df2d",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "clearance-sync-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "clearance-sync"
+          },
+          "cell_key": {
+            "ref": "clearance-sync",
+            "field": "cell_key"
+          },
+          "title": "KB audit #743 row3 — CPO clearance sheet sync"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row3 — CPO clearance sheet sync",
+        "note": "Card 3c0b (RM-2584, Deployed, release 12.0): the CPO updates a shared Google Sheet and the script reads it; the September 9 post-release comment reports 19 tutors updated, an operational report rather than a fresh production query. It does not establish a sync cadence. The Clearance ETL touchpoint cell in Tutor Profile & Maintenance carries the #750 evidence; this row adds the back-stage action in Employment & Access. Sources: https://www.notion.so/3c0b7cca498280c3bb6afb801e47df2d ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.notion.so/3c0b7cca498280c3bb6afb801e47df2d",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "slack-email-notice",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "f1000000-0000-4000-8000-000000000022",
+          "lane_id": "f1000000-0000-4000-8000-000000000028",
+          "step_id": "f1000000-0000-4000-8000-000000000034",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Ops team receives a Slack notification of the new Slack email.",
+        "summary": "When a tutor changes the Slack email on their profile, the Slack webhook posts a notification to ops.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-430456",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "slack-email-notice-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "slack-email-notice"
+          },
+          "cell_key": {
+            "ref": "slack-email-notice",
+            "field": "cell_key"
+          },
+          "title": "KB audit #743 row5 — Slack email notification"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row5 — Slack email notification",
+        "note": "Figma 11272:430456 (2026-08-08 spec correction vs shipped app), system lane: changing the Slack email fires a Slack webhook notification to ops. Sources: https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-430456 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-430456",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "lead-module",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000007201",
+          "lane_id": "a0000000-0000-4000-8000-000000000844",
+          "step_id": "a0000000-0000-4000-8000-000000000851",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Assigns the Lead Tutor Onboarding module automatically when a tutor is promoted; it does not gate Your Sessions.",
+        "summary": "When a tutor is promoted to lead tutor, the app assigns Module 11, Lead Tutor Onboarding. Lead tutors at the time it was added received it then. The module is not part of the onboarding gate, so a lead tutor keeps Your Sessions while it is incomplete.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3abb7cca4982805dacb8d0574ba66235",
+        "https://www.notion.so/3b2b7cca498280ae8048c8512640404e",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "lead-module-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "lead-module"
+          },
+          "cell_key": {
+            "ref": "lead-module",
+            "field": "cell_key"
+          },
+          "title": "KB audit #743 row7 — lead tutor module auto-assignment"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row7 — lead tutor module auto-assignment",
+        "note": "Card 2548 (Deployed, release 12.0) assigns the new lead tutor onboarding module when a tutor is promoted; it was assigned to all existing lead tutors when added, and it is not part of the gating of Your Sessions. Card 2561 (Deployed, release 12.0) adds the module itself, 11. Lead Tutor Onboarding, required only for lead tutors. Sources: https://www.notion.so/3abb7cca4982805dacb8d0574ba66235 ; https://www.notion.so/3b2b7cca498280ae8048c8512640404e ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.notion.so/3abb7cca4982805dacb8d0574ba66235",
+        "https://www.notion.so/3b2b7cca498280ae8048c8512640404e",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "signup-confirmation",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000805",
+          "lane_id": "a0000000-0000-4000-8000-000000000880",
+          "step_id": "a0000000-0000-4000-8000-000000000891",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Emails the tutor a confirmation after each successful recurring sign-up.",
+        "summary": "After a recurring sign-up succeeds, the app emails the tutor a confirmation with the school, weekday, time and teacher. Nothing is sent for a sign-up that did not succeed.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca4982811898fcc0449d742569",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "signup-confirmation-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "signup-confirmation"
+          },
+          "cell_key": {
+            "ref": "signup-confirmation",
+            "field": "cell_key"
+          },
+          "title": "KB audit #743 row15 — recurring sign-up confirmation"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row15 — recurring sign-up confirmation",
+        "note": "Card 2566, Transactional emails 1 (Deployed, release 12.0): a recurring signup confirmation is sent only for successful signup IDs, triggered after the sign-up returns, naming school, day of week, start and end time and teacher. Sources: https://www.notion.so/3b2b7cca4982811898fcc0449d742569 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca4982811898fcc0449d742569",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "ai-no-feedback",
+      "operation": "create_path_at_status",
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000124",
+          "name": "AI returns no feedback"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "exception",
+        "status": "live",
+        "summary": "A review returns no AI feedback: the answer is unclear or not in the first person, or the AI call fails. No rating is asked and no review is used.",
+        "note": null
+      },
+      "input": {
+        "lane_source_path_id": "a0000000-0000-4000-8000-000000000802"
+      },
+      "evidence": [
+        "https://www.notion.so/3e6b7cca49828084b5d5d591e4650bbc",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12505-199982",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12505-199987",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12388-6925",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12388-8570",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "ai-revise",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "ai-no-feedback"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "ai-no-feedback"
+                },
+                "name": "Regular Tutor"
+              }
+            }
+          },
+          "step_id": "a0000000-0000-4000-8000-000000000862",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Gets a Revise your response prompt when the answer is unclear or not first person, and rewrites it without using a review.",
+        "summary": "For an unclear or not-first-person answer the AI returns a Revise your response message instead of feedback. There is nothing to rate, and the attempt does not count against the tutor’s reviews.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3e6b7cca49828084b5d5d591e4650bbc",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12505-199982",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12505-199987",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12388-6925",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12388-8570",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "ai-revise-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "ai-revise"
+          },
+          "cell_key": {
+            "ref": "ai-revise",
+            "field": "cell_key"
+          },
+          "title": "KB audit #743 row12 — revise your response"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row12 — revise your response",
+        "note": "Card 2651 (Deployed, release 12.0) scenario table: an unclear or not-first-person answer shows a Revise your response message, with no rating and no review used (Figma Flow 4 · 2 and 4 · 4; intent note 12505:199982). Sources: https://www.notion.so/3e6b7cca49828084b5d5d591e4650bbc ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12505-199982 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12505-199987 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12388-6925 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12388-8570 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.notion.so/3e6b7cca49828084b5d5d591e4650bbc",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12505-199982",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12505-199987",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12388-6925",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12388-8570",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "ai-service",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "ai-no-feedback"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "ai-no-feedback"
+                },
+                "name": "Back Stage Touchpoints"
+              }
+            }
+          },
+          "step_id": "a0000000-0000-4000-8000-000000000862",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "LLM feedback service",
+        "summary": "Returns feedback on each review, a Revise your response message for an unclear or not-first-person answer, or an error the app shows as a system-issue message.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3e6b7cca49828084b5d5d591e4650bbc",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12505-199982",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12505-199987",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12388-6925",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12388-8570",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "ai-service-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "ai-service"
+          },
+          "cell_key": {
+            "ref": "ai-service",
+            "field": "cell_key"
+          },
+          "title": "KB audit #743 row12 — LLM feedback service"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row12 — LLM feedback service",
+        "note": "Card 2651 (Deployed, release 12.0) scenario table: the AI call can return feedback, a revise message, or fail (Figma Flow 5 · 1; intent notes 12505:199982 and 12505:199987). Sources: https://www.notion.so/3e6b7cca49828084b5d5d591e4650bbc ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12505-199982 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12505-199987 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12388-6925 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12388-8570 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.notion.so/3e6b7cca49828084b5d5d591e4650bbc",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12505-199982",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12505-199987",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12388-6925",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12388-8570",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "onboarding-incomplete",
+      "operation": "create_path_at_status",
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000125",
+          "name": "Onboarding incomplete"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "exception",
+        "status": "live",
+        "summary": "A tutor who has not finished onboarding cannot open Your Sessions or the schedule, so cannot sign up. The gate lifts when the required onboarding modules are complete.",
+        "note": "Card 2530 (Triage) is checking which modules and lessons count toward the gate for returning tutors and tutors who were inactive when a module shipped; that open question is not recorded as behaviour here. Lead Tutor Onboarding (Module 11) does not gate."
+      },
+      "input": {
+        "lane_source_path_id": "a0000000-0000-4000-8000-000000000805"
+      },
+      "evidence": [
+        "https://www.notion.so/383b7cca498280a4b3caecf3b9e93bdd",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878",
+        "https://www.notion.so/3a4b7cca4982804eb25ccba063228bd1",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "gate-tutor",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "onboarding-incomplete"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "onboarding-incomplete"
+                },
+                "name": "Regular Tutor"
+              }
+            }
+          },
+          "step_id": "a0000000-0000-4000-8000-000000000891",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Cannot reach Your Sessions or the schedule until onboarding modules are complete.",
+        "summary": "Your Sessions is hidden from the sidebar until onboarding is complete, and since release 12.0 the schedule pages are blocked too, including by direct URL and from Session Links.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/383b7cca498280a4b3caecf3b9e93bdd",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878",
+        "https://www.notion.so/3a4b7cca4982804eb25ccba063228bd1",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "gate-tutor-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "gate-tutor"
+          },
+          "cell_key": {
+            "ref": "gate-tutor",
+            "field": "cell_key"
+          },
+          "title": "KB audit #743 row18 — onboarding incomplete, tutor"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row18 — onboarding incomplete, tutor",
+        "note": "Card 2494 (Deployed, release 12.0) closes the routes by which a tutor with incomplete onboarding could still reach the schedule (direct URL, Session Links). Figma 11272:427878 (2026-08-08 spec correction): incomplete onboarding blocks schedule and sessions, a hard dependency from Onboarding to Sign-Up. Card 2530 (Triage) is an open question on what counts toward the gate. Sources: https://www.notion.so/383b7cca498280a4b3caecf3b9e93bdd ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878 ; https://www.notion.so/3a4b7cca4982804eb25ccba063228bd1 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.notion.so/383b7cca498280a4b3caecf3b9e93bdd",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878",
+        "https://www.notion.so/3a4b7cca4982804eb25ccba063228bd1",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "gate-app",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "onboarding-incomplete"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "onboarding-incomplete"
+                },
+                "name": "Front Stage Touchpoints"
+              }
+            }
+          },
+          "step_id": "a0000000-0000-4000-8000-000000000891",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "PLUS App",
+        "summary": "The PLUS App hides Your Sessions and blocks the schedule pages for a tutor with incomplete onboarding.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/383b7cca498280a4b3caecf3b9e93bdd",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878",
+        "https://www.notion.so/3a4b7cca4982804eb25ccba063228bd1",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "gate-app-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "gate-app"
+          },
+          "cell_key": {
+            "ref": "gate-app",
+            "field": "cell_key"
+          },
+          "title": "KB audit #743 row18 — onboarding incomplete, app"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row18 — onboarding incomplete, app",
+        "note": "Card 2494 (Deployed, release 12.0); Figma 11272:427878. Sources: https://www.notion.so/383b7cca498280a4b3caecf3b9e93bdd ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878 ; https://www.notion.so/3a4b7cca4982804eb25ccba063228bd1 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.notion.so/383b7cca498280a4b3caecf3b9e93bdd",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878",
+        "https://www.notion.so/3a4b7cca4982804eb25ccba063228bd1",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "gate-check",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "onboarding-incomplete"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "onboarding-incomplete"
+                },
+                "name": "Back Stage Touchpoints"
+              }
+            }
+          },
+          "step_id": "a0000000-0000-4000-8000-000000000891",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Onboarding gate",
+        "summary": "Checks the tutor’s required onboarding modules before allowing Your Sessions; inactive tutors are always blocked and institution admins never are.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/383b7cca498280a4b3caecf3b9e93bdd",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878",
+        "https://www.notion.so/3a4b7cca4982804eb25ccba063228bd1",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "gate-check-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "gate-check"
+          },
+          "cell_key": {
+            "ref": "gate-check",
+            "field": "cell_key"
+          },
+          "title": "KB audit #743 row18 — onboarding gate"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row18 — onboarding gate",
+        "note": "Card 2494 (Deployed, release 12.0); Figma 11272:427878. The gate rules (inactive tutors blocked, institution admins never blocked) are as described on card 2530, whose open question about returning tutors is unresolved. Sources: https://www.notion.so/383b7cca498280a4b3caecf3b9e93bdd ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878 ; https://www.notion.so/3a4b7cca4982804eb25ccba063228bd1 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.notion.so/383b7cca498280a4b3caecf3b9e93bdd",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878",
+        "https://www.notion.so/3a4b7cca4982804eb25ccba063228bd1",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "module-enables-signup",
+      "operation": "update_cell_dependency",
+      "target": {
+        "table": "cell_dependencies",
+        "id": "9aeb3883-1ec5-4c23-9305-2a339d311af6"
+      },
+      "expected": {
+        "source_cell_id": "a0000000-0000-4000-8000-000000110703",
+        "target_cell_id": "a0000000-0000-4000-8000-000000130103",
+        "kind": "leads_to",
+        "note": null
+      },
+      "value": {
+        "kind": "enables",
+        "note": "Finishing the onboarding modules unlocks Your Sessions; sign-up depends on it rather than following it as a handoff."
+      },
+      "input": {
+        "expected_source": {
+          "path_id": "a0000000-0000-4000-8000-000000007201",
+          "lane_id": "a0000000-0000-4000-8000-000000000841",
+          "step_id": "a0000000-0000-4000-8000-000000000857",
+          "scenario_id": "a0000000-0000-4000-8000-000000000123",
+          "position": 0,
+          "content": "Submits the reflection questions and completes the module.",
+          "status": "live",
+          "cell_key": "plus-application/onboarding-modules/happy-path/regular-tutor/module-completion"
+        },
+        "expected_target": {
+          "path_id": "a0000000-0000-4000-8000-000000000805",
+          "lane_id": "a0000000-0000-4000-8000-000000000879",
+          "step_id": "a0000000-0000-4000-8000-000000000891",
+          "scenario_id": "a0000000-0000-4000-8000-000000000125",
+          "position": 0,
+          "content": "Signs up for recurring sessions for the rest of the semester.",
+          "status": "live",
+          "cell_key": "plus-application/session-sign-up/happy-path/regular-tutor/sign-up"
+        }
+      },
+      "evidence": [
+        "https://www.notion.so/383b7cca498280a4b3caecf3b9e93bdd",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878",
+        "https://www.notion.so/3a4b7cca4982804eb25ccba063228bd1",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "module-enables-signup-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000110703",
+          "cell_key": "plus-application/onboarding-modules/happy-path/regular-tutor/module-completion",
+          "title": "KB audit #743 row18 — completion enables sign-up"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row18 — completion enables sign-up",
+        "note": "The Module completion → Sign up edge (9aeb3883) is retyped from leads_to to enables: Figma 11272:427878 calls the onboarding gate a hard dependency from Onboarding to Sign-Up, and card 2494 (Deployed, 12.0) enforces it. Evidence attaches to cells, so the edge is recorded on its source cell. Sources: https://www.notion.so/383b7cca498280a4b3caecf3b9e93bdd ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878 ; https://www.notion.so/3a4b7cca4982804eb25ccba063228bd1 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.notion.so/383b7cca498280a4b3caecf3b9e93bdd",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878",
+        "https://www.notion.so/3a4b7cca4982804eb25ccba063228bd1",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "slack-webhook-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "e7895077-b8d9-492c-a9e0-d38a88c4b53a",
+          "cell_key": "e7895077-b8d9-492c-a9e0-d38a88c4b53a",
+          "title": "KB audit #743 row5 — Slack webhook"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row5 — Slack webhook",
+        "note": "Figma 11272:430456 (2026-08-08 spec correction vs shipped app), system lane: changing the Slack email fires a Slack webhook notification to ops. Sources: https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-430456 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-430456",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "status-card-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "0f73cd93-5dc7-4514-b046-dd0ae0b56c5d",
+          "cell_key": "0f73cd93-5dc7-4514-b046-dd0ae0b56c5d",
+          "title": "KB audit #743 row6 — Status & Clearance card"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row6 — Status & Clearance card",
+        "note": "Figma 11272:430456 (2026-08-08 spec correction): a read-only Status & Clearance card is shipped, showing tutor, onboarding and clearance status. Sources: https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-430456 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-430456",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "background-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "3c9d9d28-15f1-49e2-b3d4-fa94a594da33",
+          "cell_key": "3c9d9d28-15f1-49e2-b3d4-fa94a594da33",
+          "title": "KB audit #743 row6 — background and languages"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row6 — background and languages",
+        "note": "Figma 11272:430456 (2026-08-08 spec correction): shipped profile fields include position, university, grad semester and languages (card 2134 / PR #1132). Sources: https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-430456 ; https://www.notion.so/2c0b7cca49828006b661e1006f80ebb4 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-430456",
+        "https://www.notion.so/2c0b7cca49828006b661e1006f80ebb4",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "module-completion-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000110703",
+          "cell_key": "plus-application/onboarding-modules/happy-path/regular-tutor/module-completion",
+          "title": "KB audit #743 row9 — reflection required in-app"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row9 — reflection required in-app",
+        "note": "Each onboarding module page (Modules 2–4 and 6–11, read 2026-11-01) says: \"Submitting your reflection in-app is required to complete this learning module.\" Each module quiz asks the tutor to sign in with the same Google account they use in the PLUS app so results link correctly. Sources: https://www.notion.so/26fb7cca498280daac2fd7efc191708d ; https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f ; https://www.notion.so/26fb7cca498280f3af02ffc07b5171e7 ; https://www.notion.so/26fb7cca498280e4aae2f73e8739388e ; https://www.notion.so/26fb7cca498280c8b700e462fa340ddb ; https://www.notion.so/26fb7cca49828064a32cdde194e36bbd ; https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 ; https://www.notion.so/3b2b7cca498280b38e44d5feae614328 ; https://www.notion.so/3b1b7cca498280909264cf0bb51239fb ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.notion.so/26fb7cca498280daac2fd7efc191708d",
+        "https://www.notion.so/26fb7cca498280dfa0daf291f2635b3f",
+        "https://www.notion.so/26fb7cca498280f3af02ffc07b5171e7",
+        "https://www.notion.so/26fb7cca498280e4aae2f73e8739388e",
+        "https://www.notion.so/26fb7cca498280c8b700e462fa340ddb",
+        "https://www.notion.so/26fb7cca49828064a32cdde194e36bbd",
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5",
+        "https://www.notion.so/3b2b7cca498280b38e44d5feae614328",
+        "https://www.notion.so/3b1b7cca498280909264cf0bb51239fb",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "onboarding-gate-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "e0000000-0000-4000-8000-000000000641",
+          "cell_key": "e0000000-0000-4000-8000-000000000641",
+          "title": "KB audit #743 row10 — onboarding gate"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row10 — onboarding gate",
+        "note": "Figma 11272:427878 (2026-08-08 spec correction): incomplete onboarding blocks schedule and sessions. Card 2494 (Deployed, release 12.0) closes the direct-URL and Session Links routes to the schedule for tutors with incomplete onboarding. Sources: https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878 ; https://www.notion.so/383b7cca498280a4b3caecf3b9e93bdd ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878",
+        "https://www.notion.so/383b7cca498280a4b3caecf3b9e93bdd",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000120"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000120"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 9
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "f1000000-0000-4000-8000-000000000021"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "f1000000-0000-4000-8000-000000000021"
+        }
+      },
+      "beforeCount": 5,
+      "afterCount": 5
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000123"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000123"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000124"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000124"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000125"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000125"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000800"
+        }
+      },
+      "beforeCount": 44,
+      "afterCount": 45
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000800"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 9
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000800"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 9
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000802"
+        }
+      },
+      "beforeCount": 20,
+      "afterCount": 22
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000802"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000802"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000805"
+        }
+      },
+      "beforeCount": 11,
+      "afterCount": 13
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000805"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000805"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000007201"
+        }
+      },
+      "beforeCount": 37,
+      "afterCount": 38
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000007201"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000007201"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "f0000000-0000-4000-8000-000000000805"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "f0000000-0000-4000-8000-000000000805"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "f0000000-0000-4000-8000-000000000805"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "f1000000-0000-4000-8000-000000000022"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 10
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "f1000000-0000-4000-8000-000000000022"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "f1000000-0000-4000-8000-000000000022"
+        }
+      },
+      "beforeCount": 5,
+      "afterCount": 5
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "ai-no-feedback"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 2,
+      "afterRows": [
+        {
+          "content": "Gets a Revise your response prompt when the answer is unclear or not first person, and rewrites it without using a review.",
+          "status": "live",
+          "position": 0,
+          "step_id": "a0000000-0000-4000-8000-000000000862"
+        },
+        {
+          "content": "LLM feedback service",
+          "status": "live",
+          "position": 0,
+          "step_id": "a0000000-0000-4000-8000-000000000862"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": {
+            "ref": "ai-no-feedback"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 7,
+      "afterRows": [
+        {
+          "name": "Storyboard",
+          "lane_role": "storyboard",
+          "position": 0
+        },
+        {
+          "name": "Regular Tutor",
+          "lane_role": "customer_actions",
+          "position": 1
+        },
+        {
+          "name": "Front Stage Actions",
+          "lane_role": "frontstage_actions",
+          "position": 3
+        },
+        {
+          "name": "Front Stage Touchpoints",
+          "lane_role": "frontstage_touchpoints",
+          "position": 2
+        },
+        {
+          "name": "Back Stage Actions",
+          "lane_role": "backstage_actions",
+          "position": 5
+        },
+        {
+          "name": "Back Stage Touchpoints",
+          "lane_role": "backstage_touchpoints",
+          "position": 4
+        },
+        {
+          "name": "Support Actions",
+          "lane_role": "support_actions",
+          "position": 6
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": {
+            "ref": "ai-no-feedback"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 3,
+      "afterRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000861",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000862",
+          "position": 2
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000863",
+          "position": 3
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "onboarding-incomplete"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 3,
+      "afterRows": [
+        {
+          "content": "Cannot reach Your Sessions or the schedule until onboarding modules are complete.",
+          "status": "live",
+          "position": 0,
+          "step_id": "a0000000-0000-4000-8000-000000000891"
+        },
+        {
+          "content": "PLUS App",
+          "status": "live",
+          "position": 0,
+          "step_id": "a0000000-0000-4000-8000-000000000891"
+        },
+        {
+          "content": "Onboarding gate",
+          "status": "live",
+          "position": 0,
+          "step_id": "a0000000-0000-4000-8000-000000000891"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": {
+            "ref": "onboarding-incomplete"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 7,
+      "afterRows": [
+        {
+          "name": "Storyboard",
+          "lane_role": "storyboard",
+          "position": 0
+        },
+        {
+          "name": "Regular Tutor",
+          "lane_role": "customer_actions",
+          "position": 1
+        },
+        {
+          "name": "Front Stage Actions",
+          "lane_role": "frontstage_actions",
+          "position": 3
+        },
+        {
+          "name": "Front Stage Touchpoints",
+          "lane_role": "frontstage_touchpoints",
+          "position": 2
+        },
+        {
+          "name": "Back Stage Actions",
+          "lane_role": "backstage_actions",
+          "position": 5
+        },
+        {
+          "name": "Back Stage Touchpoints",
+          "lane_role": "backstage_touchpoints",
+          "position": 4
+        },
+        {
+          "name": "Support Actions",
+          "lane_role": "support_actions",
+          "position": 6
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": {
+            "ref": "onboarding-incomplete"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 2,
+      "afterRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000891",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000892",
+          "position": 2
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "lesson-email"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "accredible-limit"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "clash-check"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a54e2f42-ab1c-4454-97d7-d5c3d7f035f9"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000120203"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000120107"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "clearance-sync"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "slack-email-notice"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "lead-module"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "signup-confirmation"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "ai-revise"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "ai-service"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "gate-tutor"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "gate-app"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "gate-check"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000110703"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "e7895077-b8d9-492c-a9e0-d38a88c4b53a"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "0f73cd93-5dc7-4514-b046-dd0ae0b56c5d"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "3c9d9d28-15f1-49e2-b3d4-fa94a594da33"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "e0000000-0000-4000-8000-000000000641"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "lesson-email"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "accredible-limit"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "clash-check"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "clearance-sync"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "slack-email-notice"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "lead-module"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "signup-confirmation"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "ai-revise"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "ai-service"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "gate-tutor"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "gate-app"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "gate-check"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "source_cell_id": "a0000000-0000-4000-8000-000000110703"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3,
+      "beforeRows": [
+        {
+          "id": "9aeb3883-1ec5-4c23-9305-2a339d311af6",
+          "target_cell_id": "a0000000-0000-4000-8000-000000130103",
+          "kind": "leads_to",
+          "note": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000089007",
+          "target_cell_id": "a0000000-0000-4000-8000-000000110706",
+          "kind": "leads_to",
+          "note": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000089016",
+          "target_cell_id": "a0000000-0000-4000-8000-000000110103",
+          "kind": "leads_to",
+          "note": null
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "9aeb3883-1ec5-4c23-9305-2a339d311af6",
+          "target_cell_id": "a0000000-0000-4000-8000-000000130103",
+          "kind": "enables",
+          "note": "Finishing the onboarding modules unlocks Your Sessions; sign-up depends on it rather than following it as a handoff."
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000089007",
+          "target_cell_id": "a0000000-0000-4000-8000-000000110706",
+          "kind": "leads_to",
+          "note": null
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000089016",
+          "target_cell_id": "a0000000-0000-4000-8000-000000110103",
+          "kind": "leads_to",
+          "note": null
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "target_cell_id": "a0000000-0000-4000-8000-000000130103"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    }
+  ]
+}
