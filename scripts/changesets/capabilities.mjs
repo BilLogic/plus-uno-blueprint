@@ -1,6 +1,8 @@
 import { isDeepStrictEqual } from 'node:util'
 
-export const CAPABILITIES = new Set(['update_cell_status', 'rename_step', 'move_cell', 'insert_cell_at_position'])
+/** Owner-approved deletes: each RPC archives what it destroys into the trash. */
+export const DELETIONS = new Set(['delete_cell', 'remove_step', 'remove_lane'])
+export const CAPABILITIES = new Set(['update_cell_status', 'rename_step', 'move_cell', 'insert_cell_at_position', ...DELETIONS])
 export const COORDINATES = ['path_id', 'lane_id', 'step_id', 'position']
 export const coordinates = (row) => Object.fromEntries(COORDINATES.map((key) => [key, row[key]]))
 // The database regenerates these columns on every write, so a projected row
@@ -13,13 +15,24 @@ export function matchesScope(row, target) {
     && Object.entries(target.where ?? {}).every(([key, value]) => isDeepStrictEqual(row[key], value))
 }
 
-/** Advance captured postconditions only through a successfully read-back write. */
+// A path_steps membership has no id of its own; its identity is the pair.
+const identity = (row) => row.id ?? `${row.path_id}:${row.step_id}`
+
+/**
+ * Advance captured postconditions only through a successfully read-back
+ * write. A null `after` is a delete; removing a membership renumbers what is
+ * left on its path contiguously, as remove_step does.
+ */
 export function projectChecks(checks, table, before, after) {
   for (const check of checks) {
     if (check.target.table !== table) continue
-    const index = check.rows.findIndex((row) => row.id === (before?.id ?? after.id))
+    const index = check.rows.findIndex((row) => identity(row) === identity(before ?? after))
     if (before && index !== -1) check.rows.splice(index, 1)
-    if (matchesScope(after, check.target)) check.rows.push(stableRow(after))
+    if (after && matchesScope(after, check.target)) check.rows.push(stableRow(after))
+    if (!after && table === 'path_steps' && index !== -1) {
+      check.rows.filter((row) => row.path_id === before.path_id).sort((a, b) => a.position - b.position)
+        .forEach((row, position) => { row.position = position })
+    }
   }
 }
 
@@ -38,8 +51,72 @@ export async function verifyChecks(read, checks) {
   return failures
 }
 
+/**
+ * What a delete may destroy, captured and guarded. `removes.guarded` must be
+ * identical at apply; `cascades` are the captures the RPC empties.
+ */
+async function prepareDeletion(read, op, before) {
+  const checks = []
+  const cascades = []
+  async function capture(target, { cascade = false } = {}) {
+    const rows = await read(target)
+    checks.push({ target, rows: structuredClone(rows) })
+    if (cascade) cascades.push(target)
+    return rows
+  }
+  if (op.operation === 'delete_cell') {
+    await capture({ table: 'cells', where: { path_id: before.path_id } })
+    const outgoing = await capture({ table: 'cell_dependencies', where: { source_cell_id: before.id } }, { cascade: true })
+    const incoming = await capture({ table: 'cell_dependencies', where: { target_cell_id: before.id } }, { cascade: true })
+    const placements = await capture({ table: 'cell_touchpoints', where: { cell_id: before.id } }, { cascade: true })
+    const resources = await capture({ table: 'resources', where: { cell_id: before.id } }, { cascade: true })
+    // evidence has no foreign key to cells: its rows stay, keyed to the gone cell.
+    const evidence = await capture({ table: 'evidence', where: { cell_id: before.id } })
+    const removes = {
+      dependencies: [...outgoing, ...incoming].map((row) => row.id).sort(),
+      placements: placements.map((row) => row.id).sort(),
+      resources: resources.map((row) => row.id).sort(),
+      evidence_kept: evidence.map((row) => row.id).sort(),
+    }
+    return { checks, cascades, removes: { ...removes, guarded: removes } }
+  }
+  if (op.operation === 'remove_step') {
+    const links = await capture({ table: 'path_steps', where: { step_id: before.step_id } })
+    const ordered = (rows) => rows.map(({ path_id, position }) => ({ path_id, position })).sort((a, b) => a.path_id.localeCompare(b.path_id) || a.position - b.position)
+    if (!isDeepStrictEqual(ordered(links), ordered(op.input.expected_path_steps))) throw new Error('Step memberships differ from the reviewed expected paths')
+    if (!links.some((link) => link.path_id !== before.path_id)) throw new Error('The step has no other path; removing its last membership would delete the step')
+    const column = await read({ table: 'cells', where: { path_id: before.path_id, step_id: before.step_id } })
+    const cleared = new Set(op.input.cells_deleted_earlier ?? [])
+    if (column.some((row) => !cleared.has(row.id))) throw new Error('The column on this path holds a cell this batch does not delete')
+    await capture({ table: 'path_steps', where: { path_id: before.path_id } })
+    await capture({ table: 'steps', id: before.step_id })
+    await capture({ table: 'cells', where: { path_id: before.path_id } })
+    await capture({ table: 'cells', where: { step_id: before.step_id } })
+    const kept = ordered(links).filter((link) => link.path_id !== before.path_id)
+    return { checks, cascades, removes: { membership: { path_id: before.path_id, position: before.position }, step_kept_on: kept, column_cells: column.length, guarded: { kept } } }
+  }
+  // remove_lane: one lane by id. The name-based RPC would take every
+  // same-named lane in the scenario, so those are captured and must stay.
+  const occupants = await read({ table: 'cells', where: { lane_id: before.id } })
+  if (occupants.length) throw new Error(`The lane holds ${occupants.length} cell(s); only an empty lane is removed`)
+  const [path] = await read({ table: 'paths', id: before.path_id })
+  if (!path) throw new Error('The lane\'s path no longer exists')
+  await capture({ table: 'lanes', where: { path_id: before.path_id } })
+  const kept = []
+  for (const sibling of await read({ table: 'paths', where: { scenario_id: path.scenario_id } })) {
+    for (const lane of await capture({ table: 'lanes', where: { path_id: sibling.id, name: before.name } })) {
+      if (lane.id === before.id) continue
+      const cells = await capture({ table: 'cells', where: { lane_id: lane.id } })
+      kept.push({ id: lane.id, path_id: lane.path_id, cells: cells.length })
+    }
+  }
+  kept.sort((a, b) => a.id.localeCompare(b.id))
+  return { checks, cascades, removes: { lane: before.name, cells: 0, same_name_lanes_kept: kept, guarded: { kept } } }
+}
+
 export async function prepareCapability(read, op, before) {
   if (!CAPABILITIES.has(op.operation)) return null
+  if (DELETIONS.has(op.operation)) return prepareDeletion(read, op, before)
   const checks = []
   async function capture(target) {
     const rows = await read(target)
@@ -140,6 +217,21 @@ export function expectedChange(op, before, result) {
   if (op.operation === 'insert_cell_at_position') return {
     fn: op.operation, args: { ...coordinates(op.target.where), ...op.value, cell_id: result.id },
     revert: { fn: 'delete_cell', args: { cell_id: result.id } },
+  }
+  // A delete's record is the trash row the RPC archives in its own
+  // transaction: no args and no executable inverse. Recovery is from trash.
+  const recovery = 'restore from trash: this authoring_changes row\'s payload holds the deleted rows; no restore RPC exists, so recovery is a reviewed manual re-insert'
+  if (op.operation === 'delete_cell') return {
+    archived: true, fn: 'delete_cell', deleted_kind: 'cell', args: {}, revert: null, recovery,
+    payload: Object.fromEntries(['id', 'path_id', 'lane_id', 'step_id', 'position', 'status', 'content'].map((field) => [`cell.${field}`, before[field]])),
+  }
+  if (op.operation === 'remove_step') return {
+    archived: true, fn: 'remove_step', deleted_kind: 'step', args: {}, revert: null, recovery,
+    payload: { 'step.id': before.step_id, path_id: before.path_id, cells: [] },
+  }
+  if (op.operation === 'remove_lane') return {
+    archived: true, fn: 'remove_lanes', deleted_kind: 'lane', args: {}, revert: null, recovery,
+    payload: { lane_ids: [before.id], lane_name: before.name, cells: [] },
   }
   throw new Error(`No inverse contract for ${op.operation}: ${result?.id ?? ''}`)
 }

@@ -1,5 +1,5 @@
 import { isDeepStrictEqual } from 'node:util'
-import { CAPABILITIES, prepareCapability, expectedChange, projectChecks } from './capabilities.mjs'
+import { CAPABILITIES, DELETIONS, prepareCapability, expectedChange, projectChecks } from './capabilities.mjs'
 
 function checked(result) {
   if (result.error) throw new Error(result.error.message)
@@ -170,6 +170,24 @@ export function createDatabase(client, modules) {
     let databaseChangeId
     let hostResult
     switch (op.operation) {
+      case 'delete_cell':
+        databaseChangeId = await structure.deleteCell(client, before.id)
+        break
+      case 'remove_step': {
+        // The RPC also deletes the column's cells on this path. It must be
+        // empty by now: its cells were deleted, each guarded, earlier.
+        const column = await read({ table: 'cells', where: { path_id: before.path_id, step_id: before.step_id } })
+        if (column.length) throw new Error(`The column still holds ${column.length} cell(s); no write attempted for this operation`)
+        databaseChangeId = await structure.removeStep(client, before.path_id, before.step_id)
+        break
+      }
+      case 'remove_lane': {
+        // remove_lanes, by id: remove_lane deletes by name across the scenario.
+        const occupants = await read({ table: 'cells', where: { lane_id: before.id } })
+        if (occupants.length) throw new Error(`The lane holds ${occupants.length} cell(s); no write attempted for this operation`)
+        databaseChangeId = await rpc('remove_lanes', { lane_ids: [before.id] })
+        break
+      }
       case 'insert_cell_at_position':
         hostResult = await structure.insertCellAtPosition(client, value)
         databaseChangeId = hostResult.change_id
@@ -329,14 +347,20 @@ export function createDatabase(client, modules) {
     if (!changeIds.length) throw new Error('Write produced no durable changes')
     if (CAPABILITIES.has(op.operation)) {
       const checks = structuredClone(preparation.checks)
-      const after = before ? { ...before, ...op.value } : { ...op.target.where, ...op.value, id: hostResult.id, cell_key: hostResult.cell_key }
+      const deleting = DELETIONS.has(op.operation)
+      const after = deleting ? null : before ? { ...before, ...op.value } : { ...op.target.where, ...op.value, id: hostResult.id, cell_key: hostResult.cell_key }
       projectChecks(checks, op.target.table, before, after)
+      for (const check of checks) if (preparation.cascades?.some((target) => isDeepStrictEqual(target, check.target))) check.rows = []
+      if (deleting) checks.push({ target: op.target, rows: [] })
       if (!before) {
         checks.push({ target: { table: 'cells', cell_key: after.cell_key }, rows: [after] })
         for (const table of ['evidence', 'cell_touchpoints', 'resources']) checks.push({ target: { table, where: { cell_id: after.id } }, rows: [] })
         for (const field of ['source_cell_id', 'target_cell_id']) checks.push({ target: { table: 'cell_dependencies', where: { [field]: after.id } }, rows: [] })
       }
-      return { changeIds, checks, expectedChanges: [expectedChange(op, before, hostResult)], ledgerCounts: { before: auditBefore, after: await auditCount() } }
+      return {
+        changeIds, checks, expectedChanges: [expectedChange(op, before, hostResult)], ledgerCounts: { before: auditBefore, after: await auditCount() },
+        ...(preparation.cascades?.length ? { cascaded: preparation.cascades } : {}),
+      }
     }
     return { changeIds }
   }

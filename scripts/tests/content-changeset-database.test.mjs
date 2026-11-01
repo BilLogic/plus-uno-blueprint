@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { modules } from '../../deployment/lib/contentChangesetModules.ts'
 import { createDatabase } from '../changesets/database.mjs'
 import { readFileSync } from 'node:fs'
-import { runChangeset } from '../content-changeset.mjs'
+import { runChangeset, validateChangeset } from '../content-changeset.mjs'
 
 const id = '10000000-0000-4000-8000-000000000001'
 const seed = {
@@ -213,6 +213,50 @@ function databaseFixture({ zeroRows = false, failAppend = false, corruptCell = f
       Object.assign(row, { target_cell_id: body.target_cell_id, kind: body.kind, note: body.note?.trim() || null })
       return answer(previous)
     }
+    // The three hosted deletes: each archives what it destroys into the log
+    // (fn, deleted_kind, payload; no args, no inverse) in the transaction that
+    // cascades, and returns that row's id.
+    const archive = (fn, kind, payload) => {
+      const changeId = uuid('52000000')
+      tables.authoring_changes.push({ id: changeId, fn, args: {}, revert: null, author: 'human', deleted_kind: kind, payload })
+      return changeId
+    }
+    const dropCells = (doomed) => {
+      const ids = new Set(doomed.map((row) => row.id))
+      tables.cells = tables.cells.filter((row) => !ids.has(row.id))
+      tables.cell_dependencies = tables.cell_dependencies.filter((row) => !ids.has(row.source_cell_id) && !ids.has(row.target_cell_id))
+      tables.cell_touchpoints = tables.cell_touchpoints.filter((row) => !ids.has(row.cell_id))
+      tables.resources = tables.resources.filter((row) => !ids.has(row.cell_id))
+      // evidence has no foreign key to cells: its rows outlive the cell.
+    }
+    if (url.pathname.endsWith('/rpc/delete_cell')) {
+      const row = tables.cells.find((cell) => cell.id === body.cell_id)
+      if (!row) return answer({ message: 'Unknown cell', code: 'P0001' }, 400)
+      const changeId = archive('delete_cell', 'cell', { cell: { ...row } })
+      dropCells([row])
+      return answer(changeId)
+    }
+    if (url.pathname.endsWith('/rpc/remove_step')) {
+      const step = tables.steps.find((row) => row.id === body.step_id)
+      const doomed = tables.cells.filter((row) => row.step_id === body.step_id && row.path_id === body.path_id)
+      const changeId = archive('remove_step', 'step', { step: { ...step }, path_id: body.path_id, cells: doomed.map((row) => ({ ...row })) })
+      dropCells(doomed)
+      tables.path_steps = tables.path_steps.filter((row) => !(row.step_id === body.step_id && row.path_id === body.path_id))
+      if (!tables.path_steps.some((row) => row.step_id === body.step_id)) tables.steps = tables.steps.filter((row) => row.id !== body.step_id)
+      tables.path_steps.filter((row) => row.path_id === body.path_id).sort((a, b) => a.position - b.position)
+        .forEach((row, position) => { row.position = position })
+      return answer(changeId)
+    }
+    if (url.pathname.endsWith('/rpc/remove_lanes')) {
+      const lanes = tables.lanes.filter((row) => body.lane_ids.includes(row.id))
+      if (!lanes.length) return answer({ message: 'Those lanes no longer exist', code: 'P0001' }, 400)
+      const doomed = tables.cells.filter((row) => body.lane_ids.includes(row.lane_id))
+      const changeId = archive('remove_lanes', 'lane', { lane_ids: body.lane_ids, lane_name: lanes[0].name, lanes: lanes.map((row) => ({ ...row })), cells: doomed.map((row) => ({ ...row })) })
+      dropCells(doomed)
+      tables.lanes = tables.lanes.filter((row) => !body.lane_ids.includes(row.id))
+      return answer(changeId)
+    }
+    if (url.pathname.endsWith('/rpc/remove_lane')) throw new Error('remove_lane deletes by name across a scenario; the runner must not call it')
     if (url.pathname.endsWith('/rpc/record_authoring_change')) {
       if (failAppend) return answer({ message: 'Audit append refused', code: '42501' }, 403)
       const change = { id: `20000000-0000-4000-8000-${String(counter++).padStart(12, '0')}`, ...body }
@@ -1003,5 +1047,133 @@ test('a new path’s copied step list is trimmed in place by a deferred set_path
     const trimLog = tables.authoring_changes.find((row) => row.fn === 'set_path_steps')
     expect(trimLog.revert).toEqual({ fn: 'set_path_steps', args: { path_id: created.id, step_ids: [need, file, cover, review, late] } })
     expect((await runChangeset(batch, 'verify', fixture.database, { receipt: applied.applied })).failures).toEqual([])
+  } finally { fixture.database.close() }
+})
+
+// Owner-approved deletes: a cell, one path's membership of a shared step, and
+// one lane by id. Each RPC archives what it destroys into the log; the runner
+// guards what it may destroy and records what went with it.
+const laterStep = '10000000-0000-4000-8000-000000000003'
+const otherLane = '10000000-0000-4000-8000-000000000004'
+const neighbour = '10000000-0000-4000-8000-000000000005'
+function deleteFixture() {
+  const fixture = sharedStepFixture()
+  const { tables } = fixture
+  tables.steps.push({ id: laterStep, scenario_id: id, name: 'Later step' })
+  tables.path_steps.push({ path_id: id, step_id: laterStep, position: 1 })
+  tables.lanes.push({ id: secondPath, path_id: secondPath, name: 'Lead Tutor' }, { id: otherLane, path_id: id, name: 'Lead Tutor' })
+  Object.assign(tables.lanes[0], { name: 'Teacher' })
+  tables.cells.push(
+    { id: neighbour, path_id: id, lane_id: id, step_id: laterStep, position: 0, content: 'Keeps its place', status: 'live' },
+    { id: secondPath, path_id: secondPath, lane_id: secondPath, step_id: id, position: 0, content: 'Stays on the other path', status: 'live' },
+  )
+  tables.cell_dependencies.push({ id: laterStep, source_cell_id: id, target_cell_id: neighbour, kind: 'leads_to', name: null, note: null })
+  return fixture
+}
+const deleteCellOp = {
+  key: 'delete', operation: 'delete_cell', target: { table: 'cells', id },
+  expected: { status: seed.status, content: seed.content, path_id: id, lane_id: id, step_id: id, position: 0 },
+  value: { deleted: true }, evidence: ['Owner request'],
+}
+const removeStepOp = {
+  key: 'membership', operation: 'remove_step', target: { table: 'path_steps', where: { path_id: id, step_id: id } },
+  expected: { position: 0 }, value: { deleted: true }, evidence: ['Owner request'],
+  input: { expected_path_steps: [{ path_id: id, position: 0 }, { path_id: secondPath, position: 2 }], cells_deleted_earlier: [id] },
+}
+const removeLaneOp = {
+  key: 'lane', operation: 'remove_lane', target: { table: 'lanes', id: otherLane },
+  expected: { name: 'Lead Tutor', path_id: id }, value: { deleted: true }, evidence: ['Owner request'],
+}
+
+test('a cell delete is guarded, archived to the trash with what it cascaded, and verified separately', async () => {
+  const fixture = deleteFixture()
+  const batch = { version: 1, issue: 800, operations: [deleteCellOp] }
+  try {
+    const dry = await runChangeset(batch, 'dry-run', fixture.database)
+    expect(dry.failures).toEqual([])
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+    expect(dry.diff[0].removes).toMatchObject({ dependencies: [laterStep], placements: [id], resources: [id], evidence_kept: [id] })
+    expect((await runChangeset(batch, 'verify', fixture.database)).ok).toBe(false)
+    const applied = await runChangeset(batch, 'apply', fixture.database)
+    expect(applied.failures).toEqual([])
+    const { tables } = fixture
+    expect(tables.cells.map((row) => row.id)).toEqual([neighbour, secondPath])
+    expect(tables.cell_dependencies).toEqual([])
+    expect(tables.cell_touchpoints).toEqual([])
+    expect(tables.resources).toEqual([])
+    expect(tables.evidence).toHaveLength(1)
+    expect(tables.authoring_changes).toHaveLength(1)
+    expect(tables.authoring_changes[0]).toMatchObject({ fn: 'delete_cell', deleted_kind: 'cell', revert: null })
+    expect(applied.applied[0].expectedChanges[0].recovery).toMatch(/trash/)
+    expect((await runChangeset(batch, 'verify', fixture.database, { receipt: applied.applied })).failures).toEqual([])
+    tables.cells[0].content = 'Unexpected rewrite'
+    expect((await runChangeset(batch, 'verify', fixture.database, { receipt: applied.applied })).ok).toBe(false)
+  } finally { fixture.database.close() }
+})
+
+test('a cell whose status moved since review is never deleted', async () => {
+  const fixture = deleteFixture()
+  fixture.tables.cells[0].status = 'planned'
+  try {
+    const result = await runChangeset({ version: 1, issue: 800, operations: [deleteCellOp] }, 'apply', fixture.database)
+    expect(result.ok).toBe(false)
+    expect(result.failures.join('\n')).toMatch(/delete.status/)
+    expect(fixture.tables.cells).toHaveLength(3)
+  } finally { fixture.database.close() }
+})
+
+test('a step leaves one path only once its column there is empty; the shared step and the other path stay', async () => {
+  const fixture = deleteFixture()
+  const batch = { version: 1, issue: 800, operations: [deleteCellOp, removeStepOp] }
+  try {
+    expect((await runChangeset(batch, 'dry-run', fixture.database)).failures).toEqual([])
+    const applied = await runChangeset(batch, 'apply', fixture.database)
+    expect(applied.failures).toEqual([])
+    const { tables } = fixture
+    expect(tables.steps.map((row) => row.id)).toContain(id)
+    expect(tables.path_steps.filter((row) => row.step_id === id)).toEqual([{ path_id: secondPath, step_id: id, position: 2 }])
+    expect(tables.path_steps.find((row) => row.step_id === laterStep)).toMatchObject({ path_id: id, position: 0 })
+    expect(tables.cells.find((row) => row.id === secondPath)).toMatchObject({ content: 'Stays on the other path' })
+    expect(tables.authoring_changes.map((row) => row.fn)).toEqual(['delete_cell', 'remove_step'])
+    expect((await runChangeset(batch, 'verify', fixture.database, { receipt: applied.applied })).failures).toEqual([])
+  } finally { fixture.database.close() }
+})
+
+test('a step membership is refused while its column holds a cell this batch does not delete', async () => {
+  const fixture = deleteFixture()
+  try {
+    const alone = { ...removeStepOp, input: { ...removeStepOp.input, cells_deleted_earlier: [] } }
+    expect(() => validateChangeset({ version: 1, issue: 800, operations: [removeStepOp] })).toThrow(/preceding delete_cell/)
+    const result = await runChangeset({ version: 1, issue: 800, operations: [alone] }, 'apply', fixture.database)
+    expect(result.ok).toBe(false)
+    expect(result.failures.join('\n')).toMatch(/column/)
+    expect(fixture.tables.path_steps.filter((row) => row.step_id === id)).toHaveLength(2)
+  } finally { fixture.database.close() }
+})
+
+test('an empty lane is removed by id; the same-named lane on another path keeps its cells', async () => {
+  const fixture = deleteFixture()
+  fixture.tables.cells.push({ id: otherLane, path_id: secondPath, lane_id: secondPath, step_id: laterStep, position: 0, content: 'Lead Tutor elsewhere', status: 'live' })
+  const batch = { version: 1, issue: 800, operations: [removeLaneOp] }
+  try {
+    const dry = await runChangeset(batch, 'dry-run', fixture.database)
+    expect(dry.failures).toEqual([])
+    expect(dry.diff[0].removes.same_name_lanes_kept).toEqual([{ id: secondPath, path_id: secondPath, cells: 2 }])
+    const applied = await runChangeset(batch, 'apply', fixture.database)
+    expect(applied.failures).toEqual([])
+    expect(fixture.tables.lanes.map((row) => row.id)).toEqual([id, secondPath])
+    expect(fixture.requests.some(({ path }) => path.endsWith('/rpc/remove_lanes'))).toBe(true)
+    expect((await runChangeset(batch, 'verify', fixture.database, { receipt: applied.applied })).failures).toEqual([])
+  } finally { fixture.database.close() }
+})
+
+test('a lane that holds a cell is never removed', async () => {
+  const fixture = deleteFixture()
+  fixture.tables.cells.push({ id: otherLane, path_id: id, lane_id: otherLane, step_id: laterStep, position: 0, content: 'Occupies the lane', status: 'live' })
+  try {
+    const result = await runChangeset({ version: 1, issue: 800, operations: [removeLaneOp] }, 'apply', fixture.database)
+    expect(result.ok).toBe(false)
+    expect(result.failures.join('\n')).toMatch(/lane holds/)
+    expect(fixture.tables.lanes).toHaveLength(3)
   } finally { fixture.database.close() }
 })

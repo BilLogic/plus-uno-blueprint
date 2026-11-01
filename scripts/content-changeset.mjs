@@ -21,6 +21,42 @@ const OPERATIONS = {
   update_path_spec: { table: 'paths', fields: ['summary', 'note'] },
   update_scenario_spec: { table: 'scenarios', fields: ['summary'] },
   update_step_spec: { table: 'steps', fields: ['summary'] },
+  // Owner-approved deletes. value is exactly { deleted: true }; expected
+  // carries the identity and state guards the row must still hold.
+  delete_cell: { table: 'cells', remove: true },
+  remove_step: { table: 'path_steps', remove: true },
+  remove_lane: { table: 'lanes', remove: true },
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/** A delete names its row exactly and guards it; nothing is matched by prefix or name. */
+function validateRemoval(op, earlier) {
+  if (!isDeepStrictEqual(op.value, { deleted: true })) throw new Error(`${op.key}: a delete's value is exactly { "deleted": true }`)
+  if (!op.expected || typeof op.expected !== 'object' || !Object.keys(op.expected).length)
+    throw new Error(`${op.key}: a delete requires expected guards on the row it removes`)
+  if (op.operation === 'remove_step') {
+    const { path_id: pathId, step_id: stepId } = op.target.where ?? {}
+    if (!UUID.test(pathId ?? '') || !UUID.test(stepId ?? '') || op.target.id || Object.keys(op.target.where).length !== 2)
+      throw new Error(`${op.key}: remove_step targets one membership by full path_id and step_id`)
+    if (!Number.isSafeInteger(op.expected.position)) throw new Error(`${op.key}: remove_step requires expected.position`)
+    const links = op.input?.expected_path_steps
+    if (!Array.isArray(links) || links.some((link) => !UUID.test(link.path_id ?? '') || !Number.isSafeInteger(link.position)))
+      throw new Error(`${op.key}: remove_step requires input.expected_path_steps with every reviewed membership`)
+    if (!links.some((link) => link.path_id !== pathId))
+      throw new Error(`${op.key}: remove_step removes a path's membership only; the step must stay on another path`)
+    const cleared = op.input.cells_deleted_earlier ?? []
+    const deletes = new Set(earlier.filter((other) => other.operation === 'delete_cell').map((other) => other.target.id))
+    if (!Array.isArray(cleared) || cleared.some((cellId) => !deletes.has(cellId)))
+      throw new Error(`${op.key}: input.cells_deleted_earlier may name only cells a preceding delete_cell removes`)
+  } else {
+    if (!UUID.test(op.target.id ?? '') || op.target.where || op.target.cell_key)
+      throw new Error(`${op.key}: ${op.operation} targets one row by its full id`)
+  }
+  if (op.operation === 'delete_cell' && !['status', 'path_id', 'lane_id', 'step_id', 'position'].every((field) => Object.hasOwn(op.expected, field)))
+    throw new Error(`${op.key}: delete_cell guards status and all four coordinates`)
+  if (op.operation === 'remove_lane' && !['name', 'path_id'].every((field) => Object.hasOwn(op.expected, field)))
+    throw new Error(`${op.key}: remove_lane guards name and path_id`)
 }
 
 /**
@@ -80,6 +116,10 @@ export function validateChangeset(changeset) {
     keys.add(op.key)
     if (!op.evidence?.length || op.evidence.some((e) => typeof e !== 'string' || !e.trim()))
       throw new Error(`${op.key}: evidence citations required`)
+    if (contract.remove) {
+      validateRemoval(op, changeset.operations.slice(0, changeset.operations.indexOf(op)))
+      continue
+    }
     if (!op.value || !Object.keys(op.value).length) throw new Error(`${op.key}: expected value fields`)
     for (const field of Object.keys(op.value)) {
       if (!contract.fields.includes(field)) throw new Error(`${op.key}: unsupported field ${field}`)
@@ -212,6 +252,8 @@ function durableRecord(row) {
   ))
 }
 
+const at = (object, path) => path.split('.').reduce((value, key) => value?.[key], object)
+
 async function checkLog(database, receipt, { capture = false } = {}) {
   const failures = []
   for (const entry of receipt) {
@@ -223,6 +265,24 @@ async function checkLog(database, receipt, { capture = false } = {}) {
     for (const [index, id] of (entry.changeIds ?? []).entries()) {
       const rows = await database.read({ table: 'authoring_changes', id })
       const row = rows[0]
+      const archived = entry.expectedChanges?.[index]?.archived
+      if (archived) {
+        // A delete's record is its trash row: no args, no inverse, the
+        // destroyed rows in payload. Its identity is checked field by field.
+        const expected = entry.expectedChanges[index]
+        const payloadDrift = rows.length === 1 && Object.entries(expected.payload).filter(([path, value]) => !isDeepStrictEqual(at(row.payload, path), value))
+        if (rows.length !== 1 || row.fn !== expected.fn || row.deleted_kind !== expected.deleted_kind || row.revert !== null || row.author !== 'human' || payloadDrift.length)
+          failures.push(`${entry.key}: ${id} is not the trash record of exactly the reviewed delete`)
+        else if (capture) {
+          entry.changes ??= []
+          entry.changes.push(durableRecord(row))
+        } else {
+          const captured = entry.changes?.find((change) => change.id === id)
+          if (!captured || !isDeepStrictEqual(captured, durableRecord(row)))
+            failures.push(`${entry.key}: ${id} differs from the captured durable record`)
+        }
+        continue
+      }
       if (rows.length !== 1 || !row.fn || !row.args || !row.author || !row.revert?.fn || !row.revert?.args) {
         failures.push(`${entry.key}: ${id} missing durable operation, args, author or inverse`)
       } else {
@@ -259,6 +319,7 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
     const op = await resolveRefs(source, known, database)
     const rows = await observe(database, op.target)
     const creating = op.expected === null && mode !== 'verify'
+    const removing = Boolean(OPERATIONS[op.operation].remove)
     // A step a preceding creation generates (create_scenario's placeholder)
     // has no row to preflight. Its rename and summary are deferred, not
     // assumed: apply reads the row after its parent exists, re-checks its
@@ -281,8 +342,23 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
         deferred: 'Generated by a preceding operation; read, guarded and captured at apply time',
       })
       planned.push({ source, before: null, deferred: deferred.path ? { path: deferred.path } : { scenario: deferred.scenario } })
+    } else if (removing && mode === 'verify') {
+      if (rows.length !== 0) failures.push(`${op.key}: expected the deleted row to be gone, found ${rows.length}`)
+      diff.push({ key: op.key, operation: op.operation, target: op.target, before: op.expected, after: null, evidence: op.evidence })
     } else if (creating ? rows.length !== 0 : rows.length !== 1) {
       failures.push(`${op.key}: expected ${creating ? 'no rows' : 'exactly one row'}, found ${rows.length}`)
+    } else if (removing) {
+      failures.push(...differences(rows[0], op.expected, op.key))
+      diff.push({ key: op.key, operation: op.operation, target: rows[0].id ? { table: op.target.table, id: rows[0].id } : op.target, before: op.expected, after: null, evidence: op.evidence })
+      const plan = { source, before: rows[0] }
+      planned.push(plan)
+      if (database.prepare) {
+        try {
+          plan.preparation = await database.prepare(op, rows[0])
+          const { guarded: _guarded, ...removes } = plan.preparation?.removes ?? {}
+          diff.at(-1).removes = removes
+        } catch (error) { failures.push(`${op.key}: ${error.message}`) }
+      }
     } else {
       if (!creating) failures.push(...differences(rows[0], mode === 'verify' ? { ...op.expected, ...op.value } : op.expected, op.key))
       diff.push({
@@ -348,6 +424,7 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
         // still refuses memberships that differ from the reviewed input.
         const preparation = await database.prepare?.(op, before)
         if (!deferred && !isDeepStrictEqual(preparation?.affectedPaths, preflight?.affectedPaths)) throw new Error('Affected paths changed since the reviewed preflight')
+        if (!isDeepStrictEqual(preparation?.removes?.guarded, preflight?.removes?.guarded)) throw new Error('What the delete would take with it changed since the reviewed preflight')
         if (!isDeepStrictEqual(preparation?.endpoints, preflight?.endpoints)) throw new Error('Link endpoints changed since the reviewed preflight')
         const preservationFailures = await verifyChecks(database.read, preflight?.checks ?? [])
         if (preservationFailures.length) throw new Error(preservationFailures.join('; '))
@@ -361,7 +438,14 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
         if (entry.checks) failures.push(...await verifyChecks(database.read, entry.checks))
         await onProgress(applied, { started: op.key })
         const rows = await database.read(op.target)
-        if (rows.length !== 1) failures.push(`${op.key}: zero-row or ambiguous write`)
+        if (OPERATIONS[op.operation].remove) {
+          if (rows.length) failures.push(`${op.key}: the deleted row is still present`)
+          known.set(op.key, before)
+          for (const previous of applied.slice(0, -1)) projectChecks(previous.checks ?? [], op.target.table, before, null)
+          for (const next of planned) projectChecks(next.preparation?.checks ?? [], op.target.table, before, null)
+          if (written.cascaded) for (const holder of [...applied.slice(0, -1).map((e) => e.checks ?? []), ...planned.map((p) => p.preparation?.checks ?? [])])
+            for (const check of holder) if (written.cascaded.some((target) => isDeepStrictEqual(target, check.target))) check.rows = []
+        } else if (rows.length !== 1) failures.push(`${op.key}: zero-row or ambiguous write`)
         else {
           failures.push(...differences(rows[0], op.value, op.key))
           known.set(op.key, rows[0])

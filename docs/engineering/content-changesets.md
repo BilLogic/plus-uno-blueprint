@@ -117,6 +117,24 @@ creates as side effects, including copied lanes and a scenario's initial path.
 | `update_path_spec` | `paths`; summary/note | Actual scenarioSpecMutations; preserves status |
 | `update_scenario_spec` | `scenarios`; summary | Actual scenarioSpecMutations |
 | `update_step_spec` | `steps`; summary | Actual stepSpecMutations |
+| `delete_cell` | Existing `cells` by full id; value `{ "deleted": true }`; expected guards status and all four coordinates | Owner-approved only. Actual `deleteCell`. Dry-run lists the edges, placements and resources the delete cascades and the evidence rows it leaves behind; apply refuses if that set changed |
+| `remove_step` | One `path_steps` membership, `where: { path_id, step_id }`; expected position | Owner-approved only. Actual `removeStep`, which takes the step off that path and renumbers what is left there. Requires input.expected_path_steps (every membership) with at least one other path, so the shared step survives, and input.cells_deleted_earlier naming the column's cells, each deleted by a preceding `delete_cell`. Refused at write time unless the column is empty |
+| `remove_lane` | Existing `lanes` by full id; expected name and path_id | Owner-approved only. Calls `remove_lanes` with that one id: `remove_lane` deletes by name across the whole scenario. Refuses a lane holding any cell, and guards every same-named lane on the scenario's other paths, with its cells |
+
+### Deletes
+
+The three delete operations exist for deletes the owner has approved in
+writing for that batch; a changeset never deletes on an author's own
+judgement. Each RPC archives what it destroys into `authoring_changes` (the
+`trash` view) in the same transaction: `fn`, `deleted_kind` and `payload`, with
+empty args and no inverse. The runner checks that row against the pre-state
+(ids, coordinates, and that the step or lane took no cells with it) instead of
+an inverse. Its receipt records the recovery as "restore from trash": no
+restore RPC exists, so recovery is a reviewed manual re-insert from the
+payload. `delete_cell`'s payload holds the cell row alone; the dependencies,
+placements and resources it cascades are in the receipt's captured checks,
+not in the trash. Evidence has no foreign key to cells, so its rows stay,
+keyed to the gone cell.
 
 An unknown operation is a preflight error. `set_cell_status` is deliberately
 unsupported: the hosted database has no such function. Edit status alone with
@@ -128,7 +146,7 @@ not permission to write a table or change grants.
 the requested count to at least one and names the generated columns Step 1,
 Step 2 and so on. Adding named steps afterward does not replace these rows.
 A placeholder can now be renamed with the guarded shared-step rename;
-deleting one is still human-only. Address the placeholder by its membership,
+deleting one is still owner-only. Address the placeholder by its membership,
 not its name, so separate verification still finds it after the rename:
 
 ```json
@@ -175,7 +193,7 @@ database fixture test instead.
 A deferred refusal at apply comes after the batch's earlier writes, so it
 leaves a partial scenario. The batch stops there and is not retried. A human
 removes the leftovers in the app, where each deletion is its own reviewed
-action; the runner never automates deletes. Then fix the changeset and run
+action; the runner deletes only what an owner-approved batch names. Then fix the changeset and run
 the whole batch again from dry-run.
 
 ### Guarded host capabilities
