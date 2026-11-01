@@ -20,19 +20,11 @@
  */
 import { resolve } from 'node:path'
 import { BLUEPRINT_CONTRACT, CONTRACT_PATH } from './blueprintContract.mjs'
-import { staticClaimProblem } from './check-blueprint-contract.mjs'
+import { columnPattern, staticClaimProblem, viewSelectList } from './check-blueprint-contract.mjs'
 import { replayMigrations } from './migration-replay.mjs'
 
-/** A view's select list, comments stripped — the span `staticClaimProblem` reads. */
-const selectListOf = (definition) =>
-  definition
-    .replace(/--[^\n]*/g, '')
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .match(/\bselect\b([\s\S]*?)\bfrom\b/i)?.[1] ?? ''
-
 /** Where in the select list a column is named, so a view prints in its own order. */
-const position = (selectList, column) =>
-  selectList.search(new RegExp(`\\b${column.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i'))
+const position = (selectList, column) => selectList.search(columnPattern(column))
 
 /**
  * @param {{ relations: readonly string[], schema: { tables: Map<string, { columns: Map<string, unknown> }>, views: Map<string, unknown> }, declared: Map<string, string[]> }} input
@@ -61,7 +53,7 @@ export function signedInRelationColumns({ relations, schema, declared }) {
           'Declare its Row in deployment/types/database.ts, or spell its columns out in the view.',
       )
     }
-    const selectList = selectListOf(schema.views.get(`public.${relation}`).definition)
+    const selectList = viewSelectList(schema.views.get(`public.${relation}`).definition)
     answer.set(relation, columns.sort((a, b) => position(selectList, a) - position(selectList, b)))
   }
   return answer
