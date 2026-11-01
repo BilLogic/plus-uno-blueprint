@@ -3,7 +3,10 @@ import { isDeepStrictEqual } from 'node:util'
 export const CAPABILITIES = new Set(['update_cell_status', 'rename_step', 'move_cell', 'insert_cell_at_position'])
 export const COORDINATES = ['path_id', 'lane_id', 'step_id', 'position']
 export const coordinates = (row) => Object.fromEntries(COORDINATES.map((key) => [key, row[key]]))
-export const stableRow = (row) => structuredClone(Object.fromEntries(Object.entries(row).filter(([key]) => key !== 'updated_at')))
+// The database regenerates these columns on every write, so a projected row
+// cannot predict them; the approved fields are still compared exactly.
+const GENERATED = new Set(['updated_at', 'search_tsv'])
+export const stableRow = (row) => structuredClone(Object.fromEntries(Object.entries(row).filter(([key]) => !GENERATED.has(key))))
 
 export function matchesScope(row, target) {
   return (!target.id || target.id === row.id) && (!target.cell_key || target.cell_key === row.cell_key)
