@@ -1,0 +1,282 @@
+{
+  "version": 1,
+  "issue": 743,
+  "operations": [
+    {
+      "key": "ai-fails",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "b934c5a0-71e2-405a-a8ec-32647c351e5b",
+          "lane_id": "8f6bce59-c035-4664-9937-8089751b1a97",
+          "step_id": "a0000000-0000-4000-8000-000000000862",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Sees a system-issue message when the AI call fails, then retries or moves on with no rating.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3e6b7cca49828084b5d5d591e4650bbc",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12505-199987",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12388-8570",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "ai-fails-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "ai-fails"
+          },
+          "cell_key": {
+            "ref": "ai-fails",
+            "field": "cell_key"
+          },
+          "title": "KB audit #743 row12 — AI call fails"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #743 row12 — AI call fails",
+        "note": "Card 2651 (Deployed, release 12.0) scenario table: when the AI call fails the tutor sees a system-issue message and can retry or move on, with no rating and no review used (Figma Flow 5 · 1; intent note 12505:199987). Sources: https://www.notion.so/3e6b7cca49828084b5d5d591e4650bbc ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12505-199987 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12388-8570 ; https://github.com/BilLogic/plus-uno-blueprint/issues/743 ; https://github.com/BilLogic/plus-uno-blueprint/issues/737 . Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/743 ."
+      },
+      "evidence": [
+        "https://www.notion.so/3e6b7cca49828084b5d5d591e4650bbc",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12505-199987",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12388-8570",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "lesson-email-summary",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "2f0f93bc-4d3f-4549-8da7-28f9b4d784e6"
+      },
+      "expected": {
+        "content": "Lesson assignment email",
+        "summary": null,
+        "status": "live"
+      },
+      "value": {
+        "summary": "The email the app sends a tutor when the tutor supervisor team assigns them a lesson."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-427878",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "accredible-limit-summary",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "2f481104-db3a-4f6a-ad67-3c07bb0f049c"
+      },
+      "expected": {
+        "content": "PLUS team tracks Accredible credential use and buys more before the paid limit runs out.",
+        "summary": null,
+        "status": "live"
+      },
+      "value": {
+        "summary": "Tutors’ lesson credentials are issued through Accredible against a paid recipient limit. The PLUS team checks how many are used and buys more before the limit is reached."
+      },
+      "evidence": [
+        "https://www.notion.so/3dbb7cca498280c9a91accaa6f77067c",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "clash-check-summary",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "56449148-91ea-411c-bf6c-17898db6e3b4"
+      },
+      "expected": {
+        "content": "Clash check",
+        "summary": null,
+        "status": "live"
+      },
+      "value": {
+        "summary": "Refuses a recurring sign-up that clashes with one the tutor already holds on the same weekday and start time. Fill-in sign-ups are not checked."
+      },
+      "evidence": [
+        "https://www.notion.so/2f8b7cca498280a681ebd8e143080e07",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "signup-confirmation-summary",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "e4c76f93-bea1-4d15-bb20-a44c3d817edb"
+      },
+      "expected": {
+        "content": "Emails the tutor a confirmation after each successful recurring sign-up.",
+        "summary": null,
+        "status": "live"
+      },
+      "value": {
+        "summary": "After a recurring sign-up succeeds, the app emails the tutor a confirmation with the school, weekday, time and teacher. Nothing is sent for a sign-up that did not succeed."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca4982811898fcc0449d742569",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/743",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "2f0f93bc-4d3f-4549-8da7-28f9b4d784e6"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "2f0f93bc-4d3f-4549-8da7-28f9b4d784e6"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "2f481104-db3a-4f6a-ad67-3c07bb0f049c"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "2f481104-db3a-4f6a-ad67-3c07bb0f049c"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "56449148-91ea-411c-bf6c-17898db6e3b4"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "56449148-91ea-411c-bf6c-17898db6e3b4"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "e4c76f93-bea1-4d15-bb20-a44c3d817edb"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "e4c76f93-bea1-4d15-bb20-a44c3d817edb"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000802"
+        }
+      },
+      "beforeCount": 23,
+      "afterCount": 23
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "b934c5a0-71e2-405a-a8ec-32647c351e5b"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000805"
+        }
+      },
+      "beforeCount": 14,
+      "afterCount": 14
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "ai-fails"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "ai-fails"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    }
+  ]
+}

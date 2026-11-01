@@ -88,15 +88,15 @@ export function createDatabase(client, modules) {
 
   // A link may cross paths and scenarios, never services. Both ends are read
   // and guarded against the reviewed coordinates before the RPC is sent.
-  async function prepareLink(op) {
+  async function prepareLink(op, ends = op.target.where) {
     const { expected_source: source, expected_target: target } = op.input ?? {}
-    if (!source || !target) throw new Error('set_cell_dependency requires input.expected_source and input.expected_target')
+    if (!source || !target) throw new Error(`${op.operation} requires input.expected_source and input.expected_target`)
     for (const [name, end] of [['expected_source', source], ['expected_target', target]]) {
       if (['path_id', 'lane_id', 'step_id', 'scenario_id'].some((field) => typeof end[field] !== 'string'))
         throw new Error(`${name} must name path_id, lane_id, step_id and scenario_id`)
     }
-    const from = await linkEnd(op.target.where.source_cell_id, source, 'source')
-    const to = await linkEnd(op.target.where.target_cell_id, target, 'target')
+    const from = await linkEnd(ends.source_cell_id, source, 'source')
+    const to = await linkEnd(ends.target_cell_id, target, 'target')
     if (from.service_id !== to.service_id) throw new Error('Both ends must be in the same service; a cross-service link is refused')
     return { endpoints: { service_id: from.service_id, source: from.end, target: to.end } }
   }
@@ -104,6 +104,17 @@ export function createDatabase(client, modules) {
   async function prepare(op, before) {
     if (CAPABILITIES.has(op.operation)) return prepareCapability(read, op, before)
     if (op.operation === 'set_cell_dependency') return prepareLink(op)
+    if (op.operation === 'update_cell_dependency') {
+      // An edit in place: same row, same ends, a new kind and/or note. The
+      // target is not moved by this operation; both ends stay guarded.
+      const after = { kind: op.value.kind, note: Object.hasOwn(op.value, 'note') ? op.value.note : before.note }
+      if (after.kind === before.kind && after.note === before.note) throw new Error('The dependency edit would write no change')
+      if (after.kind !== before.kind) {
+        const twins = await read({ table: 'cell_dependencies', where: { source_cell_id: before.source_cell_id, target_cell_id: before.target_cell_id, kind: after.kind } })
+        if (twins.some((row) => row.id !== before.id)) throw new Error(`An ${after.kind} edge already joins these cells; resolve it separately`)
+      }
+      return prepareLink(op, before)
+    }
     if (op.operation === 'update_cell_content' && !before?.content?.trim())
       throw new Error(`${op.key}: the module cannot capture an inverse for a blank prior cell label`)
     const value = { ...op.target.where, ...before, ...op.value }
@@ -268,6 +279,27 @@ export function createDatabase(client, modules) {
           await Promise.allSettled(appendResults)
           throw new Error('The link RPC updated an existing edge instead of inserting one; inspect its recorded inverse')
         }
+        break
+      }
+      case 'update_cell_dependency': {
+        const args = {
+          dependency_id: before.id, kind: value.kind, target_cell_id: before.target_cell_id,
+          note: Object.hasOwn(op.value, 'note') ? value.note : before.note,
+        }
+        const previous = await structure.updateCellDependency(client, {
+          dependencyId: args.dependency_id, kind: args.kind, targetCellId: args.target_cell_id, note: args.note,
+        })
+        const stood = { id: before.id, source_cell_id: before.source_cell_id, target_cell_id: before.target_cell_id, kind: before.kind, note: before.note }
+        const results = await Promise.all(appendResults)
+        const failed = results.find((result) => result.error)
+        if (failed) throw new Error(`Durable append failed after write: ${failed.error.message}`)
+        if (!isDeepStrictEqual(previous, stood)) throw new Error('The dependency RPC reported a different prior row than preflight; inspect its recorded inverse')
+        // The self-inverse comes from the RPC's own report. Check the logged
+        // record against the reviewed pre-state before claiming the write.
+        const logged = results.length === 1 && results[0].id ? await read({ table: 'authoring_changes', id: results[0].id }) : []
+        const revert = { fn: 'update_cell_dependency', args: { dependency_id: before.id, kind: before.kind, target_cell_id: before.target_cell_id, note: before.note } }
+        if (logged.length !== 1 || logged[0].fn !== 'update_cell_dependency' || !isDeepStrictEqual(logged[0].args, args) || !isDeepStrictEqual(logged[0].revert, revert))
+          throw new Error('The dependency edit was not recorded with exactly its reviewed args and inverse')
         break
       }
       case 'set_placement_touchpoint':

@@ -14,6 +14,7 @@ const OPERATIONS = {
   add_lane: { table: 'lanes', fields: ['name', 'lane_role'], create: true },
   add_evidence: { table: 'evidence', fields: ['kind', 'title', 'note'], create: true },
   set_cell_dependency: { table: 'cell_dependencies', fields: ['kind', 'note', 'name'], create: true },
+  update_cell_dependency: { table: 'cell_dependencies', fields: ['kind', 'note'] },
   set_placement_touchpoint: { table: 'cell_touchpoints', fields: ['touchpoint_id', 'name'] },
   set_path_steps: { table: 'paths', fields: ['step_ids'] },
   set_path_status: { table: 'paths', fields: ['status'] },
@@ -64,6 +65,10 @@ export function validateChangeset(changeset) {
       if (!op.target.id && !op.target.cell_key) throw new Error(`${op.key}: move must address an existing identity`)
       for (const field of COORDINATES) if (!Object.hasOwn(op.expected ?? {}, field) || !Object.hasOwn(op.value ?? {}, field))
         throw new Error(`${op.key}: move requires every expected and destination coordinate`)
+    }
+    if (op.operation === 'update_cell_dependency') {
+      if (!op.target.id) throw new Error(`${op.key}: a dependency edit must address the existing edge by id`)
+      if (!['leads_to', 'enables'].includes(op.value.kind)) throw new Error(`${op.key}: a dependency edit requires value.kind leads_to or enables`)
     }
     if (op.expected === null) {
       if (op.target.id || op.target.cell_key) throw new Error(`${op.key}: new rows require a named parent scope, not an assigned id`)

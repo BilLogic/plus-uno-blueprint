@@ -191,6 +191,7 @@ test('read-back checks ordered path columns, evidence, placements and edge type'
     ['add_evidence', 'evidence', { kind: 'doc', title: 'Module 9', note: 'Draft training' }],
     ['set_placement_touchpoint', 'cell_touchpoints', { touchpoint_id: 'touchpoint-1' }],
     ['set_cell_dependency', 'cell_dependencies', { kind: 'enables', note: 'Must be assigned first' }],
+    ['update_cell_dependency', 'cell_dependencies', { kind: 'enables', note: 'Must be finished first' }],
     ['update_path_spec', 'paths', { summary: 'When a tutor withdraws.', note: null }],
     ['create_scenario', 'scenarios', { name: 'Weekly Class Report', layout: 'stacked' }],
     ['add_step', 'steps', { name: 'Reads the report' }],
@@ -401,6 +402,15 @@ test('a deferred rename placed before an add_step on its scenario is refused at 
   assert.deepEqual(refused.failures, ['rename: a deferred rename must follow every add_step on scenario scenario; later-step comes after it'])
   const ordered = await runChangeset({ version: 1, issue: 1, operations: [scenarioOp, add, rename] }, 'dry-run', noWrites())
   assert.deepEqual(ordered.failures, [])
+})
+
+test('a dependency edit addresses its edge by id and names a known kind', async () => {
+  const edit = (target, value) => ({ version: 1, issue: 743, operations: [{
+    key: 'retype', operation: 'update_cell_dependency', target, expected: { kind: 'leads_to' }, value, evidence: ['Source'],
+  }] })
+  const database = { read: async () => [] }
+  await assert.rejects(runChangeset(edit({ table: 'cell_dependencies', where: { source_cell_id: 'cell-1' } }, { kind: 'enables' }), 'dry-run', database), /address the existing edge by id/)
+  await assert.rejects(runChangeset(edit({ table: 'cell_dependencies', id: 'edge-1' }, { kind: 'triggers' }), 'dry-run', database), /leads_to or enables/)
 })
 
 // A path created at a status copies its source path's step memberships. The
