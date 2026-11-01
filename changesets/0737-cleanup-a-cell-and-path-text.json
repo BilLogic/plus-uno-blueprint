@@ -1,0 +1,891 @@
+{
+  "version": 1,
+  "issue": 737,
+  "operations": [
+    {
+      "key": "c01-b3000000",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b3000000-0000-4000-8000-000000000033"
+      },
+      "expected": {
+        "content": "Routes the issue out of the room.",
+        "summary": "Not a content question: the tutor follows the routing table — lead tutor for roster/room problems, the school Slack channel for classroom-side issues, the support channel for app/tech problems — with message templates and privacy rules for each.",
+        "status": "live",
+        "path_id": "b3000000-0000-4000-8000-000000000001",
+        "lane_id": "b3000000-0000-4000-8000-000000000013",
+        "step_id": "a0000000-0000-4000-8000-000000000978",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Routes the issue out of the room.",
+        "summary": "Not a content question: the tutor follows the Help Center routing — the lead tutor for room, co-host and assignment problems; #in-session-support for session-wide or classroom-side issues, since school-specific channels are retired; #plus-app-bug-reporting for PLUS App problems; their supervisor and PLUS staff on Slack for a serious safety concern. Messages stay short and share no private student information.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3a2b7cca4982801283b9f129bbf89444",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c01-b3000000-ev",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b3000000-0000-4000-8000-000000000033",
+          "cell_key": "b3000000-0000-4000-8000-000000000033",
+          "title": "KB audit #737 cleanup — Routed out — support routing"
+        }
+      },
+      "expected": null,
+      "value": {
+        "title": "KB audit #737 cleanup — Routed out — support routing",
+        "kind": "doc",
+        "note": "Help Center 'Find the Right Support During a Session' (3a2b): school-specific Slack channels such as #gateway have been retired; session-wide issues go to #in-session-support, PLUS App problems to #plus-app-bug-reporting, room and assignment problems to the lead tutor, and a serious concern to the supervisor and a named PLUS staff contact (a role here, not a name). Read through the PLUS Notion connection on November 1, 2026. https://www.notion.so/3a2b7cca4982801283b9f129bbf89444 Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      },
+      "evidence": [
+        "https://www.notion.so/3a2b7cca4982801283b9f129bbf89444",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c02-a0000000",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000180402"
+      },
+      "expected": {
+        "content": "Runs the Tutor-Student Assignment tool, then creates the number of breakout rooms shown in the Rooms count.",
+        "summary": "Lead creates breakout rooms in Zoom using the breakout calculator from training, grants co-host to regular tutors, and starts the recording. Rooms are visited sequentially per tutor.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000809",
+        "lane_id": "a0000000-0000-4000-8000-000000002012",
+        "step_id": "a0000000-0000-4000-8000-000000000953",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000180402/e84183c1-0af9-d4e6-0d6b-9242fddc648b.png",
+        "cell_key": "plus-application/before-students-join/happy-path/lead-tutor/prepare-breakout-rooms"
+      },
+      "value": {
+        "content": "Runs the Tutor-Student Assignment tool, then creates the number of breakout rooms shown in the Rooms count.",
+        "summary": "The lead creates the breakout rooms in Zoom from the Rooms count, since PLUS does not create them, and gives each tutor a block of rooms using the breakout calculator. As tutors join, the lead gives them co-host and reminds them to start the recording when they enter their first breakout room.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3b1b7cca498280909264cf0bb51239fb",
+        "https://www.notion.so/26fb7cca498280f3af02ffc07b5171e7",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c02-a0000000-ev",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000180402",
+          "cell_key": "plus-application/before-students-join/happy-path/lead-tutor/prepare-breakout-rooms",
+          "title": "KB audit #737 cleanup — Prepare breakout rooms — recording"
+        }
+      },
+      "expected": null,
+      "value": {
+        "title": "KB audit #737 cleanup — Prepare breakout rooms — recording",
+        "kind": "doc",
+        "note": "Module 11 (lead tutors), Before a Session step 4: give joining tutors co-host and remind them to record when they join their first breakout room; steps 8–9: create the rooms shown in the Rooms count (PLUS does not create them in Zoom) and assign each tutor a block with the calculator. Module 4 has each tutor start the recording in their first room. Read through the PLUS Notion connection on November 1, 2026. https://www.notion.so/3b1b7cca498280909264cf0bb51239fb Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      },
+      "evidence": [
+        "https://www.notion.so/3b1b7cca498280909264cf0bb51239fb",
+        "https://www.notion.so/26fb7cca498280f3af02ffc07b5171e7",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c03-1099b78d",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "1099b78d-e056-4ab0-b6e2-7eb0e8a733e0"
+      },
+      "expected": {
+        "content": "Fills out the candidate information form.",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the candidate submits a structured info form (name, Andrew ID, contact) that seeds the clearance and later the account import — replacing ad-hoc acceptance-form data relay. Evidence: Jun 2026 design, Alex Houk 2026-06-02.",
+        "status": "proposed",
+        "path_id": "f0000000-0000-4000-8000-000000000702",
+        "lane_id": "ba816321-4ff4-4ba2-bd47-1464d3ac21c0",
+        "step_id": "f0000000-0000-4000-8000-000000000721",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Fills out the candidate information form.",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the candidate submits a structured info form (name, Andrew ID, contact) that seeds the clearance and later the account import — replacing ad-hoc acceptance-form data relay. Evidence: Jun 2026 design by PLUS staff, 2026-06-02.",
+        "status": "proposed"
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c03-1099b78d-ev",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "1099b78d-e056-4ab0-b6e2-7eb0e8a733e0",
+          "cell_key": "1099b78d-e056-4ab0-b6e2-7eb0e8a733e0",
+          "title": "KB audit #737 cleanup — Candidate info form — role, not a name"
+        }
+      },
+      "expected": null,
+      "value": {
+        "title": "KB audit #737 cleanup — Candidate info form — role, not a name",
+        "kind": "other",
+        "note": "Summary names a role instead of the staff member who wrote the June 2026 design; meaning unchanged. Card 2612 (Deployed, 12.1) has the supervisor enter the five tutor fields, so it does not ship this candidate form; the cell stays proposed. Read through the PLUS Notion connection on November 1, 2026. https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2 Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c04-dbfb6712",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "dbfb6712-7312-4737-a1a2-1cbd78adab9e"
+      },
+      "expected": {
+        "content": "Supervisors receive clearance confirmation from the CPO or school.",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the CPO or school confirms clearance to supervisors directly; tutor self-reported clearance is legally unusable, which is the reason for the redesign. Evidence: Alex Houk, Slack, 2026-06-02.",
+        "status": "proposed",
+        "path_id": "f0000000-0000-4000-8000-000000000702",
+        "lane_id": "8c931697-b5a5-4003-bfc3-643a488b2aac",
+        "step_id": "f0000000-0000-4000-8000-000000000722",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Supervisors receive clearance confirmation from the CPO or school.",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the CPO or school confirms clearance to supervisors directly; tutor self-reported clearance is legally unusable, which is the reason for the redesign. Evidence: PLUS staff, Slack, 2026-06-02.",
+        "status": "proposed"
+      },
+      "evidence": [
+        "https://www.notion.so/3c0b7cca498280c3bb6afb801e47df2d",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c04-dbfb6712-ev",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "dbfb6712-7312-4737-a1a2-1cbd78adab9e",
+          "cell_key": "dbfb6712-7312-4737-a1a2-1cbd78adab9e",
+          "title": "KB audit #737 cleanup — Clearance confirmed — role, not a name"
+        }
+      },
+      "expected": null,
+      "value": {
+        "title": "KB audit #737 cleanup — Clearance confirmed — role, not a name",
+        "kind": "other",
+        "note": "Summary names a role instead of the staff member quoted; meaning unchanged. The shipped clearance route is the CPO's shared sheet read by the script (card 2584, Deployed, 12.0), recorded on the import cell; direct confirmation to supervisors stays proposed. https://www.notion.so/3c0b7cca498280c3bb6afb801e47df2d Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      },
+      "evidence": [
+        "https://www.notion.so/3c0b7cca498280c3bb6afb801e47df2d",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c05-b0cc2c00",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b0cc2c00-474c-49d5-9a35-08c7339e9cc0"
+      },
+      "expected": {
+        "content": "Account invite",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): invite link, account creation, and the existing Tutor Profile surface (preferred name, pronouns, photo, emails, languages) as the completion step; the profile surface already exists, the invite path does not.",
+        "status": "proposed",
+        "path_id": "f0000000-0000-4000-8000-000000000702",
+        "lane_id": "9eba4655-bd13-4e73-949b-2756cf8352a9",
+        "step_id": "f0000000-0000-4000-8000-000000000724",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Account invite",
+        "summary": "Live in 12.1: adding a tutor, singly or by CSV import, sends an account invite; the tutor creates an account and completes the existing Tutor Profile (preferred name, pronouns, photo, emails, languages), and the record stays pending until then.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c05-b0cc2c00-ev",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b0cc2c00-474c-49d5-9a35-08c7339e9cc0",
+          "cell_key": "b0cc2c00-474c-49d5-9a35-08c7339e9cc0",
+          "title": "KB audit #737 cleanup — Account invite — shipped in 12.1"
+        }
+      },
+      "expected": null,
+      "value": {
+        "title": "KB audit #737 cleanup — Account invite — shipped in 12.1",
+        "kind": "doc",
+        "note": "Card 2612 (Tutor Import + Tutor Admin Detail Modal) is Dev Status Deployed, release 12.1: on submit the record is created and the invite goes out; the tutor stays pending until they finish their own profile; CSV bulk import is enabled only when every row validates. The old summary said the invite path did not exist. Read through the PLUS Notion connection on November 1, 2026. https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2 Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c06-0eb57a27",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "0eb57a27-6391-49c2-baa9-18feddb96354"
+      },
+      "expected": {
+        "content": "Overlap threshold",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): threshold set by data analysis of production sign-ups — the 11-20 minute overlap band had the worst outcomes (5.84% mistake rate); the mistake multiplier was corrected from 8.5x to 4.3x and the call-off rate is flat at ~12% across bands, so the gate moved from 20 to 10 minutes. Evidence: Bill's corrected analysis, Slack #plus-design-feedback, 2026-08-04.",
+        "status": "proposed",
+        "path_id": "f0000000-0000-4000-8000-000000000805",
+        "lane_id": "9f321ef9-61c8-4c75-9273-3fe283775d6e",
+        "step_id": "f0000000-0000-4000-8000-000000000851",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Overlap threshold",
+        "summary": "Proposed: an overlap of 1–10 minutes shows a warning; at 11 minutes or more the tutor signs up only by naming the supervisor who asked them to cover. Spring 2026 sign-up data puts the cliff between 10 and 11 minutes: the signed-up-by-mistake rate rises from 1.61% at 6–10 minutes to 5.84% at 11–20, and the share of tutors keeping both overlapping sessions falls from 23% to 5.4%. This replaced an earlier 20-minute line.",
+        "status": "proposed"
+      },
+      "evidence": [
+        "https://www.notion.so/3b1b7cca49828137aa1bfe68604bb727",
+        "https://www.notion.so/3b1b7cca4982817d91fee6490f9d0035",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c06-0eb57a27-ev",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "0eb57a27-6391-49c2-baa9-18feddb96354",
+          "cell_key": "0eb57a27-6391-49c2-baa9-18feddb96354",
+          "title": "KB audit #737 cleanup — Overlap threshold — warn to 10, gate from 11"
+        }
+      },
+      "expected": null,
+      "value": {
+        "title": "KB audit #737 cleanup — Overlap threshold — warn to 10, gate from 11",
+        "kind": "decision",
+        "note": "Decision 'Soft conflicts: 10 minutes splits warn from gate' (Accepted): warn at 1–10 minutes, gate at 11 and above, superseding the 20-minute line, with the mistake rates and keep-both shares quoted. The supervisor-attestation decision has the tutor name the supervisor. As #747 F9 recorded. Read through the PLUS Notion connection on November 1, 2026. https://www.notion.so/3b1b7cca49828137aa1bfe68604bb727 ; https://www.notion.so/3b1b7cca4982817d91fee6490f9d0035 Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      },
+      "evidence": [
+        "https://www.notion.so/3b1b7cca49828137aa1bfe68604bb727",
+        "https://www.notion.so/3b1b7cca4982817d91fee6490f9d0035",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c07-27068c9b",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "27068c9b-76f0-4d2b-9988-f4f8b6dd6480"
+      },
+      "expected": {
+        "content": "Signs up; selections are checked for overlap with the existing schedule.",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): every sign-up attempt is compared against the tutor's current schedule before it is confirmed. Evidence: soft-conflict proposal, Slack #plus-design-feedback, Bill, 2026-08-03/04.",
+        "status": "proposed",
+        "path_id": "f0000000-0000-4000-8000-000000000805",
+        "lane_id": "d5325d6a-7ed1-4b21-be83-70e3d0bac2b8",
+        "step_id": "a0000000-0000-4000-8000-000000000891",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Signs up; selections are checked for overlap with the existing schedule.",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): every sign-up attempt is compared against the tutor's current schedule before it is confirmed. Evidence: soft-conflict proposal by PLUS staff, Slack #plus-design-feedback, 2026-08-03/04.",
+        "status": "proposed"
+      },
+      "evidence": [
+        "https://www.notion.so/3b1b7cca49828137aa1bfe68604bb727",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c07-27068c9b-ev",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "27068c9b-76f0-4d2b-9988-f4f8b6dd6480",
+          "cell_key": "27068c9b-76f0-4d2b-9988-f4f8b6dd6480",
+          "title": "KB audit #737 cleanup — Sign up — role, not a name"
+        }
+      },
+      "expected": null,
+      "value": {
+        "title": "KB audit #737 cleanup — Sign up — role, not a name",
+        "kind": "other",
+        "note": "Summary names a role instead of the staff member who posted the proposal; meaning unchanged. The overlap check itself rests on the accepted decision https://www.notion.so/3b1b7cca49828137aa1bfe68604bb727 Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      },
+      "evidence": [
+        "https://www.notion.so/3b1b7cca49828137aa1bfe68604bb727",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c08-a0000000",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-0000001d0103"
+      },
+      "expected": {
+        "content": "Messages their supervisor and Alex on Slack about a behavior, wellbeing, or safety concern, during the session when it happens live, and tells the lead tutor.",
+        "summary": "During the session, the tutor alerts their supervisor and Alex directly on Slack. They also tell the lead tutor, escalate their reflection report and upload the recording as soon as possible afterward.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-00000000080f",
+        "lane_id": "a0000000-0000-4000-8000-000000000911",
+        "step_id": "a0000000-0000-4000-8000-000000000988",
+        "position": 0,
+        "owner": "Tutor Supervisors",
+        "perceived_owner": "PLUS staff",
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001d0103/ab13b929-6608-ac2b-5268-c16927040a3f.png",
+        "cell_key": "plus-application/reporting-an-issue/happy-path/regular-tutor/reach-out"
+      },
+      "value": {
+        "content": "Messages their supervisor and PLUS staff on Slack about a behavior, wellbeing, or safety concern, during the session when it happens live, and tells the lead tutor.",
+        "summary": "During the session, the tutor alerts their supervisor and PLUS staff directly on Slack. They also tell the lead tutor, escalate their reflection report and upload the recording as soon as possible afterward.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3a2b7cca4982801283b9f129bbf89444",
+        "https://www.notion.so/3b1b7cca498280909264cf0bb51239fb",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c08-a0000000-ev",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-0000001d0103",
+          "cell_key": "plus-application/reporting-an-issue/happy-path/regular-tutor/reach-out",
+          "title": "KB audit #737 cleanup — Reach out — role, not a name"
+        }
+      },
+      "expected": null,
+      "value": {
+        "title": "KB audit #737 cleanup — Reach out — role, not a name",
+        "kind": "doc",
+        "note": "Help Center 'Find the Right Support During a Session' and Module 11 tell the tutor to message their supervisor and one named PLUS staff contact on Slack for a serious concern; the cell names the role, as #746 row63 did for the lead's cell. Read through the PLUS Notion connection on November 1, 2026. https://www.notion.so/3a2b7cca4982801283b9f129bbf89444 ; https://www.notion.so/3b1b7cca498280909264cf0bb51239fb Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      },
+      "evidence": [
+        "https://www.notion.so/3a2b7cca4982801283b9f129bbf89444",
+        "https://www.notion.so/3b1b7cca498280909264cf0bb51239fb",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c09-c1432d1c",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "c1432d1c-c533-490a-b389-5b73e98f50fe"
+      },
+      "expected": {
+        "content": "Cancellation emails",
+        "summary": null,
+        "status": "live",
+        "path_id": "f1000000-0000-4000-8000-000000000003",
+        "lane_id": "f1000000-0000-4000-8000-000000000008",
+        "step_id": "f1000000-0000-4000-8000-000000000012",
+        "position": 2,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": "plus-tutoring/supervisor-program-administration/standard/back-stage-touchpoints/manage-sessions--c1432d1c-c533-490a-b389-5b73e98f50fe"
+      },
+      "value": {
+        "content": "Cancellation emails",
+        "summary": "Sent to the affected tutors when a supervisor cancels sessions, for the chosen scope: one session, a date, a date range or a shift range. The old all-future template is unused.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151",
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c09-c1432d1c-ev",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "c1432d1c-c533-490a-b389-5b73e98f50fe",
+          "cell_key": "plus-tutoring/supervisor-program-administration/standard/back-stage-touchpoints/manage-sessions--c1432d1c-c533-490a-b389-5b73e98f50fe",
+          "title": "KB audit #737 cleanup — Cancellation emails — registry placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "title": "KB audit #737 cleanup — Cancellation emails — registry placement",
+        "kind": "other",
+        "note": "Figma 11272:431151 lists the scoped session-cancellation email variants (single, date, dateRange, shiftRange) and marks the all-future template unused; card 2452 (Deployed, 12.0) defines the cancel scopes. This edit runs the placement sync, which adds the registry touchpoint Cancellation emails. https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151 ; https://www.notion.so/d11b7cca498283dba80881e9217de2a8 Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151",
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c10-07cb61c0",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "07cb61c0-4ee5-484c-a5f6-b298e291082e"
+      },
+      "expected": {
+        "content": "Tutor broadcast email",
+        "summary": null,
+        "status": "live",
+        "path_id": "f1000000-0000-4000-8000-000000000003",
+        "lane_id": "f1000000-0000-4000-8000-000000000008",
+        "step_id": "f1000000-0000-4000-8000-000000000015",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": "plus-tutoring/supervisor-program-administration/standard/back-stage-touchpoints/broadcast-export--07cb61c0-4ee5-484c-a5f6-b298e291082e"
+      },
+      "value": {
+        "content": "Tutor broadcast email",
+        "summary": "The email a supervisor's Email Tutors broadcast sends from the Tutors admin page; Figma lists it among the shipped email types.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c10-07cb61c0-ev",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "07cb61c0-4ee5-484c-a5f6-b298e291082e",
+          "cell_key": "plus-tutoring/supervisor-program-administration/standard/back-stage-touchpoints/broadcast-export--07cb61c0-4ee5-484c-a5f6-b298e291082e",
+          "title": "KB audit #737 cleanup — Tutor broadcast email — registry placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "title": "KB audit #737 cleanup — Tutor broadcast email — registry placement",
+        "kind": "other",
+        "note": "Figma 11272:431151 lists the tutor broadcast email among the shipped email types; the Supervisor cell on this step records the Email Tutors broadcast. This edit runs the placement sync, which adds the registry touchpoint Tutor broadcast email. https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151 Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c11-20457188",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "20457188-0b28-4192-aa98-f7fa2fd77b6c"
+      },
+      "expected": {
+        "content": "Students-added email",
+        "summary": null,
+        "status": "live",
+        "path_id": "f1000000-0000-4000-8000-000000000003",
+        "lane_id": "f1000000-0000-4000-8000-000000000008",
+        "step_id": "f1000000-0000-4000-8000-000000000013",
+        "position": 2,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": "plus-tutoring/supervisor-program-administration/standard/back-stage-touchpoints/manage-students--20457188-0b28-4192-aa98-f7fa2fd77b6c"
+      },
+      "value": {
+        "content": "Students-added email",
+        "summary": "The per-event New Student(s) Added email sent when a supervisor adds students; Figma lists it among the shipped email types.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "c11-20457188-ev",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "20457188-0b28-4192-aa98-f7fa2fd77b6c",
+          "cell_key": "plus-tutoring/supervisor-program-administration/standard/back-stage-touchpoints/manage-students--20457188-0b28-4192-aa98-f7fa2fd77b6c",
+          "title": "KB audit #737 cleanup — Students-added email — registry placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "title": "KB audit #737 cleanup — Students-added email — registry placement",
+        "kind": "other",
+        "note": "Figma 11272:431151 lists the students-added email among the shipped email types; the Slack bridge cell on this step records the per-event New Student(s) Added email. This edit runs the placement sync, which adds the registry touchpoint Students-added email. https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151 Ticket: https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "path-0702-spec",
+      "operation": "update_path_spec",
+      "target": {
+        "table": "paths",
+        "id": "f0000000-0000-4000-8000-000000000702"
+      },
+      "expected": {
+        "summary": "Captures planned / unshipped behavior for Interview & Offer as of 2026-08-08. Diverges after offer acceptance: the Jun 2026 supervisor-registration clearance redesign — candidate info form, CPO/school clearance confirmation to supervisors (replacing legally unusable tutor self-report), supervisor import of cleared tutors, app invite, then account creation and profile completion. Design intent (Alex Houk, 2026-06-02); ship status unknown.",
+        "note": null,
+        "status": "proposed",
+        "name": "Supervisor-registered clearance",
+        "scenario_id": "a0000000-0000-4000-8000-000000000122"
+      },
+      "value": {
+        "summary": "Diverges after offer acceptance: supervisors register cleared tutors. Live since 12.1: supervisors add cleared tutors singly or by CSV import, the app sends each an account invite, and the tutor creates an account and completes their profile. Clearance status reaches the app from the CPO's shared sheet (12.0). Still proposed from the June 2026 design: a structured candidate info form and direct CPO or school confirmation to supervisors.",
+        "note": null
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://www.notion.so/3c0b7cca498280c3bb6afb801e47df2d",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "path-0805-spec",
+      "operation": "update_path_spec",
+      "target": {
+        "table": "paths",
+        "id": "f0000000-0000-4000-8000-000000000805"
+      },
+      "expected": {
+        "summary": "Captures planned / unshipped behavior for Session Sign Up as of 2026-08-08. Diverges from the current happy path at sign-up time: the proposed soft-conflict gate — overlaps under 10 minutes trigger a warn/acknowledge dialog, overlaps of 10 minutes or more are gated until the tutor names the requesting supervisor, who then gets a heads-up email. Aug 2026 proposal (threshold revised 20 to 10 min on 2026-08-04), awaiting triage; nothing here is shipped.",
+        "note": null,
+        "status": "proposed",
+        "name": "Soft-conflict gate",
+        "scenario_id": "a0000000-0000-4000-8000-000000000125"
+      },
+      "value": {
+        "summary": "Diverges from the current happy path at sign-up time: the proposed soft-conflict gate. An overlap of 1–10 minutes shows a warning the tutor acknowledges; at 11 minutes or more the tutor signs up only by naming the supervisor who asked them to cover, and that supervisor gets a heads-up email. The 10-minute line replaced an earlier 20-minute one. Nothing here is shipped.",
+        "note": null
+      },
+      "evidence": [
+        "https://www.notion.so/3b1b7cca49828137aa1bfe68604bb727",
+        "https://www.notion.so/3b1b7cca4982817d91fee6490f9d0035",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "path-080f-spec",
+      "operation": "update_path_spec",
+      "target": {
+        "table": "paths",
+        "id": "a0000000-0000-4000-8000-00000000080f"
+      },
+      "expected": {
+        "summary": "Tutors report behavior, wellbeing or safety concerns to their supervisor and Alex on Slack during the session, inform the lead tutor, and follow up through an escalated reflection report and recording upload.",
+        "note": null,
+        "status": "live",
+        "name": "Standard",
+        "scenario_id": "a0000000-0000-4000-8000-000000000207"
+      },
+      "value": {
+        "summary": "Tutors report behavior, wellbeing or safety concerns to their supervisor and PLUS staff on Slack during the session, inform the lead tutor, and follow up through an escalated reflection report and recording upload.",
+        "note": null
+      },
+      "evidence": [
+        "https://www.notion.so/3a2b7cca4982801283b9f129bbf89444",
+        "https://www.notion.so/3b1b7cca498280909264cf0bb51239fb",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b3000000-0000-4000-8000-000000000033"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b3000000-0000-4000-8000-000000000033"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180402"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000180402"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "1099b78d-e056-4ab0-b6e2-7eb0e8a733e0"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "1099b78d-e056-4ab0-b6e2-7eb0e8a733e0"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "dbfb6712-7312-4737-a1a2-1cbd78adab9e"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "dbfb6712-7312-4737-a1a2-1cbd78adab9e"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b0cc2c00-474c-49d5-9a35-08c7339e9cc0"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b0cc2c00-474c-49d5-9a35-08c7339e9cc0"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "0eb57a27-6391-49c2-baa9-18feddb96354"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "0eb57a27-6391-49c2-baa9-18feddb96354"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "27068c9b-76f0-4d2b-9988-f4f8b6dd6480"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "27068c9b-76f0-4d2b-9988-f4f8b6dd6480"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001d0103"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001d0103"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "c1432d1c-c533-490a-b389-5b73e98f50fe"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "c1432d1c-c533-490a-b389-5b73e98f50fe"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "07cb61c0-4ee5-484c-a5f6-b298e291082e"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "07cb61c0-4ee5-484c-a5f6-b298e291082e"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "20457188-0b28-4192-aa98-f7fa2fd77b6c"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "20457188-0b28-4192-aa98-f7fa2fd77b6c"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    }
+  ]
+}

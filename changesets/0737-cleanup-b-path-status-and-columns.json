@@ -1,0 +1,445 @@
+{
+  "version": 1,
+  "issue": 737,
+  "operations": [
+    {
+      "key": "path-0702-status",
+      "operation": "set_path_status",
+      "target": {
+        "table": "paths",
+        "id": "f0000000-0000-4000-8000-000000000702"
+      },
+      "expected": {
+        "status": "proposed",
+        "name": "Supervisor-registered clearance",
+        "scenario_id": "a0000000-0000-4000-8000-000000000122"
+      },
+      "value": {
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://www.notion.so/3c0b7cca498280c3bb6afb801e47df2d",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "trim-b934c5a0",
+      "operation": "set_path_steps",
+      "target": {
+        "table": "paths",
+        "id": "b934c5a0-71e2-405a-a8ec-32647c351e5b",
+        "withSteps": true
+      },
+      "expected": {
+        "scenario_id": "a0000000-0000-4000-8000-000000000124",
+        "step_ids": [
+          "a0000000-0000-4000-8000-000000000861",
+          "a0000000-0000-4000-8000-000000000862",
+          "a0000000-0000-4000-8000-000000000863"
+        ]
+      },
+      "value": {
+        "step_ids": [
+          "a0000000-0000-4000-8000-000000000862"
+        ]
+      },
+      "evidence": [
+        "Column trim: keeps only the steps that hold cells on AI returns no feedback, in their current order; no cell moves or is deleted.",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "trim-fdefc7ef",
+      "operation": "set_path_steps",
+      "target": {
+        "table": "paths",
+        "id": "fdefc7ef-60e7-4dc2-8420-25dec7d263df",
+        "withSteps": true
+      },
+      "expected": {
+        "scenario_id": "a0000000-0000-4000-8000-000000000125",
+        "step_ids": [
+          "a0000000-0000-4000-8000-000000000891",
+          "a0000000-0000-4000-8000-000000000892"
+        ]
+      },
+      "value": {
+        "step_ids": [
+          "a0000000-0000-4000-8000-000000000891"
+        ]
+      },
+      "evidence": [
+        "Column trim: keeps only the steps that hold cells on Onboarding incomplete, in their current order; no cell moves or is deleted.",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "trim-ac4715c4",
+      "operation": "set_path_steps",
+      "target": {
+        "table": "paths",
+        "id": "ac4715c4-dbf7-4056-8c42-9bb67ecfc116",
+        "withSteps": true
+      },
+      "expected": {
+        "scenario_id": "a0000000-0000-4000-8000-000000000127",
+        "step_ids": [
+          "a0000000-0000-4000-8000-000000000897",
+          "a0000000-0000-4000-8000-000000000898",
+          "a0000000-0000-4000-8000-000000000899",
+          "a0000000-0000-4000-8000-000000000900"
+        ]
+      },
+      "value": {
+        "step_ids": [
+          "a0000000-0000-4000-8000-000000000897",
+          "a0000000-0000-4000-8000-000000000899",
+          "a0000000-0000-4000-8000-000000000900"
+        ]
+      },
+      "evidence": [
+        "Column trim: keeps only the steps that hold cells on Requested mid-session, in their current order; no cell moves or is deleted.",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "trim-79073a0f",
+      "operation": "set_path_steps",
+      "target": {
+        "table": "paths",
+        "id": "79073a0f-5c6a-4c94-813a-69e0a1e530be",
+        "withSteps": true
+      },
+      "expected": {
+        "scenario_id": "a0000000-0000-4000-8000-000000000128",
+        "step_ids": [
+          "a0000000-0000-4000-8000-000000000940",
+          "a0000000-0000-4000-8000-000000000941",
+          "a0000000-0000-4000-8000-000000000944",
+          "a0000000-0000-4000-8000-000000000943",
+          "a0000000-0000-4000-8000-000000000945"
+        ]
+      },
+      "value": {
+        "step_ids": [
+          "a0000000-0000-4000-8000-000000000941",
+          "a0000000-0000-4000-8000-000000000944"
+        ]
+      },
+      "evidence": [
+        "Column trim: keeps only the steps that hold cells on Recurring withdrawal, in their current order; no cell moves or is deleted.",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    },
+    {
+      "key": "trim-a4e8ec9b",
+      "operation": "set_path_steps",
+      "target": {
+        "table": "paths",
+        "id": "a4e8ec9b-ed13-4afe-8c19-687a18677245",
+        "withSteps": true
+      },
+      "expected": {
+        "scenario_id": "a0000000-0000-4000-8000-000000000204",
+        "step_ids": [
+          "a0000000-0000-4000-8000-000000009b01",
+          "03e76fc3-4008-426a-b8e3-d03877ec1abb",
+          "a0000000-0000-4000-8000-000000009b07",
+          "a0000000-0000-4000-8000-000000009b08"
+        ]
+      },
+      "value": {
+        "step_ids": [
+          "a0000000-0000-4000-8000-000000009b01",
+          "03e76fc3-4008-426a-b8e3-d03877ec1abb"
+        ]
+      },
+      "evidence": [
+        "Column trim: keeps only the steps that hold cells on Student is goal-exempt, in their current order; no cell moves or is deleted.",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/737"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "b934c5a0-71e2-405a-a8ec-32647c351e5b"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000861",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000862",
+          "position": 2
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000863",
+          "position": 3
+        }
+      ],
+      "afterRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000862"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "b934c5a0-71e2-405a-a8ec-32647c351e5b"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000124"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "fdefc7ef-60e7-4dc2-8420-25dec7d263df"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000891",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000892",
+          "position": 2
+        }
+      ],
+      "afterRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000891"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "fdefc7ef-60e7-4dc2-8420-25dec7d263df"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000125"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "ac4715c4-dbf7-4056-8c42-9bb67ecfc116"
+        }
+      },
+      "beforeCount": 4,
+      "afterCount": 3,
+      "beforeRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000897",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000898",
+          "position": 2
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000899",
+          "position": 3
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000900",
+          "position": 4
+        }
+      ],
+      "afterRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000897"
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000899"
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000900"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "ac4715c4-dbf7-4056-8c42-9bb67ecfc116"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000127"
+        }
+      },
+      "beforeCount": 4,
+      "afterCount": 4
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "79073a0f-5c6a-4c94-813a-69e0a1e530be"
+        }
+      },
+      "beforeCount": 5,
+      "afterCount": 2,
+      "beforeRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000940",
+          "position": 0
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000941",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000944",
+          "position": 2
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000943",
+          "position": 3
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000945",
+          "position": 4
+        }
+      ],
+      "afterRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000941"
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000944"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "79073a0f-5c6a-4c94-813a-69e0a1e530be"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000128"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a4e8ec9b-ed13-4afe-8c19-687a18677245"
+        }
+      },
+      "beforeCount": 4,
+      "afterCount": 2,
+      "beforeRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000009b01",
+          "position": 0
+        },
+        {
+          "step_id": "03e76fc3-4008-426a-b8e3-d03877ec1abb",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000009b07",
+          "position": 2
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000009b08",
+          "position": 3
+        }
+      ],
+      "afterRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000009b01"
+        },
+        {
+          "step_id": "03e76fc3-4008-426a-b8e3-d03877ec1abb"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a4e8ec9b-ed13-4afe-8c19-687a18677245"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000204"
+        }
+      },
+      "beforeCount": 61,
+      "afterCount": 61
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "f0000000-0000-4000-8000-000000000702"
+        }
+      },
+      "beforeCount": 10,
+      "afterCount": 10
+    }
+  ]
+}
