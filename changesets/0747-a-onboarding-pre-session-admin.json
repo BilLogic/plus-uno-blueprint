@@ -1,0 +1,1326 @@
+{
+  "version": 1,
+  "issue": 747,
+  "operations": [
+    {
+      "key": "F1-6afc27c3",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "6afc27c3-e692-42d6-b868-f4bd2c453b07"
+      },
+      "expected": {
+        "content": "Supervisors import cleared tutors; the app sends invites.",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): supervisors import the confirmed-cleared list into the app, which issues account invites. Clearance status is updated separately by the script reading the CPO's shared Google Sheet.",
+        "status": "proposed",
+        "path_id": "f0000000-0000-4000-8000-000000000702",
+        "lane_id": "8c931697-b5a5-4003-bfc3-643a488b2aac",
+        "step_id": "f0000000-0000-4000-8000-000000000723",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Supervisors add cleared tutors one at a time or by CSV import; the app sends invites.",
+        "summary": "Live in 12.1. Each tutor gets an invite and stays pending until they finish their own profile. Clearance status is updated separately by the script reading the CPO's shared Google Sheet.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F1-6afc27c3-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "6afc27c3-e692-42d6-b868-f4bd2c453b07",
+          "title": "KB audit #747 F1 — supervisors add and invite tutors",
+          "cell_key": "6afc27c3-e692-42d6-b868-f4bd2c453b07"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F1 — supervisors add and invite tutors",
+        "note": "Card 2612 (Tutor Import + Tutor Admin Detail Modal) is Dev Status Deployed, release 12.1: https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2 . \"On submit the record is created and the invite goes out; the tutor stays pending until they finish their own profile.\" CSV import goes through only when every row is valid. The ticket assumed built; the card is now Deployed, so the status is live. Re-read November 1, 2026."
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F1-b76e47fe",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b76e47fe-f424-44c4-98f8-64a134ecfb2c"
+      },
+      "expected": {
+        "content": "Tutor import",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): an import surface for cleared tutors plus invite issuance; no such tooling exists in the codebase today — pending accounts don't exist at all, so the gate sits before account existence.",
+        "status": "proposed",
+        "path_id": "f0000000-0000-4000-8000-000000000702",
+        "lane_id": "f78cf6ac-266a-4ec9-83c3-8b1800ef250f",
+        "step_id": "f0000000-0000-4000-8000-000000000723",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Tutor import",
+        "summary": "Live in 12.1: the Add tutor form and CSV import create pending tutor records and send each tutor an account invite.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F1-b76e47fe-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b76e47fe-f424-44c4-98f8-64a134ecfb2c",
+          "title": "KB audit #747 F1 — tutor import",
+          "cell_key": "b76e47fe-f424-44c4-98f8-64a134ecfb2c"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F1 — tutor import",
+        "note": "Card 2612 is Deployed, release 12.1: https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2 . Single add and CSV bulk import with invites; the tutor stays pending until their profile is complete. Replaces the prototype note that no import tooling existed."
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F1-11184a22",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "11184a22-242c-4e80-808f-c5cb7b67b792"
+      },
+      "expected": {
+        "content": "Creates an account from the invite and completes their profile.",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the tutor follows the app invite, creates an account, and completes their profile — arriving at onboarding already clearance-verified. Evidence: Jun 2026 design, Alex Houk 2026-06-02.",
+        "status": "proposed",
+        "path_id": "f0000000-0000-4000-8000-000000000702",
+        "lane_id": "ba816321-4ff4-4ba2-bd47-1464d3ac21c0",
+        "step_id": "f0000000-0000-4000-8000-000000000724",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Creates an account from the invite and completes their profile.",
+        "summary": "Live in 12.1: the tutor follows the app invite, creates an account and completes their profile; until then the record stays pending.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F1-11184a22-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "11184a22-242c-4e80-808f-c5cb7b67b792",
+          "title": "KB audit #747 F1 — account from invite",
+          "cell_key": "11184a22-242c-4e80-808f-c5cb7b67b792"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F1 — account from invite",
+        "note": "Card 2612 is Deployed, release 12.1: https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2 . The invite goes out on submit and the tutor stays pending until they finish their own profile."
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F2-detail-modal",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "f1000000-0000-4000-8000-000000000003",
+          "lane_id": "f1000000-0000-4000-8000-000000000005",
+          "step_id": "f1000000-0000-4000-8000-000000000011",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Opens a tutor's detail modal to see profile, clearance, training status and sessions.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://www.notion.so/304b7cca4982804f808fdddbc2e8bc93",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F2-detail-modal-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F2-detail-modal"
+          },
+          "title": "KB audit #747 F2 — tutor detail modal",
+          "cell_key": {
+            "ref": "F2-detail-modal",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F2 — tutor detail modal",
+        "note": "Card 2612 is Deployed, release 12.1 (https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2): the tutor detail modal opens from a Performance Details row and shows profile, status and clearance (with a View Training Progress link), background and the sessions table. The name search on Performance Details belongs to card 2272 (https://www.notion.so/304b7cca4982804f808fdddbc2e8bc93), which is still Code Review, so it is built, not live. The ticket assumed built for the modal; it is now live."
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://www.notion.so/304b7cca4982804f808fdddbc2e8bc93",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F3-reassign-remove",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "f1000000-0000-4000-8000-000000000003",
+          "lane_id": "f1000000-0000-4000-8000-000000000005",
+          "step_id": "f1000000-0000-4000-8000-000000000011",
+          "position": 2
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Reassigns a tutor's supervisor or removes the tutor from the detail modal.",
+        "status": "built"
+      },
+      "evidence": [
+        "https://www.notion.so/304b7cca4982804f808fdddbc2e8bc93",
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F3-reassign-remove-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F3-reassign-remove"
+          },
+          "title": "KB audit #747 F3 — reassign or remove a tutor",
+          "cell_key": {
+            "ref": "F3-reassign-remove",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F3 — reassign or remove a tutor",
+        "note": "Card 2272 (https://www.notion.so/304b7cca4982804f808fdddbc2e8bc93) is Code Review: its Remove tutor flow is \"Detail → gear menu → confirm → removed. Removing deactivates the account; data is kept.\" The editable assigned supervisor in the modal already shipped with card 2612 (Deployed 12.1, https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2); removal is not yet deployed, so the cell stays built."
+      },
+      "evidence": [
+        "https://www.notion.so/304b7cca4982804f808fdddbc2e8bc93",
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F4-step",
+      "operation": "add_step",
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "f1000000-0000-4000-8000-000000000002",
+          "name": "Add tutors"
+        }
+      },
+      "expected": null,
+      "value": {
+        "name": "Add tutors",
+        "summary": "Supervisors add cleared tutors to the app one at a time or by CSV, and the app invites each one."
+      },
+      "input": {
+        "path_id": "f1000000-0000-4000-8000-000000000003",
+        "at_position": 1
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://www.notion.so/3c8b7cca49828165b365e3078599b412",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F4-supervisor",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "f1000000-0000-4000-8000-000000000003",
+          "lane_id": "f1000000-0000-4000-8000-000000000005",
+          "step_id": {
+            "ref": "F4-step"
+          },
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Adds tutors one at a time or by CSV import; the app sends each an invite.",
+        "status": "live",
+        "summary": "Live in 12.1. A single add takes five required fields; a CSV import goes through only when every row is valid and each supervisor matches a flagged supervisor account. Each tutor stays pending until they finish their own profile."
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://www.notion.so/3c8b7cca49828165b365e3078599b412",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F4-supervisor-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F4-supervisor"
+          },
+          "title": "KB audit #747 F4 — supervisor adds tutors",
+          "cell_key": {
+            "ref": "F4-supervisor",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F4 — supervisor adds tutors",
+        "note": "Card 2612 is Deployed, release 12.1 (https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2): single add with five required fields and an invite on submit; CSV bulk import only when every row is valid, supervisor must match an is_supervisor advisor, email domain must match the university. Card 2606 (https://www.notion.so/3c8b7cca49828165b365e3078599b412, Ready for Dev) is the later UI update: editable preview table, parse progress, counted button label, template v2."
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://www.notion.so/3c8b7cca49828165b365e3078599b412",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F4-supervisor-flag",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "f1000000-0000-4000-8000-000000000003",
+          "lane_id": "f1000000-0000-4000-8000-000000000008",
+          "step_id": {
+            "ref": "F4-step"
+          },
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Tutor import\nSupervisor flag",
+        "status": "live",
+        "summary": "Live in 12.1: tutor import creates pending tutor records from the Add tutor form or a CSV and sends each tutor an invite; the supervisor flag marks which accounts an import can name as a tutor's supervisor. Call-off review still checks the admin role; unifying the two is in triage."
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://www.notion.so/3fbb7cca49828050b4d6ca3feb0b034e",
+        "https://www.notion.so/3fbb7cca4982801993a0d74e140be047",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F4-supervisor-flag-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F4-supervisor-flag"
+          },
+          "title": "KB audit #747 F4 — tutor import and supervisor flag",
+          "cell_key": {
+            "ref": "F4-supervisor-flag",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F4 — tutor import and supervisor flag",
+        "note": "Card 2612 is Deployed, release 12.1 (https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2): the Add tutor form and CSV import create pending tutor records and send invites. Card 2685 \"Update is_supervisor flag for relevant accounts\" is Deployed, release 12.1 (https://www.notion.so/3fbb7cca49828050b4d6ca3feb0b034e). Card 2687 \"Consolidate is_supervisor logic\" is Triage (https://www.notion.so/3fbb7cca4982801993a0d74e140be047): Add tutor uses advisor.is_supervisor while call-off submission checks admin.tutor_admin / admin.system_admin. Both touchpoints sit in one cell because a cell cannot be inserted at position 1 on a step this batch creates."
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://www.notion.so/3fbb7cca49828050b4d6ca3feb0b034e",
+        "https://www.notion.so/3fbb7cca4982801993a0d74e140be047",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F5-calendar-sync",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000806",
+          "lane_id": "a0000000-0000-4000-8000-000000000886",
+          "step_id": "a0000000-0000-4000-8000-000000000896",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Subscribes Google or Apple Calendar to their sessions from Your Sessions › Calendar Sync.",
+        "status": "planned"
+      },
+      "evidence": [
+        "https://www.notion.so/277b7cca498280609a13d38313b890e4",
+        "https://www.notion.so/3b4b7cca4982812088f7cde4b758ab8e",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F5-calendar-sync-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F5-calendar-sync"
+          },
+          "title": "KB audit #747 F5 — calendar sync",
+          "cell_key": {
+            "ref": "F5-calendar-sync",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F5 — calendar sync",
+        "note": "Card 1956 \"Calendar Sync for Signed-up sessions\" is Ready for Dev (https://www.notion.so/277b7cca498280609a13d38313b890e4): a feed subscription only, Google by copied URL and Apple by webcal. Help Center article \"Sync Your PLUS Sessions to Your Personal Calendar\" (https://www.notion.so/3b4b7cca4982812088f7cde4b758ab8e) is Ready to Publish and held until the feature ships: Your Sessions › Calendar Sync at top right."
+      },
+      "evidence": [
+        "https://www.notion.so/277b7cca498280609a13d38313b890e4",
+        "https://www.notion.so/3b4b7cca4982812088f7cde4b758ab8e",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F6-weekly-email-tp",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000806",
+          "lane_id": "a0000000-0000-4000-8000-000000000890",
+          "step_id": "a0000000-0000-4000-8000-000000000896",
+          "position": 2
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Weekly schedule email",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281c5a062c1b7c23d17a8",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F6-weekly-email-tp-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F6-weekly-email-tp"
+          },
+          "title": "KB audit #747 F6 — weekly schedule email",
+          "cell_key": {
+            "ref": "F6-weekly-email-tp",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F6 — weekly schedule email",
+        "note": "Card 2570 \"Transactional emails 3: session reminders\" is Deployed, release 12.1 (https://www.notion.so/3b2b7cca498281c5a062c1b7c23d17a8). The ticket assumed built; it is live. The 30-minute \"Reminder emails\" cell b9cb0dd9 stays live."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281c5a062c1b7c23d17a8",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F6-weekly-email",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000806",
+          "lane_id": "a0000000-0000-4000-8000-000000000887",
+          "step_id": "a0000000-0000-4000-8000-000000000896",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Emails each tutor their upcoming sessions every Sunday at 3 pm, with up to three of the least-filled sessions that don't clash with their sign-ups.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281c5a062c1b7c23d17a8",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F6-weekly-email-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F6-weekly-email"
+          },
+          "title": "KB audit #747 F6 — Sunday schedule email",
+          "cell_key": {
+            "ref": "F6-weekly-email",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F6 — Sunday schedule email",
+        "note": "Card 2570 is Deployed, release 12.1 (https://www.notion.so/3b2b7cca498281c5a062c1b7c23d17a8): the weekly email goes out Sunday at 3pm with the tutor's upcoming sessions plus up to three of the least-filled sessions that don't clash with their sign-ups."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281c5a062c1b7c23d17a8",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F7-help-center-button",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "c1000000-0000-4000-8000-000000000002",
+          "lane_id": "c1000000-0000-4000-8000-000000000013",
+          "step_id": "c1000000-0000-4000-8000-000000000020",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Help Center button",
+        "status": "planned"
+      },
+      "evidence": [
+        "https://www.notion.so/3deb7cca498281509540d2f4360ddde3",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12136-827",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F7-help-center-button-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F7-help-center-button"
+          },
+          "title": "KB audit #747 F7 — Help Center button",
+          "cell_key": {
+            "ref": "F7-help-center-button",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F7 — Help Center button",
+        "note": "Card 2638 \"Help Center entry point in the app top bar\" is Ready for Dev (https://www.notion.so/3deb7cca498281509540d2f4360ddde3); Figma \"Button / Help Center\" (https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12136-827). The button sits in the app top bar on every page, beside the avatar, and opens the Tutor Help Center in a new tab for every role; it is placed here because the library is where tutors look for help."
+      },
+      "evidence": [
+        "https://www.notion.so/3deb7cca498281509540d2f4360ddde3",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12136-827",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F8-signups-count",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000805",
+          "lane_id": "a0000000-0000-4000-8000-000000000880",
+          "step_id": "a0000000-0000-4000-8000-000000000891",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Counts only the sessions the tutor can sign up for on the Sign-Ups tab.",
+        "status": "live",
+        "summary": "Live in 12.1: the Sign-Ups count includes only shifts with a spot open for the tutor's role that they are not already on and that don't clash; each Sessions tab has a tooltip."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498280fb8b8dd5296d5d6317",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F8-signups-count-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F8-signups-count"
+          },
+          "title": "KB audit #747 F8 — Sign-Ups count",
+          "cell_key": {
+            "ref": "F8-signups-count",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F8 — Sign-Ups count",
+        "note": "Card 2640 \"Sessions page - Tab counts & default filters update\" is Deployed, release 12.1 (https://www.notion.so/3e2b7cca498280fb8b8dd5296d5d6317). The ticket assumed Code Review (built); it is live."
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498280fb8b8dd5296d5d6317",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F9-696da250",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "696da250-8ef7-437e-b899-91a9b65cd2a9"
+      },
+      "expected": {
+        "content": "Acknowledges a warning for small overlaps; names the requesting supervisor for large ones.",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): an overlap shorter than 10 minutes shows a soft warning the tutor acknowledges and proceeds; an overlap of 10 minutes or more blocks the sign-up until the tutor names the supervisor who asked them to take the session — the threshold was revised down from 20 minutes.",
+        "status": "proposed",
+        "path_id": "f0000000-0000-4000-8000-000000000805",
+        "lane_id": "d5325d6a-7ed1-4b21-be83-70e3d0bac2b8",
+        "step_id": "f0000000-0000-4000-8000-000000000851",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Acknowledges a warning for overlaps of 10 minutes or less; names the requesting supervisor for longer ones.",
+        "summary": "Proposed: an overlap of 10 minutes or less shows a warning the tutor acknowledges before continuing. At 11 minutes or more the tutor signs up only by confirming a supervisor asked them to cover and naming that supervisor; the sign-up completes with no approval queue. The 10-minute line replaced an earlier 20-minute one.",
+        "status": "proposed"
+      },
+      "evidence": [
+        "https://www.notion.so/3b1b7cca49828137aa1bfe68604bb727",
+        "https://www.notion.so/3b1b7cca4982817d91fee6490f9d0035",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F9-696da250-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "696da250-8ef7-437e-b899-91a9b65cd2a9",
+          "title": "KB audit #747 F9 — overlap thresholds",
+          "cell_key": "696da250-8ef7-437e-b899-91a9b65cd2a9"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F9 — overlap thresholds",
+        "note": "Decision \"Soft conflicts: 10 minutes splits warn from gate\" (Accepted, https://www.notion.so/3b1b7cca49828137aa1bfe68604bb727): warn at 1–10 minutes, gate at 11 and above, superseding the 20-minute line. Decision on the supervisor attestation gate (https://www.notion.so/3b1b7cca4982817d91fee6490f9d0035): the tutor proceeds only by confirming a supervisor asked them to cover and naming that supervisor; its 20-minute threshold is superseded."
+      },
+      "evidence": [
+        "https://www.notion.so/3b1b7cca49828137aa1bfe68604bb727",
+        "https://www.notion.so/3b1b7cca4982817d91fee6490f9d0035",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F10-daily-digest",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000807",
+          "lane_id": "a0000000-0000-4000-8000-000000000907",
+          "step_id": "a0000000-0000-4000-8000-000000000897",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Posts a daily 8 am Slack digest of sessions with open tutor spots to #sessions-in-need, and of sessions with no lead to #lead-tutors.",
+        "status": "built"
+      },
+      "evidence": [
+        "https://www.notion.so/3d5b7cca4982811ab999c1f858194418",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F10-daily-digest-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F10-daily-digest"
+          },
+          "title": "KB audit #747 F10 — daily fill-in digest",
+          "cell_key": {
+            "ref": "F10-daily-digest",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F10 — daily fill-in digest",
+        "note": "Card 2635 \"Daily Session Fill-In Slack Digest\" (https://www.notion.so/3d5b7cca4982811ab999c1f858194418) reads Dev Status Open Tasks: the digest command exists and has a testing section, but nothing shows it scheduled on prod, so it stays built. \"8:00 am ET daily\"; regular fill-ins to #sessions-in-need, no-lead to #lead-tutors. The shipped interim picks sessions with open tutor spots from the Fill-In tab; ratio-based selection moved to card 2698, so the cell does not say \"most understaffed\"."
+      },
+      "evidence": [
+        "https://www.notion.so/3d5b7cca4982811ab999c1f858194418",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F14-email-12plus",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000808",
+          "lane_id": "a0000000-0000-4000-8000-000000000974",
+          "step_id": "a0000000-0000-4000-8000-000000000945",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Email",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281dc9630e09567c75ee7",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F14-email-12plus-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F14-email-12plus"
+          },
+          "title": "KB audit #747 F14 — decision email (12+ hours ahead)",
+          "cell_key": {
+            "ref": "F14-email-12plus",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F14 — decision email (12+ hours ahead)",
+        "note": "Card 2568 \"Transactional email — 2b call-off decision\" is Deployed, release 12.1 (https://www.notion.so/3b2b7cca498281dc9630e09567c75ee7): the tutor is emailed when a reviewed call-off is approved or rejected, triggered only after the review succeeds. A separate email covers a session cancelled while the request is pending. The ticket assumed built; it is live."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281dc9630e09567c75ee7",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F14-email-under12",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "b0000000-0000-4000-8000-000000000809",
+          "lane_id": "b0000000-0000-4000-8000-000000001074",
+          "step_id": "a0000000-0000-4000-8000-000000000945",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Email",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281dc9630e09567c75ee7",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F14-email-under12-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F14-email-under12"
+          },
+          "title": "KB audit #747 F14 — decision email (Under 12 hours)",
+          "cell_key": {
+            "ref": "F14-email-under12",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F14 — decision email (Under 12 hours)",
+        "note": "Card 2568 \"Transactional email — 2b call-off decision\" is Deployed, release 12.1 (https://www.notion.so/3b2b7cca498281dc9630e09567c75ee7): the tutor is emailed when a reviewed call-off is approved or rejected, triggered only after the review succeeds. A separate email covers a session cancelled while the request is pending. The ticket assumed built; it is live."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281dc9630e09567c75ee7",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "6afc27c3-e692-42d6-b868-f4bd2c453b07"
+        }
+      },
+      "beforeCount": 4,
+      "afterCount": 5
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "6afc27c3-e692-42d6-b868-f4bd2c453b07"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b76e47fe-f424-44c4-98f8-64a134ecfb2c"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b76e47fe-f424-44c4-98f8-64a134ecfb2c"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "11184a22-242c-4e80-808f-c5cb7b67b792"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "11184a22-242c-4e80-808f-c5cb7b67b792"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F2-detail-modal"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F2-detail-modal"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F3-reassign-remove"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F3-reassign-remove"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F4-supervisor"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F4-supervisor"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F4-supervisor-flag"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F4-supervisor-flag"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "f1000000-0000-4000-8000-000000000002"
+        }
+      },
+      "beforeCount": 6,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "f1000000-0000-4000-8000-000000000003"
+        }
+      },
+      "beforeCount": 6,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F5-calendar-sync"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F5-calendar-sync"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F6-weekly-email-tp"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F6-weekly-email-tp"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F6-weekly-email"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F6-weekly-email"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F7-help-center-button"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F7-help-center-button"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F8-signups-count"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F8-signups-count"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "696da250-8ef7-437e-b899-91a9b65cd2a9"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "696da250-8ef7-437e-b899-91a9b65cd2a9"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F10-daily-digest"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F10-daily-digest"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F14-email-12plus"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F14-email-12plus"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F14-email-under12"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F14-email-under12"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "f1000000-0000-4000-8000-000000000003"
+        }
+      },
+      "beforeCount": 14,
+      "afterCount": 18
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000806"
+        }
+      },
+      "beforeCount": 15,
+      "afterCount": 18
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "c1000000-0000-4000-8000-000000000002"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 8
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000805"
+        }
+      },
+      "beforeCount": 11,
+      "afterCount": 12
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000807"
+        }
+      },
+      "beforeCount": 22,
+      "afterCount": 23
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000808"
+        }
+      },
+      "beforeCount": 25,
+      "afterCount": 26
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "b0000000-0000-4000-8000-000000000809"
+        }
+      },
+      "beforeCount": 13,
+      "afterCount": 14
+    }
+  ]
+}
