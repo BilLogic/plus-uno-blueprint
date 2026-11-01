@@ -68,6 +68,20 @@ Centers. Each evidence row's note names its sources and links.
   has the lead remind tutors to record, and each tutor starts it in their
   first room. The content edit here does not touch that summary.
 
+## Partial apply and recovery
+
+The first apply of `0745-in-session-live-behaviour.json` (SHA-256
+`2f6ddc93…62179`) wrote row 34's edit and its evidence, then stopped before
+row 35's insertion wrote anything. The insertion's preservation check had
+advanced row 34's cell with the old `search_tsv`, a column the database
+regenerates on every write. The runner now leaves `search_tsv` out of
+projected rows, as it already did `updated_at`. A unit test covers the edit
+followed by the check. All approved fields are still compared exactly.
+
+`0745-recovery.json` carries the remaining 22 operations unchanged, with
+expected values re-read after the partial apply. The first file's receipt
+stays in this worktree as the record of the two operations that landed.
+
 ## Validation
 
 - Dry-run: `ok: true`, 24 operations, no expected-current mismatch, no writes.
