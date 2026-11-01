@@ -206,3 +206,18 @@ expected-current mismatches. 32 diff entries; ledger 341→341. Affected paths
 are reported for every rename. The runner's canonical SHA-256 is
 `59ae980c479dde46f775850173e16eb1adc483e1470d404af5848502f310ecf3`.
 No apply or verify was run.
+
+## Sources re-read (October 31, 2026)
+
+Re-read through the PLUS Notion connection; the batch is unchanged.
+
+- RM-2569 (Goal cycle counts sessions, not days), RM-2158 (In-session tutor
+  note-taking) and RM-2650 (goal-setting controls re-enable at session start)
+  are all Dev Status Deployed, Release 12.0 (live). That supports `live` for
+  the G9 and G10 cells.
+- G9's wording matches RM-2569's badge spec ("{#} Sessions Left", sessions
+  rather than days).
+- G10's wording matches the Help Center article (3edb…0430): private,
+  auto-saved, at the top of the goal-setting window, in-progress sessions only.
+- That article tells tutors to select **Set goals**, so sentence case matches
+  the product's own copy (decision 2).
