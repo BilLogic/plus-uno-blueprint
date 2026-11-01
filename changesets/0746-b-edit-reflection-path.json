@@ -1,0 +1,492 @@
+{
+  "version": 1,
+  "issue": 746,
+  "operations": [
+    {
+      "key": "row60-steps",
+      "operation": "set_path_steps",
+      "target": {
+        "table": "paths",
+        "id": "cf7432cb-de24-4c46-97fe-4eeccb4c1c78",
+        "withSteps": true
+      },
+      "expected": {
+        "step_ids": [
+          "c3000000-0000-4000-8000-000000000020",
+          "bd082e7e-1c27-48a2-ad77-356b84875bf7",
+          "f664dc46-0a5a-40ec-b450-c610778aebd1",
+          "c3000000-0000-4000-8000-000000000025"
+        ],
+        "scenario_id": "c3000000-0000-4000-8000-000000000001",
+        "name": "Edits a submitted reflection"
+      },
+      "value": {
+        "step_ids": [
+          "c3000000-0000-4000-8000-000000000020",
+          "c3000000-0000-4000-8000-000000000025"
+        ]
+      },
+      "evidence": [
+        "https://www.notion.so/392b7cca4982804cb6bdf4a0c7f9c435",
+        "https://www.notion.so/2f1b7cca4982808bac30eb2fd862ac62",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    },
+    {
+      "key": "row60-reopen",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "cf7432cb-de24-4c46-97fe-4eeccb4c1c78",
+          "lane_id": "24be5407-9eb2-4a1c-889c-241462798df1",
+          "step_id": "c3000000-0000-4000-8000-000000000020",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Reopens their own submitted reflection from Reflections to replace a recording, add a file, or fix an answer.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/392b7cca4982804cb6bdf4a0c7f9c435",
+        "https://www.notion.so/2f1b7cca4982808bac30eb2fd862ac62",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    },
+    {
+      "key": "row60-reopen-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "row60-reopen"
+          },
+          "cell_key": {
+            "ref": "row60-reopen",
+            "field": "cell_key"
+          },
+          "title": "KB audit #746 row60 — Edits a submitted reflection, Regular Tutor, Open the form"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #746 row60 — Edits a submitted reflection, Regular Tutor, Open the form",
+        "note": "Help Center Complete and Manage Session Reflections, step 7 Edit a Submitted Reflection: a tutor can edit their own reflection to replace a recording that did not upload correctly, add a file they forgot, or correct an answer, opening it from the Reflections tab. Card 2225 Tutor Reflection Form Editing is Deployed (11.2). Read through the PLUS Notion connection on November 1, 2026. https://www.notion.so/392b7cca4982804cb6bdf4a0c7f9c435 ; card 2225: https://www.notion.so/2f1b7cca4982808bac30eb2fd862ac62"
+      },
+      "evidence": [
+        "https://www.notion.so/392b7cca4982804cb6bdf4a0c7f9c435",
+        "https://www.notion.so/2f1b7cca4982808bac30eb2fd862ac62",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    },
+    {
+      "key": "row60-form",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "cf7432cb-de24-4c46-97fe-4eeccb4c1c78",
+          "lane_id": "29a3a9c4-1b40-4a78-8d27-245779dc6b47",
+          "step_id": "c3000000-0000-4000-8000-000000000020",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Reflection form",
+        "status": "live",
+        "summary": "Editing opens the form prefilled with the submitted answers."
+      },
+      "evidence": [
+        "https://www.notion.so/392b7cca4982804cb6bdf4a0c7f9c435",
+        "https://www.notion.so/2f1b7cca4982808bac30eb2fd862ac62",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    },
+    {
+      "key": "row60-form-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "row60-form"
+          },
+          "cell_key": {
+            "ref": "row60-form",
+            "field": "cell_key"
+          },
+          "title": "KB audit #746 row60 — Edits a submitted reflection, Front Stage Touchpoints, Open the form"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #746 row60 — Edits a submitted reflection, Front Stage Touchpoints, Open the form",
+        "note": "Figma 11272:251700 (spec corrections vs the shipped app): reflection editing with prefill is shipped (card 2225, Deployed 11.2). https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-251700 ; card 2225: https://www.notion.so/2f1b7cca4982808bac30eb2fd862ac62"
+      },
+      "evidence": [
+        "https://www.notion.so/392b7cca4982804cb6bdf4a0c7f9c435",
+        "https://www.notion.so/2f1b7cca4982808bac30eb2fd862ac62",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    },
+    {
+      "key": "row60-save",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "cf7432cb-de24-4c46-97fe-4eeccb4c1c78",
+          "lane_id": "24be5407-9eb2-4a1c-889c-241462798df1",
+          "step_id": "c3000000-0000-4000-8000-000000000025",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Saves the edited reflection.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/392b7cca4982804cb6bdf4a0c7f9c435",
+        "https://www.notion.so/2f1b7cca4982808bac30eb2fd862ac62",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    },
+    {
+      "key": "row60-save-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "row60-save"
+          },
+          "cell_key": {
+            "ref": "row60-save",
+            "field": "cell_key"
+          },
+          "title": "KB audit #746 row60 — Edits a submitted reflection, Regular Tutor, Submit"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #746 row60 — Edits a submitted reflection, Regular Tutor, Submit",
+        "note": "Help Center step 7: the tutor makes their changes and saves them. #746 proposed \"Resubmits the reflection.\"; the Help Center says save, so the cell follows it. Read through the PLUS Notion connection on November 1, 2026. https://www.notion.so/392b7cca4982804cb6bdf4a0c7f9c435"
+      },
+      "evidence": [
+        "https://www.notion.so/392b7cca4982804cb6bdf4a0c7f9c435",
+        "https://www.notion.so/2f1b7cca4982808bac30eb2fd862ac62",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    },
+    {
+      "key": "row60-record",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "cf7432cb-de24-4c46-97fe-4eeccb4c1c78",
+          "lane_id": "c6f211f3-f666-4436-8863-af0ea573e6e2",
+          "step_id": "c3000000-0000-4000-8000-000000000025",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Session reflection",
+        "status": "live",
+        "summary": "Holds the tutor's own reflection with the saved changes."
+      },
+      "evidence": [
+        "https://www.notion.so/392b7cca4982804cb6bdf4a0c7f9c435",
+        "https://www.notion.so/2f1b7cca4982808bac30eb2fd862ac62",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    },
+    {
+      "key": "row60-record-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "row60-record"
+          },
+          "cell_key": {
+            "ref": "row60-record",
+            "field": "cell_key"
+          },
+          "title": "KB audit #746 row60 — Edits a submitted reflection, Back Stage Touchpoints, Submit"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #746 row60 — Edits a submitted reflection, Back Stage Touchpoints, Submit",
+        "note": "Card 2225 (Deployed 11.2): editing is limited to tutor-owned submissions and updates the submitted reflection. Read through the PLUS Notion connection on November 1, 2026. https://www.notion.so/2f1b7cca4982808bac30eb2fd862ac62"
+      },
+      "evidence": [
+        "https://www.notion.so/392b7cca4982804cb6bdf4a0c7f9c435",
+        "https://www.notion.so/2f1b7cca4982808bac30eb2fd862ac62",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "row60-reopen"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "row60-form"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "row60-save"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "row60-record"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "cf7432cb-de24-4c46-97fe-4eeccb4c1c78"
+        }
+      },
+      "beforeCount": 4,
+      "afterCount": 2,
+      "beforeRows": [
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000020",
+          "position": 1
+        },
+        {
+          "step_id": "bd082e7e-1c27-48a2-ad77-356b84875bf7",
+          "position": 2
+        },
+        {
+          "step_id": "f664dc46-0a5a-40ec-b450-c610778aebd1",
+          "position": 3
+        },
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000025",
+          "position": 4
+        }
+      ],
+      "afterRows": [
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000020",
+          "position": 0
+        },
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000025",
+          "position": 1
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "cf7432cb-de24-4c46-97fe-4eeccb4c1c78"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 4
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "cf7432cb-de24-4c46-97fe-4eeccb4c1c78"
+        }
+      },
+      "beforeCount": 8,
+      "afterCount": 8
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "c3000000-0000-4000-8000-000000000002"
+        }
+      },
+      "beforeCount": 6,
+      "afterCount": 6,
+      "beforeRows": [
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000020",
+          "position": 1
+        },
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000021",
+          "position": 2
+        },
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000022",
+          "position": 3
+        },
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000023",
+          "position": 4
+        },
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000024",
+          "position": 5
+        },
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000025",
+          "position": 6
+        }
+      ],
+      "afterRows": [
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000020",
+          "position": 1
+        },
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000021",
+          "position": 2
+        },
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000022",
+          "position": 3
+        },
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000023",
+          "position": 4
+        },
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000024",
+          "position": 5
+        },
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000025",
+          "position": 6
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "c3000000-0000-4000-8000-000000000002"
+        }
+      },
+      "beforeCount": 21,
+      "afterCount": 21
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "17d54a45-65ab-4670-8035-fb7bc0a0b256"
+        }
+      },
+      "beforeCount": 4,
+      "afterCount": 4,
+      "beforeRows": [
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000020",
+          "position": 1
+        },
+        {
+          "step_id": "bd082e7e-1c27-48a2-ad77-356b84875bf7",
+          "position": 2
+        },
+        {
+          "step_id": "f664dc46-0a5a-40ec-b450-c610778aebd1",
+          "position": 3
+        },
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000025",
+          "position": 4
+        }
+      ],
+      "afterRows": [
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000020",
+          "position": 1
+        },
+        {
+          "step_id": "bd082e7e-1c27-48a2-ad77-356b84875bf7",
+          "position": 2
+        },
+        {
+          "step_id": "f664dc46-0a5a-40ec-b450-c610778aebd1",
+          "position": 3
+        },
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000025",
+          "position": 4
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "17d54a45-65ab-4670-8035-fb7bc0a0b256"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 9
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "c3000000-0000-4000-8000-000000000001"
+        }
+      },
+      "beforeCount": 8,
+      "afterCount": 8
+    }
+  ]
+}
