@@ -22,6 +22,9 @@ const OPERATIONS = {
   update_step_spec: { table: 'steps', fields: ['summary'] },
 }
 
+/** Edits that may address a step generated earlier in the same batch. */
+const DEFERRABLE = new Set(['rename_step', 'update_step_spec'])
+
 const REQUIRED_SCOPE = {
   insert_cell_at_position: COORDINATES,
   create_path_at_status: ['scenario_id', 'name'],
@@ -118,11 +121,14 @@ async function resolveRefs(value, known, database) {
     if (Object.hasOwn(value, 'lookup')) {
       const target = await resolveRefs(value.lookup, known, database)
       validateTarget(target)
-      if (pending(target)) return { $pending: 'lookup' }
+      if (pending(target)) return { $pending: 'lookup', roots: pendingRoots(target) }
+      // `field` names an identity column on a row without its own id, such as
+      // a path_steps membership's step_id. It is still exactly one row's value.
+      const field = value.field ?? 'id'
       const rows = await database.read(target)
       if (rows.length !== 1) throw new Error(`lookup ${JSON.stringify(target)}: expected exactly one row, found ${rows.length}`)
-      if (typeof rows[0].id !== 'string' || !rows[0].id) throw new Error(`lookup ${JSON.stringify(target)}: missing id`)
-      return rows[0].id
+      if (typeof rows[0][field] !== 'string' || !rows[0][field]) throw new Error(`lookup ${JSON.stringify(target)}: missing ${field}`)
+      return rows[0][field]
     }
     return Object.fromEntries(await Promise.all(Object.entries(value).map(async ([k, v]) => [k, await resolveRefs(v, known, database)])))
   }
@@ -131,6 +137,36 @@ async function resolveRefs(value, known, database) {
 
 function pending(value) {
   return value && typeof value === 'object' && (Object.hasOwn(value, '$pending') || Object.values(value).some(pending))
+}
+
+/** The keys of the batch operations a pending value is waiting on. */
+function pendingRoots(value) {
+  if (!value || typeof value !== 'object') return []
+  if (Object.hasOwn(value, '$pending')) return value.roots ?? [value.$pending]
+  return [...new Set(Object.values(value).flatMap(pendingRoots))]
+}
+
+/**
+ * A deferred edit may only reach a row this batch creates: its target must be
+ * pending solely through one scenario created earlier in the batch, and it
+ * must name that scenario in expected.scenario_id, which apply re-checks.
+ * Returns the scenario's operation key, or the reasons to refuse.
+ */
+function deferral(source, op, index, operations, rootedIn) {
+  const scenario = source.expected?.scenario_id?.ref
+  if (!scenario || (source.expected.scenario_id.field ?? 'id') !== 'id' || operations.findIndex((other) => other.key === scenario) >= index
+    || operations.find((other) => other.key === scenario)?.operation !== 'create_scenario')
+    return { failures: [`${op.key}: a deferred edit requires expected.scenario_id to be the ref of a scenario created earlier in this batch`] }
+  const failures = []
+  for (const root of pendingRoots(op.target)) {
+    if (rootedIn.get(root) !== scenario)
+      failures.push(`${op.key}: deferred target is reached through ${root}, not only through scenario ${scenario}; an existing row cannot be deferred`)
+  }
+  if (op.operation === 'rename_step') {
+    const later = operations.slice(index + 1).find((other) => other.operation === 'add_step' && other.target?.where?.scenario_id?.ref === scenario)
+    if (later) failures.push(`${op.key}: a deferred rename must follow every add_step on scenario ${scenario}; ${later.key} comes after it`)
+  }
+  return { scenario, failures }
 }
 
 async function observe(database, target) {
@@ -191,12 +227,36 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
   const applied = []
   let failedAttempt
   const known = new Map()
+  // Which scenario created in this batch each pending row descends from.
+  const rootedIn = new Map()
   const auditCounts = mode === 'dry-run' && database.auditCount ? { before: await database.auditCount() } : null
-  for (const source of changeset.operations) {
+  for (const [index, source] of changeset.operations.entries()) {
     const op = await resolveRefs(source, known, database)
     const rows = await observe(database, op.target)
     const creating = op.expected === null && mode !== 'verify'
-    if (creating ? rows.length !== 0 : rows.length !== 1) {
+    // A step a preceding creation generates (create_scenario's placeholder)
+    // has no row to preflight. Its rename and summary are deferred, not
+    // assumed: apply reads the row after its parent exists, re-checks its
+    // scenario and every expected field, and prepares (memberships,
+    // preservation) before writing. Anything else on a pending row fails.
+    const deferrable = !creating && mode !== 'verify' && DEFERRABLE.has(op.operation) && pending(op.target)
+    const deferred = deferrable ? deferral(source, op, index, changeset.operations, rootedIn) : null
+    if (creating) {
+      const roots = pendingRoots(op.target)
+      const scenario = op.operation === 'create_scenario' ? op.key : rootedIn.get(roots[0])
+      if (scenario && roots.every((root) => rootedIn.get(root) === scenario)) rootedIn.set(op.key, scenario)
+    }
+    if (deferred?.failures.length) {
+      failures.push(...deferred.failures)
+    } else if (deferred) {
+      rootedIn.set(op.key, deferred.scenario)
+      diff.push({
+        key: op.key, operation: op.operation, target: { table: op.target.table, generated: true },
+        before: op.expected, after: op.value, evidence: op.evidence,
+        deferred: 'Generated by a preceding operation; read, guarded and captured at apply time',
+      })
+      planned.push({ source, before: null, deferred: { scenario: deferred.scenario } })
+    } else if (creating ? rows.length !== 0 : rows.length !== 1) {
       failures.push(`${op.key}: expected ${creating ? 'no rows' : 'exactly one row'}, found ${rows.length}`)
     } else {
       if (!creating) failures.push(...differences(rows[0], mode === 'verify' ? { ...op.expected, ...op.value } : op.expected, op.key))
@@ -218,7 +278,7 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
     }
     known.set(op.key, rows[0] ?? {
       ...op.target.where, ...op.value, id: { $pending: op.key },
-      ...(op.target.table === 'cells' ? { cell_key: { $pending: `${op.key}.cell_key` } } : {}),
+      ...(op.target.table === 'cells' ? { cell_key: { $pending: op.key, field: 'cell_key' } } : {}),
     })
   }
   for (const check of changeset.checks ?? []) {
@@ -235,15 +295,27 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
   }
   if (mode === 'apply' && failures.length === 0) {
     known.clear()
-    for (const { source, before, preparation: preflight } of planned) {
+    for (const { source, preparation: preflight, deferred, ...plan } of planned) {
       let op
+      let before = plan.before
       try {
         op = await resolveRefs(source, known, database)
+        if (pending(op.target)) throw new Error('Target is still pending after its parent; no write attempted for this operation')
         const current = await database.read(op.target)
-        if (before === null ? current.length !== 0 : current.length !== 1 || !isDeepStrictEqual(current[0], before))
+        if (deferred) {
+          if (current.length !== 1) throw new Error(`Generated target resolved to ${current.length} rows; no write attempted for this operation`)
+          const scenarioId = known.get(deferred.scenario)?.id
+          if (!scenarioId || current[0].scenario_id !== scenarioId)
+            throw new Error(`Generated target is not in scenario ${deferred.scenario} created by this batch; no write attempted for this operation`)
+          const mismatch = differences(current[0], op.expected, op.key)
+          if (mismatch.length) throw new Error(`${mismatch.join('; ')}; no write attempted for this operation`)
+          before = current[0]
+        } else if (before === null ? current.length !== 0 : current.length !== 1 || !isDeepStrictEqual(current[0], before))
           throw new Error('Target changed since preflight; no write attempted for this operation')
+        // A deferred rename has no preflight capture to compare; its prepare
+        // still refuses memberships that differ from the reviewed input.
         const preparation = await database.prepare?.(op, before)
-        if (!isDeepStrictEqual(preparation?.affectedPaths, preflight?.affectedPaths)) throw new Error('Affected paths changed since the reviewed preflight')
+        if (!deferred && !isDeepStrictEqual(preparation?.affectedPaths, preflight?.affectedPaths)) throw new Error('Affected paths changed since the reviewed preflight')
         const preservationFailures = await verifyChecks(database.read, preflight?.checks ?? [])
         if (preservationFailures.length) throw new Error(preservationFailures.join('; '))
         // Mark the attempt before sending it: a connection can fail after the
@@ -281,7 +353,8 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
     }
   }
   if (mode === 'dry-run') {
-    for (const { source, before, preparation } of planned) {
+    for (const { source, before, preparation, deferred } of planned) {
+      if (deferred) continue // Its target is pending: nothing exists to re-read.
       const op = await resolveRefs(source, known, database)
       const rows = await observe(database, op.target)
       if (!isDeepStrictEqual(rows, before === null ? [] : [before]))

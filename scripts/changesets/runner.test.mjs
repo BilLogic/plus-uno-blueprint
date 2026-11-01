@@ -311,3 +311,94 @@ test('a missing or ambiguous lookup stops an existing-parent batch before writes
     }), /lookup.*(exactly one|missing id)/)
   }
 })
+
+test('only a generated step’s rename or summary is deferred; other edits on a pending row still fail preflight', async () => {
+  const database = { read: async () => [] }
+  const scenario = { key: 'scenario', operation: 'create_scenario', target: { table: 'scenarios', where: { phase_id: 'p', name: 'New' } },
+    expected: null, value: { name: 'New', layout: 'stacked' }, evidence: ['Source'] }
+  const placeholder = { lookup: { table: 'path_steps', where: { path_id: { lookup: { table: 'paths', where: { scenario_id: { ref: 'scenario' } } } }, position: 0 } }, field: 'step_id' }
+  const rename = { key: 'rename', operation: 'rename_step', target: { table: 'steps', id: placeholder },
+    input: { expected_path_steps: [{ path_id: 'x', position: 0 }] }, expected: { name: 'Step 1', scenario_id: { ref: 'scenario' } }, value: { name: 'Build' }, evidence: ['Source'] }
+  const dry = await runChangeset({ version: 1, issue: 1, operations: [scenario, rename] }, 'dry-run', database)
+  assert.deepEqual(dry.failures, [])
+  assert.equal(dry.diff[1].before.name, 'Step 1')
+  assert.ok(dry.diff[1].deferred)
+  const status = { key: 'status', operation: 'update_cell_status', target: { table: 'cells', id: { ref: 'scenario' } }, expected: { status: 'built' }, value: { status: 'live' }, evidence: ['Source'] }
+  const refused = await runChangeset({ version: 1, issue: 1, operations: [scenario, status] }, 'dry-run', database)
+  assert.match(refused.failures.join('\n'), /status: expected exactly one row, found 0/)
+})
+
+test('a lookup field resolves exactly one membership’s step id', async () => {
+  const step = { id: 's1', name: 'Build', scenario_id: 'c' }
+  const database = { read: async (target) => target.table === 'path_steps' ? [{ path_id: 'p', step_id: 's1', position: 0 }] : target.id === 's1' ? [step] : [] }
+  const op = { key: 'rename', operation: 'rename_step', target: { table: 'steps', id: { lookup: { table: 'path_steps', where: { path_id: 'p', position: 0 } }, field: 'step_id' } },
+    input: { expected_path_steps: [{ path_id: 'p', position: 0 }] }, expected: { name: 'Step 1' }, value: { name: 'Build' }, evidence: ['Source'] }
+  const verified = await runChangeset({ version: 1, issue: 1, operations: [op] }, 'verify', database)
+  assert.deepEqual(verified.diff[0].target, { table: 'steps', id: 's1' })
+  assert.equal(verified.failures.some((failure) => failure.includes('rename.name')), false)
+})
+
+// Deferral is for rows this batch creates, never a way past preflight.
+const scenarioOp = { key: 'scenario', operation: 'create_scenario', target: { table: 'scenarios', where: { phase_id: 'p', name: 'New' } },
+  expected: null, value: { name: 'New', layout: 'stacked' }, evidence: ['Source'] }
+const placeholderRename = (expected) => ({ key: 'rename', operation: 'rename_step',
+  target: { table: 'steps', id: { lookup: { table: 'path_steps', where: { path_id: { lookup: { table: 'paths', where: { scenario_id: { ref: 'scenario' } } } }, position: 0 } }, field: 'step_id' } },
+  input: { expected_path_steps: [{ path_id: 'x', position: 0 }] }, expected, value: { name: 'Build' }, evidence: ['Source'] })
+const noWrites = (stored = {}) => ({
+  read: async (target) => (stored[target.table] ?? []).filter((row) =>
+    Object.entries(target.where ?? (target.id ? { id: target.id } : {})).every(([key, value]) => row[key] === value)),
+  write: async () => assert.fail('a refused deferral wrote'),
+})
+
+test('a deferred edit must name, in expected.scenario_id, a scenario created earlier in the batch', async () => {
+  const reason = 'rename: a deferred edit requires expected.scenario_id to be the ref of a scenario created earlier in this batch'
+  const path = { key: 'path', operation: 'create_path_at_status', target: { table: 'paths', where: { scenario_id: 'old', name: 'P' } },
+    expected: null, value: { kind: 'variant', status: 'live' }, evidence: ['Source'] }
+  for (const operations of [
+    [scenarioOp, placeholderRename({ name: 'Step 1' })],
+    [scenarioOp, path, placeholderRename({ name: 'Step 1', scenario_id: { ref: 'path' } })],
+    [scenarioOp, placeholderRename({ name: 'Step 1', scenario_id: 'an-existing-scenario' })],
+    [scenarioOp, placeholderRename({ name: 'Step 1', scenario_id: { ref: 'scenario', field: 'phase_id' } })],
+  ]) {
+    for (const mode of ['dry-run', 'apply']) {
+      const result = await runChangeset({ version: 1, issue: 1, operations }, mode, noWrites())
+      assert.deepEqual(result.failures, [reason])
+      assert.deepEqual(result.applied, [])
+    }
+  }
+  // A scenario created after the edit is a forward ref, refused outright.
+  const later = { ...scenarioOp, key: 'later' }
+  await assert.rejects(runChangeset({ version: 1, issue: 1, operations: [scenarioOp, placeholderRename({ name: 'Step 1', scenario_id: { ref: 'later' } }), later] }, 'dry-run', noWrites()),
+    /Expected a preceding operation for ref later/)
+})
+
+test('an existing step reached through a row the batch inserts is refused at dry-run, before any write', async () => {
+  const stored = {
+    steps: [{ id: 'old-step', scenario_id: 'old', name: 'Old name' }],
+    paths: [{ id: 'old-path', scenario_id: 'old' }],
+  }
+  const insert = { key: 'insert', operation: 'insert_cell_at_position',
+    target: { table: 'cells', where: { path_id: 'old-path', lane_id: 'old-lane', step_id: 'old-step', position: 1 } },
+    expected: null, value: { content: 'A new cell', status: 'live' }, evidence: ['Source'] }
+  const rename = { key: 'rename', operation: 'rename_step',
+    target: { table: 'steps', id: { lookup: { table: 'cells', where: { id: { ref: 'insert' } } }, field: 'step_id' } },
+    input: { expected_path_steps: [{ path_id: 'old-path', position: 0 }] },
+    expected: { name: 'A stale name', scenario_id: { ref: 'scenario' } }, value: { name: 'Renamed' }, evidence: ['Source'] }
+  for (const mode of ['dry-run', 'apply']) {
+    const result = await runChangeset({ version: 1, issue: 1, operations: [scenarioOp, insert, rename] }, mode, noWrites(stored))
+    assert.equal(result.ok, false)
+    assert.deepEqual(result.failures, ['rename: deferred target is reached through insert, not only through scenario scenario; an existing row cannot be deferred'])
+    assert.equal(result.diff.some((entry) => entry.key === 'rename'), false)
+    assert.deepEqual(result.applied, [])
+  }
+})
+
+test('a deferred rename placed before an add_step on its scenario is refused at preflight', async () => {
+  const add = { key: 'later-step', operation: 'add_step', target: { table: 'steps', where: { scenario_id: { ref: 'scenario' }, name: 'Later' } },
+    expected: null, value: { name: 'Later' }, input: { path_id: 'x' }, evidence: ['Source'] }
+  const rename = placeholderRename({ name: 'Step 1', scenario_id: { ref: 'scenario' } })
+  const refused = await runChangeset({ version: 1, issue: 1, operations: [scenarioOp, rename, add] }, 'dry-run', noWrites())
+  assert.deepEqual(refused.failures, ['rename: a deferred rename must follow every add_step on scenario scenario; later-step comes after it'])
+  const ordered = await runChangeset({ version: 1, issue: 1, operations: [scenarioOp, add, rename] }, 'dry-run', noWrites())
+  assert.deepEqual(ordered.failures, [])
+})

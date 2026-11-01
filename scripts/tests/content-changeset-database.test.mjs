@@ -2,6 +2,7 @@ import { test, expect } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
 import { modules } from '../../deployment/lib/contentChangesetModules.ts'
 import { createDatabase } from '../changesets/database.mjs'
+import { readFileSync } from 'node:fs'
 import { runChangeset } from '../content-changeset.mjs'
 
 const id = '10000000-0000-4000-8000-000000000001'
@@ -18,11 +19,21 @@ const changeset = {
   }],
 }
 
+/** Column defaults the hosted schema fills when an RPC's insert omits them. */
+const COLUMN_DEFAULTS = { paths: { status: 'live' } }
+
 /** A disposable PostgREST boundary, never a mock of the mutation modules. */
 function databaseFixture({ zeroRows = false, failAppend = false, corruptCell = false, wrongInverse = false, duplicateLog = false, missingRpc = false, nilReceipt = false, raceMove = false } = {}) {
   const tables = {
     cells: [{ ...seed }], authoring_changes: [], evidence: [], cell_touchpoints: [], resources: [], cell_dependencies: [], services: [{ id }],
     paths: [{ id, scenario_id: id }], lanes: [{ id, path_id: id }], steps: [{ id, scenario_id: id, name: 'Old step' }], path_steps: [],
+    phases: [], scenarios: [],
+  }
+  const uuid = (prefix) => `${prefix}-0000-4000-8000-${String(counter++).padStart(12, '0')}`
+  // Shift then insert, as add_step does under its deferred position constraint.
+  const addPathStep = (pathId, stepId, position) => {
+    for (const link of tables.path_steps) if (link.path_id === pathId && link.position >= position) link.position += 1
+    tables.path_steps.push({ path_id: pathId, step_id: stepId, position })
   }
   const requests = []
   let counter = 1
@@ -34,7 +45,45 @@ function databaseFixture({ zeroRows = false, failAppend = false, corruptCell = f
     const answer = (data, status = 200, headers = {}) => new Response(JSON.stringify(data), {
       status, headers: { 'Content-Type': 'application/json', ...headers },
     })
-    if (url.pathname.endsWith('/rpc/sync_cell_touchpoints')) return answer({ removed: [] })
+    if (url.pathname.endsWith('/rpc/sync_cell_touchpoints')) {
+      // Touchpoint lanes place each named line; actor lanes are skipped.
+      const cell = tables.cells.find((row) => row.id === body.p_cell_id)
+      const lane = tables.lanes.find((row) => row.id === cell?.lane_id)
+      if (['frontstage_touchpoints', 'backstage_touchpoints'].includes(lane?.lane_role)) {
+        for (const [position, name] of body.p_names.entries()) {
+          if (!tables.cell_touchpoints.some((row) => row.cell_id === cell.id && row.touchpoint_name === name))
+            tables.cell_touchpoints.push({ id: uuid('70000000'), cell_id: cell.id, touchpoint_name: name, position, name: null, summary: null, role: null })
+        }
+      }
+      return answer({ removed: [] })
+    }
+    if (url.pathname.endsWith('/rpc/create_scenario')) {
+      // The hosted RPC: one happy path, copied lanes, and at least one
+      // placeholder column named Step 1 at position 0 even for step_count 0.
+      const scenarioId = uuid('80000000')
+      const pathId = uuid('80000000')
+      const siblings = tables.scenarios.filter((row) => row.phase_id === body.phase_id)
+      tables.scenarios.push({ id: scenarioId, phase_id: body.phase_id, name: body.name, layout: body.layout, summary: null,
+        position: Math.max(-1, ...siblings.map((row) => row.position)) + 1 })
+      // The RPC leaves status to the column default (live); it never sets one.
+      tables.paths.push({ id: pathId, scenario_id: scenarioId, name: body.path_name, kind: 'happy', status: COLUMN_DEFAULTS.paths.status, summary: null, note: null })
+      for (const lane of tables.lanes.filter((row) => row.path_id === body.lane_source_path_id))
+        tables.lanes.push({ id: uuid('80000000'), path_id: pathId, name: lane.name, lane_role: lane.lane_role, position: lane.position })
+      for (let index = 0; index < Math.max(body.step_count, 1); index++) {
+        const stepId = uuid('80000000')
+        tables.steps.push({ id: stepId, scenario_id: scenarioId, name: `Step ${index + 1}`, summary: null })
+        tables.path_steps.push({ path_id: pathId, step_id: stepId, position: index })
+      }
+      return answer({ scenario_id: scenarioId, path_id: pathId })
+    }
+    if (url.pathname.endsWith('/rpc/add_step')) {
+      const path = tables.paths.find((row) => row.id === body.path_id)
+      const stepId = uuid('80000000')
+      const end = Math.max(-1, ...tables.path_steps.filter((row) => row.path_id === path.id).map((row) => row.position)) + 1
+      tables.steps.push({ id: stepId, scenario_id: path.scenario_id, name: body.name, summary: null })
+      addPathStep(path.id, stepId, body.at_position ?? end)
+      return answer(stepId)
+    }
     if (missingRpc && /\/rpc\/(rename_step|move_cell|insert_cell_at_position)$/.test(url.pathname)) return answer({ code: 'PGRST202', message: 'Missing host operation' }, 404)
     if (url.pathname.endsWith('/rpc/insert_cell_at_position')) {
       const cellId = `40000000-0000-4000-8000-${String(counter++).padStart(12, '0')}`
@@ -72,7 +121,7 @@ function databaseFixture({ zeroRows = false, failAppend = false, corruptCell = f
     if (url.pathname.endsWith('/rpc/upsert_cell_at_status')) {
       const cellId = `40000000-0000-4000-8000-${String(counter++).padStart(12, '0')}`
       const changeId = `50000000-0000-4000-8000-${String(counter++).padStart(12, '0')}`
-      tables.cells.push({ id: cellId, ...body, position: 0, summary: null, owner: null, perceived_owner: null })
+      tables.cells.push({ id: cellId, ...body, position: 0, summary: null, owner: null, perceived_owner: null, cell_key: `fixture/minted--${cellId}` })
       tables.authoring_changes.push({
         id: changeId, fn: 'upsert_cell_at_status', args: body, author: 'human',
         revert: { fn: 'delete_cell', args: { cell_id: cellId } },
@@ -428,5 +477,164 @@ test('new cells use the status RPC, then the sanctioned summary mutation, retain
     expect(fixture.tables.authoring_changes[0].revert.fn).toBe('delete_cell')
     expect(fixture.tables.authoring_changes[1].revert.args.update).toMatchObject({ summary: '', content: 'Checks goals.', status: 'live' })
     expect(result.applied[0].changeIds).toHaveLength(2)
+  } finally { fixture.database.close() }
+})
+
+const PHASE = 'f1000000-0000-4000-8000-000000000001'
+const LANE_SOURCE = 'a0000000-0000-4000-8000-000000000811'
+const SERVICE = 'a0000000-0000-4000-8000-000000000001'
+function scenarioFixture(options) {
+  const fixture = databaseFixture(options)
+  const { tables } = fixture
+  tables.services.push({ id: SERVICE })
+  tables.phases.push({ id: PHASE })
+  tables.scenarios.push({ id: 'f1000000-0000-4000-8000-000000000002', phase_id: PHASE, name: 'Supervisor Program Administration', position: 1, layout: 'stacked' })
+  tables.paths.push({ id: 'f1000000-0000-4000-8000-000000000003', scenario_id: 'f1000000-0000-4000-8000-000000000002' }, { id: LANE_SOURCE, scenario_id: 'a0000000-0000-4000-8000-000000000204' })
+  const lanes = ['Storyboard:storyboard', 'Teacher:partner_actions', 'Lead Tutor:customer_actions', 'Regular Tutor:customer_actions',
+    'Front Stage Touchpoints:frontstage_touchpoints', 'Front Stage Actions:frontstage_actions', 'Back Stage Touchpoints:backstage_touchpoints',
+    'Back Stage Actions:backstage_actions', 'Support Actions:support_actions']
+  lanes.forEach((lane, position) => {
+    const [name, lane_role] = lane.split(':')
+    tables.lanes.push({ id: `a0000000-0000-4000-8000-0000000008${String(position).padStart(2, '0')}`, path_id: LANE_SOURCE, name, lane_role, position })
+  })
+  return fixture
+}
+const scenarioSteps = (tables, name) => {
+  const scenario = tables.scenarios.find((row) => row.name === name)
+  const path = tables.paths.find((row) => row.scenario_id === scenario?.id)
+  return tables.path_steps.filter((link) => link.path_id === path?.id).sort((a, b) => a.position - b.position)
+    .map((link) => tables.steps.find((row) => row.id === link.step_id).name)
+}
+
+// A self-contained batch with the shape the runner supports for a generated
+// placeholder: create, add the named steps, then rename and describe the
+// placeholder by its membership, then write a cell on it with evidence.
+const reportPath = { lookup: { table: 'paths', where: { scenario_id: { ref: 'scenario' }, name: 'Report sent' } } }
+const generatedBatch = { version: 1, issue: 759, operations: [{
+  key: 'scenario', operation: 'create_scenario', target: { table: 'scenarios', where: { phase_id: PHASE, name: 'Fixture Report' } },
+  expected: null, value: { name: 'Fixture Report', layout: 'stacked' },
+  input: { lane_source_path_id: LANE_SOURCE, step_count: 1, path_name: 'Report sent' }, evidence: ['Fixture source'],
+}, ...['Receive email', 'Read report'].map((name, index) => ({
+  key: `step-${index + 1}`, operation: 'add_step', target: { table: 'steps', where: { scenario_id: { ref: 'scenario' }, name } },
+  expected: null, value: { name }, input: { path_id: reportPath, at_position: index + 1 }, evidence: ['Fixture source'],
+})), {
+  key: 'build-step', operation: 'rename_step',
+  target: { table: 'steps', id: { lookup: { table: 'path_steps', where: { path_id: reportPath, position: 0 } }, field: 'step_id' } },
+  expected: { name: 'Step 1', scenario_id: { ref: 'scenario' } }, value: { name: 'Build report' },
+  input: { expected_path_steps: [{ path_id: reportPath, position: 0 }] }, evidence: ['Fixture source'],
+}, {
+  key: 'build-step-summary', operation: 'update_step_spec', target: { table: 'steps', id: { ref: 'build-step' } },
+  expected: { summary: null, name: 'Build report', scenario_id: { ref: 'scenario' } }, value: { summary: 'Records feed the report.' }, evidence: ['Fixture source'],
+}, {
+  key: 'build-cell', operation: 'upsert_cell_at_status', target: { table: 'cells', where: {
+    path_id: reportPath, lane_id: { lookup: { table: 'lanes', where: { path_id: reportPath, name: 'Regular Tutor' } } },
+    step_id: { ref: 'build-step' }, position: 0,
+  } }, expected: null, value: { content: 'Records attendance.', status: 'live' }, evidence: ['Fixture source'],
+}, {
+  key: 'build-cell-evidence', operation: 'add_evidence', target: { table: 'evidence', where: {
+    service_id: SERVICE, cell_id: { ref: 'build-cell' }, cell_key: { ref: 'build-cell', field: 'cell_key' }, title: 'Fixture source',
+  } }, expected: null, value: { kind: 'doc', title: 'Fixture source', note: 'Fixture citation.' }, evidence: ['Fixture source'],
+}], checks: [
+  { target: { table: 'steps', where: { scenario_id: { ref: 'scenario' } } }, beforeCount: 0, afterCount: 3 },
+  { target: { table: 'steps', where: { scenario_id: { ref: 'scenario' }, name: 'Step 1' } }, beforeCount: 0, afterCount: 0 },
+] }
+
+/** Changes the fixture right after one named operation's write. */
+function after(fixture, key, change) {
+  const write = fixture.database.write
+  fixture.database.write = async (op, ...rest) => {
+    const result = await write(op, ...rest)
+    if (op.key === key) change(fixture.tables)
+    return result
+  }
+}
+const placeholder = (tables) => {
+  const scenario = tables.scenarios.find((row) => row.name === 'Fixture Report')
+  return tables.steps.find((row) => row.scenario_id === scenario.id && row.name === 'Step 1')
+}
+
+test('a generated placeholder is renamed and described in place, ending with exactly the named steps', async () => {
+  const fixture = scenarioFixture()
+  try {
+    const dry = await runChangeset(generatedBatch, 'dry-run', fixture.database)
+    expect(dry.failures).toEqual([])
+    expect(dry.diff.find((entry) => entry.key === 'build-step')).toMatchObject({ before: { name: 'Step 1' }, after: { name: 'Build report' }, deferred: expect.any(String) })
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+    expect((await runChangeset(generatedBatch, 'verify', fixture.database)).ok).toBe(false)
+
+    const applied = await runChangeset(generatedBatch, 'apply', fixture.database)
+    expect(applied.failures).toEqual([])
+    expect(applied.applied.map((entry) => entry.key)).toEqual(generatedBatch.operations.map((op) => op.key))
+    expect(scenarioSteps(fixture.tables, 'Fixture Report')).toEqual(['Build report', 'Receive email', 'Read report'])
+    expect(fixture.tables.steps.some((row) => row.name === 'Step 1')).toBe(false)
+    expect(fixture.tables.steps.find((row) => row.name === 'Build report').summary).toBe('Records feed the report.')
+    const rename = fixture.tables.authoring_changes.filter((row) => row.fn === 'rename_step')
+    expect(rename).toHaveLength(1)
+    expect(rename[0].revert).toMatchObject({ fn: 'rename_step', args: { expected_name: 'Build report', new_name: 'Step 1' } })
+    expect(fixture.tables.evidence).toHaveLength(1)
+    expect(fixture.requests.some(({ method }) => method === 'DELETE')).toBe(false)
+    expect((await runChangeset(generatedBatch, 'verify', fixture.database, { receipt: applied.applied })).failures).toEqual([])
+  } finally { fixture.database.close() }
+})
+
+const renameRefusals = [
+  ['a placeholder renamed by someone else', 'step-2', (tables) => { placeholder(tables).name = 'Column 1' },
+    'build-step: build-step.name: expected "Step 1", found "Column 1"; no write attempted for this operation; batch stopped'],
+  ['a placeholder moved to another scenario', 'step-2', (tables) => { placeholder(tables).scenario_id = 'f1000000-0000-4000-8000-000000000002' },
+    'build-step: Generated target is not in scenario scenario created by this batch; no write attempted for this operation; batch stopped'],
+  ['no membership at position 0', 'step-2', (tables) => { tables.path_steps.splice(tables.path_steps.findIndex((link) => link.step_id === placeholder(tables).id), 1) },
+    'expected exactly one row, found 0; batch stopped'],
+  ['two memberships at position 0', 'step-2', (tables) => {
+    const link = tables.path_steps.find((row) => row.step_id === placeholder(tables).id)
+    tables.path_steps.push({ ...link, step_id: id })
+  }, 'expected exactly one row, found 2; batch stopped'],
+  ['a membership row whose step is gone', 'step-2', (tables) => { tables.path_steps.find((row) => row.step_id === placeholder(tables).id).step_id = 'f1000000-0000-4000-8000-00000000dead' },
+    'build-step: Generated target resolved to 0 rows; no write attempted for this operation; batch stopped'],
+  ['a membership the review did not list', 'step-2', (tables) => { tables.path_steps.push({ path_id: 'f1000000-0000-4000-8000-000000000003', step_id: placeholder(tables).id, position: 4 }) },
+    'build-step: Shared step memberships differ from the reviewed expected paths; batch stopped'],
+]
+test.each(renameRefusals)('%s stops the batch with its reason, before the rename is sent', async (_name, key, change, reason) => {
+  const fixture = scenarioFixture()
+  after(fixture, key, change)
+  try {
+    const applied = await runChangeset(generatedBatch, 'apply', fixture.database)
+    expect(applied.ok).toBe(false)
+    expect(applied.failures).toHaveLength(1)
+    expect(applied.failures[0]).toContain(reason)
+    expect(fixture.requests.some(({ path }) => path.endsWith('/rpc/rename_step'))).toBe(false)
+    expect(applied.applied.map((entry) => entry.key)).toEqual(['scenario', 'step-1', 'step-2'])
+  } finally { fixture.database.close() }
+})
+
+test('an existing step reached through a new cell fails dry-run and apply with no write', async () => {
+  const fixture = sharedStepFixture()
+  fixture.tables.phases.push({ id: PHASE })
+  const batch = { version: 1, issue: 759, operations: [generatedBatch.operations[0], ...insertBatch.operations, {
+    key: 'rename', operation: 'rename_step',
+    target: { table: 'steps', id: { lookup: { table: 'cells', where: { id: { ref: 'insert' } } }, field: 'step_id' } },
+    input: { expected_path_steps: renameBatch.operations[0].input.expected_path_steps },
+    expected: { name: 'A stale name', scenario_id: { ref: 'scenario' } }, value: { name: 'New step' }, evidence: ['Fixture source'],
+  }] }
+  const reason = 'rename: deferred target is reached through insert, not only through scenario scenario; an existing row cannot be deferred'
+  try {
+    const dry = await runChangeset(batch, 'dry-run', fixture.database)
+    expect(dry.failures).toEqual([reason])
+    const applied = await runChangeset(batch, 'apply', fixture.database)
+    expect(applied.failures).toEqual([reason])
+    expect(applied.applied).toEqual([])
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+    expect(fixture.tables.steps[0].name).toBe('Old step')
+    expect(fixture.tables.cells).toHaveLength(1)
+  } finally { fixture.database.close() }
+})
+
+test('the posted Weekly Class Report changeset passes dry-run against the fixture board', async () => {
+  const weeklyReport = JSON.parse(readFileSync(new URL('../../changesets/0759-weekly-class-report.json', import.meta.url), 'utf8'))
+  const fixture = scenarioFixture()
+  try {
+    const dry = await runChangeset(weeklyReport, 'dry-run', fixture.database)
+    expect(dry.failures).toEqual([])
+    expect(dry.diff).toHaveLength(weeklyReport.operations.length)
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
   } finally { fixture.database.close() }
 })

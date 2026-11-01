@@ -79,8 +79,10 @@ the cell's lane id, for example:
 { "lookup": { "table": "lanes", "where": { "path_id": { "ref": "new-path" }, "name": "Regular Tutor" } } }
 ```
 
-A lookup resolves exactly one row's id; missing, ambiguous or id-less results
-fail. During preflight a lookup under a pending new parent stays pending.
+A lookup resolves exactly one row's id, or the identity column `field`
+names on a row without its own id, such as a `path_steps` membership's
+`step_id`; missing, ambiguous or empty results fail. During preflight a
+lookup under a pending new parent stays pending.
 Apply resolves it after that parent is created, and separate verify resolves
 it again from the database. This adds reads, not a new write operation. Keep
 parent ids in the scope; a name alone does not identify a lane across paths.
@@ -125,8 +127,44 @@ not permission to write a table or change grants.
 the requested count to at least one and names the generated columns Step 1,
 Step 2 and so on. Adding named steps afterward does not replace these rows.
 A placeholder can now be renamed with the guarded shared-step rename;
-deleting one is still human-only. Resolve that scope before applying a scenario with specified
-column names; dry-run does not simulate every RPC side effect.
+deleting one is still human-only. Address the placeholder by its membership,
+not its name, so separate verification still finds it after the rename:
+
+```json
+{ "lookup": { "table": "path_steps", "where": { "path_id": { "lookup": { "table": "paths", "where": { "scenario_id": { "ref": "new-scenario" }, "name": "Main path" } } }, "position": 0 } }, "field": "step_id" }
+```
+
+Dry-run cannot read a row the batch has not created, so a `rename_step` or
+`update_step_spec` whose target is still pending is deferred rather than
+failed: its diff entry shows the declared `expected` and a `deferred` note.
+Deferral is only for a row this batch creates, and preflight refuses the
+whole batch otherwise:
+
+- `expected.scenario_id` is required and must be `{ "ref": … }` to a
+  `create_scenario` earlier in the batch.
+- The target may be pending only through that scenario: through it directly,
+  through rows created under it, or through an edit already deferred on it.
+  A target reached through any other new row, such as a cell inserted on an
+  existing step, could resolve to an existing row, so it is refused.
+- A deferred rename must come after every `add_step` on its scenario. Its
+  scenario-wide capture holds every later write to account for itself, and
+  `add_step`'s membership row is a side effect the projection does not
+  advance.
+
+At apply the deferred re-check is a fresh capture plus the expected guard,
+scenario included: the runner reads the target after its parent exists,
+refuses it unless it resolves to exactly one row in the scenario this batch
+created, refuses any expected field that differs (the placeholder's name, its
+scenario), then runs the capability's membership and preservation capture
+before writing. Any other edit to a pending row still fails preflight.
+Dry-run does not simulate RPC side effects; prove the whole batch with the
+database fixture test instead.
+
+A deferred refusal at apply comes after the batch's earlier writes, so it
+leaves a partial scenario. The batch stops there and is not retried. A human
+removes the leftovers in the app, where each deletion is its own reviewed
+action; the runner never automates deletes. Then fix the changeset and run
+the whole batch again from dry-run.
 
 ### Guarded host capabilities
 
