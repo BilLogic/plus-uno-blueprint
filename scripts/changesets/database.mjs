@@ -173,6 +173,13 @@ export function createDatabase(client, modules) {
       case 'delete_cell':
         databaseChangeId = await structure.deleteCell(client, before.id)
         break
+      case 'delete_evidence': {
+        // The actual mutation: PostgREST delete under evidence_delete_auth,
+        // then one recorded change carrying the full row as its inverse.
+        if ((await read({ table: 'cells', id: before.cell_id })).length) throw new Error('Its cell still exists; no write attempted for this operation')
+        await evidence.deleteEvidence(client, before.id, before)
+        break
+      }
       case 'remove_step': {
         // The RPC also deletes the column's cells on this path. It must be
         // empty by now: its cells were deleted, each guarded, earlier.
