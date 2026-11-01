@@ -243,8 +243,10 @@ function databaseFixture({ zeroRows = false, failAppend = false, corruptCell = f
       dropCells(doomed)
       tables.path_steps = tables.path_steps.filter((row) => !(row.step_id === body.step_id && row.path_id === body.path_id))
       if (!tables.path_steps.some((row) => row.step_id === body.step_id)) tables.steps = tables.steps.filter((row) => row.id !== body.step_id)
+      // The renumbering UPDATE touches every row left on the path, and its
+      // trigger rewrites updated_at on each one.
       tables.path_steps.filter((row) => row.path_id === body.path_id).sort((a, b) => a.position - b.position)
-        .forEach((row, position) => { row.position = position })
+        .forEach((row, position) => { Object.assign(row, { position, updated_at: '2026-11-01T17:00:00Z' }) })
       return answer(changeId)
     }
     if (url.pathname.endsWith('/rpc/remove_lanes')) {
@@ -1060,7 +1062,7 @@ function deleteFixture() {
   const fixture = sharedStepFixture()
   const { tables } = fixture
   tables.steps.push({ id: laterStep, scenario_id: id, name: 'Later step' })
-  tables.path_steps.push({ path_id: id, step_id: laterStep, position: 1 })
+  tables.path_steps.push({ path_id: id, step_id: laterStep, position: 1, updated_at: '2026-06-18T00:00:00Z' })
   tables.lanes.push({ id: secondPath, path_id: secondPath, name: 'Lead Tutor' }, { id: otherLane, path_id: id, name: 'Lead Tutor' })
   Object.assign(tables.lanes[0], { name: 'Teacher' })
   tables.cells.push(
@@ -1132,7 +1134,7 @@ test('a step leaves one path only once its column there is empty; the shared ste
     const { tables } = fixture
     expect(tables.steps.map((row) => row.id)).toContain(id)
     expect(tables.path_steps.filter((row) => row.step_id === id)).toEqual([{ path_id: secondPath, step_id: id, position: 2 }])
-    expect(tables.path_steps.find((row) => row.step_id === laterStep)).toMatchObject({ path_id: id, position: 0 })
+    expect(tables.path_steps.find((row) => row.step_id === laterStep)).toMatchObject({ path_id: id, position: 0, updated_at: '2026-11-01T17:00:00Z' })
     expect(tables.cells.find((row) => row.id === secondPath)).toMatchObject({ content: 'Stays on the other path' })
     expect(tables.authoring_changes.map((row) => row.fn)).toEqual(['delete_cell', 'remove_step'])
     expect((await runChangeset(batch, 'verify', fixture.database, { receipt: applied.applied })).failures).toEqual([])

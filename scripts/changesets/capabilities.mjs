@@ -30,8 +30,11 @@ export function projectChecks(checks, table, before, after) {
     if (before && index !== -1) check.rows.splice(index, 1)
     if (after && matchesScope(after, check.target)) check.rows.push(stableRow(after))
     if (!after && table === 'path_steps' && index !== -1) {
-      check.rows.filter((row) => row.path_id === before.path_id).sort((a, b) => a.position - b.position)
-        .forEach((row, position) => { row.position = position })
+      // The renumbering UPDATE touches every row left on the path, so their
+      // generated columns cannot be predicted; drop them like any write's.
+      const left = check.rows.filter((row) => row.path_id === before.path_id).sort((a, b) => a.position - b.position)
+      check.rows = check.rows.filter((row) => row.path_id !== before.path_id)
+      check.rows.push(...left.map((row, position) => ({ ...stableRow(row), position })))
     }
   }
 }
