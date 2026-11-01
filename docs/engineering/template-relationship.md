@@ -106,6 +106,16 @@ see below.
 The bump is the only way application code changes here. There is no second copy
 to edit, which is the point.
 
+## Prepared upgrade to v2.10.1
+
+The pin and the lockfile target the released `v2.10.1` tag. No migration. The
+agent account now renders the seven relations v2.10.0 took off the anon key,
+marked signed-in only: `scripts/repo-config.mjs` sets `agentAccount.signedIn`
+to `scripts/signed-in-relations.mjs`, which resolves their columns against the
+replayed migration series, so CI needs only the anon key. The shared
+`agent-account.mjs` and `generate-agent-account.mjs` are byte-identical to the
+release, and the account baseline is re-recorded at 80 of 220 column comments.
+
 ## Prepared upgrade to v2.10.0
 
 The pin and the lockfile target the released `v2.10.0` tag. Its one migration,
