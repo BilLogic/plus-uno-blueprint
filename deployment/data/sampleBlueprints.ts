@@ -14,8 +14,8 @@
 //
 //   npm run export:sample-board
 //
-// Generated on: 2026-10-31
-// Board:        17 scenarios, 34 paths, 278 lanes, 196 steps, 935 cells, 428 dependencies, 323 touchpoint placements, 600 resources
+// Generated on: 2026-11-01
+// Board:        17 scenarios, 40 paths, 326 lanes, 211 steps, 1000 cells, 429 dependencies, 334 touchpoint placements, 600 resources
 
 import type { SampleBlueprintRegistry } from 'uno-blueprint'
 
@@ -2126,10 +2126,10 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
         "path": {
           "id": "f0000000-0000-4000-8000-000000000702",
           "name": "Supervisor-registered clearance",
-          "summary": "Captures planned / unshipped behavior for Interview & Offer as of 2026-08-08. Diverges after offer acceptance: the Jun 2026 supervisor-registration clearance redesign — candidate info form, CPO/school clearance confirmation to supervisors (replacing legally unusable tutor self-report), supervisor import of cleared tutors, app invite, then account creation and profile completion. Design intent (Alex Houk, 2026-06-02); ship status unknown.",
+          "summary": "Diverges after offer acceptance: supervisors register cleared tutors. Live since 12.1: supervisors add cleared tutors singly or by CSV import, the app sends each an account invite, and the tutor creates an account and completes their profile. Clearance status reaches the app from the CPO's shared sheet (12.0). Still proposed from the June 2026 design: a structured candidate info form and direct CPO or school confirmation to supervisors.",
           "note": null,
           "kind": "variant",
-          "status": "proposed"
+          "status": "live"
         },
         "lanes": [
           {
@@ -2232,7 +2232,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0,
             "content": "Fills out the candidate information form.",
             "frame": null,
-            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the candidate submits a structured info form (name, Andrew ID, contact) that seeds the clearance and later the account import — replacing ad-hoc acceptance-form data relay. Evidence: Jun 2026 design, Alex Houk 2026-06-02.",
+            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the candidate submits a structured info form (name, Andrew ID, contact) that seeds the clearance and later the account import — replacing ad-hoc acceptance-form data relay. Evidence: Jun 2026 design by PLUS staff, 2026-06-02.",
             "status": "proposed",
             "function": null,
             "form": null,
@@ -2266,8 +2266,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0,
             "content": "Creates an account from the invite and completes their profile.",
             "frame": null,
-            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the tutor follows the app invite, creates an account, and completes their profile — arriving at onboarding already clearance-verified. Evidence: Jun 2026 design, Alex Houk 2026-06-02.",
-            "status": "proposed",
+            "summary": "Live in 12.1: the tutor follows the app invite, creates an account and completes their profile; until then the record stays pending.",
+            "status": "live",
             "function": null,
             "form": null,
             "owner": null,
@@ -2310,8 +2310,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0,
             "content": "Account invite",
             "frame": null,
-            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): invite link, account creation, and the existing Tutor Profile surface (preferred name, pronouns, photo, emails, languages) as the completion step; the profile surface already exists, the invite path does not.",
-            "status": "proposed",
+            "summary": "Live in 12.1: adding a tutor, singly or by CSV import, sends an account invite; the tutor creates an account and completes the existing Tutor Profile (preferred name, pronouns, photo, emails, languages), and the record stays pending until then.",
+            "status": "live",
             "function": null,
             "form": null,
             "owner": null,
@@ -2346,8 +2346,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0,
             "content": "Tutor import",
             "frame": null,
-            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): an import surface for cleared tutors plus invite issuance; no such tooling exists in the codebase today — pending accounts don't exist at all, so the gate sits before account existence.",
-            "status": "proposed",
+            "summary": "Live in 12.1: the Add tutor form and CSV import create pending tutor records and send each tutor an account invite.",
+            "status": "live",
             "function": null,
             "form": null,
             "owner": null,
@@ -2373,7 +2373,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0,
             "content": "Supervisors receive clearance confirmation from the CPO or school.",
             "frame": null,
-            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the CPO or school confirms clearance to supervisors directly; tutor self-reported clearance is legally unusable, which is the reason for the redesign. Evidence: Alex Houk, Slack, 2026-06-02.",
+            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the CPO or school confirms clearance to supervisors directly; tutor self-reported clearance is legally unusable, which is the reason for the redesign. Evidence: PLUS staff, Slack, 2026-06-02.",
             "status": "proposed",
             "function": null,
             "form": null,
@@ -2388,10 +2388,10 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "8c931697-b5a5-4003-bfc3-643a488b2aac",
             "step_id": "f0000000-0000-4000-8000-000000000723",
             "position": 0,
-            "content": "Supervisors import cleared tutors; the app sends invites.",
+            "content": "Supervisors add cleared tutors one at a time or by CSV import; the app sends invites.",
             "frame": null,
-            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): supervisors import the confirmed-cleared list into the app, which issues account invites. Clearance status is updated separately by the script reading the CPO's shared Google Sheet.",
-            "status": "proposed",
+            "summary": "Live in 12.1. Each tutor gets an invite and stays pending until they finish their own profile. Clearance status is updated separately by the script reading the CPO's shared Google Sheet.",
+            "status": "live",
             "function": null,
             "form": null,
             "owner": null,
@@ -3471,6 +3471,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
                 "role": null
               }
             ],
+            "value_props": []
+          },
+          {
+            "id": "2ae94ade-ad9a-4a8e-838f-c71308297632",
+            "lane_id": "a0000000-0000-4000-8000-000000000834",
+            "step_id": "a0000000-0000-4000-8000-000000000823",
+            "position": 0,
+            "content": "A script reads the CPO's shared clearance Google Sheet and updates each tutor's clearance status in PLUS.",
+            "frame": null,
+            "summary": "The CPO keeps a shared Google Sheet of tutor clearances. A script reads it and updates each tutor’s clearance status, which the tutor sees on the read-only Status & Clearance card. A post-release report on September 9, 2026 recorded 19 tutors updated.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/employment-access/standard/back-stage-actions/send-clearances",
             "value_props": []
           },
           {
@@ -4603,6 +4621,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "05da7c13-8430-4a0e-930a-fed4f410812b",
+            "lane_id": "a0000000-0000-4000-8000-000000000844",
+            "step_id": "a0000000-0000-4000-8000-000000000851",
+            "position": 0,
+            "content": "Assigns the Lead Tutor Onboarding module automatically when a tutor is promoted; it does not gate Your Sessions.",
+            "frame": null,
+            "summary": "When a tutor is promoted to lead tutor, the app assigns Module 11, Lead Tutor Onboarding. Lead tutors at the time it was added received it then. The module is not part of the onboarding gate, so a lead tutor keeps Your Sessions while it is incomplete.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/onboarding-modules/standard/back-stage-actions/module-opening",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000110307",
             "lane_id": "a0000000-0000-4000-8000-000000000844",
             "step_id": "a0000000-0000-4000-8000-000000000853",
@@ -4944,9 +4980,9 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "id": "9aeb3883-1ec5-4c23-9305-2a339d311af6",
             "source_cell_id": "a0000000-0000-4000-8000-000000110703",
             "target_cell_id": "a0000000-0000-4000-8000-000000130103",
-            "kind": "leads_to",
+            "kind": "enables",
             "name": null,
-            "note": null
+            "note": "Finishing the onboarding modules unlocks Your Sessions; sign-up depends on it rather than following it as a handoff."
           },
           {
             "id": "a0000000-0000-4000-8000-000000089051",
@@ -5151,9 +5187,9 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "a0000000-0000-4000-8000-000000001241",
             "step_id": "a0000000-0000-4000-8000-000000000862",
             "position": 0,
-            "content": "Works through the lesson questions.",
+            "content": "Works through the lesson questions and rates each piece of AI feedback before revising or moving on.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000120203/7acdcf35-f515-41d7-01ec-25b58e69e157.png",
-            "summary": "The tutor answers open-response lesson questions in the app. Responses get automated feedback from the LLM service, so tutors see strengths and gaps per answer rather than just right/wrong.",
+            "summary": "The tutor answers open-response lesson questions in the app and gets AI feedback on each review. The answer locks until the tutor rates that feedback, with an optional comment; the rating cannot be changed. Next stays disabled until every required item is done.",
             "status": "live",
             "function": null,
             "form": null,
@@ -5225,6 +5261,34 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
               }
             ],
             "cell_key": "plus-application/lesson-modules/happy-path/front-stage-tech/open-lesson",
+            "value_props": []
+          },
+          {
+            "id": "2f0f93bc-4d3f-4549-8da7-28f9b4d784e6",
+            "lane_id": "a0000000-0000-4000-8000-000000001243",
+            "step_id": "a0000000-0000-4000-8000-000000000861",
+            "position": 1,
+            "content": "Lesson assignment email",
+            "frame": null,
+            "summary": "The email the app sends a tutor when the tutor supervisor team assigns them a lesson.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [
+              {
+                "id": "10ad1f2c-bdd8-4e94-9875-b099dfb6243f",
+                "touchpointId": "d5c7e529-8ca3-4c83-893a-ca5ff359ecab",
+                "name": "Lesson assignment email",
+                "kind": "other",
+                "iconUrl": null,
+                "summary": null,
+                "role": null
+              }
+            ],
+            "cell_key": "plus-tutoring/lesson-modules/standard/front-stage-touchpoints/open-lesson--2f0f93bc-4d3f-4549-8da7-28f9b4d784e6",
             "value_props": []
           },
           {
@@ -5450,7 +5514,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "a0000000-0000-4000-8000-000000001244",
             "step_id": "a0000000-0000-4000-8000-000000000861",
             "position": 0,
-            "content": "Tutor supervisor team assigns lessons.",
+            "content": "Tutor supervisor team assigns lessons; the app emails the tutor.",
             "frame": null,
             "summary": "The tutor supervisor team assigns lessons (individually or by mapping a group to a lesson with a time goal); assignment fires a notification email to the tutor.",
             "status": "live",
@@ -5479,6 +5543,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "resources": [],
             "touchpoints": [],
             "cell_key": "plus-application/lesson-modules/happy-path/back-stage-actions/work-through-questions",
+            "value_props": []
+          },
+          {
+            "id": "be23e8a2-2f79-49fa-acc4-043874f95821",
+            "lane_id": "a0000000-0000-4000-8000-000000001244",
+            "step_id": "a0000000-0000-4000-8000-000000000862",
+            "position": 1,
+            "content": "Research picks and tests a replacement for the gpt-4o-2024-11-20 model behind Q1 and Q3 lesson feedback, which may be retired in the coming months; Dev then verifies it in QA and production.",
+            "frame": null,
+            "summary": null,
+            "status": "proposed",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/lesson-modules/standard/back-stage-actions/work-through-questions--be23e8a2-2f79-49fa-acc4-043874f95821",
             "value_props": []
           },
           {
@@ -5578,6 +5660,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "touchpoints": [],
             "cell_key": "plus-application/lesson-modules/happy-path/support-actions/finish-lesson",
             "value_props": []
+          },
+          {
+            "id": "2f481104-db3a-4f6a-ad67-3c07bb0f049c",
+            "lane_id": "a0000000-0000-4000-8000-000000001246",
+            "step_id": "a0000000-0000-4000-8000-000000000863",
+            "position": 1,
+            "content": "PLUS team tracks Accredible credential use and buys more before the paid limit runs out.",
+            "frame": null,
+            "summary": "Tutors’ lesson credentials are issued through Accredible against a paid recipient limit. The PLUS team checks how many are used and buys more before the limit is reached.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/lesson-modules/standard/support-actions/finish-lesson--2f481104-db3a-4f6a-ad67-3c07bb0f049c",
+            "value_props": []
           }
         ],
         "dependencies": [
@@ -5670,6 +5770,135 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "note": null
           }
         ]
+      },
+      {
+        "path": {
+          "id": "b934c5a0-71e2-405a-a8ec-32647c351e5b",
+          "name": "AI returns no feedback",
+          "summary": "A review returns no AI feedback: the answer is unclear or not in the first person, or the AI call fails. No rating is asked and no review is used.",
+          "note": null,
+          "kind": "exception",
+          "status": "live"
+        },
+        "lanes": [
+          {
+            "id": "6ec51329-75d0-4297-b62e-945fe955d40d",
+            "name": "Storyboard",
+            "role": "storyboard",
+            "position": 0
+          },
+          {
+            "id": "8f6bce59-c035-4664-9937-8089751b1a97",
+            "name": "Regular Tutor",
+            "role": "customer_actions",
+            "position": 1
+          },
+          {
+            "id": "bfade85e-9a38-4bf8-bb4e-0bce22df763a",
+            "name": "Front Stage Touchpoints",
+            "role": "frontstage_touchpoints",
+            "position": 2
+          },
+          {
+            "id": "1065d00c-fd28-46d7-8924-306746b5653d",
+            "name": "Front Stage Actions",
+            "role": "frontstage_actions",
+            "position": 3
+          },
+          {
+            "id": "54656065-ee07-4af6-8f05-2f70002cd929",
+            "name": "Back Stage Touchpoints",
+            "role": "backstage_touchpoints",
+            "position": 4
+          },
+          {
+            "id": "3650b38c-f476-45e9-b818-e5a8d76a0765",
+            "name": "Back Stage Actions",
+            "role": "backstage_actions",
+            "position": 5
+          },
+          {
+            "id": "127e4bac-d240-4d95-a993-1c3e87e584de",
+            "name": "Support Actions",
+            "role": "support_actions",
+            "position": 6
+          }
+        ],
+        "steps": [
+          {
+            "id": "a0000000-0000-4000-8000-000000000862",
+            "name": "Work through questions",
+            "summary": "The tutor works through the lesson questions; an LLM feedback service grades the written answers.",
+            "position": 0
+          }
+        ],
+        "cells": [
+          {
+            "id": "20214b23-8315-4b2f-8438-9158cbf97921",
+            "lane_id": "8f6bce59-c035-4664-9937-8089751b1a97",
+            "step_id": "a0000000-0000-4000-8000-000000000862",
+            "position": 0,
+            "content": "Gets a Revise your response prompt when the answer is unclear or not first person, and rewrites it without using a review.",
+            "frame": null,
+            "summary": "For an unclear or not-first-person answer the AI returns a Revise your response message instead of feedback. There is nothing to rate, and the attempt does not count against the tutor’s reviews.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/lesson-modules/ai-returns-no-feedback/regular-tutor/work-through-questions",
+            "value_props": []
+          },
+          {
+            "id": "a671d418-3d6a-498e-8e3d-c1fb1d31800e",
+            "lane_id": "8f6bce59-c035-4664-9937-8089751b1a97",
+            "step_id": "a0000000-0000-4000-8000-000000000862",
+            "position": 1,
+            "content": "Sees a system-issue message when the AI call fails, then retries or moves on with no rating.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/lesson-modules/ai-returns-no-feedback/regular-tutor/work-through-questions--a671d418-3d6a-498e-8e3d-c1fb1d31800e",
+            "value_props": []
+          },
+          {
+            "id": "06875684-2306-43e3-a053-86b04d351fd7",
+            "lane_id": "54656065-ee07-4af6-8f05-2f70002cd929",
+            "step_id": "a0000000-0000-4000-8000-000000000862",
+            "position": 0,
+            "content": "LLM feedback service",
+            "frame": null,
+            "summary": "Returns feedback on each review, a Revise your response message for an unclear or not-first-person answer, or an error the app shows as a system-issue message.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [
+              {
+                "id": "e3540783-7ebd-485e-8b89-01d6ba65accf",
+                "touchpointId": "902241f8-37d4-46e9-b2af-0d1183b78914",
+                "name": "LLM feedback service",
+                "kind": "other",
+                "iconUrl": null,
+                "summary": null,
+                "role": null
+              }
+            ],
+            "cell_key": "plus-tutoring/lesson-modules/ai-returns-no-feedback/back-stage-touchpoints/work-through-questions",
+            "value_props": []
+          }
+        ],
+        "dependencies": []
       }
     ],
     "a0000000-0000-4000-8000-000000000125": [
@@ -5919,6 +6148,42 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "e0a20de4-02d7-41d4-bc10-d39088900846",
+            "lane_id": "a0000000-0000-4000-8000-000000000880",
+            "step_id": "a0000000-0000-4000-8000-000000000891",
+            "position": 0,
+            "content": "Counts only the sessions the tutor can sign up for on the Sign-Ups tab.",
+            "frame": null,
+            "summary": "Live in 12.1: the Sign-Ups count includes only shifts with a spot open for the tutor's role that they are not already on and that don't clash; each Sessions tab has a tooltip.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/session-sign-up/no-conflicts/front-stage-actions/sign-up",
+            "value_props": []
+          },
+          {
+            "id": "e4c76f93-bea1-4d15-bb20-a44c3d817edb",
+            "lane_id": "a0000000-0000-4000-8000-000000000880",
+            "step_id": "a0000000-0000-4000-8000-000000000891",
+            "position": 1,
+            "content": "Emails the tutor a confirmation after each successful recurring sign-up.",
+            "frame": null,
+            "summary": "After a recurring sign-up succeeds, the app emails the tutor a confirmation with the school, weekday, time and teacher. Nothing is sent for a sign-up that did not succeed.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/session-sign-up/no-conflicts/front-stage-actions/sign-up--e4c76f93-bea1-4d15-bb20-a44c3d817edb",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000130108",
             "lane_id": "a0000000-0000-4000-8000-000000000883",
             "step_id": "a0000000-0000-4000-8000-000000000891",
@@ -5958,8 +6223,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000130208",
             "lane_id": "a0000000-0000-4000-8000-000000000883",
-            "step_id": "a0000000-0000-4000-8000-000000000892",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000000891",
+            "position": 1,
             "content": "Onboarding gate",
             "frame": null,
             "summary": "Scheduling surfaces stay locked for tutors with incomplete onboarding; the gate lifts automatically on completion of the final module.",
@@ -5981,6 +6246,34 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
               }
             ],
             "cell_key": "plus-application/session-sign-up/happy-path/back-stage-tech/review-scheduling",
+            "value_props": []
+          },
+          {
+            "id": "56449148-91ea-411c-bf6c-17898db6e3b4",
+            "lane_id": "a0000000-0000-4000-8000-000000000883",
+            "step_id": "a0000000-0000-4000-8000-000000000891",
+            "position": 2,
+            "content": "Clash check",
+            "frame": null,
+            "summary": "Refuses a recurring sign-up that clashes with one the tutor already holds on the same weekday and start time. Fill-in sign-ups are not checked.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [
+              {
+                "id": "2374f65e-ede7-4807-92c4-cc926179014c",
+                "touchpointId": "afc160e3-ea93-4650-823a-cd40f5f0cd66",
+                "name": "Clash check",
+                "kind": "other",
+                "iconUrl": null,
+                "summary": null,
+                "role": null
+              }
+            ],
+            "cell_key": "plus-tutoring/session-sign-up/no-conflicts/back-stage-touchpoints/sign-up--56449148-91ea-411c-bf6c-17898db6e3b4",
             "value_props": []
           },
           {
@@ -6075,9 +6368,148 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
       },
       {
         "path": {
+          "id": "fdefc7ef-60e7-4dc2-8420-25dec7d263df",
+          "name": "Onboarding incomplete",
+          "summary": "A tutor who has not finished onboarding cannot open Your Sessions or the schedule, so cannot sign up. The gate lifts when the required onboarding modules are complete.",
+          "note": "Card 2530 (Triage) is checking which modules and lessons count toward the gate for returning tutors and tutors who were inactive when a module shipped; that open question is not recorded as behaviour here. Lead Tutor Onboarding (Module 11) does not gate.",
+          "kind": "exception",
+          "status": "live"
+        },
+        "lanes": [
+          {
+            "id": "52f138c7-0841-4b44-a1eb-f94af2abd12d",
+            "name": "Storyboard",
+            "role": "storyboard",
+            "position": 0
+          },
+          {
+            "id": "148cbe5f-f323-4796-b7b0-1fd13646a245",
+            "name": "Regular Tutor",
+            "role": "customer_actions",
+            "position": 1
+          },
+          {
+            "id": "71c485ed-f7d3-4f80-84de-9d2e0cca904e",
+            "name": "Front Stage Touchpoints",
+            "role": "frontstage_touchpoints",
+            "position": 2
+          },
+          {
+            "id": "c3d95ef9-0b7f-42d1-90f1-018dcd27c5a5",
+            "name": "Front Stage Actions",
+            "role": "frontstage_actions",
+            "position": 3
+          },
+          {
+            "id": "cc2a7660-81cd-4967-88eb-a807759a5672",
+            "name": "Back Stage Touchpoints",
+            "role": "backstage_touchpoints",
+            "position": 4
+          },
+          {
+            "id": "46e15102-008f-4036-8f4b-80ae7bed0531",
+            "name": "Back Stage Actions",
+            "role": "backstage_actions",
+            "position": 5
+          },
+          {
+            "id": "08881229-f5b6-4156-8c24-7ed415b24c02",
+            "name": "Support Actions",
+            "role": "support_actions",
+            "position": 6
+          }
+        ],
+        "steps": [
+          {
+            "id": "a0000000-0000-4000-8000-000000000891",
+            "name": "Sign up",
+            "summary": "The tutor signs up for recurring sessions for the rest of the semester, and supervisors watch the sign-ups arrive in Admin > Sessions.",
+            "position": 0
+          }
+        ],
+        "cells": [
+          {
+            "id": "8ad3c446-7405-49d7-9b8f-cc946f165e3c",
+            "lane_id": "148cbe5f-f323-4796-b7b0-1fd13646a245",
+            "step_id": "a0000000-0000-4000-8000-000000000891",
+            "position": 0,
+            "content": "Cannot reach Your Sessions or the schedule until onboarding modules are complete.",
+            "frame": null,
+            "summary": "Your Sessions is hidden from the sidebar until onboarding is complete, and since release 12.0 the schedule pages are blocked too, including by direct URL and from Session Links.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/session-sign-up/onboarding-incomplete/regular-tutor/sign-up",
+            "value_props": []
+          },
+          {
+            "id": "666912c0-82e5-4530-b248-9ec4b6be1649",
+            "lane_id": "71c485ed-f7d3-4f80-84de-9d2e0cca904e",
+            "step_id": "a0000000-0000-4000-8000-000000000891",
+            "position": 0,
+            "content": "PLUS App",
+            "frame": null,
+            "summary": "The PLUS App hides Your Sessions and blocks the schedule pages for a tutor with incomplete onboarding.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [
+              {
+                "id": "8323f2cb-7ebe-4eaf-bf0e-a39474ff8b24",
+                "touchpointId": "e469e871-33ba-4d7b-abee-20abe017593f",
+                "name": "PLUS App",
+                "kind": "app",
+                "iconUrl": null,
+                "summary": null,
+                "role": null
+              }
+            ],
+            "cell_key": "plus-tutoring/session-sign-up/onboarding-incomplete/front-stage-touchpoints/sign-up",
+            "value_props": []
+          },
+          {
+            "id": "f84af251-19b0-4706-a80b-ca76da439ecd",
+            "lane_id": "cc2a7660-81cd-4967-88eb-a807759a5672",
+            "step_id": "a0000000-0000-4000-8000-000000000891",
+            "position": 0,
+            "content": "Onboarding gate",
+            "frame": null,
+            "summary": "Checks the tutor’s required onboarding modules before allowing Your Sessions; inactive tutors are always blocked and institution admins never are.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [
+              {
+                "id": "37c1d092-38d3-46ce-ab0f-a221a62f49f5",
+                "touchpointId": "2ab5eef0-ae7e-4f97-9019-11788975dcd2",
+                "name": "Onboarding gate",
+                "kind": "service",
+                "iconUrl": null,
+                "summary": null,
+                "role": null
+              }
+            ],
+            "cell_key": "plus-tutoring/session-sign-up/onboarding-incomplete/back-stage-touchpoints/sign-up",
+            "value_props": []
+          }
+        ],
+        "dependencies": []
+      },
+      {
+        "path": {
           "id": "f0000000-0000-4000-8000-000000000805",
           "name": "Soft-conflict gate",
-          "summary": "Captures planned / unshipped behavior for Session Sign Up as of 2026-08-08. Diverges from the current happy path at sign-up time: the proposed soft-conflict gate — overlaps under 10 minutes trigger a warn/acknowledge dialog, overlaps of 10 minutes or more are gated until the tutor names the requesting supervisor, who then gets a heads-up email. Aug 2026 proposal (threshold revised 20 to 10 min on 2026-08-04), awaiting triage; nothing here is shipped.",
+          "summary": "Diverges from the current happy path at sign-up time: the proposed soft-conflict gate. An overlap of 1–10 minutes shows a warning the tutor acknowledges; at 11 minutes or more the tutor signs up only by naming the supervisor who asked them to cover, and that supervisor gets a heads-up email. The 10-minute line replaced an earlier 20-minute one. Nothing here is shipped.",
           "note": null,
           "kind": "variant",
           "status": "proposed"
@@ -6154,7 +6586,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0,
             "content": "Signs up; selections are checked for overlap with the existing schedule.",
             "frame": null,
-            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): every sign-up attempt is compared against the tutor's current schedule before it is confirmed. Evidence: soft-conflict proposal, Slack #plus-design-feedback, Bill, 2026-08-03/04.",
+            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): every sign-up attempt is compared against the tutor's current schedule before it is confirmed. Evidence: soft-conflict proposal by PLUS staff, Slack #plus-design-feedback, 2026-08-03/04.",
             "status": "proposed",
             "function": null,
             "form": null,
@@ -6178,9 +6610,9 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "d5325d6a-7ed1-4b21-be83-70e3d0bac2b8",
             "step_id": "f0000000-0000-4000-8000-000000000851",
             "position": 0,
-            "content": "Acknowledges a warning for small overlaps; names the requesting supervisor for large ones.",
+            "content": "Acknowledges a warning for overlaps of 10 minutes or less; names the requesting supervisor for longer ones.",
             "frame": null,
-            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): an overlap shorter than 10 minutes shows a soft warning the tutor acknowledges and proceeds; an overlap of 10 minutes or more blocks the sign-up until the tutor names the supervisor who asked them to take the session — the threshold was revised down from 20 minutes.",
+            "summary": "Proposed: an overlap of 10 minutes or less shows a warning the tutor acknowledges before continuing. At 11 minutes or more the tutor signs up only by confirming a supervisor asked them to cover and naming that supervisor; the sign-up completes with no approval queue. The 10-minute line replaced an earlier 20-minute one.",
             "status": "proposed",
             "function": null,
             "form": null,
@@ -6241,7 +6673,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0,
             "content": "Overlap threshold",
             "frame": null,
-            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): threshold set by data analysis of production sign-ups — the 11-20 minute overlap band had the worst outcomes (5.84% mistake rate); the mistake multiplier was corrected from 8.5x to 4.3x and the call-off rate is flat at ~12% across bands, so the gate moved from 20 to 10 minutes. Evidence: Bill's corrected analysis, Slack #plus-design-feedback, 2026-08-04.",
+            "summary": "Proposed: an overlap of 1–10 minutes shows a warning; at 11 minutes or more the tutor signs up only by naming the supervisor who asked them to cover. Spring 2026 sign-up data puts the cliff between 10 and 11 minutes: the signed-up-by-mistake rate rises from 1.61% at 6–10 minutes to 5.84% at 11–20, and the share of tutors keeping both overlapping sessions falls from 23% to 5.4%. This replaced an earlier 20-minute line.",
             "status": "proposed",
             "function": null,
             "form": null,
@@ -6454,6 +6886,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "8aa30d9b-8ebb-4208-8ff5-e101e4f81c27",
+            "lane_id": "a0000000-0000-4000-8000-000000000886",
+            "step_id": "a0000000-0000-4000-8000-000000000896",
+            "position": 1,
+            "content": "Subscribes Google or Apple Calendar to their sessions from Your Sessions › Calendar Sync.",
+            "frame": null,
+            "summary": null,
+            "status": "planned",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/standard-scheduling/schedule-as-issued/regular-tutor/views-schedule-syncs-calendar--8aa30d9b-8ebb-4208-8ff5-e101e4f81c27",
+            "value_props": []
+          },
+          {
             "id": "b0000000-0000-4000-8000-000000140303",
             "lane_id": "a0000000-0000-4000-8000-000000000886",
             "step_id": "b0000000-0000-4000-8000-000000000901",
@@ -6569,6 +7019,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "120bca47-7595-41cc-af1d-0014d3ea9b02",
+            "lane_id": "a0000000-0000-4000-8000-000000000887",
+            "step_id": "a0000000-0000-4000-8000-000000000896",
+            "position": 1,
+            "content": "Emails each tutor their upcoming sessions every Sunday at 3 pm, with up to three of the least-filled sessions that don't clash with their sign-ups.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/standard-scheduling/schedule-as-issued/front-stage-actions/views-schedule-syncs-calendar--120bca47-7595-41cc-af1d-0014d3ea9b02",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000140108",
             "lane_id": "a0000000-0000-4000-8000-000000000890",
             "step_id": "a0000000-0000-4000-8000-000000000894",
@@ -6668,6 +7136,34 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "adabac56-ae16-471b-bc09-3d1cbc2cda2e",
+            "lane_id": "a0000000-0000-4000-8000-000000000890",
+            "step_id": "a0000000-0000-4000-8000-000000000896",
+            "position": 2,
+            "content": "Weekly schedule email",
+            "frame": null,
+            "summary": "Live in 12.1: sent every Sunday at 3 pm with the tutor's upcoming sessions and up to three of the least-filled sessions that fit.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [
+              {
+                "id": "919cac78-ff1c-47f8-aa11-ba0b31a71e02",
+                "touchpointId": "a393f78c-37d7-4236-814e-599b3240dc6c",
+                "name": "Weekly schedule email",
+                "kind": "other",
+                "iconUrl": null,
+                "summary": null,
+                "role": null
+              }
+            ],
+            "cell_key": "plus-tutoring/standard-scheduling/schedule-as-issued/back-stage-touchpoints/views-schedule-syncs-calendar--adabac56-ae16-471b-bc09-3d1cbc2cda2e",
+            "value_props": []
+          },
+          {
             "id": "b0000000-0000-4000-8000-000000140308",
             "lane_id": "a0000000-0000-4000-8000-000000000890",
             "step_id": "b0000000-0000-4000-8000-000000000901",
@@ -6710,6 +7206,23 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "resources": [],
             "touchpoints": [],
             "cell_key": "plus-application/standard-scheduling/happy-path/back-stage-actions/review-schedules",
+            "value_props": []
+          },
+          {
+            "id": "734293a2-9018-4a80-a355-4999451c6c82",
+            "lane_id": "a0000000-0000-4000-8000-000000000889",
+            "step_id": "b0000000-0000-4000-8000-000000000901",
+            "position": 0,
+            "content": "Drops a tutor who answers Unavailable from the roster, with no call-off record.",
+            "frame": null,
+            "summary": "A tutor who answers Unavailable is dropped from the session without a call-off record, and the freed slot feeds the fill-in pool. This is by design, confirmed 2026-08-08: reconfirmation only fires on supervisor-initiated changes, so declining is not a call-off.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
             "value_props": []
           },
           {
@@ -7048,23 +7561,6 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             ],
             "touchpoints": [],
             "value_props": []
-          },
-          {
-            "id": "734293a2-9018-4a80-a355-4999451c6c82",
-            "lane_id": "0eae4ce7-b974-4dbc-b1c3-49ce19ab12e0",
-            "step_id": "b0000000-0000-4000-8000-000000000901",
-            "position": 0,
-            "content": "Unavailable answer releases the tutor from the roster — no call-off record, by design",
-            "frame": null,
-            "summary": "PLANNED (not shipped as of Aug 2026): a tutor answering Unavailable is dropped from the session without a call-off record; the freed slot feeds the fill-in pool. This is by design, confirmed 2026-08-08 — reconfirmation only fires on supervisor-initiated changes, so declining is not a call-off.",
-            "status": "built",
-            "function": null,
-            "form": null,
-            "owner": null,
-            "perceived_owner": null,
-            "resources": [],
-            "touchpoints": [],
-            "value_props": []
           }
         ],
         "dependencies": []
@@ -7088,40 +7584,46 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0
           },
           {
+            "id": "6afdaba8-7d74-4d20-9ce3-a3946aacbc60",
+            "name": "Lead Tutor",
+            "role": "customer_actions",
+            "position": 1
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000000904",
             "name": "Regular Tutor",
             "role": "customer_actions",
-            "position": 1
+            "position": 2
           },
           {
             "id": "a0000000-0000-4000-8000-000000000906",
             "name": "Front Stage Touchpoints",
             "role": "frontstage_touchpoints",
-            "position": 2
+            "position": 3
           },
           {
             "id": "a0000000-0000-4000-8000-000000000905",
             "name": "Front Stage Actions",
             "role": "frontstage_actions",
-            "position": 3
+            "position": 4
           },
           {
             "id": "a0000000-0000-4000-8000-000000000908",
             "name": "Back Stage Touchpoints",
             "role": "backstage_touchpoints",
-            "position": 4
+            "position": 5
           },
           {
             "id": "a0000000-0000-4000-8000-000000000907",
             "name": "Back Stage Actions",
             "role": "backstage_actions",
-            "position": 5
+            "position": 6
           },
           {
             "id": "a0000000-0000-4000-8000-000000000909",
             "name": "Support Actions",
             "role": "support_actions",
-            "position": 6
+            "position": 7
           }
         ],
         "steps": [
@@ -7554,7 +8056,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "a0000000-0000-4000-8000-000000000905",
             "step_id": "a0000000-0000-4000-8000-000000000899",
             "position": 0,
-            "content": "Updates the roster immediately when a tutor takes a fill-in slot; supervisors see it in Admin › Sessions.",
+            "content": "Updates the roster immediately when a tutor takes a fill-in slot and emails the tutor a confirmation; supervisors see it in Admin › Sessions.",
             "frame": null,
             "summary": "The update is immediate and automatic — no supervisor action is needed to record who's covering — which is what lets Admin › Sessions serve as the source of truth for who's actually signed up, even though the change only appears there after the fact.",
             "status": "live",
@@ -7656,6 +8158,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "resources": [],
             "touchpoints": [],
             "cell_key": "plus-application/fill-in-request/happy-path/back-stage-actions/initial-request",
+            "value_props": []
+          },
+          {
+            "id": "e703ea67-66e0-498f-9d19-1b00564fedd7",
+            "lane_id": "a0000000-0000-4000-8000-000000000907",
+            "step_id": "a0000000-0000-4000-8000-000000000897",
+            "position": 1,
+            "content": "Posts a daily 8 am Slack digest of sessions with open tutor spots to #sessions-in-need, and of sessions with no lead to #lead-tutors.",
+            "frame": null,
+            "summary": null,
+            "status": "built",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/fill-in-request/slot-gets-covered/back-stage-actions/session-enters-fill-in-pool--e703ea67-66e0-498f-9d19-1b00564fedd7",
             "value_props": []
           },
           {
@@ -7837,6 +8357,234 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "note": null
           }
         ]
+      },
+      {
+        "path": {
+          "id": "ac4715c4-dbf7-4056-8c42-9bb67ecfc116",
+          "name": "Requested mid-session",
+          "summary": "Variant path: after a session starts, the lead tutor requests more tutors in the app. The request posts to #sessions-in-need and opens fill-in spots in the Fill-In tab; a tutor fills in from the Slack link and the lead assigns them students.",
+          "note": null,
+          "kind": "variant",
+          "status": "live"
+        },
+        "lanes": [
+          {
+            "id": "08fbcdcf-b053-477b-8976-dd6ec652a1bc",
+            "name": "Storyboard",
+            "role": "storyboard",
+            "position": 0
+          },
+          {
+            "id": "02363ff7-81b2-4d86-9a4e-59fa112bcc95",
+            "name": "Lead Tutor",
+            "role": "customer_actions",
+            "position": 1
+          },
+          {
+            "id": "05a28922-d418-474b-b6a6-b93865b02ddf",
+            "name": "Regular Tutor",
+            "role": "customer_actions",
+            "position": 2
+          },
+          {
+            "id": "efaac381-c2a7-4a6e-b20e-a0a12b054b7b",
+            "name": "Front Stage Touchpoints",
+            "role": "frontstage_touchpoints",
+            "position": 3
+          },
+          {
+            "id": "540ada3d-7b9d-4fea-9b63-d5fa43e5d6ca",
+            "name": "Front Stage Actions",
+            "role": "frontstage_actions",
+            "position": 4
+          },
+          {
+            "id": "29f5f4c4-35b1-47ed-b5ea-6511b7f83a53",
+            "name": "Back Stage Touchpoints",
+            "role": "backstage_touchpoints",
+            "position": 5
+          },
+          {
+            "id": "12e07901-1962-43f0-8df9-986edcc3e96f",
+            "name": "Back Stage Actions",
+            "role": "backstage_actions",
+            "position": 6
+          },
+          {
+            "id": "4202feaf-a844-446a-8526-8a52d09ad669",
+            "name": "Support Actions",
+            "role": "support_actions",
+            "position": 7
+          }
+        ],
+        "steps": [
+          {
+            "id": "a0000000-0000-4000-8000-000000000897",
+            "name": "Session enters fill-in pool",
+            "summary": "A session with capacity inside 72 hours joins the fill-in pool automatically; no supervisor opens it.",
+            "position": 0
+          },
+          {
+            "id": "a0000000-0000-4000-8000-000000000899",
+            "name": "Tutor takes the slot",
+            "summary": "The tutor signs up for the slot and the roster updates immediately, which supervisors see in Admin > Sessions.",
+            "position": 1
+          },
+          {
+            "id": "a0000000-0000-4000-8000-000000000900",
+            "name": "Roster updated, tutor joins",
+            "summary": "The session appears in the tutor's My Sessions and they join it like any other; supervisors step in only for sessions still unfilled close to start.",
+            "position": 2
+          }
+        ],
+        "cells": [
+          {
+            "id": "836e2c08-9c93-42fa-8e7f-25ce0967f348",
+            "lane_id": "02363ff7-81b2-4d86-9a4e-59fa112bcc95",
+            "step_id": "a0000000-0000-4000-8000-000000000897",
+            "position": 0,
+            "content": "Requests more tutors from … › Request tutors with a count, closing time and reason.",
+            "frame": null,
+            "summary": "Only once the session has started. The count starts at the number of tutors marked absent and is capped at the session’s tutor capacity; the request closes at the chosen time, no later than 10 minutes before the session ends.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/fill-in-request/requested-mid-session/lead-tutor/session-enters-fill-in-pool",
+            "value_props": []
+          },
+          {
+            "id": "6b9a2958-bcbd-48d8-a56d-733e82f2e2bf",
+            "lane_id": "02363ff7-81b2-4d86-9a4e-59fa112bcc95",
+            "step_id": "a0000000-0000-4000-8000-000000000897",
+            "position": 1,
+            "content": "Picks a reason such as \"Fewer tutors than expected\" and sends the templated Slack message as previewed, without edits.",
+            "frame": null,
+            "summary": null,
+            "status": "proposed",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/fill-in-request/requested-mid-session/lead-tutor/session-enters-fill-in-pool--6b9a2958-bcbd-48d8-a56d-733e82f2e2bf",
+            "value_props": []
+          },
+          {
+            "id": "411dc98c-7703-4e21-8593-88c6082671f2",
+            "lane_id": "02363ff7-81b2-4d86-9a4e-59fa112bcc95",
+            "step_id": "a0000000-0000-4000-8000-000000000900",
+            "position": 0,
+            "content": "Assigns students to the fill-in tutor; nobody else’s students move.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/fill-in-request/requested-mid-session/lead-tutor/roster-updated-tutor-joins",
+            "value_props": []
+          },
+          {
+            "id": "38b102a3-9ecc-41fc-acd8-fe9a9d5c07a2",
+            "lane_id": "05a28922-d418-474b-b6a6-b93865b02ddf",
+            "step_id": "a0000000-0000-4000-8000-000000000899",
+            "position": 0,
+            "content": "Opens the Slack link, confirms Fill in for this session, and joins right away.",
+            "frame": null,
+            "summary": "When the request has closed or its slots are filled, the button is disabled with “This fill-in request is no longer available.” and the session details stay visible.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/fill-in-request/requested-mid-session/regular-tutor/tutor-takes-the-slot",
+            "value_props": []
+          },
+          {
+            "id": "031db126-093c-4b3b-b7e8-706d6f39053d",
+            "lane_id": "efaac381-c2a7-4a6e-b20e-a0a12b054b7b",
+            "step_id": "a0000000-0000-4000-8000-000000000897",
+            "position": 0,
+            "content": "PLUS App\nSlack",
+            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100706/21a81bb9-8af4-9dc8-5879-b4fa64946bd7.png",
+            "summary": "The lead sends the request from the PLUS App; it posts to #sessions-in-need in Slack with a fill-in link.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [
+              {
+                "id": "56584ad9-b460-47e1-86a4-efdd9e087f79",
+                "touchpointId": "e469e871-33ba-4d7b-abee-20abe017593f",
+                "name": "PLUS App",
+                "kind": "app",
+                "iconUrl": null,
+                "summary": null,
+                "role": null
+              },
+              {
+                "id": "e9fadd01-bd0a-4e4b-ad81-fc6ccd943ceb",
+                "touchpointId": "ac56dfd8-b04f-4af5-b30a-157f73aa3339",
+                "name": "Slack",
+                "kind": "app",
+                "iconUrl": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100706/21a81bb9-8af4-9dc8-5879-b4fa64946bd7.png",
+                "summary": null,
+                "role": null
+              }
+            ],
+            "cell_key": "plus-tutoring/fill-in-request/requested-mid-session/front-stage-touchpoints/session-enters-fill-in-pool",
+            "value_props": []
+          },
+          {
+            "id": "82645d84-e71f-4e16-b897-1dd7bf37eb03",
+            "lane_id": "540ada3d-7b9d-4fea-9b63-d5fa43e5d6ca",
+            "step_id": "a0000000-0000-4000-8000-000000000897",
+            "position": 0,
+            "content": "Posts the request to #sessions-in-need and opens fill-in spots in the Fill-In tab.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/fill-in-request/requested-mid-session/front-stage-actions/session-enters-fill-in-pool",
+            "value_props": []
+          },
+          {
+            "id": "b15b2b30-a1dc-4dcd-a943-3eb2948baf5e",
+            "lane_id": "540ada3d-7b9d-4fea-9b63-d5fa43e5d6ca",
+            "step_id": "a0000000-0000-4000-8000-000000000897",
+            "position": 1,
+            "content": "Tags @channel on the #sessions-in-need post.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/fill-in-request/requested-mid-session/front-stage-actions/session-enters-fill-in-pool--b15b2b30-a1dc-4dcd-a943-3eb2948baf5e",
+            "value_props": []
+          }
+        ],
+        "dependencies": []
       }
     ],
     "a0000000-0000-4000-8000-000000000128": [
@@ -8030,7 +8778,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "content": "",
             "frame": null,
             "summary": null,
-            "status": "live",
+            "status": "deprecated",
             "function": null,
             "form": null,
             "owner": null,
@@ -8089,7 +8837,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0,
             "content": "Files a one-time call-off 12 or more hours before the session.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000170203/91c98e6b-be75-68b0-3d51-09e428e940a3.png",
-            "summary": "For a one-time session 12 or more hours away, the call-off is approved instantly — no supervisor in the loop. Withdrawing from a recurring series instead creates a pending request for supervisor review, except the mistake case: reason 'Signed Up By Mistake' auto-approves if the sign-up was under 24 hours old and the next session is 12+ hours away. Illness call-offs arrive with ~30 hours notice on average.",
+            "summary": "For a one-time session 12 or more hours away, the call-off is approved instantly — no supervisor in the loop. Illness call-offs arrive with ~30 hours notice on average.",
             "status": "live",
             "function": null,
             "form": null,
@@ -8175,7 +8923,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0,
             "content": "Receives the excused or unexcused decision.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000170603/3a774bba-9867-9b05-2c45-7897ce20e400.png",
-            "summary": "The tutor sees the decision (and any reviewer notes) in the Call-Offs tab, flagged as unread until viewed. While a recurring request is still pending, the tutor can withdraw it if slots remain open.",
+            "summary": "The tutor sees the decision (and any reviewer notes) in the Call-Offs tab, flagged as unread until viewed.",
             "status": "live",
             "function": null,
             "form": null,
@@ -8211,7 +8959,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "content": "If it is less than 12 hours before session, tutor emails supervisor.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/00000000-0000-4000-8000-000000000000/456e2936-08f4-5150-1027-9e763987ab2f.png",
             "summary": null,
-            "status": "live",
+            "status": "deprecated",
             "function": null,
             "form": null,
             "owner": null,
@@ -8357,6 +9105,34 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "d707ac09-e4b5-46ad-a0ec-b78868e06747",
+            "lane_id": "a0000000-0000-4000-8000-000000000974",
+            "step_id": "a0000000-0000-4000-8000-000000000945",
+            "position": 1,
+            "content": "Email",
+            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090206/b69f74c2-1a83-e916-497a-a2aed9f14eb4.png",
+            "summary": "Live in 12.1: emailed when a reviewed call-off is approved or rejected. A separate email covers a session cancelled while the request is pending.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [
+              {
+                "id": "8c12df7c-6d59-4a3a-8f3e-df7f4041de7e",
+                "touchpointId": "36c2abe1-b2a0-4807-836c-4b09dccff7cb",
+                "name": "Email",
+                "kind": "channel",
+                "iconUrl": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090206/b69f74c2-1a83-e916-497a-a2aed9f14eb4.png",
+                "summary": null,
+                "role": null
+              }
+            ],
+            "cell_key": "plus-tutoring/call-off-request/12-hours-ahead/front-stage-touchpoints/final-notification--d707ac09-e4b5-46ad-a0ec-b78868e06747",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000170306",
             "lane_id": "a0000000-0000-4000-8000-000000000974",
             "step_id": "a0000000-0000-4000-8000-000000000942",
@@ -8364,7 +9140,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "content": "Email",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090206/b69f74c2-1a83-e916-497a-a2aed9f14eb4.png",
             "summary": null,
-            "status": "live",
+            "status": "deprecated",
             "function": null,
             "form": null,
             "owner": null,
@@ -8398,6 +9174,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "perceived_owner": null,
             "resources": [],
             "touchpoints": [],
+            "value_props": []
+          },
+          {
+            "id": "224e9363-6eab-4a09-b826-3f5e0547ecdd",
+            "lane_id": "a0000000-0000-4000-8000-000000000973",
+            "step_id": "a0000000-0000-4000-8000-000000000941",
+            "position": 0,
+            "content": "Emails the tutor that the call-off was received, with its status: pending review or auto-approved.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/call-off-request/12-hours-ahead/front-stage-actions/files-call-off-12h-auto-approved",
             "value_props": []
           },
           {
@@ -8444,7 +9238,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "content": "Tutor supervisor receives email request for shift swap.",
             "frame": null,
             "summary": null,
-            "status": "live",
+            "status": "deprecated",
             "function": null,
             "form": null,
             "owner": null,
@@ -8460,7 +9254,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0,
             "content": "Auto-approval rules",
             "frame": null,
-            "summary": "requiresApproval = hours-before-session < 12 for one-time; recurring always pends except the signed-up-by-mistake fast path (<24h since sign-up ∧ 12h+ before next session). 64% of 2026 production requests were auto-approved.",
+            "summary": "requiresApproval = hours-before-session < 12 for one-time call-offs. 64% of 2026 production requests were auto-approved.",
             "status": "live",
             "function": null,
             "form": null,
@@ -8551,7 +9345,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0,
             "content": "Takes no action on auto-approved call-offs.",
             "frame": null,
-            "summary": "Pending (recurring) requests queue for supervisor review with the tutor's reason and notice window.",
+            "summary": null,
             "status": "live",
             "function": null,
             "form": null,
@@ -8692,10 +9486,135 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
       },
       {
         "path": {
+          "id": "79073a0f-5c6a-4c94-813a-69e0a1e530be",
+          "name": "Recurring withdrawal",
+          "summary": "Variant path: the tutor withdraws from a recurring session series. They stay on the roster until a supervisor approves, except a Signed Up By Mistake withdrawal that auto-approves.",
+          "note": null,
+          "kind": "variant",
+          "status": "live"
+        },
+        "lanes": [
+          {
+            "id": "ff85f30e-13a4-48a6-840a-22101472b79d",
+            "name": "Storyboard",
+            "role": "storyboard",
+            "position": 0
+          },
+          {
+            "id": "872ef617-4f58-4cef-b116-f7652d438810",
+            "name": "Regular Tutor",
+            "role": "customer_actions",
+            "position": 1
+          },
+          {
+            "id": "2d59ad5b-9ace-4f74-a5c3-5265651f7051",
+            "name": "Front Stage Touchpoints",
+            "role": "frontstage_touchpoints",
+            "position": 2
+          },
+          {
+            "id": "5ae3dc93-ce41-4fcd-9414-c6028e497ff3",
+            "name": "Front Stage Actions",
+            "role": "frontstage_actions",
+            "position": 3
+          },
+          {
+            "id": "4935e0f0-35b6-45fd-81aa-0bf90280afd9",
+            "name": "Back Stage Touchpoints",
+            "role": "backstage_touchpoints",
+            "position": 4
+          },
+          {
+            "id": "3e34884c-be3f-469e-b348-9e8fbb15eea3",
+            "name": "Back Stage Actions",
+            "role": "backstage_actions",
+            "position": 5
+          },
+          {
+            "id": "f03c3b82-d818-4d50-920c-77a116da0ea4",
+            "name": "Support Actions",
+            "role": "support_actions",
+            "position": 6
+          }
+        ],
+        "steps": [
+          {
+            "id": "a0000000-0000-4000-8000-000000000941",
+            "name": "Files call-off (12h+, auto-approved)",
+            "summary": "The tutor files a one-time call-off twelve or more hours ahead; the rules auto-approve it and supervisors take no action.",
+            "position": 0
+          },
+          {
+            "id": "a0000000-0000-4000-8000-000000000944",
+            "name": "Supervisor review (pending/excuse)",
+            "summary": "Supervisors review the pending call-offs and record the excused or unexcused decision.",
+            "position": 1
+          }
+        ],
+        "cells": [
+          {
+            "id": "8b39877f-42d9-496c-8b7b-09588e232131",
+            "lane_id": "872ef617-4f58-4cef-b116-f7652d438810",
+            "step_id": "a0000000-0000-4000-8000-000000000941",
+            "position": 0,
+            "content": "Withdraws from a recurring session and stays on the roster until a supervisor approves.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/call-off-request/recurring-withdrawal/regular-tutor/files-call-off-12h-auto-approved",
+            "value_props": []
+          },
+          {
+            "id": "61284358-7a29-4cac-87ff-1fb46f1f25de",
+            "lane_id": "872ef617-4f58-4cef-b116-f7652d438810",
+            "step_id": "a0000000-0000-4000-8000-000000000944",
+            "position": 0,
+            "content": "Withdraws a pending call-off request from the Call-Offs tab while its slots are still open.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/call-off-request/recurring-withdrawal/regular-tutor/supervisor-review-pending-excuse",
+            "value_props": []
+          },
+          {
+            "id": "955df873-d714-42f7-9661-73990e8cca80",
+            "lane_id": "3e34884c-be3f-469e-b348-9e8fbb15eea3",
+            "step_id": "a0000000-0000-4000-8000-000000000944",
+            "position": 0,
+            "content": "Approves recurring withdrawals by hand; a Signed Up By Mistake withdrawal auto-approves when the sign-up is under 24 hours old and the next session is 12+ hours away.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/call-off-request/recurring-withdrawal/back-stage-actions/supervisor-review-pending-excuse",
+            "value_props": []
+          }
+        ],
+        "dependencies": []
+      },
+      {
+        "path": {
           "id": "f0000000-0000-4000-8000-000000000808",
           "name": "Swap offered instead",
           "summary": "Captures planned / unshipped behavior for Call-off Request as of 2026-08-08. Diverges at the initial need: the swap flow (Figma section 5.5, explicitly marked TBD) — the tutor swaps into another session instead of filing a pure call-off, so coverage moves instead of disappearing. No shipped code; design placeholder only.",
-          "note": null,
+          "note": "Swap-in card 2204 archived Aug 2026; spec 5.5 still TBD.",
           "kind": "variant",
           "status": "proposed"
         },
@@ -9162,7 +10081,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0,
             "content": "Receives the excused or unexcused decision.",
             "frame": null,
-            "summary": "The tutor sees the decision (and any reviewer notes) in the Call-Offs tab, flagged as unread until viewed. While a recurring request is still pending, the tutor can withdraw it if slots remain open.",
+            "summary": "The tutor sees the decision (and any reviewer notes) in the Call-Offs tab, flagged as unread until viewed.",
             "status": "live",
             "function": null,
             "form": null,
@@ -9295,6 +10214,52 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
                 "role": null
               }
             ],
+            "value_props": []
+          },
+          {
+            "id": "063ecaac-1997-475a-87df-7474fb2a8b00",
+            "lane_id": "b0000000-0000-4000-8000-000000001074",
+            "step_id": "a0000000-0000-4000-8000-000000000945",
+            "position": 1,
+            "content": "Email",
+            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090206/b69f74c2-1a83-e916-497a-a2aed9f14eb4.png",
+            "summary": "Live in 12.1: emailed when the reviewed late call-off is marked excused or unexcused.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [
+              {
+                "id": "4bef771d-faf7-4702-a623-51902044401e",
+                "touchpointId": "36c2abe1-b2a0-4807-836c-4b09dccff7cb",
+                "name": "Email",
+                "kind": "channel",
+                "iconUrl": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090206/b69f74c2-1a83-e916-497a-a2aed9f14eb4.png",
+                "summary": null,
+                "role": null
+              }
+            ],
+            "cell_key": "plus-tutoring/call-off-request/under-12-hours/front-stage-touchpoints/final-notification--063ecaac-1997-475a-87df-7474fb2a8b00",
+            "value_props": []
+          },
+          {
+            "id": "5132e442-8794-41de-b025-37a079149d84",
+            "lane_id": "b0000000-0000-4000-8000-000000001073",
+            "step_id": "a0000000-0000-4000-8000-000000000942",
+            "position": 0,
+            "content": "Emails the tutor that the call-off was received, with its status: pending review or auto-approved.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/call-off-request/under-12-hours/front-stage-actions/files-late-call-off-12h-immediate-removal",
             "value_props": []
           },
           {
@@ -9700,6 +10665,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "eb68f86e-afcb-45f1-b72e-c2a6aba9b611",
+            "lane_id": "a0000000-0000-4000-8000-000000002011",
+            "step_id": "a0000000-0000-4000-8000-000000000952",
+            "position": 1,
+            "content": "Joins the Zoom as the classroom teacher and asks the host for co-host.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/before-students-join/setup-goes-to-plan/teacher/share-zoom-link--eb68f86e-afcb-45f1-b72e-c2a6aba9b611",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000180401",
             "lane_id": "a0000000-0000-4000-8000-000000002011",
             "step_id": "a0000000-0000-4000-8000-000000000953",
@@ -9811,7 +10794,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "a0000000-0000-4000-8000-000000002012",
             "step_id": "a0000000-0000-4000-8000-000000000952",
             "position": 0,
-            "content": "Takes tutor attendance.",
+            "content": "Claims host with the host key from View session info, gives tutors co-host, and marks them Present, Absent, or Late in Manage session.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000180302/cc7329ca-1f3c-dced-b08c-64ece4011967.png",
             "summary": "Lead marks which tutors have arrived. In 2026 production data, 83.4% of rostered students end up with an attendance record but only 31.8% of sessions are fully covered — the roster check here is the first defense.",
             "status": "live",
@@ -9829,9 +10812,9 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "a0000000-0000-4000-8000-000000002012",
             "step_id": "a0000000-0000-4000-8000-000000000953",
             "position": 0,
-            "content": "Creates breakout rooms.",
+            "content": "Runs the Tutor-Student Assignment tool, then creates the number of breakout rooms shown in the Rooms count.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000180402/e84183c1-0af9-d4e6-0d6b-9242fddc648b.png",
-            "summary": "Lead creates breakout rooms in Zoom using the breakout calculator from training, grants co-host to regular tutors, and starts the recording. Rooms are visited sequentially per tutor.",
+            "summary": "The lead creates the breakout rooms in Zoom from the Rooms count, since PLUS does not create them, and gives each tutor a block of rooms using the breakout calculator. As tutors join, the lead gives them co-host and reminds them to start the recording when they enter their first breakout room.",
             "status": "live",
             "function": null,
             "form": null,
@@ -10449,6 +11432,42 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "f0c34d5f-1130-4cd0-808c-0ee14c037995",
+            "lane_id": "a0000000-0000-4000-8000-000000002014",
+            "step_id": "a0000000-0000-4000-8000-000000000950",
+            "position": 0,
+            "content": "Shows lead tutors Manage session plus a … menu (request tutors, view session info, copy assignments); regular tutors get a Tutor tools menu (request lead tutor, view session info, copy assignments).",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/before-students-join/setup-goes-to-plan/front-stage-actions/set-up-classroom--f0c34d5f-1130-4cd0-808c-0ee14c037995",
+            "value_props": []
+          },
+          {
+            "id": "b9781398-1f91-409c-8ff2-584c81048a01",
+            "lane_id": "a0000000-0000-4000-8000-000000002014",
+            "step_id": "a0000000-0000-4000-8000-000000000955",
+            "position": 0,
+            "content": "Adds a late or fill-in tutor to the roster without moving any students; the lead tutor assigns their students by hand.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/before-students-join/setup-goes-to-plan/front-stage-actions/distribute-breakout-list--b9781398-1f91-409c-8ff2-584c81048a01",
+            "value_props": []
+          },
+          {
             "id": "92429dbd-93e3-4319-ad8c-605b1d932b92",
             "lane_id": "a0000000-0000-4000-8000-000000002017",
             "step_id": "a0000000-0000-4000-8000-000000000950",
@@ -10823,6 +11842,159 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "note": null
           }
         ]
+      },
+      {
+        "path": {
+          "id": "5fb70e22-220b-41e1-9ef2-84be0b9be3ae",
+          "name": "Student AI insights",
+          "summary": "Proposed: before the room-order run, a tutor opens a student's AI insights from the student list. The card is in the dev backlog with design in progress.",
+          "note": "The Figma frame documents the older Insights and Prompts model. A newer direction (Try, Watch, Avoid, on demand in session) is pending updated Figma.",
+          "kind": "variant",
+          "status": "proposed"
+        },
+        "lanes": [
+          {
+            "id": "f9ad8b46-a8bf-447b-8a50-2b26f2e9428d",
+            "name": "Storyboard",
+            "role": "storyboard",
+            "position": 0
+          },
+          {
+            "id": "730ecd34-0ea9-42b6-96be-132614e2e06b",
+            "name": "Teacher",
+            "role": "partner_actions",
+            "position": 1
+          },
+          {
+            "id": "d6f62418-7198-4a1f-8b61-8431e28e8329",
+            "name": "Lead Tutor",
+            "role": "customer_actions",
+            "position": 2
+          },
+          {
+            "id": "c18bb726-a539-46fe-ae3f-a4a08ab70d18",
+            "name": "Regular Tutor",
+            "role": "customer_actions",
+            "position": 3
+          },
+          {
+            "id": "1a1b2196-d0fa-4070-9e84-bcd8c4b785f7",
+            "name": "Front Stage Touchpoints",
+            "role": "frontstage_touchpoints",
+            "position": 4
+          },
+          {
+            "id": "398a2a76-3bbe-49c3-8171-41afcca32574",
+            "name": "Front Stage Actions",
+            "role": "frontstage_actions",
+            "position": 5
+          },
+          {
+            "id": "8c7ee244-4ff9-4cf1-b090-cc5bde421c82",
+            "name": "Back Stage Touchpoints",
+            "role": "backstage_touchpoints",
+            "position": 6
+          },
+          {
+            "id": "aac18866-cec6-4e10-986b-72f0bd3b303d",
+            "name": "Back Stage Actions",
+            "role": "backstage_actions",
+            "position": 7
+          },
+          {
+            "id": "e4d9cdc6-fc40-40a1-921f-a03a87d0256c",
+            "name": "Support Actions",
+            "role": "support_actions",
+            "position": 8
+          }
+        ],
+        "steps": [
+          {
+            "id": "a0000000-0000-4000-8000-000000000950",
+            "name": "Set up classroom",
+            "summary": "Tutors open the session detail page in the PLUS App, where the assignment algorithm's pairings are already waiting, while the teacher gets the classroom display ready.",
+            "position": 0
+          },
+          {
+            "id": "a0000000-0000-4000-8000-000000000951",
+            "name": "Open session",
+            "summary": "Tutors join the Zoom session the supervisor team set up, and the teacher opens the shared slide deck.",
+            "position": 1
+          },
+          {
+            "id": "a0000000-0000-4000-8000-000000000952",
+            "name": "Share Zoom link",
+            "summary": "The teacher posts the Zoom link in the LMS or shares the QR code while the lead tutor takes tutor attendance and confirms co-host permissions.",
+            "position": 2
+          },
+          {
+            "id": "a0000000-0000-4000-8000-000000000953",
+            "name": "Prepare breakout rooms",
+            "summary": "The lead tutor creates the breakout rooms in Zoom while the teacher tests the classroom wifi.",
+            "position": 3
+          },
+          {
+            "id": "a0000000-0000-4000-8000-000000000954",
+            "name": "Review room order",
+            "summary": "The lead tutor asks tutors to work through the rooms in the PLUS App's dashboard order; tutors review their student lists and the teacher checks student devices.",
+            "position": 4
+          },
+          {
+            "id": "a0000000-0000-4000-8000-000000000955",
+            "name": "Distribute breakout list",
+            "summary": "The lead tutor hands the breakout room list to the tutors while the teacher reminds students to use headphones and their real names on Zoom.",
+            "position": 5
+          }
+        ],
+        "cells": [
+          {
+            "id": "3dfb2ea6-1439-4a7f-a2e6-c3ed0277696b",
+            "lane_id": "c18bb726-a539-46fe-ae3f-a4a08ab70d18",
+            "step_id": "a0000000-0000-4000-8000-000000000954",
+            "position": 0,
+            "content": "Opens a student's AI insights from the student list.",
+            "frame": null,
+            "summary": "Proposed: the pre-session student roster gains an insights button on each row.",
+            "status": "proposed",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/before-students-join/student-ai-insights/regular-tutor/review-room-order",
+            "value_props": []
+          },
+          {
+            "id": "81dac717-99a3-4a3b-b7b5-45dd308feea4",
+            "lane_id": "8c7ee244-4ff9-4cf1-b090-cc5bde421c82",
+            "step_id": "a0000000-0000-4000-8000-000000000954",
+            "position": 0,
+            "content": "Student AI insights",
+            "frame": null,
+            "summary": "Proposed: AI-generated insights about a student, shown to tutors on demand.",
+            "status": "proposed",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [
+              {
+                "id": "97e5aaed-eebd-4eee-b98d-659852a25567",
+                "touchpointId": "f4c884a0-cb1d-4398-a7df-f8bdb2f8cbd8",
+                "name": "Student AI insights",
+                "kind": "other",
+                "iconUrl": null,
+                "summary": null,
+                "role": null
+              }
+            ],
+            "cell_key": "plus-tutoring/before-students-join/student-ai-insights/back-stage-touchpoints/review-room-order",
+            "value_props": []
+          }
+        ],
+        "dependencies": []
       }
     ],
     "a0000000-0000-4000-8000-000000000202": [
@@ -11039,6 +12211,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "6b670af9-e7ef-449c-8d05-47c60d3b15cb",
+            "lane_id": "a0000000-0000-4000-8000-000000002022",
+            "step_id": "a0000000-0000-4000-8000-000000000960",
+            "position": 1,
+            "content": "Searches the attendance list to check whether a student is already on the roster.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/student-just-joined/full-room-on-time/lead-tutor/students-join--6b670af9-e7ef-449c-8d05-47c60d3b15cb",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000190202",
             "lane_id": "a0000000-0000-4000-8000-000000002022",
             "step_id": "a0000000-0000-4000-8000-000000000961",
@@ -11113,7 +12303,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "a0000000-0000-4000-8000-000000002023",
             "step_id": "a0000000-0000-4000-8000-000000000962",
             "position": 0,
-            "content": "Moves the student into their breakout room.",
+            "content": "Moves the student into their breakout room, and marks them late in attendance if they joined more than 10 minutes in.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190303/8dc54203-5cb3-6128-a60d-6ff39b848e54.png",
             "summary": "The tutor (as co-host) moves the student into their breakout room. Any co-host can move any student, so out-of-list moves are a known source of attendance drift.",
             "status": "live",
@@ -11173,6 +12363,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             ],
             "touchpoints": [],
             "cell_key": "plus-application/student-just-joined/happy-path/regular-tutor/raise-hand-for-help",
+            "value_props": []
+          },
+          {
+            "id": "b23b927b-4746-4408-990c-4749bf20272d",
+            "lane_id": "a0000000-0000-4000-8000-000000002023",
+            "step_id": "a0000000-0000-4000-8000-000000000962",
+            "position": 1,
+            "content": "Sees each student's auto-assigned breakout room number on their row.",
+            "frame": null,
+            "summary": null,
+            "status": "proposed",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/student-just-joined/full-room-on-time/regular-tutor/raise-hand-for-help--b23b927b-4746-4408-990c-4749bf20272d",
             "value_props": []
           },
           {
@@ -11266,6 +12474,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
               }
             ],
             "cell_key": "plus-application/student-just-joined/happy-path/front-stage-tech/raise-hand-for-help",
+            "value_props": []
+          },
+          {
+            "id": "eeefc7b8-bb53-41af-8a5e-0cf60fa19535",
+            "lane_id": "a0000000-0000-4000-8000-000000002024",
+            "step_id": "a0000000-0000-4000-8000-000000000960",
+            "position": 0,
+            "content": "Shows live student and tutor counts, present out of rostered, in the session header.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/student-just-joined/full-room-on-time/front-stage-actions/students-join--eeefc7b8-bb53-41af-8a5e-0cf60fa19535",
             "value_props": []
           },
           {
@@ -11472,7 +12698,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           },
           {
             "id": "b2000000-0000-4000-8000-000000000022",
-            "name": "Post in school Slack channel",
+            "name": "Post in #in-session-support",
             "summary": "The lead tutor posts in the school's Slack channel, where supervisors pick it up.",
             "position": 2
           },
@@ -12133,7 +13359,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "a0000000-0000-4000-8000-000000000303",
             "step_id": "a0000000-0000-4000-8000-000000000311",
             "position": 0,
-            "content": "Enters the student's breakout room.",
+            "content": "Enters the student's breakout room within 5 minutes of placing them and starts the Zoom recording in the first room.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040103/ae874da3-865c-a06c-f55e-e9085920b694.png",
             "summary": "This is the tutor's one-on-one window opening - the room where attendance, engagement, and help all get recorded for this student, distinct from the shared main room.",
             "status": "live",
@@ -12353,7 +13579,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "a0000000-0000-4000-8000-000000000303",
             "step_id": "a0000000-0000-4000-8000-000000000316",
             "position": 0,
-            "content": "Selects the engagement level.",
+            "content": "Selects the engagement level, including sub-reasons such as Left zoom early or Unresponsive on zoom.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040603/60111251-fa66-721f-a6ec-2a399b0d19bd.png",
             "summary": "Engagement is defined as observable Zoom behavior only, with sub-options such as joined late, unresponsive, left early. The control is disabled (not hidden) until attendance is recorded. Internally this field is being renamed from Engagement to Responsiveness.",
             "status": "live",
@@ -13906,7 +15132,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "a0000000-0000-4000-8000-000000000403",
             "step_id": "a0000000-0000-4000-8000-000000000316",
             "position": 0,
-            "content": "Selects the engagement level.",
+            "content": "Selects the engagement level, including sub-reasons such as Left zoom early or Unresponsive on zoom.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040603/60111251-fa66-721f-a6ec-2a399b0d19bd.png",
             "summary": "Engagement is defined as observable Zoom behavior only, with sub-options such as joined late, unresponsive, left early. The control is disabled (not hidden) until attendance is recorded. Internally this field is being renamed from Engagement to Responsiveness.",
             "status": "live",
@@ -16310,7 +17536,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           },
           {
             "id": "a0000000-0000-4000-8000-000000009b02",
-            "name": "Click on 'Check Goals' CTA in the Action column",
+            "name": "Click on 'Check goals' CTA in the Action column",
             "summary": "The tutor clicks Check Goals in the dashboard's Action column.",
             "position": 2
           },
@@ -16328,7 +17554,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           },
           {
             "id": "a0000000-0000-4000-8000-000000009b05",
-            "name": "Once goal review is done, clicks on 'Check Goals' button",
+            "name": "Once goal review is done, clicks on 'Check goals' button",
             "summary": "With the review done, the tutor clicks Check Goals.",
             "position": 5
           },
@@ -16475,7 +17701,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           },
           {
             "id": "a0000000-0000-4000-8000-000000009b02",
-            "name": "Click on 'Check Goals' CTA in the Action column",
+            "name": "Click on 'Check goals' CTA in the Action column",
             "summary": "The tutor clicks Check Goals in the dashboard's Action column.",
             "position": 2
           },
@@ -16493,7 +17719,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           },
           {
             "id": "a0000000-0000-4000-8000-000000009b05",
-            "name": "Once goal review is done, clicks on 'Check Goals' button",
+            "name": "Once goal review is done, clicks on 'Check goals' button",
             "summary": "With the review done, the tutor clicks Check Goals.",
             "position": 5
           },
@@ -16680,28 +17906,10 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
-            "id": "a0000000-0000-4000-8000-000000a00201",
-            "lane_id": "a0000000-0000-4000-8000-0000000008b1",
-            "step_id": "a0000000-0000-4000-8000-000000009b02",
-            "position": 0,
-            "content": "Reminds students to keep working while waiting.",
-            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040201/45a51cb4-1ae3-d2c2-5f15-49fd1b4c00f2.png",
-            "summary": "While a tutor is still occupied with another student, the teacher keeps waiting students on task rather than idle, so the room does not lose momentum before goal setting starts for them.",
-            "status": "live",
-            "function": null,
-            "form": null,
-            "owner": null,
-            "perceived_owner": null,
-            "resources": [],
-            "touchpoints": [],
-            "cell_key": "plus-application/goal-setting/check-goals/partner-action-teacher/click-on-check-goals-cta-in-the-action-column",
-            "value_props": []
-          },
-          {
             "id": "a0000000-0000-4000-8000-000000a00301",
             "lane_id": "a0000000-0000-4000-8000-0000000008b1",
-            "step_id": "a0000000-0000-4000-8000-000000009b03",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009b01",
+            "position": 1,
             "content": "Checks if all students are in the correct breakout room.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040301/0c96ea1a-4331-9912-e78a-3cca3a3f8c53.png",
             "summary": "Before the tutor pairs settle in, the teacher confirms every student landed in their assigned breakout room rather than a wrong or empty one. This catch happens before goal setting starts, since a misrouted student has no tutor to set goals with.",
@@ -16716,10 +17924,28 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "a0000000-0000-4000-8000-000000a00201",
+            "lane_id": "a0000000-0000-4000-8000-0000000008b1",
+            "step_id": "a0000000-0000-4000-8000-000000009b01",
+            "position": 2,
+            "content": "Reminds students to keep working while waiting.",
+            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040201/45a51cb4-1ae3-d2c2-5f15-49fd1b4c00f2.png",
+            "summary": "While a tutor is still occupied with another student, the teacher keeps waiting students on task rather than idle, so the room does not lose momentum before goal setting starts for them.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-application/goal-setting/check-goals/partner-action-teacher/click-on-check-goals-cta-in-the-action-column",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000a00401",
             "lane_id": "a0000000-0000-4000-8000-0000000008b1",
-            "step_id": "a0000000-0000-4000-8000-000000009b04",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009b01",
+            "position": 3,
             "content": "Receives information that a student is absent from the session.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0401/df4eeba7-5747-4aa2-1d62-dde366548029.png",
             "summary": "The teacher is the one told when a student does not show, which is what triggers roster and pairing adjustments for the rest of the session. This is the first step in reconciling attendance against the goal-setting plan for that class.",
@@ -16736,8 +17962,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000a00501",
             "lane_id": "a0000000-0000-4000-8000-0000000008b1",
-            "step_id": "a0000000-0000-4000-8000-000000009b05",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009b01",
+            "position": 4,
             "content": "Alerts lead tutor about unassigned or miss-assigned students using the \"ask for help\" alert.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0501/610fd0d7-ee32-6f6e-8d3c-7d56c796381e.png",
             "summary": null,
@@ -16753,8 +17979,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000a00601",
             "lane_id": "a0000000-0000-4000-8000-0000000008b1",
-            "step_id": "a0000000-0000-4000-8000-000000009b06",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009b03",
+            "position": 1,
             "content": "Handles student tech problems as they arise.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0601/70caf55e-72b8-3f2e-73e3-c419a60a501c.png",
             "summary": "The teacher is the first responder for device or connection issues during the breakout, so a tutor can stay focused on the goal-setting conversation instead of troubleshooting. Without this, a tech problem would either interrupt the tutor or go unresolved.",
@@ -16807,8 +18033,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000a00202",
             "lane_id": "a0000000-0000-4000-8000-0000000008b2",
-            "step_id": "a0000000-0000-4000-8000-000000009b02",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009b01",
+            "position": 1,
             "content": "Adds any un-rostered students to the attendance list.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0202/0911e936-fd5a-3171-9338-9e57d694b158.png",
             "summary": "The lead tutor accounts for a student who joined the session without a matching roster entry, so that student is not dropped from attendance or left unpaired for goal setting. This keeps the session's records accurate even when enrollment data is out of sync.",
@@ -16825,8 +18051,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000a00302",
             "lane_id": "a0000000-0000-4000-8000-0000000008b2",
-            "step_id": "a0000000-0000-4000-8000-000000009b03",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009b01",
+            "position": 2,
             "content": "Manually assigns unpaired students to available tutors.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0302/d451bb96-0858-37e8-9e3c-588df38cfb2b.png",
             "summary": "When automatic pairing leaves a student without a tutor, the lead tutor steps in to assign one by hand so goal setting is not skipped for that student. This is the fallback for whatever caused the pairing to fail in the first place.",
@@ -16843,8 +18069,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000a00402",
             "lane_id": "a0000000-0000-4000-8000-0000000008b2",
-            "step_id": "a0000000-0000-4000-8000-000000009b04",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009b01",
+            "position": 3,
             "content": "Inform classroom teacher about students that are absent.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0402/db5f36b0-90a1-dbfe-92eb-07af60fb4bc0.png",
             "summary": null,
@@ -16860,8 +18086,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000a00502",
             "lane_id": "a0000000-0000-4000-8000-0000000008b2",
-            "step_id": "a0000000-0000-4000-8000-000000009b05",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009b01",
+            "position": 4,
             "content": "Respond to classroom teachers \"ask for help\" request.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0502/63b222f0-1142-8cd8-0979-aa8e4ba2bcc2.png",
             "summary": null,
@@ -16961,13 +18187,31 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "9b7091ee-760e-43fc-89b5-40489d505196",
+            "lane_id": "a0000000-0000-4000-8000-0000000008b3",
+            "step_id": "a0000000-0000-4000-8000-000000009b02",
+            "position": 1,
+            "content": "Reviews tutor-only badges and notes, then presses Start goal check-in.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/mid-cycle-check/regular-tutor/click-on-check-goals-cta-in-the-action-column--9b7091ee-760e-43fc-89b5-40489d505196",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000a00303",
             "lane_id": "a0000000-0000-4000-8000-0000000008b3",
             "step_id": "a0000000-0000-4000-8000-000000009b03",
             "position": 0,
-            "content": "Shares screen.",
+            "content": "Shares screen once the app says the student-safe view is ready.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000a00303/2ef46d48-204f-0194-9423-ab98165ff1e2.png",
-            "summary": "The tutor shares their screen so the student can see the same goal-setting view the tutor is working from, rather than describing it verbally. This is what lets the tutor walk the student through the exact fields being filled in.",
+            "summary": "The app shows a banner when it is safe to share: \"Share your screen now — {FirstName} can safely see this view.\" The student-safe view hides system suggestions and the tutor's notes.",
             "status": "live",
             "function": null,
             "form": null,
@@ -17047,6 +18291,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "4182a678-a6c8-4b62-aa7f-5cf2c48b3987",
+            "lane_id": "a0000000-0000-4000-8000-0000000008b3",
+            "step_id": "a0000000-0000-4000-8000-000000009b04",
+            "position": 1,
+            "content": "Sees how many sessions are left in the student's goal cycle, then sets, updates or checks the goal.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/mid-cycle-check/regular-tutor/review-goals-that-were-set-with-student--4182a678-a6c8-4b62-aa7f-5cf2c48b3987",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000a00503",
             "lane_id": "a0000000-0000-4000-8000-0000000008b3",
             "step_id": "a0000000-0000-4000-8000-000000009b05",
@@ -17090,6 +18352,42 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "c5581903-938b-4eee-954a-9cf3019ea718",
+            "lane_id": "a0000000-0000-4000-8000-0000000008b3",
+            "step_id": "a0000000-0000-4000-8000-000000009b05",
+            "position": 1,
+            "content": "Stops sharing when prompted, then finishes in the tutor view.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/mid-cycle-check/regular-tutor/once-goal-review-is-done-clicks-on-check-goals-button--c5581903-938b-4eee-954a-9cf3019ea718",
+            "value_props": []
+          },
+          {
+            "id": "4800942f-31d2-4cbc-8670-21305bef726e",
+            "lane_id": "a0000000-0000-4000-8000-0000000008b3",
+            "step_id": "a0000000-0000-4000-8000-000000009b05",
+            "position": 2,
+            "content": "Can press Undo to revert Goals checked.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/mid-cycle-check/regular-tutor/once-goal-review-is-done-clicks-on-check-goals-button--4800942f-31d2-4cbc-8670-21305bef726e",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000a00603",
             "lane_id": "a0000000-0000-4000-8000-0000000008b3",
             "step_id": "a0000000-0000-4000-8000-000000009b06",
@@ -17130,6 +18428,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             ],
             "touchpoints": [],
             "cell_key": "plus-application/goal-setting/check-goals/regular-tutor/finalize-checking-goal-with-the-student",
+            "value_props": []
+          },
+          {
+            "id": "85948c2e-6399-411f-9bf2-349e66332d06",
+            "lane_id": "a0000000-0000-4000-8000-0000000008b3",
+            "step_id": "a0000000-0000-4000-8000-000000009b06",
+            "position": 1,
+            "content": "Writes private, auto-saved notes about the student in the goal-setting window.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/mid-cycle-check/regular-tutor/finalize-checking-goal-with-the-student--85948c2e-6399-411f-9bf2-349e66332d06",
             "value_props": []
           },
           {
@@ -17822,17 +19138,17 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "note": null
           },
           {
-            "id": "a0000000-0000-4000-8000-00000009c002",
-            "source_cell_id": "a0000000-0000-4000-8000-000000a00201",
-            "target_cell_id": "a0000000-0000-4000-8000-000000a00301",
+            "id": "a0000000-0000-4000-8000-00000009c003",
+            "source_cell_id": "a0000000-0000-4000-8000-000000a00301",
+            "target_cell_id": "a0000000-0000-4000-8000-000000a00401",
             "kind": "leads_to",
             "name": null,
             "note": null
           },
           {
-            "id": "a0000000-0000-4000-8000-00000009c003",
-            "source_cell_id": "a0000000-0000-4000-8000-000000a00301",
-            "target_cell_id": "a0000000-0000-4000-8000-000000a00401",
+            "id": "a0000000-0000-4000-8000-00000009c002",
+            "source_cell_id": "a0000000-0000-4000-8000-000000a00201",
+            "target_cell_id": "a0000000-0000-4000-8000-000000a00301",
             "kind": "leads_to",
             "name": null,
             "note": null
@@ -18069,18 +19385,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "id": "a0000000-0000-4000-8000-000000009e01",
             "name": "Join breakout session",
             "summary": "The tutor joins the student's breakout room over Zoom while the lead tutor renames students to match the roster and the teacher circulates.",
-            "position": 1
+            "position": 0
           },
           {
             "id": "a0000000-0000-4000-8000-000000009e02",
-            "name": "Sees action color in dashboard is warning and CTA copy is 'Update Goals' within a mid-cycle goal check-in session.",
+            "name": "Sees action color in dashboard is warning and CTA copy is 'Update goals' within a mid-cycle goal check-in session.",
             "summary": "The dashboard flags an Update Goals prompt for attention part-way through the cycle.",
-            "position": 2
+            "position": 1
           },
           {
             "id": "a0000000-0000-4000-8000-000000009e03",
-            "name": "Click on 'Update Goals' CTA in the action column",
+            "name": "Click on 'Update goals' CTA in the action column",
             "summary": "The tutor clicks Update Goals in the dashboard's Action column.",
+            "position": 2
+          },
+          {
+            "id": "a0000000-0000-4000-8000-000000009e05",
+            "name": "Review last goal cycle overview and system suggestion",
+            "summary": "The tutor reviews the last goal cycle's overview and the system's suggestion.",
             "position": 3
           },
           {
@@ -18090,52 +19412,46 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 4
           },
           {
-            "id": "a0000000-0000-4000-8000-000000009e05",
-            "name": "Review last goal cycle overview and system suggestion",
-            "summary": "The tutor reviews the last goal cycle's overview and the system's suggestion.",
-            "position": 5
-          },
-          {
             "id": "a0000000-0000-4000-8000-000000009e06",
             "name": "Once student understands, starts updating goal for the next goal cycle while sharing screen",
             "summary": "Once the student understands, the tutor starts updating the goal for the next cycle with their screen shared.",
-            "position": 6
+            "position": 5
           },
           {
             "id": "a0000000-0000-4000-8000-000000009e07",
             "name": "Fills out goal settings and quantity with the student",
             "summary": "The tutor fills out the goal's settings and quantity with the student in the PLUS App.",
-            "position": 7
+            "position": 6
           },
           {
             "id": "a0000000-0000-4000-8000-000000009e08",
-            "name": "If prompted, fill out goal achievement strategy with the student",
+            "name": "Fill out goal achievement strategy with the student",
             "summary": "Where the activity prompts for one, the tutor fills out the goal achievement strategy with the student.",
-            "position": 8
+            "position": 7
           },
           {
             "id": "a0000000-0000-4000-8000-000000009e09",
             "name": "Save goal",
             "summary": "The tutor saves the goal.",
-            "position": 9
+            "position": 8
           },
           {
             "id": "a0000000-0000-4000-8000-000000009e0a",
             "name": "Finalize updating goal with student",
             "summary": "The tutor finalizes the goal update with the student.",
-            "position": 10
+            "position": 9
           },
           {
             "id": "a0000000-0000-4000-8000-000000009e0b",
             "name": "Leave breakout room",
             "summary": "The tutor leaves the student's breakout room.",
-            "position": 11
+            "position": 10
           },
           {
             "id": "a0000000-0000-4000-8000-000000009e0c",
             "name": "Move on to the next student in sorted order set by researchers",
             "summary": "The tutor moves on to the next student, in the order researchers set in the PLUS App.",
-            "position": 12
+            "position": 11
           }
         ],
         "cells": [
@@ -18194,24 +19510,6 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
-            "id": "a0000000-0000-4000-8000-000000d00410",
-            "lane_id": "a0000000-0000-4000-8000-0000000008f0",
-            "step_id": "a0000000-0000-4000-8000-000000009e04",
-            "position": 0,
-            "content": "",
-            "frame": null,
-            "summary": null,
-            "status": "live",
-            "function": null,
-            "form": null,
-            "owner": null,
-            "perceived_owner": null,
-            "resources": [],
-            "touchpoints": [],
-            "cell_key": "plus-application/goal-setting/update-goals-edge-case/visual/share-screen",
-            "value_props": []
-          },
-          {
             "id": "a0000000-0000-4000-8000-000000d00510",
             "lane_id": "a0000000-0000-4000-8000-0000000008f0",
             "step_id": "a0000000-0000-4000-8000-000000009e05",
@@ -18227,6 +19525,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "resources": [],
             "touchpoints": [],
             "cell_key": "plus-application/goal-setting/update-goals-edge-case/visual/review-last-goal-cycle-overview-and-system-suggestion",
+            "value_props": []
+          },
+          {
+            "id": "a0000000-0000-4000-8000-000000d00410",
+            "lane_id": "a0000000-0000-4000-8000-0000000008f0",
+            "step_id": "a0000000-0000-4000-8000-000000009e04",
+            "position": 0,
+            "content": "",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-application/goal-setting/update-goals-edge-case/visual/share-screen",
             "value_props": []
           },
           {
@@ -18374,28 +19690,10 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
-            "id": "a0000000-0000-4000-8000-000000d00201",
-            "lane_id": "a0000000-0000-4000-8000-0000000008f1",
-            "step_id": "a0000000-0000-4000-8000-000000009e02",
-            "position": 0,
-            "content": "Reminds students to keep working while waiting.",
-            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040201/45a51cb4-1ae3-d2c2-5f15-49fd1b4c00f2.png",
-            "summary": "While a tutor is still occupied with another student, the teacher keeps waiting students on task rather than idle, so the room does not lose momentum before goal setting starts for them.",
-            "status": "live",
-            "function": null,
-            "form": null,
-            "owner": null,
-            "perceived_owner": null,
-            "resources": [],
-            "touchpoints": [],
-            "cell_key": "plus-application/goal-setting/update-goals-edge-case/partner-action-teacher/sees-action-color-in-dashboard-is-warning-and-cta-copy-is-update-goals-within-a-mid-cycle-goal-check-in-session",
-            "value_props": []
-          },
-          {
             "id": "a0000000-0000-4000-8000-000000d00301",
             "lane_id": "a0000000-0000-4000-8000-0000000008f1",
-            "step_id": "a0000000-0000-4000-8000-000000009e03",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009e01",
+            "position": 1,
             "content": "Checks if all students are in the correct breakout room.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040301/0c96ea1a-4331-9912-e78a-3cca3a3f8c53.png",
             "summary": "Before the tutor pairs settle in, the teacher confirms every student landed in their assigned breakout room rather than a wrong or empty one. This catch happens before goal setting starts, since a misrouted student has no tutor to set goals with.",
@@ -18410,10 +19708,28 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "a0000000-0000-4000-8000-000000d00201",
+            "lane_id": "a0000000-0000-4000-8000-0000000008f1",
+            "step_id": "a0000000-0000-4000-8000-000000009e01",
+            "position": 2,
+            "content": "Reminds students to keep working while waiting.",
+            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040201/45a51cb4-1ae3-d2c2-5f15-49fd1b4c00f2.png",
+            "summary": "While a tutor is still occupied with another student, the teacher keeps waiting students on task rather than idle, so the room does not lose momentum before goal setting starts for them.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-application/goal-setting/update-goals-edge-case/partner-action-teacher/sees-action-color-in-dashboard-is-warning-and-cta-copy-is-update-goals-within-a-mid-cycle-goal-check-in-session",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000d00401",
             "lane_id": "a0000000-0000-4000-8000-0000000008f1",
-            "step_id": "a0000000-0000-4000-8000-000000009e04",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009e01",
+            "position": 3,
             "content": "Receives information that a student is absent from the session.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0401/df4eeba7-5747-4aa2-1d62-dde366548029.png",
             "summary": "The teacher is the one told when a student does not show, which is what triggers roster and pairing adjustments for the rest of the session. This is the first step in reconciling attendance against the goal-setting plan for that class.",
@@ -18430,8 +19746,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000d00501",
             "lane_id": "a0000000-0000-4000-8000-0000000008f1",
-            "step_id": "a0000000-0000-4000-8000-000000009e05",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009e01",
+            "position": 4,
             "content": "Alerts lead tutor about unassigned or miss-assigned students using the \"ask for help\" alert.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0501/610fd0d7-ee32-6f6e-8d3c-7d56c796381e.png",
             "summary": null,
@@ -18447,8 +19763,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000d00601",
             "lane_id": "a0000000-0000-4000-8000-0000000008f1",
-            "step_id": "a0000000-0000-4000-8000-000000009e06",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009e04",
+            "position": 1,
             "content": "Handles student tech problems as they arise.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0601/70caf55e-72b8-3f2e-73e3-c419a60a501c.png",
             "summary": "The teacher is the first responder for device or connection issues during the breakout, so a tutor can stay focused on the goal-setting conversation instead of troubleshooting. Without this, a tech problem would either interrupt the tutor or go unresolved.",
@@ -18501,8 +19817,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000d00202",
             "lane_id": "a0000000-0000-4000-8000-0000000008f2",
-            "step_id": "a0000000-0000-4000-8000-000000009e02",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009e01",
+            "position": 1,
             "content": "Adds any un-rostered students to the attendance list.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0202/0911e936-fd5a-3171-9338-9e57d694b158.png",
             "summary": "The lead tutor accounts for a student who joined the session without a matching roster entry, so that student is not dropped from attendance or left unpaired for goal setting. This keeps the session's records accurate even when enrollment data is out of sync.",
@@ -18519,8 +19835,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000d00302",
             "lane_id": "a0000000-0000-4000-8000-0000000008f2",
-            "step_id": "a0000000-0000-4000-8000-000000009e03",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009e01",
+            "position": 2,
             "content": "Manually assigns unpaired students to available tutors.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0302/d451bb96-0858-37e8-9e3c-588df38cfb2b.png",
             "summary": "When automatic pairing leaves a student without a tutor, the lead tutor steps in to assign one by hand so goal setting is not skipped for that student. This is the fallback for whatever caused the pairing to fail in the first place.",
@@ -18537,8 +19853,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000d00402",
             "lane_id": "a0000000-0000-4000-8000-0000000008f2",
-            "step_id": "a0000000-0000-4000-8000-000000009e04",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009e01",
+            "position": 3,
             "content": "Inform classroom teacher about students that are absent.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0402/db5f36b0-90a1-dbfe-92eb-07af60fb4bc0.png",
             "summary": null,
@@ -18554,8 +19870,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000d00502",
             "lane_id": "a0000000-0000-4000-8000-0000000008f2",
-            "step_id": "a0000000-0000-4000-8000-000000009e05",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009e01",
+            "position": 4,
             "content": "Respond to classroom teachers \"ask for help\" request.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0502/63b222f0-1142-8cd8-0979-aa8e4ba2bcc2.png",
             "summary": null,
@@ -18698,56 +20014,13 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
-            "id": "a0000000-0000-4000-8000-000000d00403",
-            "lane_id": "a0000000-0000-4000-8000-0000000008f3",
-            "step_id": "a0000000-0000-4000-8000-000000009e04",
-            "position": 0,
-            "content": "Shares screen.",
-            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000d00403/ea0070c7-856f-b4b0-7c7c-483dd4703c47.png",
-            "summary": "The tutor shares their screen so the student can see the same goal-setting view the tutor is working from, rather than describing it verbally. This is what lets the tutor walk the student through the exact fields being filled in.",
-            "status": "live",
-            "function": null,
-            "form": null,
-            "owner": null,
-            "perceived_owner": null,
-            "resources": [
-              {
-                "id": "b6212cac-9169-4f30-bc1a-48b2e10ad492",
-                "name": "Onboarding Module 5",
-                "kind": "link",
-                "url": "https://plus-tutors.notion.site/Module-5-Helping-Students-26fb7cca4982807fa5b7d2a0a92753dd",
-                "placementId": null,
-                "featured": false
-              },
-              {
-                "id": "09cfd325-b641-47c8-b166-abc2b93f5f74",
-                "name": "Onboarding Module 6",
-                "kind": "link",
-                "url": "https://plus-tutors.notion.site/Module-6-Tutoring-Tools-26fb7cca498280e4aae2f73e8739388e",
-                "placementId": null,
-                "featured": false
-              },
-              {
-                "id": "c20511a4-6f83-4d22-be96-d8f913edfd1e",
-                "name": "Onboarding Module 9",
-                "kind": "link",
-                "url": "https://plus-tutors.notion.site/Module-9-Goal-Setting-Practices-2a1b7cca498280278bb9e2c9f9e20b6b",
-                "placementId": null,
-                "featured": false
-              }
-            ],
-            "touchpoints": [],
-            "cell_key": "plus-application/goal-setting/update-goals-edge-case/regular-tutor/share-screen",
-            "value_props": []
-          },
-          {
             "id": "a0000000-0000-4000-8000-000000d00503",
             "lane_id": "a0000000-0000-4000-8000-0000000008f3",
             "step_id": "a0000000-0000-4000-8000-000000009e05",
             "position": 0,
-            "content": "Reviews the last goal cycle overview and system suggestion.",
+            "content": "Reviews last cycle's overview, the system suggestion and notes in the tutor-only view, then presses Start goal update.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000d00503/409fce75-a5ea-d7f4-195b-086ed924b868.png",
-            "summary": "Before updating anything, the tutor and student look at how the previous cycle went and the app's suggested next goal, so the new goal is informed by actual progress rather than set cold. The suggestion is generated by the app, not chosen by the tutor.",
+            "summary": "Before sharing, the tutor privately reviews how the previous cycle went, the app's suggested next goal and their notes, then presses Start goal update. The student-safe view the tutor then shares hides the system suggestion and notes.",
             "status": "live",
             "function": null,
             "form": null,
@@ -18781,6 +20054,49 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             ],
             "touchpoints": [],
             "cell_key": "plus-application/goal-setting/update-goals-edge-case/regular-tutor/review-last-goal-cycle-overview-and-system-suggestion",
+            "value_props": []
+          },
+          {
+            "id": "a0000000-0000-4000-8000-000000d00403",
+            "lane_id": "a0000000-0000-4000-8000-0000000008f3",
+            "step_id": "a0000000-0000-4000-8000-000000009e04",
+            "position": 0,
+            "content": "Shares screen once the app says the student-safe view is ready.",
+            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000d00403/ea0070c7-856f-b4b0-7c7c-483dd4703c47.png",
+            "summary": "The app shows a banner when it is safe to share: \"Share your screen now — {FirstName} can safely see this view.\" The student-safe view hides system suggestions and the tutor's notes.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [
+              {
+                "id": "b6212cac-9169-4f30-bc1a-48b2e10ad492",
+                "name": "Onboarding Module 5",
+                "kind": "link",
+                "url": "https://plus-tutors.notion.site/Module-5-Helping-Students-26fb7cca4982807fa5b7d2a0a92753dd",
+                "placementId": null,
+                "featured": false
+              },
+              {
+                "id": "09cfd325-b641-47c8-b166-abc2b93f5f74",
+                "name": "Onboarding Module 6",
+                "kind": "link",
+                "url": "https://plus-tutors.notion.site/Module-6-Tutoring-Tools-26fb7cca498280e4aae2f73e8739388e",
+                "placementId": null,
+                "featured": false
+              },
+              {
+                "id": "c20511a4-6f83-4d22-be96-d8f913edfd1e",
+                "name": "Onboarding Module 9",
+                "kind": "link",
+                "url": "https://plus-tutors.notion.site/Module-9-Goal-Setting-Practices-2a1b7cca498280278bb9e2c9f9e20b6b",
+                "placementId": null,
+                "featured": false
+              }
+            ],
+            "touchpoints": [],
+            "cell_key": "plus-application/goal-setting/update-goals-edge-case/regular-tutor/share-screen",
             "value_props": []
           },
           {
@@ -18824,6 +20140,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             ],
             "touchpoints": [],
             "cell_key": "plus-application/goal-setting/update-goals-edge-case/regular-tutor/once-student-understands-starts-updating-goal-for-the-next-goal-cycle-while-sharing-screen",
+            "value_props": []
+          },
+          {
+            "id": "6a9d3e6f-40b3-48ce-a67e-e292ef916977",
+            "lane_id": "a0000000-0000-4000-8000-0000000008f3",
+            "step_id": "a0000000-0000-4000-8000-000000009e06",
+            "position": 1,
+            "content": "Sees how many sessions are left in the student's goal cycle, then sets, updates or checks the goal.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/missed-last-session-has-goals/regular-tutor/once-student-understands-starts-updating-goal-for-the-next-goal-cycle-while-sharing-screen--6a9d3e6f-40b3-48ce-a67e-e292ef916977",
             "value_props": []
           },
           {
@@ -18956,6 +20290,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "1c949bd1-a731-4903-9eb1-4c494c8d8061",
+            "lane_id": "a0000000-0000-4000-8000-0000000008f3",
+            "step_id": "a0000000-0000-4000-8000-000000009e09",
+            "position": 1,
+            "content": "Stops sharing when prompted, then finishes in the tutor view.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/missed-last-session-has-goals/regular-tutor/save-goal--1c949bd1-a731-4903-9eb1-4c494c8d8061",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000d01003",
             "lane_id": "a0000000-0000-4000-8000-0000000008f3",
             "step_id": "a0000000-0000-4000-8000-000000009e0a",
@@ -18996,6 +20348,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             ],
             "touchpoints": [],
             "cell_key": "plus-application/goal-setting/update-goals-edge-case/regular-tutor/finalize-updating-goal-with-student",
+            "value_props": []
+          },
+          {
+            "id": "bbc19e15-60c8-4e81-a6fd-7cc4a2b51dac",
+            "lane_id": "a0000000-0000-4000-8000-0000000008f3",
+            "step_id": "a0000000-0000-4000-8000-000000009e0a",
+            "position": 1,
+            "content": "Writes private, auto-saved notes about the student in the goal-setting window.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/missed-last-session-has-goals/regular-tutor/finalize-updating-goal-with-student--bbc19e15-60c8-4e81-a6fd-7cc4a2b51dac",
             "value_props": []
           },
           {
@@ -19235,88 +20605,6 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
-            "id": "a0000000-0000-4000-8000-000000d00406",
-            "lane_id": "a0000000-0000-4000-8000-0000000008f4",
-            "step_id": "a0000000-0000-4000-8000-000000009e04",
-            "position": 0,
-            "content": "Zoom",
-            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png",
-            "summary": "The tutor shares screen via Zoom screen share feature.",
-            "status": "live",
-            "function": null,
-            "form": null,
-            "owner": null,
-            "perceived_owner": null,
-            "resources": [
-              {
-                "id": "09ac49d0-b8af-472d-815b-b6d84b39d786",
-                "name": "PLUS App",
-                "kind": "link",
-                "url": "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=5662-73487&t=X6VgpWcaJyIr1cSu-1",
-                "placementId": "38c597cf-a57c-4f58-88fd-65ceae5231b7",
-                "featured": true
-              },
-              {
-                "id": "22e92506-697b-4da0-b08d-612b2bc7ff24",
-                "name": "PLUS App",
-                "kind": "attachment",
-                "url": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000d00406/2cc937d4-662f-6173-00fa-dcf5a8ca5b1b.png",
-                "placementId": "38c597cf-a57c-4f58-88fd-65ceae5231b7",
-                "featured": false
-              }
-            ],
-            "touchpoints": [
-              {
-                "id": "540088a5-33ce-4cc5-9a6a-18232042c029",
-                "touchpointId": "20b2043a-2fe5-48cb-916b-4b156bdca4ee",
-                "name": "Zoom",
-                "kind": "app",
-                "iconUrl": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png",
-                "summary": null,
-                "role": null
-              },
-              {
-                "id": "38c597cf-a57c-4f58-88fd-65ceae5231b7",
-                "touchpointId": "e469e871-33ba-4d7b-abee-20abe017593f",
-                "name": "PLUS App",
-                "kind": "app",
-                "iconUrl": null,
-                "summary": "The tutor shares the update goals modal in the PLUS app with the student while screen sharing, which displays the last goal cycle overview and system suggestions for effort and progress goals.",
-                "role": null
-              }
-            ],
-            "cell_key": "plus-application/goal-setting/update-goals-edge-case/front-stage-tech/share-screen",
-            "value_props": []
-          },
-          {
-            "id": "788ad4dd-7f11-48d2-a2b1-0b0ceb52767e",
-            "lane_id": "a0000000-0000-4000-8000-0000000008f4",
-            "step_id": "a0000000-0000-4000-8000-000000009e04",
-            "position": 1,
-            "content": "PLUS App",
-            "frame": null,
-            "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
-            "status": "live",
-            "function": null,
-            "form": null,
-            "owner": null,
-            "perceived_owner": null,
-            "resources": [],
-            "touchpoints": [
-              {
-                "id": "10c25ad6-ba12-4907-8c76-3362253a8961",
-                "touchpointId": "e469e871-33ba-4d7b-abee-20abe017593f",
-                "name": "PLUS App",
-                "kind": "app",
-                "iconUrl": null,
-                "summary": null,
-                "role": null
-              }
-            ],
-            "cell_key": "plus-application/goal-setting/update-goals-edge-case/front-stage-tech/share-screen-2",
-            "value_props": []
-          },
-          {
             "id": "a0000000-0000-4000-8000-000000d00506",
             "lane_id": "a0000000-0000-4000-8000-0000000008f4",
             "step_id": "a0000000-0000-4000-8000-000000009e05",
@@ -19405,6 +20693,88 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
               }
             ],
             "cell_key": "plus-application/goal-setting/update-goals-edge-case/front-stage-tech/review-last-goal-cycle-overview-and-system-suggestion-2",
+            "value_props": []
+          },
+          {
+            "id": "a0000000-0000-4000-8000-000000d00406",
+            "lane_id": "a0000000-0000-4000-8000-0000000008f4",
+            "step_id": "a0000000-0000-4000-8000-000000009e04",
+            "position": 0,
+            "content": "Zoom",
+            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png",
+            "summary": "The tutor shares screen via Zoom screen share feature.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [
+              {
+                "id": "09ac49d0-b8af-472d-815b-b6d84b39d786",
+                "name": "PLUS App",
+                "kind": "link",
+                "url": "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=5662-73487&t=X6VgpWcaJyIr1cSu-1",
+                "placementId": "38c597cf-a57c-4f58-88fd-65ceae5231b7",
+                "featured": true
+              },
+              {
+                "id": "22e92506-697b-4da0-b08d-612b2bc7ff24",
+                "name": "PLUS App",
+                "kind": "attachment",
+                "url": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000d00406/2cc937d4-662f-6173-00fa-dcf5a8ca5b1b.png",
+                "placementId": "38c597cf-a57c-4f58-88fd-65ceae5231b7",
+                "featured": false
+              }
+            ],
+            "touchpoints": [
+              {
+                "id": "540088a5-33ce-4cc5-9a6a-18232042c029",
+                "touchpointId": "20b2043a-2fe5-48cb-916b-4b156bdca4ee",
+                "name": "Zoom",
+                "kind": "app",
+                "iconUrl": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png",
+                "summary": null,
+                "role": null
+              },
+              {
+                "id": "38c597cf-a57c-4f58-88fd-65ceae5231b7",
+                "touchpointId": "e469e871-33ba-4d7b-abee-20abe017593f",
+                "name": "PLUS App",
+                "kind": "app",
+                "iconUrl": null,
+                "summary": "The tutor shares the update goals modal in the PLUS app with the student while screen sharing, which displays the last goal cycle overview and system suggestions for effort and progress goals.",
+                "role": null
+              }
+            ],
+            "cell_key": "plus-application/goal-setting/update-goals-edge-case/front-stage-tech/share-screen",
+            "value_props": []
+          },
+          {
+            "id": "788ad4dd-7f11-48d2-a2b1-0b0ceb52767e",
+            "lane_id": "a0000000-0000-4000-8000-0000000008f4",
+            "step_id": "a0000000-0000-4000-8000-000000009e04",
+            "position": 1,
+            "content": "PLUS App",
+            "frame": null,
+            "summary": "The goal-setting surface: the student list with its Action column, the Set Goals / Update Goals / Check Goals control that column shows, and the goal form behind it. What the column offers is decided per student by where they are in the goal cycle.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [
+              {
+                "id": "10c25ad6-ba12-4907-8c76-3362253a8961",
+                "touchpointId": "e469e871-33ba-4d7b-abee-20abe017593f",
+                "name": "PLUS App",
+                "kind": "app",
+                "iconUrl": null,
+                "summary": null,
+                "role": null
+              }
+            ],
+            "cell_key": "plus-application/goal-setting/update-goals-edge-case/front-stage-tech/share-screen-2",
             "value_props": []
           },
           {
@@ -20111,9 +21481,9 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
-            "id": "a0000000-0000-4000-8000-000000d00409",
+            "id": "a0000000-0000-4000-8000-000000d00509",
             "lane_id": "a0000000-0000-4000-8000-0000000008f8",
-            "step_id": "a0000000-0000-4000-8000-000000009e04",
+            "step_id": "a0000000-0000-4000-8000-000000009e05",
             "position": 0,
             "content": "Dev Team\nDesign Team",
             "frame": null,
@@ -20128,9 +21498,9 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
-            "id": "a0000000-0000-4000-8000-000000d00509",
+            "id": "a0000000-0000-4000-8000-000000d00409",
             "lane_id": "a0000000-0000-4000-8000-0000000008f8",
-            "step_id": "a0000000-0000-4000-8000-000000009e05",
+            "step_id": "a0000000-0000-4000-8000-000000009e04",
             "position": 0,
             "content": "Dev Team\nDesign Team",
             "frame": null,
@@ -20257,17 +21627,17 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "note": null
           },
           {
-            "id": "a0000000-0000-4000-8000-00000009e002",
-            "source_cell_id": "a0000000-0000-4000-8000-000000d00201",
-            "target_cell_id": "a0000000-0000-4000-8000-000000d00301",
+            "id": "a0000000-0000-4000-8000-00000009e003",
+            "source_cell_id": "a0000000-0000-4000-8000-000000d00301",
+            "target_cell_id": "a0000000-0000-4000-8000-000000d00401",
             "kind": "leads_to",
             "name": null,
             "note": null
           },
           {
-            "id": "a0000000-0000-4000-8000-00000009e003",
-            "source_cell_id": "a0000000-0000-4000-8000-000000d00301",
-            "target_cell_id": "a0000000-0000-4000-8000-000000d00401",
+            "id": "a0000000-0000-4000-8000-00000009e002",
+            "source_cell_id": "a0000000-0000-4000-8000-000000d00201",
+            "target_cell_id": "a0000000-0000-4000-8000-000000d00301",
             "kind": "leads_to",
             "name": null,
             "note": null
@@ -20353,22 +21723,6 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "note": null
           },
           {
-            "id": "a0000000-0000-4000-8000-00000009e073",
-            "source_cell_id": "a0000000-0000-4000-8000-000000d00403",
-            "target_cell_id": "a0000000-0000-4000-8000-000000d00406",
-            "kind": "leads_to",
-            "name": null,
-            "note": null
-          },
-          {
-            "id": "a0000000-0000-4000-8000-00000009e053",
-            "source_cell_id": "a0000000-0000-4000-8000-000000d00403",
-            "target_cell_id": "a0000000-0000-4000-8000-000000d00503",
-            "kind": "leads_to",
-            "name": null,
-            "note": null
-          },
-          {
             "id": "a0000000-0000-4000-8000-00000009e074",
             "source_cell_id": "a0000000-0000-4000-8000-000000d00503",
             "target_cell_id": "a0000000-0000-4000-8000-000000d00506",
@@ -20380,6 +21734,22 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "id": "a0000000-0000-4000-8000-00000009e054",
             "source_cell_id": "a0000000-0000-4000-8000-000000d00503",
             "target_cell_id": "a0000000-0000-4000-8000-000000d00603",
+            "kind": "leads_to",
+            "name": null,
+            "note": null
+          },
+          {
+            "id": "a0000000-0000-4000-8000-00000009e073",
+            "source_cell_id": "a0000000-0000-4000-8000-000000d00403",
+            "target_cell_id": "a0000000-0000-4000-8000-000000d00406",
+            "kind": "leads_to",
+            "name": null,
+            "note": null
+          },
+          {
+            "id": "a0000000-0000-4000-8000-00000009e053",
+            "source_cell_id": "a0000000-0000-4000-8000-000000d00403",
+            "target_cell_id": "a0000000-0000-4000-8000-000000d00503",
             "kind": "leads_to",
             "name": null,
             "note": null
@@ -20572,13 +21942,13 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           },
           {
             "id": "a0000000-0000-4000-8000-000000009f02",
-            "name": "Sees action color in dashboard is warning and CTA copy is 'Set Goals' within a mid-cycle goal check-in session.",
+            "name": "Sees action color in dashboard is warning and CTA copy is 'Set goals' within a mid-cycle goal check-in session.",
             "summary": "The dashboard flags a Set Goals prompt for attention part-way through the cycle.",
             "position": 2
           },
           {
             "id": "a0000000-0000-4000-8000-000000009f03",
-            "name": "Click on 'Set Goals' CTA in the action column",
+            "name": "Click on 'Set goals' CTA in the action column",
             "summary": "The tutor clicks Set Goals in the dashboard's Action column.",
             "position": 3
           },
@@ -20608,7 +21978,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           },
           {
             "id": "a0000000-0000-4000-8000-000000009f08",
-            "name": "If prompted, fill out goal achievement strategy with the student",
+            "name": "Fill out goal achievement strategy with the student",
             "summary": "Where the activity prompts for one, the tutor fills out the goal achievement strategy with the student.",
             "position": 8
           },
@@ -20873,28 +22243,10 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
-            "id": "a0000000-0000-4000-8000-000000c00201",
-            "lane_id": "a0000000-0000-4000-8000-0000000008e1",
-            "step_id": "a0000000-0000-4000-8000-000000009f02",
-            "position": 0,
-            "content": "Reminds students to keep working while waiting.",
-            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040201/45a51cb4-1ae3-d2c2-5f15-49fd1b4c00f2.png",
-            "summary": "While a tutor is still occupied with another student, the teacher keeps waiting students on task rather than idle, so the room does not lose momentum before goal setting starts for them.",
-            "status": "live",
-            "function": null,
-            "form": null,
-            "owner": null,
-            "perceived_owner": null,
-            "resources": [],
-            "touchpoints": [],
-            "cell_key": "plus-application/goal-setting/set-goals-edge-case/partner-action-teacher/sees-action-color-in-dashboard-is-warning-and-cta-copy-is-set-goals-within-a-mid-cycle-goal-check-in-session",
-            "value_props": []
-          },
-          {
             "id": "a0000000-0000-4000-8000-000000c00301",
             "lane_id": "a0000000-0000-4000-8000-0000000008e1",
-            "step_id": "a0000000-0000-4000-8000-000000009f03",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009f01",
+            "position": 1,
             "content": "Checks if all students are in the correct breakout room.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040301/0c96ea1a-4331-9912-e78a-3cca3a3f8c53.png",
             "summary": "Before the tutor pairs settle in, the teacher confirms every student landed in their assigned breakout room rather than a wrong or empty one. This catch happens before goal setting starts, since a misrouted student has no tutor to set goals with.",
@@ -20909,10 +22261,28 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "a0000000-0000-4000-8000-000000c00201",
+            "lane_id": "a0000000-0000-4000-8000-0000000008e1",
+            "step_id": "a0000000-0000-4000-8000-000000009f01",
+            "position": 2,
+            "content": "Reminds students to keep working while waiting.",
+            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040201/45a51cb4-1ae3-d2c2-5f15-49fd1b4c00f2.png",
+            "summary": "While a tutor is still occupied with another student, the teacher keeps waiting students on task rather than idle, so the room does not lose momentum before goal setting starts for them.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-application/goal-setting/set-goals-edge-case/partner-action-teacher/sees-action-color-in-dashboard-is-warning-and-cta-copy-is-set-goals-within-a-mid-cycle-goal-check-in-session",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000c00401",
             "lane_id": "a0000000-0000-4000-8000-0000000008e1",
-            "step_id": "a0000000-0000-4000-8000-000000009f04",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009f01",
+            "position": 3,
             "content": "Receives information that a student is absent from the session.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0401/df4eeba7-5747-4aa2-1d62-dde366548029.png",
             "summary": "The teacher is the one told when a student does not show, which is what triggers roster and pairing adjustments for the rest of the session. This is the first step in reconciling attendance against the goal-setting plan for that class.",
@@ -20929,8 +22299,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000c00501",
             "lane_id": "a0000000-0000-4000-8000-0000000008e1",
-            "step_id": "a0000000-0000-4000-8000-000000009f05",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009f01",
+            "position": 4,
             "content": "Alerts lead tutor about unassigned or miss-assigned students using the \"ask for help\" alert.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0501/610fd0d7-ee32-6f6e-8d3c-7d56c796381e.png",
             "summary": null,
@@ -20946,8 +22316,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000c00601",
             "lane_id": "a0000000-0000-4000-8000-0000000008e1",
-            "step_id": "a0000000-0000-4000-8000-000000009f06",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009f04",
+            "position": 1,
             "content": "Handles student tech problems as they arise.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0601/70caf55e-72b8-3f2e-73e3-c419a60a501c.png",
             "summary": "The teacher is the first responder for device or connection issues during the breakout, so a tutor can stay focused on the goal-setting conversation instead of troubleshooting. Without this, a tech problem would either interrupt the tutor or go unresolved.",
@@ -21000,8 +22370,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000c00202",
             "lane_id": "a0000000-0000-4000-8000-0000000008e2",
-            "step_id": "a0000000-0000-4000-8000-000000009f02",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009f01",
+            "position": 1,
             "content": "Adds any un-rostered students to the attendance list.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0202/0911e936-fd5a-3171-9338-9e57d694b158.png",
             "summary": "The lead tutor accounts for a student who joined the session without a matching roster entry, so that student is not dropped from attendance or left unpaired for goal setting. This keeps the session's records accurate even when enrollment data is out of sync.",
@@ -21018,8 +22388,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000c00302",
             "lane_id": "a0000000-0000-4000-8000-0000000008e2",
-            "step_id": "a0000000-0000-4000-8000-000000009f03",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009f01",
+            "position": 2,
             "content": "Manually assigns unpaired students to available tutors.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0302/d451bb96-0858-37e8-9e3c-588df38cfb2b.png",
             "summary": "When automatic pairing leaves a student without a tutor, the lead tutor steps in to assign one by hand so goal setting is not skipped for that student. This is the fallback for whatever caused the pairing to fail in the first place.",
@@ -21036,8 +22406,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000c00402",
             "lane_id": "a0000000-0000-4000-8000-0000000008e2",
-            "step_id": "a0000000-0000-4000-8000-000000009f04",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009f01",
+            "position": 3,
             "content": "Inform classroom teacher about students that are absent.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0402/db5f36b0-90a1-dbfe-92eb-07af60fb4bc0.png",
             "summary": null,
@@ -21053,8 +22423,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000c00502",
             "lane_id": "a0000000-0000-4000-8000-0000000008e2",
-            "step_id": "a0000000-0000-4000-8000-000000009f05",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009f01",
+            "position": 4,
             "content": "Respond to classroom teachers \"ask for help\" request.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0502/63b222f0-1142-8cd8-0979-aa8e4ba2bcc2.png",
             "summary": null,
@@ -21197,13 +22567,31 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "1d8de59d-e20e-4728-b4de-edfc5b5fb581",
+            "lane_id": "a0000000-0000-4000-8000-0000000008e3",
+            "step_id": "a0000000-0000-4000-8000-000000009f03",
+            "position": 1,
+            "content": "Reviews tutor-only badges and notes, then presses Start goal setting.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/missed-last-session-no-goals/regular-tutor/click-on-set-goals-cta-in-the-action-column--1d8de59d-e20e-4728-b4de-edfc5b5fb581",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000c00403",
             "lane_id": "a0000000-0000-4000-8000-0000000008e3",
             "step_id": "a0000000-0000-4000-8000-000000009f04",
             "position": 0,
-            "content": "Shares screen.",
+            "content": "Shares screen once the app says the student-safe view is ready.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000c00403/322fab0d-03bf-987b-c2e8-c44224ec8fe4.png",
-            "summary": "The tutor shares their screen so the student can see the same goal-setting view the tutor is working from, rather than describing it verbally. This is what lets the tutor walk the student through the exact fields being filled in.",
+            "summary": "The app shows a banner when it is safe to share: \"Share your screen now — {FirstName} can safely see this view.\" The student-safe view hides system suggestions and the tutor's notes.",
             "status": "live",
             "function": null,
             "form": null,
@@ -21323,6 +22711,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             ],
             "touchpoints": [],
             "cell_key": "plus-application/goal-setting/set-goals-edge-case/regular-tutor/once-student-understands-starts-setting-first-goal-while-sharing-screen",
+            "value_props": []
+          },
+          {
+            "id": "0be57cef-0425-427b-bed4-3209f481d00c",
+            "lane_id": "a0000000-0000-4000-8000-0000000008e3",
+            "step_id": "a0000000-0000-4000-8000-000000009f06",
+            "position": 1,
+            "content": "Sees how many sessions are left in the student's goal cycle, then sets, updates or checks the goal.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/missed-last-session-no-goals/regular-tutor/once-student-understands-starts-setting-first-goal-while-sharing-screen--0be57cef-0425-427b-bed4-3209f481d00c",
             "value_props": []
           },
           {
@@ -21455,6 +22861,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "a78f81aa-a191-4be4-9c55-27804bf8ffb4",
+            "lane_id": "a0000000-0000-4000-8000-0000000008e3",
+            "step_id": "a0000000-0000-4000-8000-000000009f09",
+            "position": 1,
+            "content": "Stops sharing when prompted, then finishes in the tutor view.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/missed-last-session-no-goals/regular-tutor/save-goal--a78f81aa-a191-4be4-9c55-27804bf8ffb4",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000c01003",
             "lane_id": "a0000000-0000-4000-8000-0000000008e3",
             "step_id": "a0000000-0000-4000-8000-000000009f0a",
@@ -21495,6 +22919,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             ],
             "touchpoints": [],
             "cell_key": "plus-application/goal-setting/set-goals-edge-case/regular-tutor/finalize-goal-setting-with-student",
+            "value_props": []
+          },
+          {
+            "id": "d39881e6-2a42-43e8-810f-f85998047612",
+            "lane_id": "a0000000-0000-4000-8000-0000000008e3",
+            "step_id": "a0000000-0000-4000-8000-000000009f0a",
+            "position": 1,
+            "content": "Writes private, auto-saved notes about the student in the goal-setting window.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/missed-last-session-no-goals/regular-tutor/finalize-goal-setting-with-student--d39881e6-2a42-43e8-810f-f85998047612",
             "value_props": []
           },
           {
@@ -22676,17 +24118,17 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "note": null
           },
           {
-            "id": "a0000000-0000-4000-8000-00000009f002",
-            "source_cell_id": "a0000000-0000-4000-8000-000000c00201",
-            "target_cell_id": "a0000000-0000-4000-8000-000000c00301",
+            "id": "a0000000-0000-4000-8000-00000009f003",
+            "source_cell_id": "a0000000-0000-4000-8000-000000c00301",
+            "target_cell_id": "a0000000-0000-4000-8000-000000c00401",
             "kind": "leads_to",
             "name": null,
             "note": null
           },
           {
-            "id": "a0000000-0000-4000-8000-00000009f003",
-            "source_cell_id": "a0000000-0000-4000-8000-000000c00301",
-            "target_cell_id": "a0000000-0000-4000-8000-000000c00401",
+            "id": "a0000000-0000-4000-8000-00000009f002",
+            "source_cell_id": "a0000000-0000-4000-8000-000000c00201",
+            "target_cell_id": "a0000000-0000-4000-8000-000000c00301",
             "kind": "leads_to",
             "name": null,
             "note": null
@@ -22987,12 +24429,18 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "id": "a0000000-0000-4000-8000-000000009d01",
             "name": "Join breakout session",
             "summary": "The tutor joins the student's breakout room over Zoom while the lead tutor renames students to match the roster and the teacher circulates.",
-            "position": 1
+            "position": 0
           },
           {
             "id": "a0000000-0000-4000-8000-000000009d02",
-            "name": "Click on 'Update Goals' CTA in the Action column",
+            "name": "Click on 'Update goals' CTA in the Action column",
             "summary": "The tutor clicks Update Goals in the dashboard's Action column.",
+            "position": 1
+          },
+          {
+            "id": "a0000000-0000-4000-8000-000000009d04",
+            "name": "Review last goal cycle overview and system suggestion",
+            "summary": "The tutor reviews the last cycle's overview and the system's suggestion, both refreshed by the Sunday goal-update ETL.",
             "position": 2
           },
           {
@@ -23002,52 +24450,46 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 3
           },
           {
-            "id": "a0000000-0000-4000-8000-000000009d04",
-            "name": "Review last goal cycle overview and system suggestion",
-            "summary": "The tutor reviews the last cycle's overview and the system's suggestion, both refreshed by the Sunday goal-update ETL.",
-            "position": 4
-          },
-          {
             "id": "a0000000-0000-4000-8000-000000009d05",
             "name": "Once student understands, starts updating goal for the next goal cycle while sharing screen",
             "summary": "Once the student understands, the tutor starts updating the goal for the next cycle with their screen shared.",
-            "position": 5
+            "position": 4
           },
           {
             "id": "a0000000-0000-4000-8000-000000009d06",
             "name": "Fills out goal settings and quantity with the student",
             "summary": "The tutor fills out the goal's settings and quantity with the student in the PLUS App.",
-            "position": 6
+            "position": 5
           },
           {
             "id": "a0000000-0000-4000-8000-000000009d07",
-            "name": "If prompted, fill out goal achievement strategy with the student",
+            "name": "Fill out goal achievement strategy with the student",
             "summary": "Where the activity prompts for one, the tutor fills out the goal achievement strategy with the student.",
-            "position": 7
+            "position": 6
           },
           {
             "id": "a0000000-0000-4000-8000-000000009d08",
             "name": "Save goal",
             "summary": "The tutor saves the goal.",
-            "position": 8
+            "position": 7
           },
           {
             "id": "a0000000-0000-4000-8000-000000009d09",
             "name": "Finalize updating goal with the student",
             "summary": "The tutor finalizes the goal update with the student.",
-            "position": 9
+            "position": 8
           },
           {
             "id": "a0000000-0000-4000-8000-000000009d0a",
             "name": "Leave breakout room",
             "summary": "The tutor leaves the student's breakout room.",
-            "position": 10
+            "position": 9
           },
           {
             "id": "a0000000-0000-4000-8000-000000009d0b",
             "name": "Move on to the next student in sorted order set by researchers.",
             "summary": "The tutor returns to the main room and waits for the next breakout session.",
-            "position": 11
+            "position": 10
           }
         ],
         "cells": [
@@ -23088,24 +24530,6 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
-            "id": "a0000000-0000-4000-8000-000000b00310",
-            "lane_id": "a0000000-0000-4000-8000-0000000008d0",
-            "step_id": "a0000000-0000-4000-8000-000000009d03",
-            "position": 0,
-            "content": "",
-            "frame": null,
-            "summary": null,
-            "status": "live",
-            "function": null,
-            "form": null,
-            "owner": null,
-            "perceived_owner": null,
-            "resources": [],
-            "touchpoints": [],
-            "cell_key": "plus-application/goal-setting/update-goals/visual/share-screen",
-            "value_props": []
-          },
-          {
             "id": "a0000000-0000-4000-8000-000000b00410",
             "lane_id": "a0000000-0000-4000-8000-0000000008d0",
             "step_id": "a0000000-0000-4000-8000-000000009d04",
@@ -23121,6 +24545,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "resources": [],
             "touchpoints": [],
             "cell_key": "plus-application/goal-setting/update-goals/visual/review-last-goal-cycle-overview-and-system-suggestion",
+            "value_props": []
+          },
+          {
+            "id": "a0000000-0000-4000-8000-000000b00310",
+            "lane_id": "a0000000-0000-4000-8000-0000000008d0",
+            "step_id": "a0000000-0000-4000-8000-000000009d03",
+            "position": 0,
+            "content": "",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-application/goal-setting/update-goals/visual/share-screen",
             "value_props": []
           },
           {
@@ -23268,28 +24710,10 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
-            "id": "a0000000-0000-4000-8000-000000b00201",
-            "lane_id": "a0000000-0000-4000-8000-0000000008d1",
-            "step_id": "a0000000-0000-4000-8000-000000009d02",
-            "position": 0,
-            "content": "Reminds students to keep working while waiting.",
-            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040201/45a51cb4-1ae3-d2c2-5f15-49fd1b4c00f2.png",
-            "summary": "While a tutor is still occupied with another student, the teacher keeps waiting students on task rather than idle, so the room does not lose momentum before goal setting starts for them.",
-            "status": "live",
-            "function": null,
-            "form": null,
-            "owner": null,
-            "perceived_owner": null,
-            "resources": [],
-            "touchpoints": [],
-            "cell_key": "plus-application/goal-setting/update-goals/partner-action-teacher/click-on-update-goals-cta-in-the-action-column",
-            "value_props": []
-          },
-          {
             "id": "a0000000-0000-4000-8000-000000b00301",
             "lane_id": "a0000000-0000-4000-8000-0000000008d1",
-            "step_id": "a0000000-0000-4000-8000-000000009d03",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009d01",
+            "position": 1,
             "content": "Checks if all students are in the correct breakout room.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040301/0c96ea1a-4331-9912-e78a-3cca3a3f8c53.png",
             "summary": "Before the tutor pairs settle in, the teacher confirms every student landed in their assigned breakout room rather than a wrong or empty one. This catch happens before goal setting starts, since a misrouted student has no tutor to set goals with.",
@@ -23304,10 +24728,28 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "a0000000-0000-4000-8000-000000b00201",
+            "lane_id": "a0000000-0000-4000-8000-0000000008d1",
+            "step_id": "a0000000-0000-4000-8000-000000009d01",
+            "position": 2,
+            "content": "Reminds students to keep working while waiting.",
+            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040201/45a51cb4-1ae3-d2c2-5f15-49fd1b4c00f2.png",
+            "summary": "While a tutor is still occupied with another student, the teacher keeps waiting students on task rather than idle, so the room does not lose momentum before goal setting starts for them.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-application/goal-setting/update-goals/partner-action-teacher/click-on-update-goals-cta-in-the-action-column",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000b00401",
             "lane_id": "a0000000-0000-4000-8000-0000000008d1",
-            "step_id": "a0000000-0000-4000-8000-000000009d04",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009d01",
+            "position": 3,
             "content": "Receives information that a student is absent from the session.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0401/df4eeba7-5747-4aa2-1d62-dde366548029.png",
             "summary": "The teacher is the one told when a student does not show, which is what triggers roster and pairing adjustments for the rest of the session. This is the first step in reconciling attendance against the goal-setting plan for that class.",
@@ -23324,8 +24766,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000b00501",
             "lane_id": "a0000000-0000-4000-8000-0000000008d1",
-            "step_id": "a0000000-0000-4000-8000-000000009d05",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009d01",
+            "position": 4,
             "content": "Alerts lead tutor about unassigned or miss-assigned students using the \"ask for help\" alert.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0501/610fd0d7-ee32-6f6e-8d3c-7d56c796381e.png",
             "summary": null,
@@ -23341,8 +24783,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000b00601",
             "lane_id": "a0000000-0000-4000-8000-0000000008d1",
-            "step_id": "a0000000-0000-4000-8000-000000009d06",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009d03",
+            "position": 1,
             "content": "Handles student tech problems as they arise.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0601/70caf55e-72b8-3f2e-73e3-c419a60a501c.png",
             "summary": "The teacher is the first responder for device or connection issues during the breakout, so a tutor can stay focused on the goal-setting conversation instead of troubleshooting. Without this, a tech problem would either interrupt the tutor or go unresolved.",
@@ -23395,8 +24837,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000b00202",
             "lane_id": "a0000000-0000-4000-8000-0000000008d2",
-            "step_id": "a0000000-0000-4000-8000-000000009d02",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009d01",
+            "position": 1,
             "content": "Adds any un-rostered students to the attendance list.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0202/0911e936-fd5a-3171-9338-9e57d694b158.png",
             "summary": "The lead tutor accounts for a student who joined the session without a matching roster entry, so that student is not dropped from attendance or left unpaired for goal setting. This keeps the session's records accurate even when enrollment data is out of sync.",
@@ -23413,8 +24855,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000b00302",
             "lane_id": "a0000000-0000-4000-8000-0000000008d2",
-            "step_id": "a0000000-0000-4000-8000-000000009d03",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009d01",
+            "position": 2,
             "content": "Manually assigns unpaired students to available tutors.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0302/d451bb96-0858-37e8-9e3c-588df38cfb2b.png",
             "summary": "When automatic pairing leaves a student without a tutor, the lead tutor steps in to assign one by hand so goal setting is not skipped for that student. This is the fallback for whatever caused the pairing to fail in the first place.",
@@ -23431,8 +24873,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000b00402",
             "lane_id": "a0000000-0000-4000-8000-0000000008d2",
-            "step_id": "a0000000-0000-4000-8000-000000009d04",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009d01",
+            "position": 3,
             "content": "Inform classroom teacher about students that are absent.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0402/db5f36b0-90a1-dbfe-92eb-07af60fb4bc0.png",
             "summary": null,
@@ -23448,8 +24890,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-000000b00502",
             "lane_id": "a0000000-0000-4000-8000-0000000008d2",
-            "step_id": "a0000000-0000-4000-8000-000000009d05",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009d01",
+            "position": 4,
             "content": "Respond to classroom teachers \"ask for help\" request.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0502/63b222f0-1142-8cd8-0979-aa8e4ba2bcc2.png",
             "summary": null,
@@ -23549,56 +24991,13 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
-            "id": "a0000000-0000-4000-8000-000000b00303",
-            "lane_id": "a0000000-0000-4000-8000-0000000008d3",
-            "step_id": "a0000000-0000-4000-8000-000000009d03",
-            "position": 0,
-            "content": "Shares screen.",
-            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00303/715e7771-4740-1895-e9b9-1fb78b0d6462.png",
-            "summary": "The tutor shares their screen so the student can see the same goal-setting view the tutor is working from, rather than describing it verbally. This is what lets the tutor walk the student through the exact fields being filled in.",
-            "status": "live",
-            "function": null,
-            "form": null,
-            "owner": null,
-            "perceived_owner": null,
-            "resources": [
-              {
-                "id": "8c7ed803-794b-48d3-ba2e-35bf9dac13b5",
-                "name": "Onboarding Module 5",
-                "kind": "link",
-                "url": "https://plus-tutors.notion.site/Module-5-Helping-Students-26fb7cca4982807fa5b7d2a0a92753dd",
-                "placementId": null,
-                "featured": false
-              },
-              {
-                "id": "0e7d3bf7-2445-4fab-8d58-a3f236404701",
-                "name": "Onboarding Module 6",
-                "kind": "link",
-                "url": "https://plus-tutors.notion.site/Module-6-Tutoring-Tools-26fb7cca498280e4aae2f73e8739388e",
-                "placementId": null,
-                "featured": false
-              },
-              {
-                "id": "27acf697-957d-45f2-9878-eb2a21ea46df",
-                "name": "Onboarding Module 9",
-                "kind": "link",
-                "url": "https://plus-tutors.notion.site/Module-9-Goal-Setting-Practices-2a1b7cca498280278bb9e2c9f9e20b6b",
-                "placementId": null,
-                "featured": false
-              }
-            ],
-            "touchpoints": [],
-            "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/share-screen",
-            "value_props": []
-          },
-          {
             "id": "a0000000-0000-4000-8000-000000b00403",
             "lane_id": "a0000000-0000-4000-8000-0000000008d3",
             "step_id": "a0000000-0000-4000-8000-000000009d04",
             "position": 0,
-            "content": "Reviews the last goal cycle overview and system suggestion.",
+            "content": "Reviews last cycle's overview, the system suggestion and notes in the tutor-only view, then presses Start goal update.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00403/5ebcb585-16ab-0e79-86b8-6bee2fa72b4c.png",
-            "summary": "Before updating anything, the tutor and student look at how the previous cycle went and the app's suggested next goal, so the new goal is informed by actual progress rather than set cold. The suggestion is generated by the app, not chosen by the tutor.",
+            "summary": "Before sharing, the tutor privately reviews how the previous cycle went, the app's suggested next goal and their notes, then presses Start goal update. The student-safe view the tutor then shares hides the system suggestion and notes.",
             "status": "live",
             "function": null,
             "form": null,
@@ -23632,6 +25031,67 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             ],
             "touchpoints": [],
             "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/review-last-goal-cycle-overview-and-system-suggestion",
+            "value_props": []
+          },
+          {
+            "id": "c5148989-2442-465c-a0c5-2a96aa932669",
+            "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+            "step_id": "a0000000-0000-4000-8000-000000009d04",
+            "position": 1,
+            "content": "Sees an Eligible for reward chip when the student met at least one goal last cycle.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/new-cycle-goals-exist/regular-tutor/review-last-goal-cycle-overview-and-system-suggestion--c5148989-2442-465c-a0c5-2a96aa932669",
+            "value_props": []
+          },
+          {
+            "id": "a0000000-0000-4000-8000-000000b00303",
+            "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+            "step_id": "a0000000-0000-4000-8000-000000009d03",
+            "position": 0,
+            "content": "Shares screen once the app says the student-safe view is ready.",
+            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00303/715e7771-4740-1895-e9b9-1fb78b0d6462.png",
+            "summary": "The app shows a banner when it is safe to share: \"Share your screen now — {FirstName} can safely see this view.\" The student-safe view hides system suggestions and the tutor's notes.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [
+              {
+                "id": "8c7ed803-794b-48d3-ba2e-35bf9dac13b5",
+                "name": "Onboarding Module 5",
+                "kind": "link",
+                "url": "https://plus-tutors.notion.site/Module-5-Helping-Students-26fb7cca4982807fa5b7d2a0a92753dd",
+                "placementId": null,
+                "featured": false
+              },
+              {
+                "id": "0e7d3bf7-2445-4fab-8d58-a3f236404701",
+                "name": "Onboarding Module 6",
+                "kind": "link",
+                "url": "https://plus-tutors.notion.site/Module-6-Tutoring-Tools-26fb7cca498280e4aae2f73e8739388e",
+                "placementId": null,
+                "featured": false
+              },
+              {
+                "id": "27acf697-957d-45f2-9878-eb2a21ea46df",
+                "name": "Onboarding Module 9",
+                "kind": "link",
+                "url": "https://plus-tutors.notion.site/Module-9-Goal-Setting-Practices-2a1b7cca498280278bb9e2c9f9e20b6b",
+                "placementId": null,
+                "featured": false
+              }
+            ],
+            "touchpoints": [],
+            "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/share-screen",
             "value_props": []
           },
           {
@@ -23675,6 +25135,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             ],
             "touchpoints": [],
             "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/once-student-understands-starts-updating-goal-for-the-next-goal-cycle-while-sharing-screen",
+            "value_props": []
+          },
+          {
+            "id": "ed000b86-867b-497c-bf61-acbd5c0bb6d8",
+            "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+            "step_id": "a0000000-0000-4000-8000-000000009d05",
+            "position": 1,
+            "content": "Sees how many sessions are left in the student's goal cycle, then sets, updates or checks the goal.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/new-cycle-goals-exist/regular-tutor/once-student-understands-starts-updating-goal-for-the-next-goal-cycle-while-sharing-screen--ed000b86-867b-497c-bf61-acbd5c0bb6d8",
             "value_props": []
           },
           {
@@ -23807,6 +25285,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "04ed2dc7-37a6-4572-996a-451b1cbb533a",
+            "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+            "step_id": "a0000000-0000-4000-8000-000000009d08",
+            "position": 1,
+            "content": "Stops sharing when prompted, then finishes in the tutor view.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/new-cycle-goals-exist/regular-tutor/save-goal--04ed2dc7-37a6-4572-996a-451b1cbb533a",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000b00903",
             "lane_id": "a0000000-0000-4000-8000-0000000008d3",
             "step_id": "a0000000-0000-4000-8000-000000009d09",
@@ -23847,6 +25343,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             ],
             "touchpoints": [],
             "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/finalize-updating-goal-with-the-student",
+            "value_props": []
+          },
+          {
+            "id": "b8ead647-5549-4016-a781-e4714feb4d7a",
+            "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+            "step_id": "a0000000-0000-4000-8000-000000009d09",
+            "position": 1,
+            "content": "Writes private, auto-saved notes about the student in the goal-setting window.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/new-cycle-goals-exist/regular-tutor/finalize-updating-goal-with-the-student--b8ead647-5549-4016-a781-e4714feb4d7a",
             "value_props": []
           },
           {
@@ -24025,6 +25539,34 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "a0000000-0000-4000-8000-000000b00406",
+            "lane_id": "a0000000-0000-4000-8000-0000000008d4",
+            "step_id": "a0000000-0000-4000-8000-000000009d04",
+            "position": 0,
+            "content": "Zoom",
+            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png",
+            "summary": "The tutor connects with student via Zoom in individual breakout room.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [
+              {
+                "id": "b9742ed1-f918-4637-a948-b4170862bdee",
+                "touchpointId": "20b2043a-2fe5-48cb-916b-4b156bdca4ee",
+                "name": "Zoom",
+                "kind": "app",
+                "iconUrl": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png",
+                "summary": null,
+                "role": null
+              }
+            ],
+            "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/review-last-goal-cycle-overview-and-system-suggestion",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-000000b00306",
             "lane_id": "a0000000-0000-4000-8000-0000000008d4",
             "step_id": "a0000000-0000-4000-8000-000000009d03",
@@ -24104,34 +25646,6 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
               }
             ],
             "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/share-screen-2",
-            "value_props": []
-          },
-          {
-            "id": "a0000000-0000-4000-8000-000000b00406",
-            "lane_id": "a0000000-0000-4000-8000-0000000008d4",
-            "step_id": "a0000000-0000-4000-8000-000000009d04",
-            "position": 0,
-            "content": "Zoom",
-            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png",
-            "summary": "The tutor connects with student via Zoom in individual breakout room.",
-            "status": "live",
-            "function": null,
-            "form": null,
-            "owner": null,
-            "perceived_owner": null,
-            "resources": [],
-            "touchpoints": [
-              {
-                "id": "b9742ed1-f918-4637-a948-b4170862bdee",
-                "touchpointId": "20b2043a-2fe5-48cb-916b-4b156bdca4ee",
-                "name": "Zoom",
-                "kind": "app",
-                "iconUrl": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png",
-                "summary": null,
-                "role": null
-              }
-            ],
-            "cell_key": "plus-application/goal-setting/update-goals/front-stage-tech/review-last-goal-cycle-overview-and-system-suggestion",
             "value_props": []
           },
           {
@@ -25005,14 +26519,6 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
         ],
         "dependencies": [
           {
-            "id": "552efbc1-3efa-4f86-9e42-51e3e260a7df",
-            "source_cell_id": "a0000000-0000-4000-8000-000000b00201",
-            "target_cell_id": "a0000000-0000-4000-8000-000000b00301",
-            "kind": "leads_to",
-            "name": null,
-            "note": null
-          },
-          {
             "id": "f6d8043d-4981-40ec-8f20-03ef59f60e78",
             "source_cell_id": "a0000000-0000-4000-8000-000000b00301",
             "target_cell_id": "a0000000-0000-4000-8000-000000b00302",
@@ -25024,6 +26530,14 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "id": "20cdc3fd-617a-4197-8086-75a1a347fd34",
             "source_cell_id": "a0000000-0000-4000-8000-000000b00301",
             "target_cell_id": "a0000000-0000-4000-8000-000000b00401",
+            "kind": "leads_to",
+            "name": null,
+            "note": null
+          },
+          {
+            "id": "552efbc1-3efa-4f86-9e42-51e3e260a7df",
+            "source_cell_id": "a0000000-0000-4000-8000-000000b00201",
+            "target_cell_id": "a0000000-0000-4000-8000-000000b00301",
             "kind": "leads_to",
             "name": null,
             "note": null
@@ -25077,6 +26591,22 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "note": null
           },
           {
+            "id": "70c8e312-3199-4d5b-96d7-14254df6c96a",
+            "source_cell_id": "a0000000-0000-4000-8000-000000b00403",
+            "target_cell_id": "a0000000-0000-4000-8000-000000b00406",
+            "kind": "leads_to",
+            "name": null,
+            "note": null
+          },
+          {
+            "id": "8a15697d-957e-4947-9bc7-cb5b7a6f317c",
+            "source_cell_id": "a0000000-0000-4000-8000-000000b00403",
+            "target_cell_id": "a0000000-0000-4000-8000-000000b00503",
+            "kind": "leads_to",
+            "name": null,
+            "note": null
+          },
+          {
             "id": "722676c4-6e04-407f-b3ad-04d4c2bc902a",
             "source_cell_id": "a0000000-0000-4000-8000-000000b00303",
             "target_cell_id": "a0000000-0000-4000-8000-000000b00306",
@@ -25096,22 +26626,6 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "id": "1fcede82-ae3c-4e80-9fa7-502edd116832",
             "source_cell_id": "a0000000-0000-4000-8000-000000b00303",
             "target_cell_id": "bce92a12-494c-43ed-9dc6-dad127ab5465",
-            "kind": "leads_to",
-            "name": null,
-            "note": null
-          },
-          {
-            "id": "70c8e312-3199-4d5b-96d7-14254df6c96a",
-            "source_cell_id": "a0000000-0000-4000-8000-000000b00403",
-            "target_cell_id": "a0000000-0000-4000-8000-000000b00406",
-            "kind": "leads_to",
-            "name": null,
-            "note": null
-          },
-          {
-            "id": "8a15697d-957e-4947-9bc7-cb5b7a6f317c",
-            "source_cell_id": "a0000000-0000-4000-8000-000000b00403",
-            "target_cell_id": "a0000000-0000-4000-8000-000000b00503",
             "kind": "leads_to",
             "name": null,
             "note": null
@@ -25267,6 +26781,14 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "kind": "leads_to",
             "name": null,
             "note": null
+          },
+          {
+            "id": "cc240eb9-b53c-4163-a51c-01d8a843264a",
+            "source_cell_id": "3c359d25-ac54-4310-bfe6-e458a916ec1d",
+            "target_cell_id": "944a2e40-b411-4704-acd9-a44d245f42a6",
+            "kind": "leads_to",
+            "name": null,
+            "note": "The weekly email is the Weekly Class Report, which starts from the attendance, engagement and goal records tutors keep."
           }
         ]
       },
@@ -25344,7 +26866,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           },
           {
             "id": "a0000000-0000-4000-8000-000000009a02",
-            "name": "Click on Set Goals CTA in the Action column",
+            "name": "Click on Set goals CTA in the Action column",
             "summary": "The tutor clicks Set Goals in the dashboard's Action column.",
             "position": 2
           },
@@ -25374,7 +26896,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           },
           {
             "id": "a0000000-0000-4000-8000-000000009a07",
-            "name": "If prompted, fill out goal achievement strategy with the student",
+            "name": "Fill out goal achievement strategy with the student",
             "summary": "Where the activity prompts for one, the tutor fills out the goal achievement strategy with the student.",
             "position": 7
           },
@@ -25621,28 +27143,10 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
-            "id": "a0000000-0000-4000-8000-0000001f0201",
-            "lane_id": "a0000000-0000-4000-8000-0000000008a1",
-            "step_id": "a0000000-0000-4000-8000-000000009a02",
-            "position": 0,
-            "content": "Reminds students to keep working while waiting.",
-            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040201/45a51cb4-1ae3-d2c2-5f15-49fd1b4c00f2.png",
-            "summary": "While a tutor is still occupied with another student, the teacher keeps waiting students on task rather than idle, so the room does not lose momentum before goal setting starts for them.",
-            "status": "live",
-            "function": null,
-            "form": null,
-            "owner": null,
-            "perceived_owner": null,
-            "resources": [],
-            "touchpoints": [],
-            "cell_key": "plus-application/goal-setting/set-goals/partner-action-teacher/click-on-set-goals-cta-in-the-action-column",
-            "value_props": []
-          },
-          {
             "id": "a0000000-0000-4000-8000-0000001f0301",
             "lane_id": "a0000000-0000-4000-8000-0000000008a1",
-            "step_id": "a0000000-0000-4000-8000-000000009a03",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009a01",
+            "position": 1,
             "content": "Checks if all students are in the correct breakout room.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040301/0c96ea1a-4331-9912-e78a-3cca3a3f8c53.png",
             "summary": "Before the tutor pairs settle in, the teacher confirms every student landed in their assigned breakout room rather than a wrong or empty one. This catch happens before goal setting starts, since a misrouted student has no tutor to set goals with.",
@@ -25657,10 +27161,28 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "a0000000-0000-4000-8000-0000001f0201",
+            "lane_id": "a0000000-0000-4000-8000-0000000008a1",
+            "step_id": "a0000000-0000-4000-8000-000000009a01",
+            "position": 2,
+            "content": "Reminds students to keep working while waiting.",
+            "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040201/45a51cb4-1ae3-d2c2-5f15-49fd1b4c00f2.png",
+            "summary": "While a tutor is still occupied with another student, the teacher keeps waiting students on task rather than idle, so the room does not lose momentum before goal setting starts for them.",
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-application/goal-setting/set-goals/partner-action-teacher/click-on-set-goals-cta-in-the-action-column",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-0000001f0401",
             "lane_id": "a0000000-0000-4000-8000-0000000008a1",
-            "step_id": "a0000000-0000-4000-8000-000000009a04",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009a01",
+            "position": 3,
             "content": "Receives information that a student is absent from the session.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0401/df4eeba7-5747-4aa2-1d62-dde366548029.png",
             "summary": "The teacher is the one told when a student does not show, which is what triggers roster and pairing adjustments for the rest of the session. This is the first step in reconciling attendance against the goal-setting plan for that class.",
@@ -25677,8 +27199,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-0000001f0501",
             "lane_id": "a0000000-0000-4000-8000-0000000008a1",
-            "step_id": "a0000000-0000-4000-8000-000000009a05",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009a01",
+            "position": 4,
             "content": "Alerts lead tutor about unassigned or miss-assigned students using the \"ask for help\" alert.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0501/610fd0d7-ee32-6f6e-8d3c-7d56c796381e.png",
             "summary": null,
@@ -25694,8 +27216,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-0000001f0601",
             "lane_id": "a0000000-0000-4000-8000-0000000008a1",
-            "step_id": "a0000000-0000-4000-8000-000000009a06",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009a03",
+            "position": 1,
             "content": "Handles student tech problems as they arise.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0601/70caf55e-72b8-3f2e-73e3-c419a60a501c.png",
             "summary": "The teacher is the first responder for device or connection issues during the breakout, so a tutor can stay focused on the goal-setting conversation instead of troubleshooting. Without this, a tech problem would either interrupt the tutor or go unresolved.",
@@ -25748,8 +27270,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-0000001f0202",
             "lane_id": "a0000000-0000-4000-8000-0000000008a2",
-            "step_id": "a0000000-0000-4000-8000-000000009a02",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009a01",
+            "position": 1,
             "content": "Adds any un-rostered students to the attendance list.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0202/0911e936-fd5a-3171-9338-9e57d694b158.png",
             "summary": "The lead tutor accounts for a student who joined the session without a matching roster entry, so that student is not dropped from attendance or left unpaired for goal setting. This keeps the session's records accurate even when enrollment data is out of sync.",
@@ -25766,8 +27288,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-0000001f0302",
             "lane_id": "a0000000-0000-4000-8000-0000000008a2",
-            "step_id": "a0000000-0000-4000-8000-000000009a03",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009a01",
+            "position": 2,
             "content": "Manually assigns unpaired students to available tutors.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0302/d451bb96-0858-37e8-9e3c-588df38cfb2b.png",
             "summary": "When automatic pairing leaves a student without a tutor, the lead tutor steps in to assign one by hand so goal setting is not skipped for that student. This is the fallback for whatever caused the pairing to fail in the first place.",
@@ -25784,8 +27306,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-0000001f0402",
             "lane_id": "a0000000-0000-4000-8000-0000000008a2",
-            "step_id": "a0000000-0000-4000-8000-000000009a04",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009a01",
+            "position": 3,
             "content": "Inform classroom teacher about students that are absent.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0402/db5f36b0-90a1-dbfe-92eb-07af60fb4bc0.png",
             "summary": null,
@@ -25801,8 +27323,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "a0000000-0000-4000-8000-0000001f0502",
             "lane_id": "a0000000-0000-4000-8000-0000000008a2",
-            "step_id": "a0000000-0000-4000-8000-000000009a05",
-            "position": 0,
+            "step_id": "a0000000-0000-4000-8000-000000009a01",
+            "position": 4,
             "content": "Respond to classroom teachers \"ask for help\" request.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0502/63b222f0-1142-8cd8-0979-aa8e4ba2bcc2.png",
             "summary": null,
@@ -25902,13 +27424,31 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "a6948a2b-3b5b-4b81-92e6-c07cc03ef56d",
+            "lane_id": "a0000000-0000-4000-8000-0000000008a3",
+            "step_id": "a0000000-0000-4000-8000-000000009a02",
+            "position": 1,
+            "content": "Reviews tutor-only badges and notes, then presses Start goal setting.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/no-prior-goals/regular-tutor/click-on-set-goals-cta-in-the-action-column--a6948a2b-3b5b-4b81-92e6-c07cc03ef56d",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-0000001f0303",
             "lane_id": "a0000000-0000-4000-8000-0000000008a3",
             "step_id": "a0000000-0000-4000-8000-000000009a03",
             "position": 0,
-            "content": "Shares screen.",
+            "content": "Shares screen once the app says the student-safe view is ready.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001f0303/b77dac8f-0ab7-5252-29d2-7af706007fc9.png",
-            "summary": "The tutor shares their screen so the student can see the same goal-setting view the tutor is working from, rather than describing it verbally. This is what lets the tutor walk the student through the exact fields being filled in.",
+            "summary": "The app shows a banner when it is safe to share: \"Share your screen now — {FirstName} can safely see this view.\" The student-safe view hides system suggestions and the tutor's notes.",
             "status": "live",
             "function": null,
             "form": null,
@@ -26028,6 +27568,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             ],
             "touchpoints": [],
             "cell_key": "plus-application/goal-setting/set-goals/regular-tutor/once-student-understands-starts-setting-first-goal-while-sharing-screen",
+            "value_props": []
+          },
+          {
+            "id": "90109744-82d7-4b53-99ce-194d6d4168f2",
+            "lane_id": "a0000000-0000-4000-8000-0000000008a3",
+            "step_id": "a0000000-0000-4000-8000-000000009a05",
+            "position": 1,
+            "content": "Sees how many sessions are left in the student's goal cycle, then sets, updates or checks the goal.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/no-prior-goals/regular-tutor/once-student-understands-starts-setting-first-goal-while-sharing-screen--90109744-82d7-4b53-99ce-194d6d4168f2",
             "value_props": []
           },
           {
@@ -26160,6 +27718,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "6b25ac21-252b-478a-9750-c5fdb66197b4",
+            "lane_id": "a0000000-0000-4000-8000-0000000008a3",
+            "step_id": "a0000000-0000-4000-8000-000000009a08",
+            "position": 1,
+            "content": "Stops sharing when prompted, then finishes in the tutor view.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/no-prior-goals/regular-tutor/save-goal--6b25ac21-252b-478a-9750-c5fdb66197b4",
+            "value_props": []
+          },
+          {
             "id": "a0000000-0000-4000-8000-0000001f0903",
             "lane_id": "a0000000-0000-4000-8000-0000000008a3",
             "step_id": "a0000000-0000-4000-8000-000000009a09",
@@ -26200,6 +27776,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             ],
             "touchpoints": [],
             "cell_key": "plus-application/goal-setting/set-goals/regular-tutor/finalize-goal-setting-with-student",
+            "value_props": []
+          },
+          {
+            "id": "8be0d70e-6c49-4ef3-b736-ac606064c20d",
+            "lane_id": "a0000000-0000-4000-8000-0000000008a3",
+            "step_id": "a0000000-0000-4000-8000-000000009a09",
+            "position": 1,
+            "content": "Writes private, auto-saved notes about the student in the goal-setting window.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/no-prior-goals/regular-tutor/finalize-goal-setting-with-student--8be0d70e-6c49-4ef3-b736-ac606064c20d",
             "value_props": []
           },
           {
@@ -27357,17 +28951,17 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "note": null
           },
           {
-            "id": "a0000000-0000-4000-8000-00000009b002",
-            "source_cell_id": "a0000000-0000-4000-8000-0000001f0201",
-            "target_cell_id": "a0000000-0000-4000-8000-0000001f0301",
+            "id": "a0000000-0000-4000-8000-00000009b003",
+            "source_cell_id": "a0000000-0000-4000-8000-0000001f0301",
+            "target_cell_id": "a0000000-0000-4000-8000-0000001f0401",
             "kind": "leads_to",
             "name": null,
             "note": null
           },
           {
-            "id": "a0000000-0000-4000-8000-00000009b003",
-            "source_cell_id": "a0000000-0000-4000-8000-0000001f0301",
-            "target_cell_id": "a0000000-0000-4000-8000-0000001f0401",
+            "id": "a0000000-0000-4000-8000-00000009b002",
+            "source_cell_id": "a0000000-0000-4000-8000-0000001f0201",
+            "target_cell_id": "a0000000-0000-4000-8000-0000001f0301",
             "kind": "leads_to",
             "name": null,
             "note": null
@@ -27581,6 +29175,143 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "note": null
           }
         ]
+      },
+      {
+        "path": {
+          "id": "a4e8ec9b-ed13-4afe-8c19-687a18677245",
+          "name": "Student is goal-exempt",
+          "summary": "The student is not part of goal setting. The tutor sees Status unavailable, helps as usual and marks them helped; goal-setting stats leave the student out.",
+          "note": null,
+          "kind": "exception",
+          "status": "live"
+        },
+        "lanes": [
+          {
+            "id": "bdeac9e6-ad49-4a19-b947-3815920c28a5",
+            "name": "Storyboard",
+            "role": "storyboard",
+            "position": 0
+          },
+          {
+            "id": "c2d5eb9b-edc5-448a-891b-02501fc88600",
+            "name": "Teacher",
+            "role": "partner_actions",
+            "position": 1
+          },
+          {
+            "id": "e1e2a55f-50e1-406c-8bb5-ecdaa225e593",
+            "name": "Lead Tutor",
+            "role": "customer_actions",
+            "position": 2
+          },
+          {
+            "id": "fa91f29c-7a12-419d-8039-4ecc55eede1d",
+            "name": "Regular Tutor",
+            "role": "customer_actions",
+            "position": 3
+          },
+          {
+            "id": "e4375814-e437-4f3c-b7e6-762264f6d799",
+            "name": "Front Stage Touchpoints",
+            "role": "frontstage_touchpoints",
+            "position": 4
+          },
+          {
+            "id": "a7d08fcc-ec8d-44f2-af31-f7d999004dce",
+            "name": "Front Stage Actions",
+            "role": "frontstage_actions",
+            "position": 5
+          },
+          {
+            "id": "903b0715-1b4c-475f-a166-8313456633af",
+            "name": "Back Stage Touchpoints",
+            "role": "backstage_touchpoints",
+            "position": 6
+          },
+          {
+            "id": "de3458f8-2774-40a3-8a0f-ecdf1363edd1",
+            "name": "Back Stage Actions",
+            "role": "backstage_actions",
+            "position": 7
+          },
+          {
+            "id": "39b7fa00-1394-40ea-bf67-b5b401e7202d",
+            "name": "Support Actions",
+            "role": "support_actions",
+            "position": 8
+          }
+        ],
+        "steps": [
+          {
+            "id": "a0000000-0000-4000-8000-000000009b01",
+            "name": "Join breakout session",
+            "summary": "The tutor joins the student's breakout room over Zoom while the lead tutor renames students to match the roster and the teacher circulates.",
+            "position": 0
+          },
+          {
+            "id": "03e76fc3-4008-426a-b8e3-d03877ec1abb",
+            "name": "Help the student and mark them helped",
+            "summary": "A goal-exempt row shows Status unavailable and Mark helped instead of a goal action. Mark helped is disabled for a student marked Absent; Undo in the pop-up reverts it.",
+            "position": 1
+          }
+        ],
+        "cells": [
+          {
+            "id": "48eaf282-5c9d-4527-a893-8fe29e8fdf70",
+            "lane_id": "e1e2a55f-50e1-406c-8bb5-ecdaa225e593",
+            "step_id": "a0000000-0000-4000-8000-000000009b01",
+            "position": 0,
+            "content": "Sees a Goal-exempt count on Session info and a tag in Attendees.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/student-is-goal-exempt/lead-tutor/join-breakout-session",
+            "value_props": []
+          },
+          {
+            "id": "3887f178-24e0-40a0-8008-84fb4532440a",
+            "lane_id": "fa91f29c-7a12-419d-8039-4ecc55eede1d",
+            "step_id": "03e76fc3-4008-426a-b8e3-d03877ec1abb",
+            "position": 0,
+            "content": "Sees Status unavailable, helps as usual, then marks them helped.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/student-is-goal-exempt/regular-tutor/help-the-student-and-mark-them-helped",
+            "value_props": []
+          },
+          {
+            "id": "c7605729-2e3f-48c1-8b25-23873152277d",
+            "lane_id": "de3458f8-2774-40a3-8a0f-ecdf1363edd1",
+            "step_id": "03e76fc3-4008-426a-b8e3-d03877ec1abb",
+            "position": 0,
+            "content": "Goal-setting stats leave goal-exempt students out; Mark helped counts as a completed check-in.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/goal-setting/student-is-goal-exempt/back-stage-actions/help-the-student-and-mark-them-helped",
+            "value_props": []
+          }
+        ],
+        "dependencies": []
       }
     ],
     "a0000000-0000-4000-8000-000000000205": [
@@ -28821,7 +30552,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0,
             "content": "Routes the issue out of the room.",
             "frame": null,
-            "summary": "Not a content question: the tutor follows the routing table — lead tutor for roster/room problems, the school Slack channel for classroom-side issues, the support channel for app/tech problems — with message templates and privacy rules for each.",
+            "summary": "Not a content question: the tutor follows the Help Center routing — the lead tutor for room, co-host and assignment problems; #in-session-support for session-wide or classroom-side issues, since school-specific channels are retired; #plus-app-bug-reporting for PLUS App problems; their supervisor and PLUS staff on Slack for a serious safety concern. Messages stay short and share no private student information.",
             "status": "live",
             "function": null,
             "form": null,
@@ -28846,6 +30577,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
               }
             ],
             "touchpoints": [],
+            "value_props": []
+          },
+          {
+            "id": "72060311-f2c7-4f0c-aca0-b0ef520af560",
+            "lane_id": "b3000000-0000-4000-8000-000000000013",
+            "step_id": "a0000000-0000-4000-8000-000000000978",
+            "position": 1,
+            "content": "Uses Tutor tools › Request lead tutor when no lead is on the call, which posts to #in-session-support and tags the supervisors.",
+            "frame": null,
+            "summary": null,
+            "status": "live",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/help-request/routed-out/regular-tutor/resolve-issue--72060311-f2c7-4f0c-aca0-b0ef520af560",
             "value_props": []
           },
           {
@@ -28906,7 +30655,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "b3000000-0000-4000-8000-000000000018",
             "step_id": "a0000000-0000-4000-8000-000000000978",
             "position": 0,
-            "content": "Support channel triage (ticketing tool pending)",
+            "content": "#plus-app-bug-reporting triage for PLUS App issues (ticketing tool pending)",
             "frame": null,
             "summary": "App and tech problems a tutor cannot resolve in-room get triaged through the support Slack channel, the only mechanism that exists today since a dedicated ticketing tool is still being selected. Once one ships, this is the cell that changes.",
             "status": "live",
@@ -29661,6 +31410,24 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "value_props": []
           },
           {
+            "id": "33b83e8f-3ae7-44ad-8590-ee5a0a8ab560",
+            "lane_id": "a0000000-0000-4000-8000-000000000876",
+            "step_id": "a0000000-0000-4000-8000-000000000983",
+            "position": 1,
+            "content": "A script re-links sessions to their Zoom calls (with a backfill of past sessions), accepts more meeting-name formats, and matches attendees only against students in the session's own group.",
+            "frame": null,
+            "summary": null,
+            "status": "built",
+            "function": null,
+            "form": null,
+            "owner": null,
+            "perceived_owner": null,
+            "resources": [],
+            "touchpoints": [],
+            "cell_key": "plus-tutoring/wrap-up/rooms-close-on-time/back-stage-actions/complete-wrap-up--33b83e8f-3ae7-44ad-8590-ee5a0a8ab560",
+            "value_props": []
+          },
+          {
             "id": "91112e64-3141-49f7-9165-76c3660dd1b2",
             "lane_id": "b4000000-0000-4000-8000-000000000018",
             "step_id": "a0000000-0000-4000-8000-000000000983",
@@ -30111,10 +31878,10 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
         "path": {
           "id": "f0000000-0000-4000-8000-00000000080e",
           "name": "Redesigned reflection",
-          "summary": "Captures planned / unshipped behavior for Wrap-Up as of 2026-08-08. Diverges from the current happy path at \"Complete wrap-up\": the reflection redesign — escalation chips, an AI follow-up question per section, cadence-triggered Self Reflection (every 10th session) and Form Feedback (every 3 weeks), and recording upload with a No Recording Reason. Design iteration as of Jul 2026; nothing here is in production.",
+          "summary": "Planned reflection redesign, handoff-ready since Jul 30, 2026 and waiting for development. Diverges from the current happy path at Complete wrap-up: a roster pre-filled from live attendance, effort, progress and engagement selections, an escalation question last in each section, an optional AI follow-up per section, cadence-triggered Self Reflection and Form Feedback, and a required No Recording Reason when no recording is attached.",
           "note": null,
           "kind": "variant",
-          "status": "proposed"
+          "status": "planned"
         },
         "lanes": [
           {
@@ -30182,7 +31949,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
           {
             "id": "f0000000-0000-4000-8000-0000000008e1",
             "name": "Cadence check-ins",
-            "summary": "Planned: cadence-triggered forms surface a Self Reflection every tenth session and a Form Feedback survey every three weeks.",
+            "summary": "Planned: cadence-triggered forms surface a Self Reflection at session 5 and every tenth session after, and a Form Feedback survey at most once every three weeks.",
             "position": 2
           }
         ],
@@ -30194,8 +31961,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0,
             "content": "Reminds tutors to complete the reflection and upload the recording or give a No Recording Reason.",
             "frame": null,
-            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the lead's scripted wrap-up reminder changes from \"upload the recording\" to \"upload the recording or record why there isn't one\".",
-            "status": "proposed",
+            "summary": "Planned: the lead's wrap-up reminder changes from \"upload the recording\" to \"upload the recording or record why there isn't one\".",
+            "status": "planned",
             "function": null,
             "form": null,
             "owner": null,
@@ -30209,10 +31976,10 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "4ea015cf-0e96-474f-879d-c132cd5bca75",
             "step_id": "a0000000-0000-4000-8000-000000000983",
             "position": 0,
-            "content": "Completes the redesigned reflection with escalation chips and an AI follow-up per section.",
+            "content": "Confirms the roster pre-filled from live attendance, selects each student's effort, progress and engagement, rates the session, flags any escalation, and answers an optional AI follow-up per section.",
             "frame": null,
-            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the redesigned form adds escalation chips for flagging concerns and one AI-generated follow-up question per completed section, aimed at the ~80% of reflections whose free-text notes are empty today.",
-            "status": "proposed",
+            "summary": "Planned: every structured answer is a rating or a chip selection. Roster edits are logged as a data signal; escalation comes last in each section with a \"No\" default, and any other choice asks for a short description.",
+            "status": "planned",
             "function": null,
             "form": null,
             "owner": null,
@@ -30226,10 +31993,10 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "4ea015cf-0e96-474f-879d-c132cd5bca75",
             "step_id": "f0000000-0000-4000-8000-0000000008e1",
             "position": 0,
-            "content": "Completes a Self Reflection every 10th session and a Form Feedback survey every 3 weeks.",
+            "content": "Completes a Self Reflection at session 5 and every 10th session after, and a Form Feedback survey every 3 weeks.",
             "frame": null,
-            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): two cadence-triggered instruments replace one-size-fits-all prompts - a Self Reflection on every 10th completed session and a Form Feedback survey every 3 weeks. The exact cadence was still unresolved in the Jul 2026 review.",
-            "status": "proposed",
+            "summary": "Planned: Self Reflection appears when the session count is 5, 15, 25 and so on; Form Feedback appears at most once per tutor every 3 weeks. The cadence was locked Jul 27, 2026.",
+            "status": "planned",
             "function": null,
             "form": null,
             "owner": null,
@@ -30245,8 +32012,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0,
             "content": "Reflection form",
             "frame": null,
-            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the form gains chips and AI follow-ups, and the recording-upload widget adds a required No Recording Reason when no file is attached - closing the silent-missing-recording gap.",
-            "status": "proposed",
+            "summary": "Planned: the form pre-fills the roster from attendance, adds effort, progress and engagement chips, an escalation question and AI follow-ups, and the upload widget requires a No Recording Reason when no file is attached.",
+            "status": "planned",
             "function": null,
             "form": null,
             "owner": null,
@@ -30272,8 +32039,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0,
             "content": "Cadence forms",
             "frame": null,
-            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the app tracks session counts and calendar intervals per tutor and surfaces the right instrument at the right moment.",
-            "status": "proposed",
+            "summary": "Planned: the app counts each tutor's sessions and the weeks since their last Form Feedback, and shows the right form at the right moment.",
+            "status": "planned",
             "function": null,
             "form": null,
             "owner": null,
@@ -30299,8 +32066,8 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "position": 0,
             "content": "Follow-up question LLM",
             "frame": null,
-            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): an LLM reads each section's ratings/notes and asks a single targeted follow-up. The AI questions were challenged by Cindy in review and remain unresolved - this is the least settled piece of the redesign.",
-            "status": "proposed",
+            "summary": "Planned: an LLM reads each section's answers and asks one optional follow-up question. A trial round on real data passed 95% of 21 cases; escalation answers are never sent to it.",
+            "status": "planned",
             "function": null,
             "form": null,
             "owner": null,
@@ -30324,10 +32091,10 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "c4c33991-2b2c-4f45-b493-37e13595a8e1",
             "step_id": "a0000000-0000-4000-8000-000000000983",
             "position": 0,
-            "content": "Escalation chips route flagged concerns to supervisors.",
+            "content": "Routes flagged escalations to supervisors.",
             "frame": null,
-            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): a chip selected in the reflection routes the concern to the supervisor queue rather than sitting in free text. Chips were endorsed by Emme in design review.",
-            "status": "proposed",
+            "summary": "Planned: an escalation chosen in the reflection reaches the supervisors rather than sitting in free text.",
+            "status": "planned",
             "function": null,
             "form": null,
             "owner": null,
@@ -30341,10 +32108,10 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "eaba1e90-bbaf-4121-8b4a-f9d71cb558e1",
             "step_id": "a0000000-0000-4000-8000-000000000983",
             "position": 0,
-            "content": "Design iteration in flight (Jul 2026)",
+            "content": "Ready for dev; split into AI module, UI and note-taking cards.",
             "frame": null,
-            "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): active design work — Loom walkthrough by Cassie 2026-07-15; AI questions challenged (Cindy), chips endorsed (Emme), cadence unresolved.",
-            "status": "proposed",
+            "summary": "Cadence locked Jul 27, 2026; an AI question trial on real data passed 95% of 21 cases; supervisor sign-off on the decisions is still open. The note-taking widget card shipped in 12.0; the AI module and UI cards are in triage.",
+            "status": "planned",
             "function": null,
             "form": null,
             "owner": null,
@@ -30362,7 +32129,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
         "path": {
           "id": "a0000000-0000-4000-8000-00000000080f",
           "name": "Standard",
-          "summary": "Tutors report behavior, wellbeing or safety concerns to their supervisor and Alex on Slack during the session, inform the lead tutor, and follow up through an escalated reflection report and recording upload.",
+          "summary": "Tutors report behavior, wellbeing or safety concerns to their supervisor and PLUS staff on Slack during the session, inform the lead tutor, and follow up through an escalated reflection report and recording upload.",
           "note": null,
           "kind": "happy",
           "status": "live"
@@ -30521,7 +32288,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "a0000000-0000-4000-8000-000000000917",
             "step_id": "a0000000-0000-4000-8000-000000000988",
             "position": 0,
-            "content": "Reaches out to PLUS staff with any concerns.",
+            "content": "Checks that a tutor reporting a serious concern has messaged their supervisor and PLUS staff on Slack, and reminds them to tick Escalate report.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001d0102/fa633b95-45ae-d609-fbc9-06eb3f5e1291.png",
             "summary": "After the session, tutors raise anything unresolved — student wellbeing concerns, roster errors, repeated tech failures — via the school or support Slack channel, or by email for non-urgent items. Urgent issues have separate contacts and expected response behavior.",
             "status": "live",
@@ -30591,9 +32358,9 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "a0000000-0000-4000-8000-000000000911",
             "step_id": "a0000000-0000-4000-8000-000000000988",
             "position": 0,
-            "content": "Messages their supervisor and Alex on Slack about a behavior, wellbeing, or safety concern, during the session when it happens live, and tells the lead tutor.",
+            "content": "Messages their supervisor and PLUS staff on Slack about a behavior, wellbeing, or safety concern, during the session when it happens live, and tells the lead tutor.",
             "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001d0103/ab13b929-6608-ac2b-5268-c16927040a3f.png",
-            "summary": "During the session, the tutor alerts their supervisor and Alex directly on Slack. They also tell the lead tutor, escalate their reflection report and upload the recording as soon as possible afterward.",
+            "summary": "During the session, the tutor alerts their supervisor and PLUS staff directly on Slack. They also tell the lead tutor, escalate their reflection report and upload the recording as soon as possible afterward.",
             "status": "live",
             "function": null,
             "form": null,
@@ -30971,7 +32738,7 @@ export const SAMPLE_BLUEPRINTS: SampleBlueprintRegistry = {
             "lane_id": "a0000000-0000-4000-8000-000000000914",
             "step_id": "a0000000-0000-4000-8000-000000000990",
             "position": 0,
-            "content": "PLUS supervisor team resolves the concern.",
+            "content": "The supervisor team assesses severity, contacts the school when warranted, and follows up with the tutor; for suspected abuse, PLUS staff and the supervisor help decide whether a state report is needed.",
             "frame": null,
             "summary": "Resolution is tracked informally today — there is no ticketing system; a servicedesk tool selection is in progress. Escalation infrastructure is not yet formalized.",
             "status": "live",
