@@ -21,8 +21,11 @@
 -- that would leave an incident dependency crossing paths, which after this
 -- migration would pin every cell with a cross-path link in place. A move
 -- already stays inside one scenario, so it can never leave a link joining two
--- services; the refusal is removed and nothing replaces it. Every other guard,
--- the lock and the inverse are unchanged.
+-- services; the refusal is removed and nothing replaces it. Its lock on
+-- `cell_dependencies` existed only to keep that incident-dependency read
+-- consistent with a concurrent link writer, and since a move cannot change a
+-- cell's service no such race remains, so the lock goes too. The two link
+-- writers keep theirs. Every other guard and the inverse are unchanged.
 --
 -- The two proofs are upstream's. The one adaptation is in the archive proof:
 -- this deployment's cells carry a generated column, so the re-insert of the
@@ -372,7 +375,6 @@ begin
     raise exception 'Move coordinates require parents and nonnegative positions' using errcode = '22023';
   end if;
 
-  lock table public.cell_dependencies in share row exclusive mode;
   select c.* into previous from public.cells c where c.id=move_cell.cell_id for update;
   if not found then raise exception 'No cell %', cell_id using errcode='P0002'; end if;
   if row(previous.path_id,previous.lane_id,previous.step_id,previous.position)
@@ -889,4 +891,8 @@ begin
       raise exception 'a rewritten write lost its author-only grant: %', fn;
     end if;
   end loop;
+  -- 20261031130000 also took move_cell away from service_role.
+  if has_function_privilege('service_role', 'public.move_cell(uuid, jsonb, jsonb)', 'execute') then
+    raise exception 'move_cell regained service_role execute';
+  end if;
 end $grants$;

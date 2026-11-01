@@ -124,9 +124,10 @@ applied: the dependency-table lock, the comment wording and `delete_path`'s
 refused a move that left an incident dependency crossing paths, which would
 now pin every cell with a cross-path link in place. A move already stays in
 one scenario, so it cannot leave a link joining two services, and that refusal
-is removed. `supabase/tests/move_cell.sql` and `npm run prove:cell-move` now
-prove a cross-path move keeps its edge, and that a concurrent edge write waits
-for the move and lands across paths.
+is removed, with the `cell_dependencies` lock that only kept it consistent; the
+two link writers keep theirs. `supabase/tests/move_cell.sql` and
+`npm run prove:cell-move` now prove a cross-path move keeps its edge, and that
+a concurrent link write or retarget and a move both land.
 
 The in-migration proofs are upstream's; the archive proof names the cells'
 columns on its re-insert, because `cells.search_tsv` is generated here. As with

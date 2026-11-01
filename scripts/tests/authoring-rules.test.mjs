@@ -22,8 +22,10 @@ import {
 } from '@/lib/versionValidation.ts'
 
 const source = { cellId: 'a', label: 'Greet student' }
-const sameVersion = { cellId: 'b', label: 'Share screen' }
-const otherVersion = { cellId: 'c', label: 'Escalate' }
+// Both targets are cells of the source's service: one on its path, one on
+// another path. A link may reach either.
+const inPathCell = { cellId: 'b', label: 'Share screen' }
+const crossPathCell = { cellId: 'c', label: 'Escalate' }
 
 const draft = (patch) => ({
   sourceCellId: 'a',
@@ -36,7 +38,7 @@ const draft = (patch) => ({
 
 test('a valid handoff has no problems', () => {
   assert.deepEqual(
-    validateDraftDependency(draft(), sameVersion, []),
+    validateDraftDependency(draft(), inPathCell, []),
     [],
   )
 })
@@ -55,7 +57,7 @@ test('a link may cross paths within one service', () => {
   // refuse; the panel only offers cells of the service it has open.
   const problems = validateDraftDependency(
     draft({ targetCellId: 'c' }),
-    otherVersion,
+    crossPathCell,
     [],
   )
   assert.deepEqual(problems, [])
@@ -71,7 +73,7 @@ test('no target is reported before anything else', () => {
 })
 
 test('the same connection is not added twice', () => {
-  const problems = validateDraftDependency(draft(), sameVersion, [
+  const problems = validateDraftDependency(draft(), inPathCell, [
     { targetCellId: 'b', kind: 'leads_to' },
   ])
   assert.ok(problems.some((p) => /already exists/.test(p)))
@@ -80,7 +82,7 @@ test('the same connection is not added twice', () => {
 test('the same pair may hold both a leads_to and an enables', () => {
   const problems = validateDraftDependency(
     draft({ kind: 'enables' }),
-    sameVersion,
+    inPathCell,
     [{ targetCellId: 'b', kind: 'leads_to' }],
   )
   assert.deepEqual(problems, [])
