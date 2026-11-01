@@ -8,7 +8,7 @@ after a spec edit on the same row:
 - `0737-cleanup-a-cell-and-path-text.json`: 11 cell edits, each with its own
   `add_evidence` row, and 3 path summary edits. 25 operations.
 - `0737-cleanup-b-path-status-and-columns.json`: 1 `set_path_status` and
-  4 `set_path_steps` column trims. 5 operations.
+  5 `set_path_steps` column trims. 6 operations.
 
 Every expected value was read live on November 1, 2026, by the dev authoring
 user, with reads only. Notion sources were read through the PLUS connection
@@ -128,3 +128,17 @@ Nothing here deletes a row. Consider, in the app:
   one and its placement count, which goes from 0 to 1 on the three email
   cells. For each trimmed path they assert the `path_steps` rows before and
   after, an unchanged cell count and an unchanged scenario step count.
+
+## Applied (November 1, 2026)
+
+Both batches were applied under the shared apply lock. Each was dry-run again
+just before its apply, and each verify was a separate run.
+
+| File | Runner SHA-256 | Apply | Verify |
+|---|---|---|---|
+| `0737-cleanup-a-cell-and-path-text.json` | `a3172678fc2d8df7016cac22ac474b29a76e9ed438902570850265f7448d3f43` | ok, 25 of 25 | **pass** |
+| `0737-cleanup-b-path-status-and-columns.json` | `4c7f482b2e5cea6802f7b9b9a9ed283ea13c2135f72634a3e1921db87460bdd8` | ok, 6 of 6 | **pass** |
+
+A read-back confirms the registry now holds Cancellation emails, Tutor
+broadcast email and Students-added email. Each is placed on its one cell. It
+also confirms Supervisor-registered clearance is `live`.
