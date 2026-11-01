@@ -444,8 +444,8 @@ async function run({ serviceRole }) {
     )
   }
 
-  // The anon key is refused on the signed-in-only relations once
-  // 20261101130000 is applied, so a name on one of them — in a doc or a
+  // The anon key is refused on the signed-in-only relations (20261101130000
+  // is applied), so a name on one of them — in a doc or a
   // catalog comment — is resolved against the migration series instead of
   // selected. Replayed once, on first need.
   const signedIn = new Set(contract.signedInReadTables)
@@ -470,28 +470,28 @@ async function run({ serviceRole }) {
   //     fails. What also fails is a relation PostgREST does not know — a
   //     rename or a drop, the drift this file exists for. Under --service-role
   //     every one must read, since that key reads past every policy.
-  const closed = []
+  const signedInFailures = []
   const stillOpen = []
   for (const relation of contract.signedInReadTables) {
     const result = await rest(url, key, `${relation}?select=*&limit=0`)
     if (serviceRole) {
-      if (!result.ok) closed.push(`"${relation}" answers HTTP ${result.status} to the service role — ${postgrest(result.body)}`)
+      if (!result.ok) signedInFailures.push(`"${relation}" answers HTTP ${result.status} to the service role — ${postgrest(result.body)}`)
     } else if (result.ok) {
       stillOpen.push(relation)
     } else if (!refusesAnon(result)) {
-      closed.push(
+      signedInFailures.push(
         `"${relation}" is declared signed-in-only but answers HTTP ${result.status} — ` +
           `${postgrest(result.body)}. A refusal is expected; this is not one. Renamed or dropped?`,
       )
     }
   }
   if (stillOpen.length > 0) {
-    closed.push(
+    signedInFailures.push(
       `the anon key still reads ${stillOpen.join(', ')}. 20261101130000 closed these to ` +
         `signed-out visitors, so each was reopened after it: revoke it again.`,
     )
   }
-  check('signed-in read surface', closed)
+  check('signed-in read surface', signedInFailures)
 
   // 2. botReadTables must be a subset — the bot cannot read what the app does
   //    not publish, and a table listed only here would never be probed.
