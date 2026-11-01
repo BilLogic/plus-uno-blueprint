@@ -92,7 +92,7 @@ the rejoin.
 The scan covered every cell's text and spec fields, path summaries and
 notes, scenario and step text, lanes and the touchpoint registry. It looked
 for staff first and last names, then for any two capitalized words in a row.
-Only the six cells and two paths above named a person. All of them are fixed
+Only the five cells and two paths above named a person. All of them are fixed
 here.
 
 Not fixable by this runner (there is no evidence edit operation), so they are
