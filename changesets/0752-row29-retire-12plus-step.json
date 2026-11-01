@@ -1,0 +1,458 @@
+{
+  "version": 1,
+  "issue": 752,
+  "operations": [
+    {
+      "key": "row29-303-deprecate",
+      "operation": "update_cell_status",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170303"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000808",
+        "lane_id": "a0000000-0000-4000-8000-000000000972",
+        "step_id": "a0000000-0000-4000-8000-000000000942",
+        "position": 0,
+        "content": "If it is less than 12 hours before session, tutor emails supervisor.",
+        "summary": null,
+        "status": "live",
+        "cell_key": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/00000000-0000-4000-8000-000000000000/456e2936-08f4-5150-1027-9e763987ab2f.png"
+      },
+      "value": {
+        "status": "deprecated"
+      },
+      "evidence": [
+        "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138",
+        "Slack confirmation of the replaced call-off form/email route (owner-reported)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 29)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
+      ]
+    },
+    {
+      "key": "row29-303-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000170303",
+          "cell_key": "a0000000-0000-4000-8000-000000170303",
+          "title": "KB audit #752 row 29 — …00170303"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #752 row 29 — …00170303",
+        "note": "Sources: https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138 ; owner-reported Slack confirmation that the form/email route was replaced. Checked October 31, 2026 on web-app dev at c78ac8a. submitOneTimeCallOff sets requiresApproval = hoursBefore < 12.0: a call-off 12 or more hours ahead is auto-approved, and one inside 12 hours goes to manual review in the app, with a Slack notification to supervisors. Neither branch routes to an email or a form. Revision scope: https://github.com/BilLogic/plus-uno-blueprint/issues/752 (original #739 row 29). The step stays on Under 12 hours, where its in-app cells are current."
+      },
+      "evidence": [
+        "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
+      ]
+    },
+    {
+      "key": "row29-304-deprecate",
+      "operation": "update_cell_status",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170304"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000808",
+        "lane_id": "a0000000-0000-4000-8000-000000000973",
+        "step_id": "a0000000-0000-4000-8000-000000000942",
+        "position": 0,
+        "content": "Tutor supervisor receives email request for shift swap.",
+        "summary": null,
+        "status": "live",
+        "cell_key": null,
+        "frame": null
+      },
+      "value": {
+        "status": "deprecated"
+      },
+      "evidence": [
+        "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138",
+        "Slack confirmation of the replaced call-off form/email route (owner-reported)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 29)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
+      ]
+    },
+    {
+      "key": "row29-304-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000170304",
+          "cell_key": "a0000000-0000-4000-8000-000000170304",
+          "title": "KB audit #752 row 29 — …00170304"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #752 row 29 — …00170304",
+        "note": "Sources: https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138 ; owner-reported Slack confirmation that the form/email route was replaced. Checked October 31, 2026 on web-app dev at c78ac8a. submitOneTimeCallOff sets requiresApproval = hoursBefore < 12.0: a call-off 12 or more hours ahead is auto-approved, and one inside 12 hours goes to manual review in the app, with a Slack notification to supervisors. Neither branch routes to an email or a form. Revision scope: https://github.com/BilLogic/plus-uno-blueprint/issues/752 (original #739 row 29). The step stays on Under 12 hours, where its in-app cells are current."
+      },
+      "evidence": [
+        "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
+      ]
+    },
+    {
+      "key": "row29-306-deprecate",
+      "operation": "update_cell_status",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170306"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000808",
+        "lane_id": "a0000000-0000-4000-8000-000000000974",
+        "step_id": "a0000000-0000-4000-8000-000000000942",
+        "position": 0,
+        "content": "Email",
+        "summary": null,
+        "status": "live",
+        "cell_key": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090206/b69f74c2-1a83-e916-497a-a2aed9f14eb4.png"
+      },
+      "value": {
+        "status": "deprecated"
+      },
+      "evidence": [
+        "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138",
+        "Slack confirmation of the replaced call-off form/email route (owner-reported)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 29)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
+      ]
+    },
+    {
+      "key": "row29-306-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000170306",
+          "cell_key": "a0000000-0000-4000-8000-000000170306",
+          "title": "KB audit #752 row 29 — …00170306"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #752 row 29 — …00170306",
+        "note": "Sources: https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138 ; owner-reported Slack confirmation that the form/email route was replaced. Checked October 31, 2026 on web-app dev at c78ac8a. submitOneTimeCallOff sets requiresApproval = hoursBefore < 12.0: a call-off 12 or more hours ahead is auto-approved, and one inside 12 hours goes to manual review in the app, with a Slack notification to supervisors. Neither branch routes to an email or a form. Revision scope: https://github.com/BilLogic/plus-uno-blueprint/issues/752 (original #739 row 29). The step stays on Under 12 hours, where its in-app cells are current."
+      },
+      "evidence": [
+        "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
+      ]
+    },
+    {
+      "key": "row29-310-deprecate",
+      "operation": "update_cell_status",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170310"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000808",
+        "lane_id": "a0000000-0000-4000-8000-000000000971",
+        "step_id": "a0000000-0000-4000-8000-000000000942",
+        "position": 0,
+        "content": "",
+        "summary": null,
+        "status": "live",
+        "cell_key": null,
+        "frame": null
+      },
+      "value": {
+        "status": "deprecated"
+      },
+      "evidence": [
+        "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138",
+        "Slack confirmation of the replaced call-off form/email route (owner-reported)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 29)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
+      ]
+    },
+    {
+      "key": "row29-310-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000170310",
+          "cell_key": "a0000000-0000-4000-8000-000000170310",
+          "title": "KB audit #752 row 29 — …00170310"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #752 row 29 — …00170310",
+        "note": "Sources: https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138 ; owner-reported Slack confirmation that the form/email route was replaced. Checked October 31, 2026 on web-app dev at c78ac8a. submitOneTimeCallOff sets requiresApproval = hoursBefore < 12.0: a call-off 12 or more hours ahead is auto-approved, and one inside 12 hours goes to manual review in the app, with a Slack notification to supervisors. Neither branch routes to an email or a form. Revision scope: https://github.com/BilLogic/plus-uno-blueprint/issues/752 (original #739 row 29). The step stays on Under 12 hours, where its in-app cells are current."
+      },
+      "evidence": [
+        "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170303"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1,
+      "beforeRows": [],
+      "afterRows": [
+        {
+          "cell_id": "a0000000-0000-4000-8000-000000170303",
+          "cell_key": "a0000000-0000-4000-8000-000000170303",
+          "kind": "doc",
+          "title": "KB audit #752 row 29 — …00170303"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170304"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1,
+      "beforeRows": [],
+      "afterRows": [
+        {
+          "cell_id": "a0000000-0000-4000-8000-000000170304",
+          "cell_key": "a0000000-0000-4000-8000-000000170304",
+          "kind": "doc",
+          "title": "KB audit #752 row 29 — …00170304"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170306"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1,
+      "beforeRows": [],
+      "afterRows": [
+        {
+          "cell_id": "a0000000-0000-4000-8000-000000170306",
+          "cell_key": "a0000000-0000-4000-8000-000000170306",
+          "kind": "doc",
+          "title": "KB audit #752 row 29 — …00170306"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170310"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1,
+      "beforeRows": [],
+      "afterRows": [
+        {
+          "cell_id": "a0000000-0000-4000-8000-000000170310",
+          "cell_key": "a0000000-0000-4000-8000-000000170310",
+          "kind": "doc",
+          "title": "KB audit #752 row 29 — …00170310"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000808",
+          "step_id": "a0000000-0000-4000-8000-000000000942"
+        }
+      },
+      "beforeCount": 4,
+      "afterCount": 4,
+      "beforeRows": [
+        {
+          "id": "a0000000-0000-4000-8000-000000170303",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000170304",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000170306",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000170310",
+          "status": "live"
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "a0000000-0000-4000-8000-000000170303",
+          "status": "deprecated"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000170304",
+          "status": "deprecated"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000170306",
+          "status": "deprecated"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000170310",
+          "status": "deprecated"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "step_id": "a0000000-0000-4000-8000-000000000942"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 2,
+      "beforeRows": [
+        {
+          "path_id": "b0000000-0000-4000-8000-000000000809",
+          "position": 2
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000808",
+          "position": 6
+        }
+      ],
+      "afterRows": [
+        {
+          "path_id": "b0000000-0000-4000-8000-000000000809",
+          "position": 2
+        },
+        {
+          "path_id": "a0000000-0000-4000-8000-000000000808",
+          "position": 6
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "b0000000-0000-4000-8000-000000000809",
+          "step_id": "a0000000-0000-4000-8000-000000000942"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 2,
+      "beforeRows": [
+        {
+          "id": "b0000000-0000-4000-8000-000000180303",
+          "status": "live"
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000180306",
+          "status": "live"
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "b0000000-0000-4000-8000-000000180303",
+          "status": "live"
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000180306",
+          "status": "live"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000808"
+        }
+      },
+      "beforeCount": 6,
+      "afterCount": 6
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "id": "a0000000-0000-4000-8000-000000000942"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "name": "Files late call-off (<12h, immediate removal)"
+        }
+      ],
+      "afterRows": [
+        {
+          "name": "Files late call-off (<12h, immediate removal)"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "resources",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170303"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170306"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "72c9ce89-88fc-406e-a26d-12d56bae1e5e",
+          "touchpoint_id": "36c2abe1-b2a0-4807-836c-4b09dccff7cb"
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "72c9ce89-88fc-406e-a26d-12d56bae1e5e",
+          "touchpoint_id": "36c2abe1-b2a0-4807-836c-4b09dccff7cb"
+        }
+      ]
+    }
+  ]
+}
