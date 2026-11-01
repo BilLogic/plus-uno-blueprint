@@ -7,7 +7,8 @@ limit:
 
 | Batch | Paths | Operations |
 |---|---|---|
-| `0756-g13-a-placement-moves.json` | No prior goals, Mid-cycle check, New cycle, goals exist | 27 moves + 27 evidence |
+| `0756-g13-a-placement-moves.json` | No prior goals, Mid-cycle check, New cycle, goals exist | 27 moves + 27 evidence (stopped after 7; see below) |
+| `0756-g13-a-recovery.json` | The rest of batch A | 23 moves + 24 evidence |
 | `0756-g13-b-placement-moves.json` | Missed last session, no goals; Missed last session, has goals | 18 moves + 18 evidence |
 
 ## Live values
@@ -46,6 +47,23 @@ Lead Tutor row before and after.
 Share screen on the Mid-cycle check path is shared with Goal data looks wrong,
 but cells are per path; nothing on that path moves.
 
+## Partial apply of batch A and its recovery
+
+Batch A stopped at its eighth operation, `G13-1f0501-evidence`. Four moves
+(`…1f0301`, `…1f0201`, `…1f0401`, `…1f0501`) and three evidence rows had
+landed and were verified, each with its durable change. The failed write
+was the evidence insert for `…1f0501`: that cell has no `cell_key`, the
+changeset passed `null`, and the evidence table requires one, so nothing was
+written. The batch stopped as designed and its receipt stays in place, so a
+separate `--verify` of batch A reports it incomplete.
+
+`0756-g13-a-recovery.json` is the rest of batch A, regenerated from a fresh
+read. It skips the four cells already at their destination and the three
+evidence rows already written. For a cell without a `cell_key` it uses the
+cell id as the evidence `cell_key`, which is the convention the existing
+evidence rows on keyless cells follow. Batch B was regenerated the same way
+(its `…0402` and `…0502` cells have no key either).
+
 ## Clears left for the owner (R7)
 
 Deletes are human-only. Remove these five Teacher support-escalation cells
@@ -59,10 +77,13 @@ neighbouring Teacher cells, which the delete also removes:
 - Missed last session, no goals: `a0000000-0000-4000-8000-000000c00701`
 - Missed last session, has goals: `a0000000-0000-4000-8000-000000d00701`
 
-## Dry-run
+## Dry-run, apply and verify (November 1, 2026)
 
-Read-only against production, November 1, 2026. Both batches `ok: true`, no
-failures, ledger 426→426.
+| Batch | SHA-256 | Result |
+|---|---|---|
+| A | `6df8c31785373ad5f1f7847418e00578933b2bd80f01c59c37c026f61c48c69a` | Dry-run `ok`; apply stopped after 7 of 54 operations (above). Its separate verify reports the incomplete receipt and the keyless-cell evidence it never wrote, as expected |
+| A recovery | `abbe04f76f6984501f6d8698848db6c87fb74b28e27a2b4df991505c423ea3af` | Dry-run `ok` (47 entries, ledger 580→580); apply 47/47; separate verify `ok: true`, no failures |
+| B | `f86aedf2d93aa57341849400f8bd8ba2c0d576b83328d7345fce931e61027131` | Dry-run `ok` (36 entries, ledger 627→627); apply 36/36; separate verify `ok: true`, no failures |
 
-- A: 54 diff entries, SHA-256 `6df8c31785373ad5f1f7847418e00578933b2bd80f01c59c37c026f61c48c69a`
-- B: 36 diff entries, SHA-256 `49e69b668ce9a17a3065c85cf8caab078dcfa4fbafed13d826cd0a78def95ee2`
+All 45 moves and 45 evidence rows are in place. Batch B's hash changed from the
+first draft because it was regenerated with the keyless-cell fix.

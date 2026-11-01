@@ -206,7 +206,7 @@
         "where": {
           "service_id": "a0000000-0000-4000-8000-000000000001",
           "cell_id": "a0000000-0000-4000-8000-000000c00501",
-          "cell_key": null,
+          "cell_key": "a0000000-0000-4000-8000-000000c00501",
           "title": "KB audit #756 G13 — Missed last session, no goals placement"
         }
       },
@@ -426,7 +426,7 @@
         "where": {
           "service_id": "a0000000-0000-4000-8000-000000000001",
           "cell_id": "a0000000-0000-4000-8000-000000c00402",
-          "cell_key": null,
+          "cell_key": "a0000000-0000-4000-8000-000000c00402",
           "title": "KB audit #756 G13 — Missed last session, no goals placement"
         }
       },
@@ -481,7 +481,7 @@
         "where": {
           "service_id": "a0000000-0000-4000-8000-000000000001",
           "cell_id": "a0000000-0000-4000-8000-000000c00502",
-          "cell_key": null,
+          "cell_key": "a0000000-0000-4000-8000-000000c00502",
           "title": "KB audit #756 G13 — Missed last session, no goals placement"
         }
       },
@@ -701,7 +701,7 @@
         "where": {
           "service_id": "a0000000-0000-4000-8000-000000000001",
           "cell_id": "a0000000-0000-4000-8000-000000d00501",
-          "cell_key": null,
+          "cell_key": "a0000000-0000-4000-8000-000000d00501",
           "title": "KB audit #756 G13 — Missed last session, has goals placement"
         }
       },
@@ -921,7 +921,7 @@
         "where": {
           "service_id": "a0000000-0000-4000-8000-000000000001",
           "cell_id": "a0000000-0000-4000-8000-000000d00402",
-          "cell_key": null,
+          "cell_key": "a0000000-0000-4000-8000-000000d00402",
           "title": "KB audit #756 G13 — Missed last session, has goals placement"
         }
       },
@@ -976,7 +976,7 @@
         "where": {
           "service_id": "a0000000-0000-4000-8000-000000000001",
           "cell_id": "a0000000-0000-4000-8000-000000d00502",
-          "cell_key": null,
+          "cell_key": "a0000000-0000-4000-8000-000000d00502",
           "title": "KB audit #756 G13 — Missed last session, has goals placement"
         }
       },
