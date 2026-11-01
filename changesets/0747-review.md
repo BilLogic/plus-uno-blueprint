@@ -1,6 +1,6 @@
 # #747 Record future state (proposed / planned / built)
 
-Two batches, split by phase so neither goes over about 60 operations:
+Two batches, split by phase so neither goes over about 60 operations, plus a recovery file and a placement follow-up (see Applied):
 
 - `0747-a-onboarding-pre-session-admin.json`: 37 operations covering F1–F12 and F14.
 - `0747-b-in-session-post-session.json`: 46 operations covering F15–F17, F20–F28.
@@ -94,3 +94,27 @@ These were noticed but not changed:
   - the new step and its membership,
   - lanes and memberships on the three new paths, copied from their source paths,
   - unchanged placements on edited touchpoint cells.
+
+## Applied (November 1, 2026)
+
+Every batch was applied under the shared apply lock. The changeset files were regenerated from a fresh read just before each run.
+
+| File | Runner SHA-256 | Apply | Verify |
+|---|---|---|---|
+| `0747-a-onboarding-pre-session-admin.json` | `0ee3c8b5…a38e` | all 37 writes landed with durable inverses; the run reported 11 post-check failures | same 11 |
+| `0747-b-in-session-post-session.json` | `ee7a4b83…fab` | stopped at `F20-path-status`; 10 writes before it landed | incomplete receipt, as expected |
+| `0747-b2-recovery.json` | `55a7a3a1…52fc` | the remaining 36 operations | **pass** |
+| `0747-c-placements-and-summaries.json` | `b00117bf…76c1` | all 6 writes landed | two `frame` differences |
+
+What the failures were, and what the rows show:
+
+- **Batch A, placement counts.** Placement counts read 0 on the four touchpoint cells inserted at position 1 or more: Weekly schedule email, Help Center button, and the two Email cells. `insert_cell_at_position` does not run the placement sync; `upsert` and content edits do. Batch C re-saves those four cells with a summary each, and that ran the sync. Each now has one placement.
+- **Batch A, step memberships.** The preservation check on Supervisor Program Administration flagged the step memberships. That comes from `add_step` shifting positions after the F2/F3 inserts had captured them. The read-back shows the intended order: Add tutors at 1, then Monitor tutors through Institution & system admin at 2–7.
+- **Batch B.** Its stop was the runner's re-check of a row edited by the operation before it, `F20-path-spec`. `b2` carries the rest, with re-read expected values.
+- **Batch C, frames.** The sync filled the two Email cells' empty frames with the Email touchpoint's logo. That is the template's behaviour for a placed touchpoint, not a stray write.
+
+The final read-back finds 38 #747 evidence rows, one on every new or changed cell. It also confirms:
+
+- the statuses in the tables above,
+- the three new variant paths: Student AI insights and Monthly Reviews list (`proposed`), and Insights Part 2 (`planned`),
+- Redesigned reflection at `planned`.
