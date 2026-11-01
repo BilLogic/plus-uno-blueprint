@@ -402,3 +402,13 @@ test('a deferred rename placed before an add_step on its scenario is refused at 
   const ordered = await runChangeset({ version: 1, issue: 1, operations: [scenarioOp, add, rename] }, 'dry-run', noWrites())
   assert.deepEqual(ordered.failures, [])
 })
+
+test('a content edit advances a later capability’s preservation check without the stale search index', async () => {
+  const { projectChecks, verifyChecks } = await import('./capabilities.mjs')
+  const before = { id: 'edited', path_id: 'p', content: 'Takes tutor attendance.', search_tsv: "'attend':3 'take':1", updated_at: 't0' }
+  const stored = { ...before, content: 'Claims host.', search_tsv: "'claim':1 'host':2", updated_at: 't1' }
+  const checks = [{ target: { table: 'cells', where: { path_id: 'p' } }, rows: [structuredClone(before)] }]
+  projectChecks(checks, 'cells', before, { ...before, content: stored.content })
+  assert.deepEqual(await verifyChecks(async () => [stored], checks), [])
+  assert.notDeepEqual(await verifyChecks(async () => [{ ...stored, summary: 'An unapproved change' }], [{ ...checks[0], rows: [{ ...checks[0].rows[0], summary: null }] }]), [])
+})
