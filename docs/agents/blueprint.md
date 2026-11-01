@@ -128,76 +128,6 @@ its description are the same migration.
 
 <!-- generated:schema from public.schema_comments() and deployment/types/database.ts — edit the migration, then npm run agent-account -->
 
-### `agent_messages`
-Transcript events of an agent session, ordered by seq. Payload mirrors the app's TranscriptEvent.
-
-0 of 6 columns described.
-
-| Column | Meaning |
-|---|---|
-| `created_at` | — |
-| `id` | — |
-| `kind` | — |
-| `payload` | — |
-| `seq` | — |
-| `session_id` | — |
-
-### `agent_sessions`
-One canvas-agent conversation. Ledger entries reference it via agentSessionId (client-side).
-
-1 of 5 columns described.
-
-| Column | Meaning |
-|---|---|
-| `created_at` | — |
-| `created_by` | Who owns this conversation. NULL means the row predates ownership (2026-08-28); those are readable by service accounts only and no new row may be NULL. |
-| `id` | — |
-| `title` | — |
-| `updated_at` | — |
-
-### `audit_findings`
-Audit / whatif / import-sweep outputs. Written by skills (IDE service key or canvas authenticated agent); humans triage by status. Prefixed on 2026-08-30 because the bare word `findings` gave a reader no clue which process produces the rows; the CONCEPT is still a finding everywhere else.
-
-6 of 15 columns described.
-
-| Column | Meaning |
-|---|---|
-| `id` | — |
-| `service_id` | — |
-| `run_id` | Audit-run identity. Intentionally FK-less — no runs table by design. |
-| `source` | — |
-| `check_key` | Roster check identifier, e.g. "gap-sweep". A key rather than a name because nobody reads it as prose — it is what a fingerprint is built from and what a run is grouped by. |
-| `severity` | — |
-| `cell_ids` | — |
-| `cell_keys` | — |
-| `summary` | The finding itself, in one line. It was `note`, which read as an aside about a finding rather than as the finding. |
-| `fingerprint` | check_key + sorted cell_keys hash. Dedupe/reopen identity across runs. |
-| `status` | — |
-| `created_at` | — |
-| `updated_at` | — |
-| `impact` | How much fixing this finding matters to the service: low, medium or high. Null on a finding recorded before the rating existed, which reads as unrated. |
-| `effort` | How much work the fix takes: low, medium or high. Null on a finding recorded before the rating existed, which reads as unrated. |
-
-### `authoring_changes`
-Append-only record of every authoring write. Audit-only: the in-memory stack in src/lib/authoringSession.ts is still the undo affordance, and nothing replays `revert` from here. A row with `deleted_kind` set is a deletion and carries the rows it destroyed; `public.trash` is the view over exactly those.
-
-5 of 12 columns described.
-
-| Column | Meaning |
-|---|---|
-| `id` | — |
-| `at` | — |
-| `author` | Who wrote it: human, agent (the in-app agent, under a human's session), or uno-bot (the plus-uno Slack Worker, its rpc_writer account). uno-bot is stamped by a trigger from the JWT and cannot be claimed by anyone else. |
-| `author_id` | — |
-| `agent_session_id` | The agent conversation this write belongs to. No foreign key on purpose: the record has to outlive the session it names. |
-| `fn` | The operation: an authoring RPC name, or one of the direct-table mutation names the client logs under. Matches the WriteFn union in src/lib/authoringSession.ts. |
-| `args` | Exactly what was sent. Ids, not names — a name is resolved at render because a name is a thing that changes. |
-| `revert` | The captured inverse, {fn, args}, where one exists. Recorded so a row can say what would undo it. Nothing replays it — see the header. |
-| `deleted_kind` | — |
-| `label` | — |
-| `payload` | — |
-| `affected_slices` | — |
-
 ### `cell_dependencies`
 Dependency from one cell to another
 
@@ -258,37 +188,6 @@ Content at lane × step intersection, within one path.
 | `position` | — |
 | `search_tsv` | Generated FTS vector over the cell's own prose + spec columns, with a slash-stripped copy appended so "Zoom/Pencil"-style compounds match their parts (the parser treats a/b as a filename and indexes it whole). Consumed by public.search_blueprint. |
 | `status` | How far along the thing this cell describes is. Defaults to live — a current-state blueprint documents what is in use. |
-
-### `evidence`
-Provenance rows for cells and proposition questions. A cell with zero rows is an ASSUMPTION (derived, never stored). Restricted SELECT: a note may hold interview content.
-
-3 of 13 columns described.
-
-| Column | Meaning |
-|---|---|
-| `id` | — |
-| `service_id` | — |
-| `cell_id` | — |
-| `cell_key` | — |
-| `proposition_question_key` | — |
-| `kind` | — |
-| `title` | — |
-| `note` | The one thing worth keeping about this source, in the author's own words: a quotation, an observation, or a link. A URL written here renders as a link wherever the source is displayed. |
-| `observed_at` | Date-only by design (timestamps could re-identify participants). |
-| `added_by` | Agent name or participant-coded author. Never the interviewee. |
-| `created_by` | — |
-| `created_at` | — |
-| `updated_at` | — |
-
-### `evidence_counts`
-cell_id -> evidence row count. Public: powers the assumption lens without exposing evidence content.
-
-0 of 2 columns described.
-
-| Column | Meaning |
-|---|---|
-| `cell_id` | — |
-| `n` | — |
 
 ### `lanes`
 Blueprint row (e.g. Users, Front Stage Employees)
@@ -517,27 +416,19 @@ Deployment-level catalog of the tools, documents, channels and artifacts the ser
 | `tone` | The palette family this touchpoint's face is drawn in — the deployment's own choice, one of the renderer's tone names (crimson, gold, indigo, purple, red, tomato, yellow). A product fact ("Zoom is blue"), not a styling one, which is why it is a row and not a literal in touchpointColors.ts (#326 S2, #396 Q48). Deliberately unconstrained: the tone vocabulary belongs to the token model (ADR 0001) and a CHECK here would be a second copy of it, free to drift. Null means no preference — the renderer falls back deterministically, exactly as it does for a tool the old map never named. |
 | `aliases` | The other spellings that mean this touchpoint — an older name the service has stopped using, a label that carried its own specification, a lower-case one a person typed into a cell. The name is the identity (ADR 0014); these resolve to it. This deployment's own history, which is why it is a column and not the TECH_LABEL_ALIASES literal in touchpointColors.ts (#326 S2, #396 Q48). Nullable rather than NOT NULL DEFAULT '{}' like stakeholders.aliases: null means no aliases have been considered, which is what every row means today. Uniqueness against other names and aliases is not constrained here — that rule belongs with the resolver, in S6. |
 
-### `trash`
-The deletions in public.authoring_changes, in the shape the retired deleted_structure table had. A filter over the one log, so the recovery list cannot drift from the record of what happened.
-
-0 of 7 columns described.
-
-| Column | Meaning |
-|---|---|
-| `id` | — |
-| `deleted_at` | — |
-| `deleted_by` | — |
-| `kind` | — |
-| `label` | — |
-| `payload` | — |
-| `affected_slices` | — |
-
 ### Not readable with the anon key
 
 These exist and a service key reads them. What each is for:
 
+- `agent_messages` — Transcript events of an agent session, ordered by seq. Payload mirrors the app's TranscriptEvent.
+- `agent_sessions` — One canvas-agent conversation. Ledger entries reference it via agentSessionId (client-side).
+- `audit_findings` — Audit / whatif / import-sweep outputs. Written by skills (IDE service key or canvas authenticated agent); humans triage by status. Prefixed on 2026-08-30 because the bare word `findings` gave a reader no clue which process produces the rows; the CONCEPT is still a finding everywhere else.
+- `authoring_changes` — Append-only record of every authoring write. Audit-only: the in-memory stack in src/lib/authoringSession.ts is still the undo affordance, and nothing replays `revert` from here. A row with `deleted_kind` set is a deletion and carries the rows it destroyed; `public.trash` is the view over exactly those.
 - `business_models` — How the service is funded, priced and delivered. One row per service. Renamed from `propositions` on 2026-08-21 — that word already meant a cell's value proposition, which is a different thing at a different level.
 - `cell_storyboard_receipts` — —
+- `evidence` — Provenance rows for cells and proposition questions. A cell with zero rows is an ASSUMPTION (derived, never stored). Restricted SELECT: a note may hold interview content.
+- `evidence_counts` — cell_id -> evidence row count, without content. For signed-in readers, like evidence itself: anon holds no SELECT on either.
 - `structure_membership_receipts` — —
+- `trash` — The deletions in public.authoring_changes, in the shape the retired deleted_structure table had. A filter over the one log, so the recovery list cannot drift from the record of what happened.
 
 <!-- /generated:schema -->
