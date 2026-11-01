@@ -187,7 +187,7 @@ line). A case fails if any line fails.
   - [J] Picks `leads_to` vs `enables` per the adapter's definitions ("only
     makes sense after X exists" reads as needs) and says which and why.
     *(CA-inv, EP-Q8)*
-  - [T] At most one dependency write; [J] both cells on the same path.
+  - [T] At most one dependency write; [J] both cells in the same service.
     *(CA-inv)*
 
 ### C6 · batch-etiquette

@@ -89,10 +89,11 @@ about the roadmap, answer from `proposed`, `planned` and `built`.
 
 A path's `kind` is `happy`, `variant` or `exception`. The happy path IS the
 scenario's main route. A variant is equally normal, chosen by a condition. An
-exception is a rule or a failure diverting the route. Nothing connects across
-paths: each path owns its lanes and cells, and shares the scenario's steps
-through `path_steps` in its own order. A scenario's `layout` is `stacked` or
-`merged` — how the board is drawn, a display setting and not a kind.
+exception is a rule or a failure diverting the route. Each path owns its
+lanes and cells, and shares the scenario's steps through `path_steps` in its
+own order; a link may still join cells on any path or scenario of the same
+service. A scenario's `layout` is `stacked` or `merged` — how the board is
+drawn, a display setting and not a kind.
 Dependencies between cells are `leads_to` (this cell makes the other happen,
 drawn as an arrow) or `enables` (the other must already be in place).
 
@@ -323,7 +324,7 @@ Steps included on a path and their column order
 | `updated_at` | — |
 
 ### `paths`
-One route through a scenario: happy, variant or exception (kind), and how far along it is (status). Nothing connects across paths; a path is a detour, not a stage.
+One route through a scenario: happy, variant or exception (kind), and how far along it is (status). A link may join cells on any path or scenario of the same service; a path is a detour, not a stage.
 
 5 of 10 columns described.
 
