@@ -80,13 +80,9 @@ left `publicReadTables`, `botReadTables` and `botDirectReadColumns`, and
 `/health/blueprint` probes that route rather than the table.
 
 `check:contract:live` accepts a refusal on these and fails a relation PostgREST
-does not know, which is how a closed table is told from a renamed one. While the
-anon key still reads all seven — the migration not yet applied — it prints a
-notice instead of failing, so the check is green on both sides of the apply. A
-mix of refused and readable fails, since the migration closes all seven at
-once. All seven reopened together reads like "not applied", so once the
-migration is applied wherever the check runs, that notice should become a
-failure. A doc or
+does not know, which is how a closed table is told from a renamed one. The
+migration is applied, so any of the seven the anon key can still read has been
+reopened, and that fails. A doc or
 catalog comment naming one of them is resolved against the replayed migration
 series, since the anon key cannot select it; `--service-role` selects them live.
 

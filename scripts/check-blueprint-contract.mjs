@@ -19,10 +19,9 @@
  * WHAT IT ASSERTS, all of it derived from the contract rather than restated:
  *
  *   - every `publicReadTables` entry is selectable by the anon role
- *   - every `signedInReadTables` entry exists and refuses the anon role. A
- *     database that still lets anon read one has not applied 20261101130000
- *     yet; that is reported as a notice, not a failure, so this check is green
- *     on both sides of the apply. A relation that is MISSING fails either way
+ *   - every `signedInReadTables` entry exists and refuses the anon role.
+ *     20261101130000 is applied, so any of them the anon key still reads has
+ *     been reopened, and that fails. A relation that is MISSING fails too
  *   - every `fkConstraints` name resolves as a PostgREST embed hint — the
  *     sharpest edge in the contract, because an embed hint is a string inside
  *     a `select=` and nothing type-checks it on either side
@@ -445,8 +444,8 @@ async function run({ serviceRole }) {
     )
   }
 
-  // The anon key is refused on the signed-in-only relations once
-  // 20261101130000 is applied, so a name on one of them — in a doc or a
+  // The anon key is refused on the signed-in-only relations (20261101130000
+  // is applied), so a name on one of them — in a doc or a
   // catalog comment — is resolved against the migration series instead of
   // selected. Replayed once, on first need.
   const signedIn = new Set(contract.signedInReadTables)
@@ -467,48 +466,32 @@ async function run({ serviceRole }) {
   check('public read surface', surface)
 
   // 1b. The signed-in-only surface. Under the anon key a refusal is the
-  //     promise (20261101130000) and a read means the migration is not applied
-  //     here yet — a notice, so the check holds on both sides of the apply.
-  //     The migration closes all seven in one statement, so the two states are
-  //     all-open and all-closed: a MIX fails, which is what catches one of
-  //     them reopened by hand after the apply. What also fails is a relation
-  //     PostgREST does not know — a rename or a drop, the drift this file
-  //     exists for. Under --service-role every one must read, since that key
-  //     reads past every policy.
-  //
-  //     The one state this cannot tell from "not applied yet" is all seven
-  //     reopened at once. Once the migration is applied everywhere this check
-  //     runs, the notice below becomes a failure.
-  const closed = []
+  //     promise (20261101130000, applied): a read means one was reopened, and
+  //     fails. What also fails is a relation PostgREST does not know — a
+  //     rename or a drop, the drift this file exists for. Under --service-role
+  //     every one must read, since that key reads past every policy.
+  const signedInFailures = []
   const stillOpen = []
   for (const relation of contract.signedInReadTables) {
     const result = await rest(url, key, `${relation}?select=*&limit=0`)
     if (serviceRole) {
-      if (!result.ok) closed.push(`"${relation}" answers HTTP ${result.status} to the service role — ${postgrest(result.body)}`)
+      if (!result.ok) signedInFailures.push(`"${relation}" answers HTTP ${result.status} to the service role — ${postgrest(result.body)}`)
     } else if (result.ok) {
       stillOpen.push(relation)
     } else if (!refusesAnon(result)) {
-      closed.push(
+      signedInFailures.push(
         `"${relation}" is declared signed-in-only but answers HTTP ${result.status} — ` +
           `${postgrest(result.body)}. A refusal is expected; this is not one. Renamed or dropped?`,
       )
     }
   }
-  const refused = contract.signedInReadTables.length - stillOpen.length - closed.length
-  if (!serviceRole && stillOpen.length > 0 && refused > 0) {
-    closed.push(
-      `the anon key is refused on some signed-in-only relations and still reads ` +
-        `${stillOpen.join(', ')}. 20261101130000 closes all seven at once, so a mix means ` +
-        `one was reopened after it: revoke it again.`,
+  if (stillOpen.length > 0) {
+    signedInFailures.push(
+      `the anon key still reads ${stillOpen.join(', ')}. 20261101130000 closed these to ` +
+        `signed-out visitors, so each was reopened after it: revoke it again.`,
     )
   }
-  check('signed-in read surface', closed)
-  if (!serviceRole && stillOpen.length === contract.signedInReadTables.length) {
-    console.log(
-      `::notice::the anon key still reads ${stillOpen.join(', ')} — 20261101130000 is not ` +
-        `applied to this database yet. Expected until it is.`,
-    )
-  }
+  check('signed-in read surface', signedInFailures)
 
   // 2. botReadTables must be a subset — the bot cannot read what the app does
   //    not publish, and a table listed only here would never be probed.
