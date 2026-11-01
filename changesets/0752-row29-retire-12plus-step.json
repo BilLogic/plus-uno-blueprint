@@ -25,7 +25,7 @@
       },
       "evidence": [
         "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138",
-        "Slack confirmation of the replaced call-off form/email route (owner-reported)",
+        "https://devoli.slack.com/archives/C074QG2V7DJ/p1772906369176979?thread_ts=1772207406.232069&cid=C074QG2V7DJ",
         "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 29)",
         "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
       ]
@@ -46,10 +46,11 @@
       "value": {
         "kind": "doc",
         "title": "KB audit #752 row 29 — …00170303",
-        "note": "Sources: https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138 ; owner-reported Slack confirmation that the form/email route was replaced. Checked October 31, 2026 on web-app dev at c78ac8a. submitOneTimeCallOff sets requiresApproval = hoursBefore < 12.0: a call-off 12 or more hours ahead is auto-approved, and one inside 12 hours goes to manual review in the app, with a Slack notification to supervisors. Neither branch routes to an email or a form. Revision scope: https://github.com/BilLogic/plus-uno-blueprint/issues/752 (original #739 row 29). The step stays on Under 12 hours, where its in-app cells are current."
+        "note": "Sources: https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138 ; https://devoli.slack.com/archives/C074QG2V7DJ/p1772906369176979?thread_ts=1772207406.232069&cid=C074QG2V7DJ (#plus-design-feedback, March 7, 2026: a program-team member says call-offs used to go through a Google form and #shift-swaps, and that call-offs more than 12 hours ahead are now automatically approved). Checked October 31, 2026 on web-app dev at c78ac8a. submitOneTimeCallOff sets requiresApproval = hoursBefore < 12.0: a call-off 12 or more hours ahead is auto-approved, and one inside 12 hours goes to manual review in the app, with a Slack notification to supervisors. Neither branch routes to an email or a form. Revision scope: https://github.com/BilLogic/plus-uno-blueprint/issues/752 (original #739 row 29). The step stays on Under 12 hours, where its in-app cells are current."
       },
       "evidence": [
         "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138",
+        "https://devoli.slack.com/archives/C074QG2V7DJ/p1772906369176979?thread_ts=1772207406.232069&cid=C074QG2V7DJ",
         "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
       ]
     },
@@ -76,7 +77,7 @@
       },
       "evidence": [
         "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138",
-        "Slack confirmation of the replaced call-off form/email route (owner-reported)",
+        "https://devoli.slack.com/archives/C074QG2V7DJ/p1772906369176979?thread_ts=1772207406.232069&cid=C074QG2V7DJ",
         "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 29)",
         "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
       ]
@@ -97,10 +98,11 @@
       "value": {
         "kind": "doc",
         "title": "KB audit #752 row 29 — …00170304",
-        "note": "Sources: https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138 ; owner-reported Slack confirmation that the form/email route was replaced. Checked October 31, 2026 on web-app dev at c78ac8a. submitOneTimeCallOff sets requiresApproval = hoursBefore < 12.0: a call-off 12 or more hours ahead is auto-approved, and one inside 12 hours goes to manual review in the app, with a Slack notification to supervisors. Neither branch routes to an email or a form. Revision scope: https://github.com/BilLogic/plus-uno-blueprint/issues/752 (original #739 row 29). The step stays on Under 12 hours, where its in-app cells are current."
+        "note": "Sources: https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138 ; https://devoli.slack.com/archives/C074QG2V7DJ/p1772906369176979?thread_ts=1772207406.232069&cid=C074QG2V7DJ (#plus-design-feedback, March 7, 2026: a program-team member says call-offs used to go through a Google form and #shift-swaps, and that call-offs more than 12 hours ahead are now automatically approved). Checked October 31, 2026 on web-app dev at c78ac8a. submitOneTimeCallOff sets requiresApproval = hoursBefore < 12.0: a call-off 12 or more hours ahead is auto-approved, and one inside 12 hours goes to manual review in the app, with a Slack notification to supervisors. Neither branch routes to an email or a form. Revision scope: https://github.com/BilLogic/plus-uno-blueprint/issues/752 (original #739 row 29). The step stays on Under 12 hours, where its in-app cells are current."
       },
       "evidence": [
         "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138",
+        "https://devoli.slack.com/archives/C074QG2V7DJ/p1772906369176979?thread_ts=1772207406.232069&cid=C074QG2V7DJ",
         "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
       ]
     },
@@ -127,7 +129,7 @@
       },
       "evidence": [
         "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138",
-        "Slack confirmation of the replaced call-off form/email route (owner-reported)",
+        "https://devoli.slack.com/archives/C074QG2V7DJ/p1772906369176979?thread_ts=1772207406.232069&cid=C074QG2V7DJ",
         "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 29)",
         "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
       ]
@@ -148,10 +150,11 @@
       "value": {
         "kind": "doc",
         "title": "KB audit #752 row 29 — …00170306",
-        "note": "Sources: https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138 ; owner-reported Slack confirmation that the form/email route was replaced. Checked October 31, 2026 on web-app dev at c78ac8a. submitOneTimeCallOff sets requiresApproval = hoursBefore < 12.0: a call-off 12 or more hours ahead is auto-approved, and one inside 12 hours goes to manual review in the app, with a Slack notification to supervisors. Neither branch routes to an email or a form. Revision scope: https://github.com/BilLogic/plus-uno-blueprint/issues/752 (original #739 row 29). The step stays on Under 12 hours, where its in-app cells are current."
+        "note": "Sources: https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138 ; https://devoli.slack.com/archives/C074QG2V7DJ/p1772906369176979?thread_ts=1772207406.232069&cid=C074QG2V7DJ (#plus-design-feedback, March 7, 2026: a program-team member says call-offs used to go through a Google form and #shift-swaps, and that call-offs more than 12 hours ahead are now automatically approved). Checked October 31, 2026 on web-app dev at c78ac8a. submitOneTimeCallOff sets requiresApproval = hoursBefore < 12.0: a call-off 12 or more hours ahead is auto-approved, and one inside 12 hours goes to manual review in the app, with a Slack notification to supervisors. Neither branch routes to an email or a form. Revision scope: https://github.com/BilLogic/plus-uno-blueprint/issues/752 (original #739 row 29). The step stays on Under 12 hours, where its in-app cells are current."
       },
       "evidence": [
         "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138",
+        "https://devoli.slack.com/archives/C074QG2V7DJ/p1772906369176979?thread_ts=1772207406.232069&cid=C074QG2V7DJ",
         "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
       ]
     },
@@ -178,7 +181,7 @@
       },
       "evidence": [
         "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138",
-        "Slack confirmation of the replaced call-off form/email route (owner-reported)",
+        "https://devoli.slack.com/archives/C074QG2V7DJ/p1772906369176979?thread_ts=1772207406.232069&cid=C074QG2V7DJ",
         "https://github.com/BilLogic/plus-uno-blueprint/issues/739 (audit row 29)",
         "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
       ]
@@ -199,10 +202,11 @@
       "value": {
         "kind": "doc",
         "title": "KB audit #752 row 29 — …00170310",
-        "note": "Sources: https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138 ; owner-reported Slack confirmation that the form/email route was replaced. Checked October 31, 2026 on web-app dev at c78ac8a. submitOneTimeCallOff sets requiresApproval = hoursBefore < 12.0: a call-off 12 or more hours ahead is auto-approved, and one inside 12 hours goes to manual review in the app, with a Slack notification to supervisors. Neither branch routes to an email or a form. Revision scope: https://github.com/BilLogic/plus-uno-blueprint/issues/752 (original #739 row 29). The step stays on Under 12 hours, where its in-app cells are current."
+        "note": "Sources: https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138 ; https://devoli.slack.com/archives/C074QG2V7DJ/p1772906369176979?thread_ts=1772207406.232069&cid=C074QG2V7DJ (#plus-design-feedback, March 7, 2026: a program-team member says call-offs used to go through a Google form and #shift-swaps, and that call-offs more than 12 hours ahead are now automatically approved). Checked October 31, 2026 on web-app dev at c78ac8a. submitOneTimeCallOff sets requiresApproval = hoursBefore < 12.0: a call-off 12 or more hours ahead is auto-approved, and one inside 12 hours goes to manual review in the app, with a Slack notification to supervisors. Neither branch routes to an email or a form. Revision scope: https://github.com/BilLogic/plus-uno-blueprint/issues/752 (original #739 row 29). The step stays on Under 12 hours, where its in-app cells are current."
       },
       "evidence": [
         "https://github.com/CMU-PLUS/web-app/blob/c78ac8abddc16bf45104940cd4dc0fa87d09d3bd/java/source/edu/cmu/pl2/service/impl/CallOffRequestServiceImpl.java#L138",
+        "https://devoli.slack.com/archives/C074QG2V7DJ/p1772906369176979?thread_ts=1772207406.232069&cid=C074QG2V7DJ",
         "https://github.com/BilLogic/plus-uno-blueprint/issues/752"
       ]
     }

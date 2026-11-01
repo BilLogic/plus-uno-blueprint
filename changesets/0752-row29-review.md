@@ -15,8 +15,11 @@ hours path. The production code supports that decision:
 on web-app `dev` (c78ac8a) sets `requiresApproval = hoursBefore < 12.0`. A
 call-off 12 or more hours ahead is auto-approved. One inside 12 hours goes to
 manual review in the app, with a Slack notification to supervisors. Neither
-branch routes to an email or a form. Slack confirms that the old form/email
-route was replaced. This is the production evidence #737 asks for before a
+branch routes to an email or a form. Slack confirms the change: in
+[#plus-design-feedback on March 7, 2026](https://devoli.slack.com/archives/C074QG2V7DJ/p1772906369176979?thread_ts=1772207406.232069&cid=C074QG2V7DJ),
+a program-team member says call-offs used to go through a Google form and
+#shift-swaps, and that call-offs more than 12 hours ahead are now
+automatically approved. This is the production evidence #737 asks for before a
 retirement, which the Figma, TE2a and Attendance Procedures sources alone did
 not supply.
 
@@ -35,7 +38,7 @@ exactly these four cells:
 | `…00170310` | Storyboard | blank | live → deprecated |
 
 Each cell also gains one `doc` evidence row titled “KB audit #752 row 29 —
-…00170xxx”, citing the web-app line and the Slack confirmation. These cells
+…00170xxx”, citing the web-app line and the Slack thread. These cells
 have no `cell_key`, so the evidence pairs on the cell id, as in the #750
 recovery batch. The blank storyboard cell goes through `update_cell_status`,
 which writes status alone and needs no label, so no label is invented.
