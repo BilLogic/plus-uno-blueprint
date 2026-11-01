@@ -128,6 +128,32 @@ function databaseFixture({ zeroRows = false, failAppend = false, corruptCell = f
       })
       return answer({ id: cellId, change_id: changeId, inserted: true, previous: null })
     }
+    if (url.pathname.endsWith('/rpc/set_cell_dependency')) {
+      // The hosted RPC since the one-service rule: cell → path → scenario →
+      // phase → service on both ends, then an upsert on (source, target, kind)
+      // that reports which half it took and the row as it stood.
+      const serviceOf = (cellId) => {
+        const cell = tables.cells.find((row) => row.id === cellId)
+        const path = tables.paths.find((row) => row.id === cell?.path_id)
+        const scenario = tables.scenarios.find((row) => row.id === path?.scenario_id)
+        return tables.phases.find((row) => row.id === scenario?.phase_id)?.service_id
+      }
+      if (body.source_cell_id === body.target_cell_id) return answer({ message: 'A cell cannot depend on itself', code: 'P0001' }, 400)
+      const [sourceService, targetService] = [serviceOf(body.source_cell_id), serviceOf(body.target_cell_id)]
+      if (!sourceService || !targetService) return answer({ message: 'Both cells must exist', code: 'P0001' }, 400)
+      if (sourceService !== targetService) return answer({ message: 'Both cells must be in the same service', code: 'P0001' }, 400)
+      const existing = tables.cell_dependencies.find((row) => row.source_cell_id === body.source_cell_id
+        && row.target_cell_id === body.target_cell_id && row.kind === body.kind)
+      if (existing) {
+        const previous = { ...existing }
+        existing.name = body.name ?? existing.name
+        existing.note = body.note ?? existing.note
+        return answer({ id: existing.id, inserted: false, previous })
+      }
+      const row = { id: uuid('90000000'), source_cell_id: body.source_cell_id, target_cell_id: body.target_cell_id, kind: body.kind, name: body.name, note: body.note }
+      tables.cell_dependencies.push(row)
+      return answer({ id: row.id, inserted: true, previous: null })
+    }
     if (url.pathname.endsWith('/rpc/record_authoring_change')) {
       if (failAppend) return answer({ message: 'Audit append refused', code: '42501' }, 403)
       const change = { id: `20000000-0000-4000-8000-${String(counter++).padStart(12, '0')}`, ...body }
@@ -636,5 +662,137 @@ test('the posted Weekly Class Report changeset passes dry-run against the fixtur
     expect(dry.failures).toEqual([])
     expect(dry.diff).toHaveLength(weeklyReport.operations.length)
     expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+  } finally { fixture.database.close() }
+})
+
+// Two scenarios of one service, in different phases, and a third scenario in
+// another service: the shapes a cross-scenario link has to tell apart.
+const LINK = {
+  services: ['c1000000-0000-4000-8000-000000000001', 'c1000000-0000-4000-8000-000000000002'],
+  source: { phase: 'c2000000-0000-4000-8000-000000000001', scenario: 'c3000000-0000-4000-8000-000000000001', path: 'c4000000-0000-4000-8000-000000000001', lane: 'c5000000-0000-4000-8000-000000000001', step: 'c6000000-0000-4000-8000-000000000001', cell: 'c7000000-0000-4000-8000-000000000001' },
+  target: { phase: 'c2000000-0000-4000-8000-000000000002', scenario: 'c3000000-0000-4000-8000-000000000002', path: 'c4000000-0000-4000-8000-000000000002', lane: 'c5000000-0000-4000-8000-000000000002', step: 'c6000000-0000-4000-8000-000000000002', cell: 'c7000000-0000-4000-8000-000000000002' },
+  foreign: { phase: 'c2000000-0000-4000-8000-000000000003', scenario: 'c3000000-0000-4000-8000-000000000003', path: 'c4000000-0000-4000-8000-000000000003', lane: 'c5000000-0000-4000-8000-000000000003', step: 'c6000000-0000-4000-8000-000000000003', cell: 'c7000000-0000-4000-8000-000000000003' },
+}
+function linkFixture(options) {
+  const fixture = databaseFixture(options)
+  const { tables } = fixture
+  tables.services.push(...LINK.services.map((service) => ({ id: service })))
+  for (const [name, end] of Object.entries({ source: LINK.source, target: LINK.target, foreign: LINK.foreign })) {
+    tables.phases.push({ id: end.phase, service_id: LINK.services[name === 'foreign' ? 1 : 0] })
+    tables.scenarios.push({ id: end.scenario, phase_id: end.phase, name: `${name} scenario` })
+    tables.paths.push({ id: end.path, scenario_id: end.scenario, name: `${name} path` })
+    tables.lanes.push({ id: end.lane, path_id: end.path, name: 'Lane' })
+    tables.steps.push({ id: end.step, scenario_id: end.scenario, name: `${name} step` })
+    tables.cells.push({ id: end.cell, path_id: end.path, lane_id: end.lane, step_id: end.step, position: 0, content: `${name} cell`, status: 'live', cell_key: null })
+  }
+  return fixture
+}
+const endpoint = (end, content) => ({ path_id: end.path, lane_id: end.lane, step_id: end.step, scenario_id: end.scenario, content })
+const linkBatch = (to = LINK.target, input = {}) => ({ version: 1, issue: 758, operations: [{
+  key: 'link', operation: 'set_cell_dependency',
+  target: { table: 'cell_dependencies', where: { source_cell_id: LINK.source.cell, target_cell_id: to.cell, kind: 'leads_to' } },
+  expected: null, value: { kind: 'leads_to', note: 'The report continues in its own scenario.' },
+  input: { expected_source: endpoint(LINK.source, 'source cell'), expected_target: endpoint(to, to === LINK.foreign ? 'foreign cell' : 'target cell'), ...input },
+  evidence: ['Fixture source'],
+}], checks: [{ target: { table: 'cell_dependencies', where: { source_cell_id: LINK.source.cell } }, beforeCount: 0, afterCount: 1 }] })
+
+test('a link across scenarios of one service is guarded, recorded with its clear inverse and verified separately', async () => {
+  const fixture = linkFixture()
+  const batch = linkBatch()
+  try {
+    expect((await runChangeset(batch, 'verify', fixture.database)).ok).toBe(false)
+    const dry = await runChangeset(batch, 'dry-run', fixture.database)
+    expect(dry.failures).toEqual([])
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+    expect(dry.diff[0].endpoints).toEqual({
+      service_id: LINK.services[0],
+      source: { cell_id: LINK.source.cell, ...endpoint(LINK.source, 'source cell') },
+      target: { cell_id: LINK.target.cell, ...endpoint(LINK.target, 'target cell') },
+    })
+    const applied = await runChangeset(batch, 'apply', fixture.database)
+    expect(applied.failures).toEqual([])
+    expect(fixture.tables.cell_dependencies).toEqual([expect.objectContaining({
+      source_cell_id: LINK.source.cell, target_cell_id: LINK.target.cell, kind: 'leads_to', note: 'The report continues in its own scenario.',
+    })])
+    const dependencyId = fixture.tables.cell_dependencies[0].id
+    expect(fixture.tables.authoring_changes).toEqual([expect.objectContaining({
+      fn: 'set_cell_dependency', author: 'human', revert: { fn: 'clear_cell_dependency', args: { dependency_id: dependencyId } },
+    })])
+    expect((await runChangeset(batch, 'verify', fixture.database, { receipt: applied.applied })).failures).toEqual([])
+  } finally { fixture.database.close() }
+})
+
+const linkRefusals = [
+  ['a cross-service link', () => linkBatch(LINK.foreign), /same service; a cross-service link is refused/],
+  ['a source moved since review', () => linkBatch(LINK.target, { expected_source: { ...endpoint(LINK.source, 'source cell'), lane_id: LINK.target.lane } }), /source cell no longer matches the reviewed endpoint: lane_id/],
+  ['a target in another scenario than reviewed', () => linkBatch(LINK.target, { expected_target: { ...endpoint(LINK.target, 'target cell'), scenario_id: LINK.source.scenario } }), /target cell no longer matches the reviewed endpoint: scenario_id/],
+  ['a missing reviewed endpoint', () => linkBatch(LINK.target, { expected_target: undefined }), /requires input.expected_source and input.expected_target/],
+  ['an endpoint without its path and scenario', () => linkBatch(LINK.target, { expected_source: { lane_id: LINK.source.lane } }), /expected_source must name path_id, lane_id, step_id and scenario_id/],
+]
+test.each(linkRefusals)('%s is refused at dry-run and apply before any write', async (_name, batch, reason) => {
+  const fixture = linkFixture()
+  try {
+    const dry = await runChangeset(batch(), 'dry-run', fixture.database)
+    expect(dry.ok).toBe(false)
+    expect(dry.failures.join('\n')).toMatch(reason)
+    const applied = await runChangeset(batch(), 'apply', fixture.database)
+    expect(applied.failures.join('\n')).toMatch(reason)
+    expect(applied.applied).toEqual([])
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+    expect(fixture.tables.cell_dependencies).toEqual([])
+  } finally { fixture.database.close() }
+})
+
+test('a link that lands on an edge created since preflight is refused, not claimed as an insert', async () => {
+  const fixture = linkFixture()
+  const write = fixture.database.write
+  fixture.database.write = async (...args) => {
+    fixture.tables.cell_dependencies.push({ id: '90000000-0000-4000-8000-000000000999', source_cell_id: LINK.source.cell,
+      target_cell_id: LINK.target.cell, kind: 'leads_to', name: null, note: 'A concurrent note.' })
+    return write(...args)
+  }
+  try {
+    const applied = await runChangeset(linkBatch(), 'apply', fixture.database)
+    expect(applied.ok).toBe(false)
+    expect(applied.failures.join('\n')).toMatch(/updated an existing edge instead of inserting one/)
+    expect(applied.applied).toEqual([])
+    expect(applied.failedAttempt.key).toBe('link')
+  } finally { fixture.database.close() }
+})
+
+test('the posted Goal Setting to Weekly Class Report link dry-runs, applies with one clear inverse and verifies on the fixture board', async () => {
+  const posted = JSON.parse(readFileSync(new URL('../../changesets/0758-weekly-class-report-link.json', import.meta.url), 'utf8'))
+  const [link, linkEvidence] = posted.operations
+  const fixture = databaseFixture()
+  const { tables } = fixture
+  // Goal Setting sits in In-session and Weekly Class Report in Program
+  // Administration: two phases, one service.
+  tables.services.push({ id: SERVICE })
+  for (const [phase, end, cellId] of [
+    ['a0000000-0000-4000-8000-000000000104', link.input.expected_source, link.target.where.source_cell_id],
+    [PHASE, link.input.expected_target, link.target.where.target_cell_id],
+  ]) {
+    tables.phases.push({ id: phase, service_id: SERVICE })
+    tables.scenarios.push({ id: end.scenario_id, phase_id: phase })
+    tables.paths.push({ id: end.path_id, scenario_id: end.scenario_id })
+    tables.lanes.push({ id: end.lane_id, path_id: end.path_id })
+    tables.steps.push({ id: end.step_id, scenario_id: end.scenario_id })
+    const { scenario_id: _scenario, ...cell } = end
+    tables.cells.push({ cell_key: null, ...cell, id: cellId })
+  }
+  for (const check of posted.checks.filter(({ target }) => target.table === 'evidence'))
+    tables.evidence.push(...check.beforeRows.map((row) => ({ ...row, cell_id: check.target.where.cell_id })))
+  try {
+    const dry = await runChangeset(posted, 'dry-run', fixture.database)
+    expect(dry.failures).toEqual([])
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+    const applied = await runChangeset(posted, 'apply', fixture.database)
+    expect(applied.failures).toEqual([])
+    expect(tables.cell_dependencies).toHaveLength(1)
+    expect(tables.authoring_changes.map(({ fn, revert }) => [fn, revert.fn])).toEqual([
+      ['set_cell_dependency', 'clear_cell_dependency'], ['add_evidence', expect.any(String)],
+    ])
+    expect(tables.evidence.filter((row) => row.cell_id === linkEvidence.target.where.cell_id)).toHaveLength(2)
+    expect((await runChangeset(posted, 'verify', fixture.database, { receipt: applied.applied })).failures).toEqual([])
   } finally { fixture.database.close() }
 })

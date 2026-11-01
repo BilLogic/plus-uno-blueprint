@@ -272,6 +272,7 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
         try {
           plan.preparation = await database.prepare(op, rows[0] ?? null)
           if (plan.preparation?.affectedPaths) diff.at(-1).affectedPaths = plan.preparation.affectedPaths
+          if (plan.preparation?.endpoints) diff.at(-1).endpoints = plan.preparation.endpoints
         }
         catch (error) { failures.push(`${op.key}: ${error.message}`) }
       }
@@ -316,6 +317,7 @@ export async function runChangeset(changeset, mode, database, { receipt = [], on
         // still refuses memberships that differ from the reviewed input.
         const preparation = await database.prepare?.(op, before)
         if (!deferred && !isDeepStrictEqual(preparation?.affectedPaths, preflight?.affectedPaths)) throw new Error('Affected paths changed since the reviewed preflight')
+        if (!isDeepStrictEqual(preparation?.endpoints, preflight?.endpoints)) throw new Error('Link endpoints changed since the reviewed preflight')
         const preservationFailures = await verifyChecks(database.read, preflight?.checks ?? [])
         if (preservationFailures.length) throw new Error(preservationFailures.join('; '))
         // Mark the attempt before sending it: a connection can fail after the
