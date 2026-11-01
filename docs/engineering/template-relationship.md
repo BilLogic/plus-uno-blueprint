@@ -106,6 +106,28 @@ see below.
 The bump is the only way application code changes here. There is no second copy
 to edit, which is the point.
 
+## Prepared upgrade to v2.10.0
+
+The pin and the lockfile target the released `v2.10.0` tag. Its one migration,
+upstream 328, is adopted as
+`20261101130000_a_signed_out_visitor_reads_the_board_alone.sql`, its body
+unchanged. It revokes the anon key's reads on `evidence`, `evidence_counts`,
+`authoring_changes`, `trash`, `audit_findings`, `agent_sessions` and
+`agent_messages`, drops `evidence_select_anon`, and recreates
+`authoring_changes_select` and `audit_findings_select` for `authenticated`
+with the same `using (true)`. The policy names it touches are the ones this
+deployment's own history created, so no adaptation was needed. The board, its
+slices and slides stay readable signed-out, and the database types are
+unchanged.
+
+The application gates the Evidence tab on sign-in. Nothing under
+`deployment/` or `scripts/` reads those tables without a session. The
+blueprint contract does: `publicReadTables` names `audit_findings` and
+`evidence_counts`, and uno-bot reads `audit_findings` with the anon key, so
+once this is applied the bot's findings read and `check:contract:live` need a
+decision. Apply it with
+`npm run apply:pending -- --from=20261101130000 --apply` once approved.
+
 ## Prepared upgrade to v2.9.0
 
 The pin and the lockfile target the released `v2.9.0` tag. Its one migration,
