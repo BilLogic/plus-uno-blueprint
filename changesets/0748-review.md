@@ -107,3 +107,28 @@ does not claim when it clears.
   "proposed iteration" Student Progress Dashboard. That is out of this
   ticket's scope.
 - No deletes.
+
+## Applied (November 1, 2026)
+
+| Batch | SHA-256 | Result |
+|---|---|---|
+| A | `e5d5ebca0f60fcdb5de514b2d6b556ff19b24090b5d0b28265d64612d7134087` | Apply 2/2; separate verify `ok: true` |
+| B | `e764a2f4c013a3dc7a02d8600cc550acaa1bfa67c67c412a4184ceb2294e4cca` | Apply 34/34. The apply and the separate verify each report the same two failures, and no others. Both are a fault in the changeset's own `checks`, not in the data (below) |
+| C | `abaf553152a8d9ff1792d779a46a2bbdf525d9f864ea45e3ad314678a7d6c630` | Regenerated after B, because B's three new cells changed Mid-cycle check's cell count. Dry-run `ok`, ledger 816→816; apply 8/8; separate verify `ok: true` |
+| D | `2aee8a6335179572621fe3dd16d0d6de497a9a8a09e81da03b648fc538f2c8fd` | Generated after C; dry-run `ok`, ledger 826→826; apply 1/1; separate verify `ok: true` |
+
+**Batch B's two check failures.** Two insertions go into the same Mid-cycle
+check square: *Once goal review is done, clicks on 'Check goals' button*,
+Regular Tutor. They are `stop-share-9b05` at position 1 and `undo-9b05` at
+position 2. The generator wrote one square check for each insertion, each
+expecting 1 → 2 cells. After both insertions the square holds 3. A fresh read
+shows exactly the intended rows: `…a00503` at position 0 (unchanged),
+"Stops sharing when prompted, then finishes in the tutor view." at 1, and
+"Can press Undo to revert Goals checked." at 2. Every operation's durable
+record, inverse, content and the other 42 checks verify. The file stays as
+applied, because its receipt is bound to this hash.
+
+The new path is `a4e8ec9b-ed13-4afe-8c19-687a18677245` and its new step is
+`03e76fc3-4008-426a-b8e3-d03877ec1abb`. After D, its columns are Join
+breakout session, Help the student and mark them helped, Leave breakout room,
+and Move on to the next student….

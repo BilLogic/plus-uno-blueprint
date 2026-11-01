@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "issue": 748,
+  "operations": [
+    {
+      "key": "exempt-trim",
+      "operation": "set_path_steps",
+      "target": {
+        "table": "paths",
+        "id": "a4e8ec9b-ed13-4afe-8c19-687a18677245",
+        "withSteps": true
+      },
+      "expected": {
+        "step_ids": [
+          "a0000000-0000-4000-8000-000000009b01",
+          "03e76fc3-4008-426a-b8e3-d03877ec1abb",
+          "a0000000-0000-4000-8000-000000009b02",
+          "a0000000-0000-4000-8000-000000009b03",
+          "a0000000-0000-4000-8000-000000009b04",
+          "a0000000-0000-4000-8000-000000009b05",
+          "a0000000-0000-4000-8000-000000009b06",
+          "a0000000-0000-4000-8000-000000009b07",
+          "a0000000-0000-4000-8000-000000009b08"
+        ]
+      },
+      "value": {
+        "step_ids": [
+          "a0000000-0000-4000-8000-000000009b01",
+          "03e76fc3-4008-426a-b8e3-d03877ec1abb",
+          "a0000000-0000-4000-8000-000000009b07",
+          "a0000000-0000-4000-8000-000000009b08"
+        ]
+      },
+      "evidence": [
+        "https://www.notion.so/3e2b7cca498280529f40c7751d7e1c35 (card 2641, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal nodes 12200:250870 and 12200:422358 (scenarios 4 and 4.1)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a4e8ec9b-ed13-4afe-8c19-687a18677245"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 4,
+      "beforeRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000009b01"
+        },
+        {
+          "step_id": "03e76fc3-4008-426a-b8e3-d03877ec1abb"
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000009b02"
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000009b03"
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000009b04"
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000009b05"
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000009b06"
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000009b07"
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000009b08"
+        }
+      ],
+      "afterRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000009b01",
+          "position": 0
+        },
+        {
+          "step_id": "03e76fc3-4008-426a-b8e3-d03877ec1abb",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000009b07",
+          "position": 2
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000009b08",
+          "position": 3
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a4e8ec9b-ed13-4afe-8c19-687a18677245"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000814"
+        }
+      },
+      "beforeCount": 8,
+      "afterCount": 8
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "975a38c1-0261-465c-9b33-cfa0b7ed6887"
+        }
+      },
+      "beforeCount": 8,
+      "afterCount": 8
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000204"
+        }
+      },
+      "beforeCount": 61,
+      "afterCount": 61
+    }
+  ]
+}
