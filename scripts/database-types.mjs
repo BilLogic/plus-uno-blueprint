@@ -68,24 +68,37 @@ export function tablesInFile(source) {
  * `Args: never` — a function that takes none — parses to an empty set, which
  * is what the catalogue reports for it too.
  */
+/** Keep overloads separate: a Map keyed only by name silently drops one. */
+export function indexFunctions(rows) {
+  const counts = new Map()
+  for (const { name } of rows) counts.set(name, (counts.get(name) ?? 0) + 1)
+  return new Map(rows.map(({ name, args }) => [
+    counts.get(name) > 1 ? `${name}(${[...args].sort().join(', ')})` : name,
+    args,
+  ]))
+}
+
 export function functionsInFile(source) {
   const at = source.indexOf('    Functions: {')
   if (at === -1) throw new Error('no Functions map in the types file')
   const functions = balanced(source, source.indexOf('{', at))
-  const out = new Map()
-  for (const match of functions.matchAll(/\n {6}([a-z_]+): \{/g)) {
-    const block = balanced(functions, match.index + match[0].length - 1)
-    const argsAt = block.indexOf('Args:')
-    const args = new Set()
-    if (block.slice(argsAt + 'Args:'.length).trimStart().startsWith('{')) {
-      const list = balanced(block, block.indexOf('{', argsAt))
-      for (const arg of list.matchAll(/([a-z_]+)(\??):/g)) {
-        args.add(arg[1] + (arg[2] ? '?' : ''))
+  const entries = [...functions.matchAll(/\n {6}([a-z_]+):/g)]
+  const rows = []
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i]
+    const block = functions.slice(entry.index, entries[i + 1]?.index ?? functions.length)
+    for (const match of block.matchAll(/Args:\s*(never|\{)/g)) {
+      const args = new Set()
+      if (match[1] !== 'never') {
+        const list = balanced(block, match.index + match[0].length - 1)
+        for (const arg of list.matchAll(/([a-z_]+)(\??):/g)) {
+          args.add(arg[1] + (arg[2] ? '?' : ''))
+        }
       }
+      rows.push({ name: entry[1], args })
     }
-    out.set(match[1], args)
   }
-  return out
+  return indexFunctions(rows)
 }
 
 /**

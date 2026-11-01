@@ -263,3 +263,51 @@ test('count checks also verify the parents and positions of rows created as stru
   assert.equal(result.ok, false)
   assert.match(result.failures.join('\n'), /afterRows/)
 })
+
+test('a new path cell resolves its copied lane by scoped read in dry-run, apply and separate verify', async () => {
+  const stored = { paths: [], lanes: [], cells: [], authoring_changes: [] }
+  const batch = { version: 1, issue: 741, operations: [{
+    key: 'path', operation: 'create_path_at_status',
+    target: { table: 'paths', where: { scenario_id: 'goal-setting', name: 'Goal data looks wrong' } },
+    expected: null, value: { kind: 'exception', status: 'live' }, evidence: ['Module 9'],
+  }, {
+    key: 'cell', operation: 'upsert_cell_at_status',
+    target: { table: 'cells', where: {
+      path_id: { ref: 'path' },
+      lane_id: { lookup: { table: 'lanes', where: { path_id: { ref: 'path' }, name: 'Regular Tutor' } } },
+      step_id: 'report-discrepancy', position: 0,
+    } },
+    expected: null, value: { content: 'Reports the discrepancy.', status: 'live' }, evidence: ['Module 9'],
+  }], checks: [{ target: { table: 'cells', where: { path_id: { ref: 'path' } } }, beforeCount: 0, afterCount: 1,
+    afterRows: [{ lane_id: { lookup: { table: 'lanes', where: { path_id: { ref: 'path' }, name: 'Regular Tutor' } } }, step_id: 'report-discrepancy', position: 0 }],
+  }] }
+  const database = {
+    read: async (target) => stored[target.table].filter(row => Object.entries(target.where ?? (target.id ? { id: target.id } : {})).every(([key,value])=>row[key]===value)),
+    write: async (op) => {
+      if (op.key === 'cell') assert.equal(op.target.where.lane_id, 'copied-rt')
+      const id = `${op.key}-1`
+      stored[op.target.table].push({ id, ...op.target.where, ...op.value })
+      if(op.key === 'path') stored.lanes.push({id:'copied-rt',path_id:id,name:'Regular Tutor'})
+      stored.authoring_changes.push({ id: `log-${id}`, fn: op.operation, args: {}, author: 'human', revert: { fn: 'delete', args: { id } } })
+      return {changeIds:[`log-${id}`]}
+    },
+  }
+  assert.equal((await runChangeset(batch, 'dry-run', database)).ok, true)
+  assert.equal(stored.paths.length, 0)
+  const applied = await runChangeset(batch, 'apply', database)
+  assert.equal(applied.ok, true, applied.failures.join('\n'))
+  assert.equal((await runChangeset(batch, 'verify', database, { receipt: applied.applied })).ok, true)
+  stored.lanes.push({id:'ambiguous-rt',path_id:'path-1',name:'Regular Tutor'})
+  await assert.rejects(runChangeset(batch, 'verify', database, {receipt:applied.applied}), /lookup.*exactly one.*found 2/)
+})
+
+test('a missing or ambiguous lookup stops an existing-parent batch before writes', async () => {
+  for (const rows of [[], [{ id: 'first' }, { id: 'second' }], [{ id: null }]]) {
+    const batch = structuredClone(changeset)
+    batch.operations[0].target = { table: 'cells', id: { lookup: { table: 'cells', where: { path_id: 'path-1', content: cell.content } } } }
+    await assert.rejects(runChangeset(batch, 'apply', {
+      read: async () => rows,
+      write: async () => assert.fail('an unresolved lookup wrote'),
+    }), /lookup.*(exactly one|missing id)/)
+  }
+})

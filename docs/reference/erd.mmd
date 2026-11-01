@@ -1,3 +1,5 @@
+%% Prepared v2.8.11 receipt tables and composite FK, from the owned local replay, 2026-10-31.
+%% Not yet applied to the hosted deployment.
 %% Service Blueprint ERD
 %%
 %% REGENERATED FROM THE LIVE SCHEMA on 2026-10-11, through 20261011120000, from
@@ -334,4 +336,25 @@ erDiagram
     bigint seq "unique per session"
     text kind "user | assistant | tool | status"
     jsonb payload
+  }
+
+  cells ||--o{ cell_storyboard_receipts : "private edit receipts"
+  path_steps ||--o{ cells : "path_id and step_id"
+  cell_storyboard_receipts {
+    uuid id PK
+    uuid cell_id FK
+    text actor
+    uuid_array uploaded_ids
+    jsonb before_state
+    jsonb after_state
+  }
+  structure_membership_receipts {
+    uuid id PK
+    uuid step_id
+    uuid path_id
+    boolean present
+    jsonb before_state
+    jsonb after_state
+    jsonb archive
+    boolean reverted
   }

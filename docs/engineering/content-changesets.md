@@ -72,6 +72,19 @@ preflight; creation is still checked against the actual scope before writing.
 Supply new rows' prose in their creation operation. The runner cannot preflight
 an edit to a row that does not exist yet.
 
+When a path RPC copies lanes with fresh ids, use a scoped read-only lookup for
+the cell's lane id, for example:
+
+```json
+{ "lookup": { "table": "lanes", "where": { "path_id": { "ref": "new-path" }, "name": "Regular Tutor" } } }
+```
+
+A lookup resolves exactly one row's id; missing, ambiguous or id-less results
+fail. During preflight a lookup under a pending new parent stays pending.
+Apply resolves it after that parent is created, and separate verify resolves
+it again from the database. This adds reads, not a new write operation. Keep
+parent ids in the scope; a name alone does not identify a lane across paths.
+
 `checks` is an array of `{ target, beforeCount, afterCount }`. Use it for
 every touched path/scenario's paths, steps, lanes and cells, and for evidence
 counts. Optional `beforeRows` and `afterRows` describe every row in that scoped
@@ -91,7 +104,7 @@ creates as side effects, including copied lanes and a scenario's initial path.
 | `upsert_cell_at_status` | New `cells`; scope path_id/lane_id/step_id/position=0; content/status, optional summary | RPC records creation; optional summary uses the cell mutation and captures a second inverse |
 | `create_path_at_status` | New `paths`; scope scenario_id/name; kind/status, optional summary/note | Optional input.lane_source_path_id; optional prose uses updatePathSpec |
 | `set_path_status` | Existing `paths`; status | RPC records itself |
-| `create_scenario` | New `scenarios`; scope phase_id; name/layout, optional summary | Optional input.lane_source_path_id, lane_set, step_count (default 0), path_name; verify its generated path/lanes in checks |
+| `create_scenario` | New `scenarios`; scope phase_id; name/layout, optional summary | Optional input.lane_source_path_id, lane_set, step_count, path_name; the RPC creates at least one placeholder step even when step_count is 0; verify its generated path/lanes/steps in checks |
 | `add_step` | New `steps`; scope scenario_id/name; name, optional summary | Required input.path_id; optional input.at_position; check path_steps positions |
 | `add_lane` | New `lanes`; scope path_id/name; name/lane_role | Required input.scenario_id; optional input.at_position; creates a lane on every path, so check all of them |
 | `set_path_steps` | `paths`, target.withSteps=true; expected.step_ids and value.step_ids in order | Captures the previous full list before calling the RPC and recordChange |
@@ -108,9 +121,16 @@ unsupported: the hosted database has no such function. Edit status alone with
 A missing sanctioned operation is a ticket blocker,
 not permission to write a table or change grants.
 
+`create_scenario` cannot create a path with zero initial steps. Its RPC clamps
+the requested count to at least one and names the generated columns Step 1,
+Step 2 and so on. Adding named steps afterward does not replace these rows.
+A placeholder can now be renamed with the guarded shared-step rename;
+deleting one is still human-only. Resolve that scope before applying a scenario with specified
+column names; dry-run does not simulate every RPC side effect.
+
 ### Guarded host capabilities
 
-The optional host wrappers arrive in template v2.8.10. The deployment must
+The optional host wrappers arrive in template v2.8.10; this deployment pins v2.8.12 and has the reviewed rename, move and insertion RPCs installed. The deployment must
 separately install their reviewed RPC contracts before they are usable; a
 successful pin/install or read-only dry-run does not establish hosted RPC
 availability. Never probe availability by attempting an unapproved write.

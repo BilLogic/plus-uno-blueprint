@@ -1,3 +1,5 @@
+-- Prepared v2.8.11 receipt tables and path-step FK added from the owned local catalog on 2026-10-31.
+-- These additions have not been applied to the hosted deployment.
 -- Reference snapshot: Service Blueprint schema
 --
 -- REGENERATED FROM THE LIVE SCHEMA on 2026-10-11, through 20261011120000.
@@ -27,6 +29,11 @@
 -- columns were added, not any design), and defaults are shown where they exist.
 -- Triggers, functions, policies and grants are not reproduced: the migrations
 -- say them, and `check:rls-posture:live` asks the database about the last two.
+-- Capabilities 20261031120000 (rename_step), 20261031130000 (move_cell) and
+-- 20261031140000 (insert_cell_at_position, prepared) change no table/domain/view
+-- shape; each migration owns its function body and execution grants.
+-- 20261031150000 (template v2.8.12, prepared) replaces the undo_structure_add
+-- body only, so the shape above is unchanged.
 --
 -- `entity_status` is a DOMAIN over text, not a per-table CHECK:
 --   proposed | planned | built | live | at_risk | deprecated
@@ -446,3 +453,83 @@ create table public.agent_messages (
 -- `trash` (over authoring_changes' delete rows) and `evidence_counts`. Their
 -- definitions are in the migrations that create them, 20260830200000 and
 -- 20260729120000 onward.
+
+-- Prepared v2.8.11 additions, generated with pg_dump from the isolated replay.
+--
+-- Name: cell_storyboard_receipts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.cell_storyboard_receipts (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    cell_id uuid NOT NULL,
+    actor text NOT NULL,
+    uploaded_ids uuid[] NOT NULL,
+    before_state jsonb NOT NULL,
+    after_state jsonb NOT NULL
+);
+
+
+--
+-- Name: structure_membership_receipts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.structure_membership_receipts (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    step_id uuid NOT NULL,
+    path_id uuid NOT NULL,
+    present boolean NOT NULL,
+    before_state jsonb NOT NULL,
+    after_state jsonb NOT NULL,
+    archive jsonb NOT NULL,
+    reverted boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: cell_storyboard_receipts cell_storyboard_receipts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cell_storyboard_receipts
+    ADD CONSTRAINT cell_storyboard_receipts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: structure_membership_receipts structure_membership_receipts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.structure_membership_receipts
+    ADD CONSTRAINT structure_membership_receipts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: cell_storyboard_receipts_cell_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX cell_storyboard_receipts_cell_idx ON public.cell_storyboard_receipts USING btree (cell_id);
+
+
+--
+-- Name: cell_storyboard_receipts cell_storyboard_receipts_cell_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cell_storyboard_receipts
+    ADD CONSTRAINT cell_storyboard_receipts_cell_id_fkey FOREIGN KEY (cell_id) REFERENCES public.cells(id) ON DELETE CASCADE;
+
+
+--
+-- Name: cell_storyboard_receipts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.cell_storyboard_receipts ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: structure_membership_receipts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.structure_membership_receipts ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE ONLY public.cells ADD CONSTRAINT cells_path_step_fkey
+  FOREIGN KEY (path_id, step_id) REFERENCES public.path_steps(path_id, step_id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED;
+CREATE INDEX cells_path_step_idx ON public.cells USING btree (path_id, step_id);

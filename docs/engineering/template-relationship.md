@@ -106,6 +106,60 @@ see below.
 The bump is the only way application code changes here. There is no second copy
 to edit, which is the point.
 
+## Prepared upgrade to v2.8.12
+
+The pin and the lockfile target the released `v2.8.12` tag. Its one migration,
+upstream 323, is adopted as
+`20261031150000_undo_of_an_add_keeps_the_numbering_it_found.sql`. It replaces
+`undo_structure_add` so that Undo of an Add accepts a `before` order numbered
+from 1 or with gaps: positions are non-negative and strictly increase in array
+order. Every other guard, the signature and the database types are unchanged,
+and no data moves.
+
+The adoption keeps the upstream body byte for byte. As with the 311 adoption,
+it revokes execute from `public` and `anon` explicitly, and its grant proof
+checks both, so execute stays with `authenticated` alone. The in-migration
+proof round-trips a path numbered 1, 2, 3 and one with gaps through Add and
+Undo, and still refuses a numbering that disagrees with the path order. It
+applies after the v2.8.11 set and the 20261031 capabilities; apply it with
+`npm run apply:pending -- --from=20261031150000 --apply` once approved.
+
+## Prepared upgrade to v2.8.11
+
+The v2.8.11 bump moved the pin and the lockfile to that released tag. The five
+migrations under `20261030120000` through `20261030160000` adopt upstream
+309–313 together; they are prepared for a coordinated database and app
+upgrade, not evidence of an apply to the hosted project. Keep the deployed
+application and database on their matching versions until that upgrade is
+approved.
+
+Before applying the set, run this read-only preflight on the target database:
+
+```sql
+SELECT c.id, c.path_id, c.step_id
+FROM public.cells c
+LEFT JOIN public.path_steps ps ON ps.path_id=c.path_id AND ps.step_id=c.step_id
+WHERE ps.step_id IS NULL;
+```
+
+If it returns cells, restore their intended memberships with a separately
+approved change. Do not delete content to make the migration pass. The new
+foreign key and triggers refuse orphaned memberships, and old reorder callers
+receive a reload instruction instead of overwriting a newer order.
+
+The adoption preserves this deployment's constraints. Proof owners are
+registered inside rollback-contained fixtures. Membership Undo restores the
+writable cell columns and lets PostgreSQL recompute generated `search_tsv`;
+the proof compares the complete restored cell. Storyboard writes retain the
+absolute-frame constraint and refuse relative URLs with a readable sentence.
+The new receipt tables are private; no RLS policy or column grant is widened.
+
+Prepared database types and the schema additions describe the isolated local
+replay. Regenerate and verify against the target after its approved upgrade.
+This upgrade does not deploy the optional authoring capabilities or apply the
+reviewed content changesets; those keep their separate approval and read-back
+requirements.
+
 ## When the template changes something you depend on
 
 There is no local edit available, and that is the arrangement working rather
@@ -333,6 +387,12 @@ scenario, path and layout, failing on a console error. `scripts/render-walk.mjs`
 keeps a precondition in front of it — if the two halves ever stop sharing an id,
 the walk says so through the `unverified` register rather than failing as though
 the application were broken.
+
+Run locally, the walk needs `RENDER_WALK_STORAGE_PREFIX` set to the namespace
+configured in `deployment/bootstrap.ts`, as the CI workflow sets it. Otherwise
+the template seeds its own browser-storage namespace and the deployment cannot
+read the seeded agent session. The walk verifies the exported sample board, not
+hosted authoring.
 
 ## What is genuinely this deployment's
 
