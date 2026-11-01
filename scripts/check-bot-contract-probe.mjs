@@ -42,12 +42,18 @@ const probeKeyForRpc = (name) => `rpc_${name.split('.').pop()}`
  * it with the service role over its own connection, and the public endpoint
  * cannot probe it without holding a key. It is listed as optional so that the
  * bot growing that probe is accepted rather than rejected as undeclared.
+ *
+ * `include_findings` is required too. Findings are signed-in-only
+ * (`signedInReadTables`), so the bot no longer reads their table and has no
+ * `table_*` key for them; the search RPC's findings branch is its one route to
+ * them, and a probe of that branch is what keeps the route watched.
  */
 export function expectedProbeKeys(contract = BLUEPRINT_CONTRACT) {
   return {
     required: [
       probeKeyForRpc(contract.rpcs.searchBlueprint),
       ...contract.botReadTables.map((table) => `table_${table}`),
+      `include_${Object.keys(contract.searchBlueprintInclude).find((name) => name === 'findings')}`,
     ],
     optional: [probeKeyForRpc(contract.rpcs.matchCorpusChunks)],
   }

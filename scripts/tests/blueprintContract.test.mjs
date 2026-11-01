@@ -412,18 +412,49 @@ test('every signed-in-only relation was introduced by a migration', () => {
   }
 })
 
-test('a migration revokes the anon key on every signed-in-only relation', () => {
-  const revokedFromAnon = new Set()
-  for (const m of ALL_SQL.matchAll(/revoke\s+[^;]*?\bon\b([^;]*?)\bfrom\s+anon\s*;/gis)) {
-    for (const name of m[1].matchAll(/public\.([a-z_][a-z0-9_]*)/g)) revokedFromAnon.add(name[1])
+/**
+ * The anon key's last word on each relation, replayed in migration order: a
+ * `grant` of select (or all) to anon opens it, a `revoke` of the same closes it.
+ * Comments are stripped first, so a commented-out statement says nothing.
+ */
+function anonSelectState(migrations) {
+  const state = new Map()
+  for (const { sql } of migrations) {
+    const code = sql.replace(/--[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '')
+    const statement = /\b(grant|revoke)\s+([^;]*?)\s+on\s+(?:table\s+)?([^;]*?)\s+(to|from)\s+([^;]*?);/gis
+    for (const [, verb, privileges, relations, , grantees] of code.matchAll(statement)) {
+      if (!/\b(select|all)\b/i.test(privileges)) continue
+      if (!/\banon\b/i.test(grantees)) continue
+      for (const [, name] of relations.matchAll(/public\.([a-z_][a-z0-9_]*)/gi)) {
+        state.set(name, verb.toLowerCase() === 'revoke' ? 'revoked' : 'granted')
+      }
+    }
   }
+  return state
+}
+
+test('the migration series leaves the anon key revoked on every signed-in-only relation', () => {
+  const state = anonSelectState(MIGRATIONS)
   for (const relation of contractValues('signedInReadTables')) {
-    assert.ok(
-      revokedFromAnon.has(relation),
-      `"${relation}" is declared signed-in-only, but no migration revokes it from anon. ` +
-        `The live check excuses a refusal on this list; it must not excuse one nobody made.`,
+    assert.equal(
+      state.get(relation),
+      'revoked',
+      `"${relation}" is declared signed-in-only, but the migration series does not end with ` +
+        `anon's select on it revoked. The live check excuses a refusal on this list; it must ` +
+        `not excuse one nobody made, nor survive a later grant that reopened it.`,
     )
   }
+})
+
+test('the anon state replay follows order and ignores comments', () => {
+  const state = anonSelectState([
+    { sql: 'revoke all on public.a, public.b from anon;' },
+    { sql: 'grant select on table public.b to anon, authenticated;' },
+    { sql: '-- revoke select on public.b from anon;\nrevoke insert on public.c from anon;' },
+  ])
+  assert.equal(state.get('a'), 'revoked')
+  assert.equal(state.get('b'), 'granted', 'a later grant reopens it; a commented revoke does not close it')
+  assert.equal(state.has('c'), false, 'revoking a write privilege says nothing about select')
 })
 
 test('no relation is both public-read and signed-in-only, and the bot reads neither closed one', () => {
@@ -702,6 +733,16 @@ test('the probe check fails when the bot stops probing a declared bot read', () 
   )
 })
 
+test('the probe check fails when the bot stops probing the search findings branch', () => {
+  const probes = { ...HEALTHY_PROBE.probes }
+  delete probes.include_findings
+  const failures = probeFailures({ ...HEALTHY_PROBE, probes })
+  assert.ok(
+    failures.some((f) => f.includes('include_findings')),
+    `findings reach the bot only through the search; losing that probe must fail, got ${JSON.stringify(failures)}`,
+  )
+})
+
 test('the probe check fails on a false probe, and again when ok:true covers for it', () => {
   const failures = probeFailures({
     ...HEALTHY_PROBE,
@@ -836,6 +877,11 @@ test('a refusal of the anon role is told apart from a relation PostgREST does no
   assert.equal(refusesAnon({ status: 401, ok: false, body: denied }), true)
   assert.equal(refusesAnon({ status: 403, ok: false, body: denied }), true)
   assert.equal(
+    refusesAnon({ status: 401, ok: false, body: { code: 'PGRST301', message: 'JWT expired' } }),
+    false,
+    'a key the server rejects is not the relation refusing the role',
+  )
+  assert.equal(
     refusesAnon({ status: 404, ok: false, body: { code: 'PGRST205', message: 'Could not find the table' } }),
     false,
     'a missing relation is drift, never the promised refusal',
@@ -843,10 +889,16 @@ test('a refusal of the anon role is told apart from a relation PostgREST does no
 })
 
 test('a claim on a signed-in-only relation resolves against the migration series', () => {
-  const schema = replayMigrations(resolve('supabase/migrations'))
+  const schema = replayMigrations(resolve(REPO_ROOT, 'supabase/migrations'))
   const claim = (table, column) => ({ table, column, token: `${table}.${column}` })
   assert.equal(staticClaimProblem(claim('audit_findings', 'cell_ids'), schema), null)
   assert.equal(staticClaimProblem(claim('trash', null), schema), null)
   assert.match(staticClaimProblem(claim('audit_findings', 'cell_id'), schema), /column/)
   assert.match(staticClaimProblem(claim('findings', null), schema), /no migration defines/)
+  assert.equal(staticClaimProblem(claim('evidence_counts', 'cell_id'), schema), null)
+  assert.match(
+    staticClaimProblem(claim('evidence_counts', 'excerpt'), schema),
+    /does not name/,
+    'a column the view only reads through, never selects, is not one of its columns',
+  )
 })

@@ -54,11 +54,13 @@ vendored copy. `slices` is why this is not cosmetic: its label column is
 `title`, so the one generic read string the bot could have written was already
 wrong for one table.
 
-Additive, deliberately: `botDirectReadColumns` and `botReadTables` are
-unchanged, so a consumer that has not re-vendored keeps working. Only a role a
-table really has is declared — a table with none declares an empty entry rather
-than being left out, and both halves carry the same table keys so a new
-direct-read table forces a role decision. `check:contract` proves every role names a column its
+Additive, deliberately, when it landed: `botDirectReadColumns` and
+`botReadTables` were unchanged, so a consumer that had not re-vendored kept
+working. (Closing `audit_findings` to the anon key later removed a table from
+both, and retired `botFindingsTable` — see below.) Only a role a table really
+has is declared — a table with none declares an empty entry rather than being
+left out, and both halves carry the same table keys so a new direct-read table
+forces a role decision. `check:contract` proves every role names a column its
 table publishes, which is what stops the two halves drifting into a select no
 live check has ever sent.
 
@@ -79,8 +81,12 @@ left `publicReadTables`, `botReadTables` and `botDirectReadColumns`, and
 
 `check:contract:live` accepts a refusal on these and fails a relation PostgREST
 does not know, which is how a closed table is told from a renamed one. While the
-anon key still reads them — the migration not yet applied — it prints a notice
-instead of failing, so the check is green on both sides of the apply. A doc or
+anon key still reads all seven — the migration not yet applied — it prints a
+notice instead of failing, so the check is green on both sides of the apply. A
+mix of refused and readable fails, since the migration closes all seven at
+once. All seven reopened together reads like "not applied", so once the
+migration is applied wherever the check runs, that notice should become a
+failure. A doc or
 catalog comment naming one of them is resolved against the replayed migration
 series, since the anon key cannot select it; `--service-role` selects them live.
 

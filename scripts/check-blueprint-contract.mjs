@@ -389,12 +389,14 @@ export function refusesAnon(result) {
  * A claim on a relation the anon key cannot select, resolved against the
  * replayed migration series rather than the live database. Returns why it does
  * not resolve, or null. A view's columns are not modelled by the replay, so a
- * column on a view resolves when its definition names it.
+ * column on a view resolves when its select list names it — the list between
+ * the first `select` and the first `from`, comments stripped. A column the view
+ * only filters or groups on is not one of its columns.
  */
 export function staticClaimProblem(claim, schema) {
   const table = schema.tables.get(claim.table)
   // The replay keys tables bare and views schema-qualified.
-  const view = schema.views.get(`public.${claim.table}`) ?? schema.views.get(claim.table)
+  const view = schema.views.get(`public.${claim.table}`)
   if (!table && !view) return 'a signed-in-only relation no migration defines'
   if (claim.column === null) return null
   if (table) {
@@ -402,7 +404,10 @@ export function staticClaimProblem(claim, schema) {
       ? null
       : `a column no migration gives the signed-in-only table \`${claim.table}\``
   }
-  return new RegExp(`\\b${claim.column}\\b`).test(view.definition)
+  const sql = view.definition.replace(/--[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '')
+  const selectList = sql.match(/\bselect\b([\s\S]*?)\bfrom\b/i)?.[1] ?? ''
+  const column = claim.column.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`\\b${column}\\b`, 'i').test(selectList)
     ? null
     : `a column the signed-in-only view \`${claim.table}\` does not name`
 }
@@ -464,9 +469,16 @@ async function run({ serviceRole }) {
   // 1b. The signed-in-only surface. Under the anon key a refusal is the
   //     promise (20261101130000) and a read means the migration is not applied
   //     here yet — a notice, so the check holds on both sides of the apply.
-  //     What fails is a relation PostgREST does not know: that is a rename or a
-  //     drop, the drift this file exists for. Under --service-role every one
-  //     must read, since that key reads past every policy.
+  //     The migration closes all seven in one statement, so the two states are
+  //     all-open and all-closed: a MIX fails, which is what catches one of
+  //     them reopened by hand after the apply. What also fails is a relation
+  //     PostgREST does not know — a rename or a drop, the drift this file
+  //     exists for. Under --service-role every one must read, since that key
+  //     reads past every policy.
+  //
+  //     The one state this cannot tell from "not applied yet" is all seven
+  //     reopened at once. Once the migration is applied everywhere this check
+  //     runs, the notice below becomes a failure.
   const closed = []
   const stillOpen = []
   for (const relation of contract.signedInReadTables) {
@@ -482,11 +494,19 @@ async function run({ serviceRole }) {
       )
     }
   }
+  const refused = contract.signedInReadTables.length - stillOpen.length - closed.length
+  if (!serviceRole && stillOpen.length > 0 && refused > 0) {
+    closed.push(
+      `the anon key is refused on some signed-in-only relations and still reads ` +
+        `${stillOpen.join(', ')}. 20261101130000 closes all seven at once, so a mix means ` +
+        `one was reopened after it: revoke it again.`,
+    )
+  }
   check('signed-in read surface', closed)
-  if (stillOpen.length > 0) {
+  if (!serviceRole && stillOpen.length === contract.signedInReadTables.length) {
     console.log(
       `::notice::the anon key still reads ${stillOpen.join(', ')} — 20261101130000 is not ` +
-        `applied to this database yet. Expected until it is; nothing reads them as anon.`,
+        `applied to this database yet. Expected until it is.`,
     )
   }
 
