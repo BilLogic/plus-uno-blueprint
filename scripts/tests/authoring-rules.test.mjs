@@ -3,7 +3,7 @@
  * Dependency and version rules (phases 5 and 6).
  *
  * These are the checks that stop a blueprint from describing something that
- * cannot happen: an arrow between two alternatives, a copy whose arrows point
+ * cannot happen: a cell that depends on itself, a copy whose arrows point
  * back at the original, two versions nobody can tell apart.
  *
  * Run: npm test
@@ -21,9 +21,9 @@ import {
   describeVersionOutcome,
 } from '@/lib/versionValidation.ts'
 
-const source = { cellId: 'a', pathId: 'p1', label: 'Greet student' }
-const sameVersion = { cellId: 'b', pathId: 'p1', label: 'Share screen' }
-const otherVersion = { cellId: 'c', pathId: 'p2', label: 'Escalate' }
+const source = { cellId: 'a', label: 'Greet student' }
+const sameVersion = { cellId: 'b', label: 'Share screen' }
+const otherVersion = { cellId: 'c', label: 'Escalate' }
 
 const draft = (patch) => ({
   sourceCellId: 'a',
@@ -36,7 +36,7 @@ const draft = (patch) => ({
 
 test('a valid handoff has no problems', () => {
   assert.deepEqual(
-    validateDraftDependency(draft(), source, sameVersion, []),
+    validateDraftDependency(draft(), sameVersion, []),
     [],
   )
 })
@@ -45,26 +45,25 @@ test('a cell cannot depend on itself', () => {
   const problems = validateDraftDependency(
     draft({ targetCellId: 'a' }),
     source,
-    source,
     [],
   )
   assert.ok(problems.some((p) => /cannot depend on itself/.test(p)))
 })
 
-test('an arrow may not cross paths', () => {
+test('a link may cross paths within one service', () => {
+  // The one wall left is another service, and that is the database's to
+  // refuse; the panel only offers cells of the service it has open.
   const problems = validateDraftDependency(
     draft({ targetCellId: 'c' }),
-    source,
     otherVersion,
     [],
   )
-  assert.ok(problems.some((p) => /same path/.test(p)))
+  assert.deepEqual(problems, [])
 })
 
 test('no target is reported before anything else', () => {
   const problems = validateDraftDependency(
     draft({ targetCellId: null }),
-    source,
     null,
     [],
   )
@@ -72,7 +71,7 @@ test('no target is reported before anything else', () => {
 })
 
 test('the same connection is not added twice', () => {
-  const problems = validateDraftDependency(draft(), source, sameVersion, [
+  const problems = validateDraftDependency(draft(), sameVersion, [
     { targetCellId: 'b', kind: 'leads_to' },
   ])
   assert.ok(problems.some((p) => /already exists/.test(p)))
@@ -81,7 +80,6 @@ test('the same connection is not added twice', () => {
 test('the same pair may hold both a leads_to and an enables', () => {
   const problems = validateDraftDependency(
     draft({ kind: 'enables' }),
-    source,
     sameVersion,
     [{ targetCellId: 'b', kind: 'leads_to' }],
   )

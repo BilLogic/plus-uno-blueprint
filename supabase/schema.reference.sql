@@ -34,6 +34,10 @@
 -- shape; each migration owns its function body and execution grants.
 -- 20261031150000 (template v2.8.12, prepared) replaces the undo_structure_add
 -- body only, so the shape above is unchanged.
+-- 20261031160000 (template v2.9.0, prepared) replaces the bodies of
+-- set_cell_dependency, update_cell_dependency, delete_path, delete_scenario and
+-- move_cell only: a dependency may join two paths of one service. No shape here
+-- changes.
 --
 -- `entity_status` is a DOMAIN over text, not a per-table CHECK:
 --   proposed | planned | built | live | at_risk | deprecated

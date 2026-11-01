@@ -106,6 +106,39 @@ see below.
 The bump is the only way application code changes here. There is no second copy
 to edit, which is the point.
 
+## Prepared upgrade to v2.9.0
+
+The pin and the lockfile target the released `v2.9.0` tag. Its one migration,
+upstream 324, is adopted as
+`20261031160000_a_link_may_cross_paths_within_one_service.sql`. A `leads_to`
+or an `enables` may now join cells on different paths or scenarios of one
+service: `set_cell_dependency` and `update_cell_dependency` refuse only a link
+between two services, with "Both cells must be in the same service", and
+`delete_path` and `delete_scenario` archive the links that come into them as
+well as the ones that leave. Signatures, grants and database types are
+unchanged, and no data moves.
+
+Each body is this deployment's current one with only upstream's change
+applied: the dependency-table lock, the comment wording and `delete_path`'s
+"at least one version" sentence stay. `move_cell` is this deployment's own; it
+refused a move that left an incident dependency crossing paths, which would
+now pin every cell with a cross-path link in place. A move already stays in
+one scenario, so it cannot leave a link joining two services, and that refusal
+is removed. `supabase/tests/move_cell.sql` and `npm run prove:cell-move` now
+prove a cross-path move keeps its edge, and that a concurrent edge write waits
+for the move and lands across paths.
+
+The in-migration proofs are upstream's; the archive proof names the cells'
+columns on its re-insert, because `cells.search_tsv` is generated here. As with
+the 311 and 323 adoptions, execute is revoked from `public` and `anon`
+explicitly and the grant proof checks both. Apply it with
+`npm run apply:pending -- --from=20261031160000 --apply` once approved.
+
+This deployment holds no IR file, and its seeds are SQL it maintains itself,
+so the IR stamp step (`2026.09.12`) has nothing to migrate here. The render
+walk gains upstream's cross-path-link case, which skips on a board with no
+such link.
+
 ## Prepared upgrade to v2.8.12
 
 The pin and the lockfile target the released `v2.8.12` tag. Its one migration,
