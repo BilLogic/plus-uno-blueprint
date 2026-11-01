@@ -110,7 +110,7 @@ creates as side effects, including copied lanes and a scenario's initial path.
 | `add_step` | New `steps`; scope scenario_id/name; name, optional summary | Required input.path_id; optional input.at_position; check path_steps positions |
 | `add_lane` | New `lanes`; scope path_id/name; name/lane_role | Required input.scenario_id; optional input.at_position; creates a lane on every path, so check all of them |
 | `set_path_steps` | `paths`, target.withSteps=true; expected.step_ids and value.step_ids in order | Captures the previous full list before calling the RPC and recordChange |
-| `set_cell_dependency` | New `cell_dependencies`; scope source_cell_id/target_cell_id/kind; kind, optional name/note | Existing dependency collisions fail rather than silently updating |
+| `set_cell_dependency` | New `cell_dependencies`; scope source_cell_id/target_cell_id/kind; kind, optional name/note | Required input.expected_source and input.expected_target, each naming at least path_id/lane_id/step_id/scenario_id; both ends are read through to their service and must still match, and a cross-service link is refused before any write. The ends may sit on different paths or scenarios. An RPC that reports an update instead of an insert fails; the recorded inverse is `clear_cell_dependency` |
 | `set_placement_touchpoint` | Existing `cell_touchpoints`; touchpoint_id or name | Actual placementLinkMutations; captures the prior registry/name pair |
 | `add_evidence` | New `evidence`; scope service_id/cell_id/cell_key/title; title/kind/note | Actual evidenceMutations.addEvidence; the delete inverse is recorded, never executed by this runner |
 | `update_path_spec` | `paths`; summary/note | Actual scenarioSpecMutations; preserves status |

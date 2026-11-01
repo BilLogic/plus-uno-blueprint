@@ -1,0 +1,166 @@
+{
+  "version": 1,
+  "issue": 758,
+  "operations": [
+    {
+      "key": "report-link",
+      "operation": "set_cell_dependency",
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "source_cell_id": "3c359d25-ac54-4310-bfe6-e458a916ec1d",
+          "target_cell_id": "944a2e40-b411-4704-acd9-a44d245f42a6",
+          "kind": "leads_to"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "leads_to",
+        "note": "The weekly email is the Weekly Class Report, which starts from the attendance, engagement and goal records tutors keep."
+      },
+      "input": {
+        "expected_source": {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d7",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "scenario_id": "a0000000-0000-4000-8000-000000000204",
+          "position": 1,
+          "content": "Weekly Class Report email",
+          "status": "live"
+        },
+        "expected_target": {
+          "path_id": "611a7139-ba98-4ded-8d85-e3df58511585",
+          "lane_id": "06e90efd-4459-4327-9a3b-dc519c83a01d",
+          "step_id": "641b5e22-7e7f-490c-8466-2f471520e5df",
+          "scenario_id": "2ab2c208-8baf-47c7-8396-b8ae098c0a4b",
+          "position": 0,
+          "content": "Records attendance, engagement and goals that feed the teacher report.",
+          "status": "live",
+          "cell_key": "plus-tutoring/weekly-class-report/report-sent/regular-tutor/build-report"
+        }
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/758",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/759",
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78"
+      ]
+    },
+    {
+      "key": "report-link-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "3c359d25-ac54-4310-bfe6-e458a916ec1d",
+          "cell_key": "3c359d25-ac54-4310-bfe6-e458a916ec1d",
+          "title": "KB audit #758 (#742 row80) — leads to Weekly Class Report"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #758 (#742 row80) — leads to Weekly Class Report",
+        "note": "The #742 row80 audit asked for a leads_to from this Goal Setting email cell to the first cell of the Weekly Class Report scenario, Regular Tutor at Build report. The link crosses scenarios within one service, which the deployment accepts since November 1, 2026. Scope: https://github.com/BilLogic/plus-uno-blueprint/issues/758 . Scenario: https://github.com/BilLogic/plus-uno-blueprint/issues/759 . Sources for the report itself: https://www.notion.so/2abb7cca498280c5933ef42984de7374 ; https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/742",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/758",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/759",
+        "https://www.notion.so/2abb7cca498280c5933ef42984de7374",
+        "https://www.notion.so/3aab7cca498280ba91e4c02f125b2f78"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "source_cell_id": "3c359d25-ac54-4310-bfe6-e458a916ec1d"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1,
+      "afterRows": [
+        {
+          "source_cell_id": "3c359d25-ac54-4310-bfe6-e458a916ec1d",
+          "target_cell_id": "944a2e40-b411-4704-acd9-a44d245f42a6",
+          "kind": "leads_to",
+          "name": null,
+          "note": "The weekly email is the Weekly Class Report, which starts from the attendance, engagement and goal records tutors keep."
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "target_cell_id": "3c359d25-ac54-4310-bfe6-e458a916ec1d"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "target_cell_id": "944a2e40-b411-4704-acd9-a44d245f42a6"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_dependencies",
+        "where": {
+          "source_cell_id": "944a2e40-b411-4704-acd9-a44d245f42a6"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "3c359d25-ac54-4310-bfe6-e458a916ec1d"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2,
+      "beforeRows": [
+        {
+          "id": "8bee715a-3af9-4e27-b942-355069ae788c",
+          "title": "KB audit #742 row52 — Weekly Class Report email"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "944a2e40-b411-4704-acd9-a44d245f42a6"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1,
+      "beforeRows": [
+        {
+          "id": "f37da419-0e9e-4be6-b76d-32c58e50663c",
+          "title": "KB audit #759 (#742 row80) — build-tutor"
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "f37da419-0e9e-4be6-b76d-32c58e50663c",
+          "title": "KB audit #759 (#742 row80) — build-tutor"
+        }
+      ]
+    }
+  ]
+}

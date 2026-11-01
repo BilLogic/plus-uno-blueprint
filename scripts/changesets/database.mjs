@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util'
 import { CAPABILITIES, prepareCapability, expectedChange, projectChecks } from './capabilities.mjs'
 
 function checked(result) {
@@ -70,8 +71,39 @@ export function createDatabase(client, modules) {
     }
   }
 
+  /**
+   * One end of a link as it stands: the cell, its scenario and its service
+   * (cell → path → scenario → phase). Every reviewed field must still hold.
+   */
+  async function linkEnd(cellId, expected, label) {
+    const cell = await one('cells', cellId)
+    const path = await one('paths', cell.path_id)
+    const scenario = await one('scenarios', path.scenario_id)
+    const phase = await one('phases', scenario.phase_id)
+    const actual = { ...cell, scenario_id: scenario.id }
+    const drifted = Object.keys(expected).filter((field) => !isDeepStrictEqual(actual[field], expected[field]))
+    if (drifted.length) throw new Error(`The ${label} cell no longer matches the reviewed endpoint: ${drifted.join(', ')}`)
+    return { service_id: phase.service_id, end: { cell_id: cell.id, ...Object.fromEntries(Object.keys(expected).map((field) => [field, actual[field]])) } }
+  }
+
+  // A link may cross paths and scenarios, never services. Both ends are read
+  // and guarded against the reviewed coordinates before the RPC is sent.
+  async function prepareLink(op) {
+    const { expected_source: source, expected_target: target } = op.input ?? {}
+    if (!source || !target) throw new Error('set_cell_dependency requires input.expected_source and input.expected_target')
+    for (const [name, end] of [['expected_source', source], ['expected_target', target]]) {
+      if (['path_id', 'lane_id', 'step_id', 'scenario_id'].some((field) => typeof end[field] !== 'string'))
+        throw new Error(`${name} must name path_id, lane_id, step_id and scenario_id`)
+    }
+    const from = await linkEnd(op.target.where.source_cell_id, source, 'source')
+    const to = await linkEnd(op.target.where.target_cell_id, target, 'target')
+    if (from.service_id !== to.service_id) throw new Error('Both ends must be in the same service; a cross-service link is refused')
+    return { endpoints: { service_id: from.service_id, source: from.end, target: to.end } }
+  }
+
   async function prepare(op, before) {
     if (CAPABILITIES.has(op.operation)) return prepareCapability(read, op, before)
+    if (op.operation === 'set_cell_dependency') return prepareLink(op)
     if (op.operation === 'update_cell_content' && !before?.content?.trim())
       throw new Error(`${op.key}: the module cannot capture an inverse for a blank prior cell label`)
     const value = { ...op.target.where, ...before, ...op.value }
@@ -225,12 +257,19 @@ export function createDatabase(client, modules) {
         })
         break
       }
-      case 'set_cell_dependency':
-        await structure.setCellDependency(client, {
+      case 'set_cell_dependency': {
+        // The RPC upserts. Preflight saw no edge, so anything but an insert
+        // means one appeared since; its inverse would restore, not clear.
+        const result = await structure.setCellDependency(client, {
           sourceCellId: value.source_cell_id, targetCellId: value.target_cell_id,
           kind: value.kind, name: value.name, note: value.note,
         })
+        if (!result?.id || result.inserted !== true) {
+          await Promise.allSettled(appendResults)
+          throw new Error('The link RPC updated an existing edge instead of inserting one; inspect its recorded inverse')
+        }
         break
+      }
       case 'set_placement_touchpoint':
         await placement.setPlacementTouchpoint(client,
           { id: before.id, cellId: before.cell_id, name: before.name ?? '' },
