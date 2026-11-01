@@ -32,6 +32,8 @@
 -- Capabilities 20261031120000 (rename_step), 20261031130000 (move_cell) and
 -- 20261031140000 (insert_cell_at_position, prepared) change no table/domain/view
 -- shape; each migration owns its function body and execution grants.
+-- 20261031150000 (template v2.8.12, prepared) replaces the undo_structure_add
+-- body only, so the shape above is unchanged.
 --
 -- `entity_status` is a DOMAIN over text, not a per-table CHECK:
 --   proposed | planned | built | live | at_risk | deprecated
