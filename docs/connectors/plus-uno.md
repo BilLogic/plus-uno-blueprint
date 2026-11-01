@@ -47,21 +47,48 @@ matching edit on the bot's side, written a second time, in a Worker nothing
 type-checks against this schema.
 
 `botDirectReadRoles` names the column that plays each role, per table, beside
-`botTouchpointReadKeys` and `botFindingsTable` for the other two
+`botTouchpointReadKeys` for the touchpoint read
 ([#671](https://github.com/BilLogic/plus-uno-blueprint/issues/671)). The bot
 derives its read strings from them, so the next rename reaches it with the
 vendored copy. `slices` is why this is not cosmetic: its label column is
 `title`, so the one generic read string the bot could have written was already
 wrong for one table.
 
-Additive, deliberately: `botDirectReadColumns` and `botReadTables` are
-unchanged, so a consumer that has not re-vendored keeps working. Only a role a
-table really has is declared — `audit_findings` declares an empty entry rather
-than being left out, because a finding has no label, no prose and no order of
-its own, and both halves carry the same table keys so a new direct-read table
+Additive, deliberately, when it landed: `botDirectReadColumns` and
+`botReadTables` were unchanged, so a consumer that had not re-vendored kept
+working. (Closing `audit_findings` to the anon key later removed a table from
+both, and retired `botFindingsTable` — see below.) Only a role a table really
+has is declared — a table with none declares an empty entry rather than being
+left out, and both halves carry the same table keys so a new direct-read table
 forces a role decision. `check:contract` proves every role names a column its
 table publishes, which is what stops the two halves drifting into a select no
 live check has ever sent.
+
+### Signed-in-only relations, and how the bot still answers with findings
+
+`signedInReadTables` names the seven relations 20261101130000 takes off the anon
+key: `evidence`, `evidence_counts`, `authoring_changes`, `trash`,
+`audit_findings`, `agent_sessions` and `agent_messages`. The anon key is the
+deployed app's key, so what it may select is published to anyone holding the
+URL, and none of these is the board.
+
+The bot holds the anon key, so it reads none of them directly — `audit_findings`
+left `publicReadTables`, `botReadTables` and `botDirectReadColumns`, and
+`botFindingsTable` was retired with it. Open findings still reach Slack:
+`search_blueprint` is a security-definer function, and its
+`include: ['findings']` branch returns them inside the search call. The bot's
+`/health/blueprint` probes that route rather than the table.
+
+`check:contract:live` accepts a refusal on these and fails a relation PostgREST
+does not know, which is how a closed table is told from a renamed one. While the
+anon key still reads all seven — the migration not yet applied — it prints a
+notice instead of failing, so the check is green on both sides of the apply. A
+mix of refused and readable fails, since the migration closes all seven at
+once. All seven reopened together reads like "not applied", so once the
+migration is applied wherever the check runs, that notice should become a
+failure. A doc or
+catalog comment naming one of them is resolved against the replayed migration
+series, since the anon key cannot select it; `--service-role` selects them live.
 
 ### The bot resolves it by path, and the path moved
 

@@ -19,6 +19,10 @@
  * WHAT IT ASSERTS, all of it derived from the contract rather than restated:
  *
  *   - every `publicReadTables` entry is selectable by the anon role
+ *   - every `signedInReadTables` entry exists and refuses the anon role. A
+ *     database that still lets anon read one has not applied 20261101130000
+ *     yet; that is reported as a notice, not a failure, so this check is green
+ *     on both sides of the apply. A relation that is MISSING fails either way
  *   - every `fkConstraints` name resolves as a PostgREST embed hint — the
  *     sharpest edge in the contract, because an embed hint is a string inside
  *     a `select=` and nothing type-checks it on either side
@@ -367,6 +371,47 @@ export function commentSpans(line) {
   return spans
 }
 
+/**
+ * Whether PostgREST refused the role, as opposed to not knowing the relation.
+ * 42501 is Postgres's insufficient_privilege; PostgREST answers it 401 to anon
+ * and 403 to a signed-in role.
+ */
+export function refusesAnon(result) {
+  return (
+    (result.status === 401 || result.status === 403) &&
+    !!result.body &&
+    typeof result.body === 'object' &&
+    result.body.code === '42501'
+  )
+}
+
+/**
+ * A claim on a relation the anon key cannot select, resolved against the
+ * replayed migration series rather than the live database. Returns why it does
+ * not resolve, or null. A view's columns are not modelled by the replay, so a
+ * column on a view resolves when its select list names it — the list between
+ * the first `select` and the first `from`, comments stripped. A column the view
+ * only filters or groups on is not one of its columns.
+ */
+export function staticClaimProblem(claim, schema) {
+  const table = schema.tables.get(claim.table)
+  // The replay keys tables bare and views schema-qualified.
+  const view = schema.views.get(`public.${claim.table}`)
+  if (!table && !view) return 'a signed-in-only relation no migration defines'
+  if (claim.column === null) return null
+  if (table) {
+    return table.columns.has(claim.column)
+      ? null
+      : `a column no migration gives the signed-in-only table \`${claim.table}\``
+  }
+  const sql = view.definition.replace(/--[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '')
+  const selectList = sql.match(/\bselect\b([\s\S]*?)\bfrom\b/i)?.[1] ?? ''
+  const column = claim.column.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`\\b${column}\\b`, 'i').test(selectList)
+    ? null
+    : `a column the signed-in-only view \`${claim.table}\` does not name`
+}
+
 /* ------------------------------------------------------------------- checks */
 
 async function run({ serviceRole }) {
@@ -400,6 +445,14 @@ async function run({ serviceRole }) {
     )
   }
 
+  // The anon key is refused on the signed-in-only relations once
+  // 20261101130000 is applied, so a name on one of them — in a doc or a
+  // catalog comment — is resolved against the migration series instead of
+  // selected. Replayed once, on first need.
+  const signedIn = new Set(contract.signedInReadTables)
+  let replayed = null
+  const migrations = () => (replayed ??= replayMigrations(resolve(REPO_ROOT, 'supabase/migrations')))
+
   // 1. The public read surface.
   const surface = []
   for (const table of contract.publicReadTables) {
@@ -412,6 +465,50 @@ async function run({ serviceRole }) {
     }
   }
   check('public read surface', surface)
+
+  // 1b. The signed-in-only surface. Under the anon key a refusal is the
+  //     promise (20261101130000) and a read means the migration is not applied
+  //     here yet — a notice, so the check holds on both sides of the apply.
+  //     The migration closes all seven in one statement, so the two states are
+  //     all-open and all-closed: a MIX fails, which is what catches one of
+  //     them reopened by hand after the apply. What also fails is a relation
+  //     PostgREST does not know — a rename or a drop, the drift this file
+  //     exists for. Under --service-role every one must read, since that key
+  //     reads past every policy.
+  //
+  //     The one state this cannot tell from "not applied yet" is all seven
+  //     reopened at once. Once the migration is applied everywhere this check
+  //     runs, the notice below becomes a failure.
+  const closed = []
+  const stillOpen = []
+  for (const relation of contract.signedInReadTables) {
+    const result = await rest(url, key, `${relation}?select=*&limit=0`)
+    if (serviceRole) {
+      if (!result.ok) closed.push(`"${relation}" answers HTTP ${result.status} to the service role — ${postgrest(result.body)}`)
+    } else if (result.ok) {
+      stillOpen.push(relation)
+    } else if (!refusesAnon(result)) {
+      closed.push(
+        `"${relation}" is declared signed-in-only but answers HTTP ${result.status} — ` +
+          `${postgrest(result.body)}. A refusal is expected; this is not one. Renamed or dropped?`,
+      )
+    }
+  }
+  const refused = contract.signedInReadTables.length - stillOpen.length - closed.length
+  if (!serviceRole && stillOpen.length > 0 && refused > 0) {
+    closed.push(
+      `the anon key is refused on some signed-in-only relations and still reads ` +
+        `${stillOpen.join(', ')}. 20261101130000 closes all seven at once, so a mix means ` +
+        `one was reopened after it: revoke it again.`,
+    )
+  }
+  check('signed-in read surface', closed)
+  if (!serviceRole && stillOpen.length === contract.signedInReadTables.length) {
+    console.log(
+      `::notice::the anon key still reads ${stillOpen.join(', ')} — 20261101130000 is not ` +
+        `applied to this database yet. Expected until it is.`,
+    )
+  }
 
   // 2. botReadTables must be a subset — the bot cannot read what the app does
   //    not publish, and a table listed only here would never be probed.
@@ -503,6 +600,11 @@ async function run({ serviceRole }) {
     }
   }
   for (const claim of claimed.values()) {
+    if (!serviceRole && signedIn.has(claim.table)) {
+      const problem = staticClaimProblem(claim, migrations())
+      if (problem) prose.push(`${claim.source}:${claim.line} names \`${claim.token}\`, ${problem}`)
+      continue
+    }
     const query = claim.column
       ? `${claim.table}?select=${claim.column}&limit=0`
       : `${claim.table}?select=*&limit=0`
@@ -581,7 +683,7 @@ async function run({ serviceRole }) {
       // refuses the OpenAPI root to the anon key. So a name that is not a
       // relation is resolved against the functions the migration series
       // defines, which the contract test already holds the live ones to.
-      const defined = replayMigrations(resolve(REPO_ROOT, 'supabase/migrations')).functions
+      const defined = migrations().functions
       const problems = []
       const excused = retiredSpans()
       const named = new Map()
@@ -605,6 +707,11 @@ async function run({ serviceRole }) {
         }
       }
       for (const claim of named.values()) {
+        if (!serviceRole && signedIn.has(claim.table)) {
+          const problem = staticClaimProblem(claim, migrations())
+          if (problem) problems.push(`${claim.source} names \`${claim.token}\`, ${problem}`)
+          continue
+        }
         if (claim.column === null) {
           const relation = await rest(url, key, `${claim.table}?select=*&limit=0`)
           if (relation.ok || defined.has(`public.${claim.table}`)) continue

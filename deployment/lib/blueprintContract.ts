@@ -11,10 +11,10 @@
  *
  * Since 2026-09-14 the contract also names what its direct-read columns are
  * FOR — `botDirectReadRoles` (the prose, position and name column of each
- * table), `botTouchpointReadKeys` and `botFindingsTable` — so the Worker
- * DERIVES its read strings from the contract instead of spelling `summary`,
- * `position`, `name` and `audit_findings` a second time in its own source.
- * Additive: the lists those roles point into are unchanged (#671).
+ * table) and `botTouchpointReadKeys` — so the Worker DERIVES its read
+ * strings from the contract instead of spelling `summary`, `position` and
+ * `name` a second time in its own source. Additive: the lists those roles
+ * point into are unchanged (#671).
  *
  * Keep this module dependency-free: the bot compiles it in a Worker
  * context with no access to app imports.
@@ -83,6 +83,10 @@ export const BLUEPRINT_CONTRACT = {
    * Public-read surface the bot depends on (anon SELECT via RLS policy or
    * public view). Tightening any of these breaks bot reads — the bot's
    * /health/blueprint probe checks the starred subset it actually queries.
+   *
+   * The board and the slices cut from it, and nothing else. `audit_findings`
+   * and `evidence_counts` left this list with 20261101130000, which refuses
+   * the anon key on both: they are `signedInReadTables` now.
    */
   publicReadTables: [
     'phases',
@@ -93,15 +97,39 @@ export const BLUEPRINT_CONTRACT = {
     'cells',
     'cell_dependencies',
     'resources',
-    'audit_findings',
     'slices',
     'slides',
-    'evidence_counts',
     'touchpoints',
   ],
 
+  /**
+   * Relations a signed-in reader may select and the anon key may not —
+   * 20261101130000 revokes anon on all seven. An evidence excerpt can hold
+   * interview content, the edit history names who changed what, and a finding
+   * is a team's verdict; none of them is the board.
+   *
+   * The bot holds the anon key, so it reads none of these directly. It still
+   * answers with open findings: `search_blueprint` is a security-definer
+   * function, and its `include: ['findings']` branch (`searchBlueprintInclude`)
+   * returns them inside the search call. That is the bot's one route to them.
+   *
+   * Named here so the live check can tell a closed table from a broken one:
+   * a refusal is the promise, a missing relation is drift. Until the migration
+   * is applied to a database the anon key still reads them, and the live check
+   * says so rather than failing.
+   */
+  signedInReadTables: [
+    'evidence',
+    'evidence_counts',
+    'authoring_changes',
+    'trash',
+    'audit_findings',
+    'agent_sessions',
+    'agent_messages',
+  ],
+
   /** Tables the bot actively reads (probe list for /health/blueprint). */
-  botReadTables: ['cells', 'cell_dependencies', 'audit_findings', 'slices', 'touchpoints'],
+  botReadTables: ['cells', 'cell_dependencies', 'slices', 'touchpoints'],
 
   /**
    * Columns the bot names in a DIRECT PostgREST select — the reads that do not
@@ -158,7 +186,6 @@ export const BLUEPRINT_CONTRACT = {
     ],
     cell_dependencies: ['source_cell_id', 'target_cell_id', 'kind', 'name'],
     resources: ['name', 'url', 'kind'],
-    audit_findings: ['id', 'cell_ids', 'status'],
     slices: ['id', 'title', 'actor'],
     // The registry of the tools and surfaces the service runs through — an app
     // screen, an email, a Zoom room. Anon-readable since 20260830140000; the
@@ -185,11 +212,10 @@ export const BLUEPRINT_CONTRACT = {
    * cosmetic: its label column is `title`, not `name`, so the one generic
    * read string the bot could have written was already wrong for one table.
    *
-   * Only a role a table really HAS is declared. `audit_findings` declares none
-   * and says so with an empty entry rather than being left out: a finding is a
-   * verdict keyed to cells, with no label, no prose and no order of its own,
-   * and an entry present-and-empty is a decision recorded where the next
-   * reader looks. Every direct-read table has an entry for that reason —
+   * Only a role a table really HAS is declared, and a table with none says so
+   * with an empty entry rather than being left out: an entry present-and-empty
+   * is a decision recorded where the next reader looks. Every direct-read
+   * table has an entry for that reason —
    * `botDirectReadRoles` and `botDirectReadColumns` carry the same keys, held
    * by the contract test, so a table added to one forces a role decision in
    * the other.
@@ -213,7 +239,6 @@ export const BLUEPRINT_CONTRACT = {
     cells: { prose: 'summary' },
     cell_dependencies: { name: 'name' },
     resources: { name: 'name' },
-    audit_findings: {},
     slices: { name: 'title' },
     // `kind` is the facet the registry sorts and filters touchpoints by — the
     // one column besides name and prose the bot reads for its meaning.
@@ -232,16 +257,6 @@ export const BLUEPRINT_CONTRACT = {
    * a select the live column check never sees.
    */
   botTouchpointReadKeys: ['id', 'name', 'kind', 'summary', 'url'],
-
-  /**
-   * The table audit findings live in.
-   *
-   * It was `findings` until 20260830190000 and the bot spells the new name in
-   * its own source; naming it here means the next rename travels with the
-   * vendored contract instead of being a second edit someone has to remember.
-   * Held to `botReadTables` by the contract test.
-   */
-  botFindingsTable: 'audit_findings',
 
   /**
    * PostgREST embed-hint constraint names. These are the sharpest edge in the

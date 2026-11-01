@@ -8,8 +8,11 @@ import { expectedProbeKeys, probeFailures } from '../check-bot-contract-probe.mj
 import {
   breadcrumbFailure,
   missingColumns,
+  refusesAnon,
+  staticClaimProblem,
   undeclaredKinds,
 } from '../check-blueprint-contract.mjs'
+import { replayMigrations } from '../migration-replay.mjs'
 
 /**
  * The cross-repo contract is a promise about names that live in SQL, and
@@ -355,7 +358,7 @@ test('every direct-read table has a role entry, and every role entry has a table
       `added to the read list with no roles beside it leaves the bot spelling its ` +
       `prose and position columns by hand again; a role entry for a table the bot ` +
       `does not read names columns no live check selects. A table that genuinely has ` +
-      `no role declares an empty entry, as audit_findings does.`,
+      `no role declares an empty entry.`,
   )
 })
 
@@ -392,13 +395,82 @@ test('the touchpoint read keys are all columns the touchpoints read publishes', 
   }
 })
 
-test('the findings table is one the bot declares it reads', () => {
+/**
+ * The signed-in-only surface: what 20261101130000 took off the anon key.
+ *
+ * Declared so a refusal can be told from drift. The live check accepts a
+ * refusal on these where it would fail one on `publicReadTables`, so the list
+ * must hold only relations a migration really closes — a board table slipped in
+ * here would turn its own breakage into a pass.
+ */
+test('every signed-in-only relation was introduced by a migration', () => {
+  for (const relation of contractValues('signedInReadTables')) {
+    assert.ok(
+      introducedByAMigration(relation),
+      `contract declares "${relation}" as signed-in-only but no migration ever names it`,
+    )
+  }
+})
+
+/**
+ * The anon key's last word on each relation, replayed in migration order: a
+ * `grant` of select (or all) to anon opens it, a `revoke` of the same closes it.
+ * Comments are stripped first, so a commented-out statement says nothing.
+ */
+function anonSelectState(migrations) {
+  const state = new Map()
+  for (const { sql } of migrations) {
+    const code = sql.replace(/--[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '')
+    const statement = /\b(grant|revoke)\s+([^;]*?)\s+on\s+(?:table\s+)?([^;]*?)\s+(to|from)\s+([^;]*?);/gis
+    for (const [, verb, privileges, relations, , grantees] of code.matchAll(statement)) {
+      if (!/\b(select|all)\b/i.test(privileges)) continue
+      if (!/\banon\b/i.test(grantees)) continue
+      for (const [, name] of relations.matchAll(/public\.([a-z_][a-z0-9_]*)/gi)) {
+        state.set(name, verb.toLowerCase() === 'revoke' ? 'revoked' : 'granted')
+      }
+    }
+  }
+  return state
+}
+
+test('the migration series leaves the anon key revoked on every signed-in-only relation', () => {
+  const state = anonSelectState(MIGRATIONS)
+  for (const relation of contractValues('signedInReadTables')) {
+    assert.equal(
+      state.get(relation),
+      'revoked',
+      `"${relation}" is declared signed-in-only, but the migration series does not end with ` +
+        `anon's select on it revoked. The live check excuses a refusal on this list; it must ` +
+        `not excuse one nobody made, nor survive a later grant that reopened it.`,
+    )
+  }
+})
+
+test('the anon state replay follows order and ignores comments', () => {
+  const state = anonSelectState([
+    { sql: 'revoke all on public.a, public.b from anon;' },
+    { sql: 'grant select on table public.b to anon, authenticated;' },
+    { sql: '-- revoke select on public.b from anon;\nrevoke insert on public.c from anon;' },
+  ])
+  assert.equal(state.get('a'), 'revoked')
+  assert.equal(state.get('b'), 'granted', 'a later grant reopens it; a commented revoke does not close it')
+  assert.equal(state.has('c'), false, 'revoking a write privilege says nothing about select')
+})
+
+test('no relation is both public-read and signed-in-only, and the bot reads neither closed one', () => {
+  const closed = new Set(contractValues('signedInReadTables'))
+  for (const name of ['publicReadTables', 'botReadTables']) {
+    for (const table of contractValues(name)) {
+      assert.ok(
+        !closed.has(table),
+        `"${table}" is in both ${name} and signedInReadTables. uno-bot holds the anon ` +
+          `key; a relation the anon key is refused on cannot be one it reads directly.`,
+      )
+    }
+  }
   assert.ok(
-    contractValues('botReadTables').includes(BLUEPRINT_CONTRACT.botFindingsTable),
-    `botFindingsTable is "${BLUEPRINT_CONTRACT.botFindingsTable}" but botReadTables does ` +
-      `not list it, so no /health/blueprint probe key is derived for it and no anon ` +
-      `select is run against it. The table was renamed from "findings" once already ` +
-      `(20260830190000); naming it here is only worth it while the name is checked.`,
+    !Object.keys(BLUEPRINT_CONTRACT.botDirectReadColumns).some((table) => closed.has(table)),
+    'botDirectReadColumns names a signed-in-only relation',
   )
 })
 
@@ -556,6 +628,10 @@ const COVERAGE = {
     by: 'scripts/check-blueprint-contract.mjs',
     how: 'one anon select per table against the live database; introduced-by-a-migration above',
   },
+  signedInReadTables: {
+    by: 'scripts/check-blueprint-contract.mjs',
+    how: 'one anon select per relation: a refusal passes, a missing relation fails, a read is reported as not yet closed',
+  },
   botReadTables: {
     by: 'scripts/check-bot-contract-probe.mjs',
     how: 'each becomes a required table_* probe key on /health/blueprint',
@@ -571,10 +647,6 @@ const COVERAGE = {
   botTouchpointReadKeys: {
     by: 'scripts/tests/blueprintContract.test.mjs',
     how: 'held to a subset of botDirectReadColumns.touchpoints, which is what the live check selects',
-  },
-  botFindingsTable: {
-    by: 'scripts/tests/blueprintContract.test.mjs',
-    how: 'asserted to be one of botReadTables, which is probed live and checked against the migrations',
   },
   fkConstraints: {
     by: 'scripts/check-blueprint-contract.mjs',
@@ -658,6 +730,16 @@ test('the probe check fails when the bot stops probing a declared bot read', () 
   assert.ok(
     failures.some((f) => f.includes('table_slices')),
     `a shrinking probe set must fail and name the missing key, got ${JSON.stringify(failures)}`,
+  )
+})
+
+test('the probe check fails when the bot stops probing the search findings branch', () => {
+  const probes = { ...HEALTHY_PROBE.probes }
+  delete probes.include_findings
+  const failures = probeFailures({ ...HEALTHY_PROBE, probes })
+  assert.ok(
+    failures.some((f) => f.includes('include_findings')),
+    `findings reach the bot only through the search; losing that probe must fail, got ${JSON.stringify(failures)}`,
   )
 })
 
@@ -788,4 +870,35 @@ test('the live kind check treats a retired input spelling as a stray', () => {
   // reporting green, which is the failure this whole file exists to refuse.
   // The word is the historical case; writing it down keeps the test about it.
   assert.deepEqual(undeclaredKinds([{ kind: 'layer' }], kinds, include), ['layer'])
+})
+
+test('a refusal of the anon role is told apart from a relation PostgREST does not know', () => {
+  const denied = { code: '42501', message: 'permission denied for table audit_findings' }
+  assert.equal(refusesAnon({ status: 401, ok: false, body: denied }), true)
+  assert.equal(refusesAnon({ status: 403, ok: false, body: denied }), true)
+  assert.equal(
+    refusesAnon({ status: 401, ok: false, body: { code: 'PGRST301', message: 'JWT expired' } }),
+    false,
+    'a key the server rejects is not the relation refusing the role',
+  )
+  assert.equal(
+    refusesAnon({ status: 404, ok: false, body: { code: 'PGRST205', message: 'Could not find the table' } }),
+    false,
+    'a missing relation is drift, never the promised refusal',
+  )
+})
+
+test('a claim on a signed-in-only relation resolves against the migration series', () => {
+  const schema = replayMigrations(resolve(REPO_ROOT, 'supabase/migrations'))
+  const claim = (table, column) => ({ table, column, token: `${table}.${column}` })
+  assert.equal(staticClaimProblem(claim('audit_findings', 'cell_ids'), schema), null)
+  assert.equal(staticClaimProblem(claim('trash', null), schema), null)
+  assert.match(staticClaimProblem(claim('audit_findings', 'cell_id'), schema), /column/)
+  assert.match(staticClaimProblem(claim('findings', null), schema), /no migration defines/)
+  assert.equal(staticClaimProblem(claim('evidence_counts', 'cell_id'), schema), null)
+  assert.match(
+    staticClaimProblem(claim('evidence_counts', 'excerpt'), schema),
+    /does not name/,
+    'a column the view only reads through, never selects, is not one of its columns',
+  )
 })
