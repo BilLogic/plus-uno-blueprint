@@ -1,0 +1,1491 @@
+{
+  "version": 1,
+  "issue": 748,
+  "operations": [
+    {
+      "key": "pre-share-9a02",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000811",
+          "lane_id": "a0000000-0000-4000-8000-0000000008a3",
+          "step_id": "a0000000-0000-4000-8000-000000009a02",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Reviews tutor-only badges and notes, then presses Start goal setting.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "pre-share-9a02-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "pre-share-9a02"
+          },
+          "cell_key": {
+            "ref": "pre-share-9a02",
+            "field": "cell_key"
+          },
+          "title": "#748 12.1 go-live — pre-share-9a02"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "#748 12.1 go-live — pre-share-9a02",
+        "note": "Card 2482 (Goal-Setting Iteration, student-facing screen-share surface) is Dev Status Deployed, Release 12.1, checked 2026-11-01. Module 9 step 1: before sharing, privately review tutor-only information. Handoff Spec § 2: the modal's enter button reads \"Start goal setting\"; notes show only in the tutor view."
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "pre-share-9b02",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000814",
+          "lane_id": "a0000000-0000-4000-8000-0000000008b3",
+          "step_id": "a0000000-0000-4000-8000-000000009b02",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Reviews tutor-only badges and notes, then presses Start goal check-in.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "pre-share-9b02-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "pre-share-9b02"
+          },
+          "cell_key": {
+            "ref": "pre-share-9b02",
+            "field": "cell_key"
+          },
+          "title": "#748 12.1 go-live — pre-share-9b02"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "#748 12.1 go-live — pre-share-9b02",
+        "note": "Card 2482 (Goal-Setting Iteration, student-facing screen-share surface) is Dev Status Deployed, Release 12.1, checked 2026-11-01. Module 9 step 1: before sharing, privately review tutor-only information. Handoff Spec § 2: the modal's enter button reads \"Start goal check-in\"; notes show only in the tutor view."
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "pre-share-9f03",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000816",
+          "lane_id": "a0000000-0000-4000-8000-0000000008e3",
+          "step_id": "a0000000-0000-4000-8000-000000009f03",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Reviews tutor-only badges and notes, then presses Start goal setting.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "pre-share-9f03-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "pre-share-9f03"
+          },
+          "cell_key": {
+            "ref": "pre-share-9f03",
+            "field": "cell_key"
+          },
+          "title": "#748 12.1 go-live — pre-share-9f03"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "#748 12.1 go-live — pre-share-9f03",
+        "note": "Card 2482 (Goal-Setting Iteration, student-facing screen-share surface) is Dev Status Deployed, Release 12.1, checked 2026-11-01. Module 9 step 1: before sharing, privately review tutor-only information. Handoff Spec § 2: the modal's enter button reads \"Start goal setting\"; notes show only in the tutor view."
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "review-b00403",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000b00403"
+      },
+      "expected": {
+        "content": "Reviews the last goal cycle overview and system suggestion.",
+        "summary": "Before updating anything, the tutor and student look at how the previous cycle went and the app's suggested next goal, so the new goal is informed by actual progress rather than set cold. The suggestion is generated by the app, not chosen by the tutor.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000815",
+        "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+        "step_id": "a0000000-0000-4000-8000-000000009d04",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00403/5ebcb585-16ab-0e79-86b8-6bee2fa72b4c.png",
+        "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/review-last-goal-cycle-overview-and-system-suggestion"
+      },
+      "value": {
+        "content": "Reviews last cycle's overview, the system suggestion and notes in the tutor-only view, then presses Start goal update.",
+        "summary": "Before sharing, the tutor privately reviews how the previous cycle went, the app's suggested next goal and their notes, then presses Start goal update. The student-safe view the tutor then shares hides the system suggestion and notes.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "review-b00403-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000b00403",
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/review-last-goal-cycle-overview-and-system-suggestion",
+          "title": "#748 12.1 go-live — review-b00403"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "#748 12.1 go-live — review-b00403",
+        "note": "Card 2482 (Goal-Setting Iteration, student-facing screen-share surface) is Dev Status Deployed, Release 12.1, checked 2026-11-01. Module 9 step 1 (review tutor-only information before sharing) and step 2; Handoff Spec § 2–3 (Start goal update; notes only in the tutor view). The step now precedes Share screen. The prior summary said the student sees the suggested next goal; the student-safe view hides it."
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "review-d00503",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000d00503"
+      },
+      "expected": {
+        "content": "Reviews the last goal cycle overview and system suggestion.",
+        "summary": "Before updating anything, the tutor and student look at how the previous cycle went and the app's suggested next goal, so the new goal is informed by actual progress rather than set cold. The suggestion is generated by the app, not chosen by the tutor.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f3",
+        "step_id": "a0000000-0000-4000-8000-000000009e05",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000d00503/409fce75-a5ea-d7f4-195b-086ed924b868.png",
+        "cell_key": "plus-application/goal-setting/update-goals-edge-case/regular-tutor/review-last-goal-cycle-overview-and-system-suggestion"
+      },
+      "value": {
+        "content": "Reviews last cycle's overview, the system suggestion and notes in the tutor-only view, then presses Start goal update.",
+        "summary": "Before sharing, the tutor privately reviews how the previous cycle went, the app's suggested next goal and their notes, then presses Start goal update. The student-safe view the tutor then shares hides the system suggestion and notes.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "review-d00503-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000d00503",
+          "cell_key": "plus-application/goal-setting/update-goals-edge-case/regular-tutor/review-last-goal-cycle-overview-and-system-suggestion",
+          "title": "#748 12.1 go-live — review-d00503"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "#748 12.1 go-live — review-d00503",
+        "note": "Card 2482 (Goal-Setting Iteration, student-facing screen-share surface) is Dev Status Deployed, Release 12.1, checked 2026-11-01. Module 9 step 1 (review tutor-only information before sharing) and step 2; Handoff Spec § 2–3 (Start goal update; notes only in the tutor view). The step now precedes Share screen. The prior summary said the student sees the suggested next goal; the student-safe view hides it."
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "share-1f0303",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-0000001f0303"
+      },
+      "expected": {
+        "content": "Shares screen.",
+        "summary": "The tutor shares their screen so the student can see the same goal-setting view the tutor is working from, rather than describing it verbally. This is what lets the tutor walk the student through the exact fields being filled in.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000811",
+        "lane_id": "a0000000-0000-4000-8000-0000000008a3",
+        "step_id": "a0000000-0000-4000-8000-000000009a03",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001f0303/b77dac8f-0ab7-5252-29d2-7af706007fc9.png",
+        "cell_key": "plus-application/goal-setting/set-goals/regular-tutor/share-screen"
+      },
+      "value": {
+        "content": "Shares screen once the app says the student-safe view is ready.",
+        "summary": "The app shows a banner when it is safe to share: \"Share your screen now — {FirstName} can safely see this view.\" The student-safe view hides system suggestions and the tutor's notes.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "share-1f0303-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-0000001f0303",
+          "cell_key": "plus-application/goal-setting/set-goals/regular-tutor/share-screen",
+          "title": "#748 12.1 go-live — share-1f0303"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "#748 12.1 go-live — share-1f0303",
+        "note": "Card 2482 (Goal-Setting Iteration, student-facing screen-share surface) is Dev Status Deployed, Release 12.1, checked 2026-11-01. Module 9 step 2: wait until the app confirms the student-safe view is ready before sharing. Handoff Spec § 3: enter banner copy."
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "share-a00303",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000a00303"
+      },
+      "expected": {
+        "content": "Shares screen.",
+        "summary": "The tutor shares their screen so the student can see the same goal-setting view the tutor is working from, rather than describing it verbally. This is what lets the tutor walk the student through the exact fields being filled in.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000814",
+        "lane_id": "a0000000-0000-4000-8000-0000000008b3",
+        "step_id": "a0000000-0000-4000-8000-000000009b03",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000a00303/2ef46d48-204f-0194-9423-ab98165ff1e2.png",
+        "cell_key": "plus-application/goal-setting/check-goals/regular-tutor/share-screen"
+      },
+      "value": {
+        "content": "Shares screen once the app says the student-safe view is ready.",
+        "summary": "The app shows a banner when it is safe to share: \"Share your screen now — {FirstName} can safely see this view.\" The student-safe view hides system suggestions and the tutor's notes.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "share-a00303-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000a00303",
+          "cell_key": "plus-application/goal-setting/check-goals/regular-tutor/share-screen",
+          "title": "#748 12.1 go-live — share-a00303"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "#748 12.1 go-live — share-a00303",
+        "note": "Card 2482 (Goal-Setting Iteration, student-facing screen-share surface) is Dev Status Deployed, Release 12.1, checked 2026-11-01. Module 9 step 2: wait until the app confirms the student-safe view is ready before sharing. Handoff Spec § 3: enter banner copy."
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "share-b00303",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000b00303"
+      },
+      "expected": {
+        "content": "Shares screen.",
+        "summary": "The tutor shares their screen so the student can see the same goal-setting view the tutor is working from, rather than describing it verbally. This is what lets the tutor walk the student through the exact fields being filled in.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000815",
+        "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+        "step_id": "a0000000-0000-4000-8000-000000009d03",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000b00303/715e7771-4740-1895-e9b9-1fb78b0d6462.png",
+        "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/share-screen"
+      },
+      "value": {
+        "content": "Shares screen once the app says the student-safe view is ready.",
+        "summary": "The app shows a banner when it is safe to share: \"Share your screen now — {FirstName} can safely see this view.\" The student-safe view hides system suggestions and the tutor's notes.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "share-b00303-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000b00303",
+          "cell_key": "plus-application/goal-setting/update-goals/regular-tutor/share-screen",
+          "title": "#748 12.1 go-live — share-b00303"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "#748 12.1 go-live — share-b00303",
+        "note": "Card 2482 (Goal-Setting Iteration, student-facing screen-share surface) is Dev Status Deployed, Release 12.1, checked 2026-11-01. Module 9 step 2: wait until the app confirms the student-safe view is ready before sharing. Handoff Spec § 3: enter banner copy."
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "share-c00403",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000c00403"
+      },
+      "expected": {
+        "content": "Shares screen.",
+        "summary": "The tutor shares their screen so the student can see the same goal-setting view the tutor is working from, rather than describing it verbally. This is what lets the tutor walk the student through the exact fields being filled in.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e3",
+        "step_id": "a0000000-0000-4000-8000-000000009f04",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000c00403/322fab0d-03bf-987b-c2e8-c44224ec8fe4.png",
+        "cell_key": "plus-application/goal-setting/set-goals-edge-case/regular-tutor/share-screen"
+      },
+      "value": {
+        "content": "Shares screen once the app says the student-safe view is ready.",
+        "summary": "The app shows a banner when it is safe to share: \"Share your screen now — {FirstName} can safely see this view.\" The student-safe view hides system suggestions and the tutor's notes.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "share-c00403-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000c00403",
+          "cell_key": "plus-application/goal-setting/set-goals-edge-case/regular-tutor/share-screen",
+          "title": "#748 12.1 go-live — share-c00403"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "#748 12.1 go-live — share-c00403",
+        "note": "Card 2482 (Goal-Setting Iteration, student-facing screen-share surface) is Dev Status Deployed, Release 12.1, checked 2026-11-01. Module 9 step 2: wait until the app confirms the student-safe view is ready before sharing. Handoff Spec § 3: enter banner copy."
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "share-d00403",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000d00403"
+      },
+      "expected": {
+        "content": "Shares screen.",
+        "summary": "The tutor shares their screen so the student can see the same goal-setting view the tutor is working from, rather than describing it verbally. This is what lets the tutor walk the student through the exact fields being filled in.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f3",
+        "step_id": "a0000000-0000-4000-8000-000000009e04",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000d00403/ea0070c7-856f-b4b0-7c7c-483dd4703c47.png",
+        "cell_key": "plus-application/goal-setting/update-goals-edge-case/regular-tutor/share-screen"
+      },
+      "value": {
+        "content": "Shares screen once the app says the student-safe view is ready.",
+        "summary": "The app shows a banner when it is safe to share: \"Share your screen now — {FirstName} can safely see this view.\" The student-safe view hides system suggestions and the tutor's notes.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "share-d00403-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000d00403",
+          "cell_key": "plus-application/goal-setting/update-goals-edge-case/regular-tutor/share-screen",
+          "title": "#748 12.1 go-live — share-d00403"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "#748 12.1 go-live — share-d00403",
+        "note": "Card 2482 (Goal-Setting Iteration, student-facing screen-share surface) is Dev Status Deployed, Release 12.1, checked 2026-11-01. Module 9 step 2: wait until the app confirms the student-safe view is ready before sharing. Handoff Spec § 3: enter banner copy."
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "stop-share-9a08",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000811",
+          "lane_id": "a0000000-0000-4000-8000-0000000008a3",
+          "step_id": "a0000000-0000-4000-8000-000000009a08",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Stops sharing when prompted, then finishes in the tutor view.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "stop-share-9a08-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "stop-share-9a08"
+          },
+          "cell_key": {
+            "ref": "stop-share-9a08",
+            "field": "cell_key"
+          },
+          "title": "#748 12.1 go-live — stop-share-9a08"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "#748 12.1 go-live — stop-share-9a08",
+        "note": "Card 2482 (Goal-Setting Iteration, student-facing screen-share surface) is Dev Status Deployed, Release 12.1, checked 2026-11-01. Handoff Spec § 3: exit banner \"Goals saved. Stop sharing your screen — the rest is tutor-only.\"; the post-share tutor view shows notes and Edit. Module 9: follow the app's prompts for when to begin and stop sharing."
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "stop-share-9b05",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000814",
+          "lane_id": "a0000000-0000-4000-8000-0000000008b3",
+          "step_id": "a0000000-0000-4000-8000-000000009b05",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Stops sharing when prompted, then finishes in the tutor view.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "stop-share-9b05-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "stop-share-9b05"
+          },
+          "cell_key": {
+            "ref": "stop-share-9b05",
+            "field": "cell_key"
+          },
+          "title": "#748 12.1 go-live — stop-share-9b05"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "#748 12.1 go-live — stop-share-9b05",
+        "note": "Card 2482 (Goal-Setting Iteration, student-facing screen-share surface) is Dev Status Deployed, Release 12.1, checked 2026-11-01. Handoff Spec § 3: exit banner \"Goals checked. Stop sharing your screen — the rest is tutor-only.\"; the post-share tutor view shows notes and Edit. Module 9: follow the app's prompts for when to begin and stop sharing."
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "stop-share-9d08",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d08",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Stops sharing when prompted, then finishes in the tutor view.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "stop-share-9d08-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "stop-share-9d08"
+          },
+          "cell_key": {
+            "ref": "stop-share-9d08",
+            "field": "cell_key"
+          },
+          "title": "#748 12.1 go-live — stop-share-9d08"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "#748 12.1 go-live — stop-share-9d08",
+        "note": "Card 2482 (Goal-Setting Iteration, student-facing screen-share surface) is Dev Status Deployed, Release 12.1, checked 2026-11-01. Handoff Spec § 3: exit banner \"Goals saved. Stop sharing your screen — the rest is tutor-only.\"; the post-share tutor view shows notes and Edit. Module 9: follow the app's prompts for when to begin and stop sharing."
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "stop-share-9f09",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000816",
+          "lane_id": "a0000000-0000-4000-8000-0000000008e3",
+          "step_id": "a0000000-0000-4000-8000-000000009f09",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Stops sharing when prompted, then finishes in the tutor view.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "stop-share-9f09-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "stop-share-9f09"
+          },
+          "cell_key": {
+            "ref": "stop-share-9f09",
+            "field": "cell_key"
+          },
+          "title": "#748 12.1 go-live — stop-share-9f09"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "#748 12.1 go-live — stop-share-9f09",
+        "note": "Card 2482 (Goal-Setting Iteration, student-facing screen-share surface) is Dev Status Deployed, Release 12.1, checked 2026-11-01. Handoff Spec § 3: exit banner \"Goals saved. Stop sharing your screen — the rest is tutor-only.\"; the post-share tutor view shows notes and Edit. Module 9: follow the app's prompts for when to begin and stop sharing."
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "stop-share-9e09",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000817",
+          "lane_id": "a0000000-0000-4000-8000-0000000008f3",
+          "step_id": "a0000000-0000-4000-8000-000000009e09",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Stops sharing when prompted, then finishes in the tutor view.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "stop-share-9e09-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "stop-share-9e09"
+          },
+          "cell_key": {
+            "ref": "stop-share-9e09",
+            "field": "cell_key"
+          },
+          "title": "#748 12.1 go-live — stop-share-9e09"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "#748 12.1 go-live — stop-share-9e09",
+        "note": "Card 2482 (Goal-Setting Iteration, student-facing screen-share surface) is Dev Status Deployed, Release 12.1, checked 2026-11-01. Handoff Spec § 3: exit banner \"Goals saved. Stop sharing your screen — the rest is tutor-only.\"; the post-share tutor view shows notes and Edit. Module 9: follow the app's prompts for when to begin and stop sharing."
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "undo-9b05",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000814",
+          "lane_id": "a0000000-0000-4000-8000-0000000008b3",
+          "step_id": "a0000000-0000-4000-8000-000000009b05",
+          "position": 2
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Can press Undo to revert Goals checked.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "undo-9b05-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "undo-9b05"
+          },
+          "cell_key": {
+            "ref": "undo-9b05",
+            "field": "cell_key"
+          },
+          "title": "#748 12.1 go-live — undo-9b05"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "#748 12.1 go-live — undo-9b05",
+        "note": "Card 2482 (Goal-Setting Iteration, student-facing screen-share surface) is Dev Status Deployed, Release 12.1, checked 2026-11-01. Handoff Spec § 1–2: the check-goals checked state reads \"Goals checked\"; the modal header carries Undo (rotate-left) to revert."
+      },
+      "evidence": [
+        "https://www.notion.so/32cb7cca49828080ab2fefa7f0908fe5 (draft Module 9, § How to do Goal Support, steps 1–2)",
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma tHttBT17FkwerGssmrpHFF node 1887:171090 (Goal Setting final spec, card 2482)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 11900:95680 (Goal Alert, share banners)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "reward-9d04",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d04",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Sees an Eligible for reward chip when the student met at least one goal last cycle.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 157:180892 (Goal / Check-in Badges; read 2026-11-01)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    },
+    {
+      "key": "reward-9d04-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "reward-9d04"
+          },
+          "cell_key": {
+            "ref": "reward-9d04",
+            "field": "cell_key"
+          },
+          "title": "#748 12.1 go-live — reward-9d04"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "#748 12.1 go-live — reward-9d04",
+        "note": "Card 2482 (Goal-Setting Iteration, student-facing screen-share surface) is Dev Status Deployed, Release 12.1, checked 2026-11-01. Figma Goal / Check-in Badges: \"Shown at the start of a new cycle if the student met at least one of their two goals last cycle.\" Tooltip: \"This student earned a reward for meeting at least one of their goals last cycle.\" The ticket's \"clears when the cycle closes\" was not found in the nodes read, so the cell does not claim it."
+      },
+      "evidence": [
+        "https://www.notion.so/37ab7cca49828088ba61ff6957494f18 (card 2482, Dev Status Deployed, Release 12.1, checked 2026-11-01)",
+        "https://www.notion.so/3a3b7cca49828113b7b3c37275a66f86 (card 2482 Handoff Spec)",
+        "Figma W0qzhXWxFsMwSJzkdV2yal node 157:180892 (Goal / Check-in Badges; read 2026-11-01)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/748"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "pre-share-9a02"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000811",
+          "lane_id": "a0000000-0000-4000-8000-0000000008a3",
+          "step_id": "a0000000-0000-4000-8000-000000009a02"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "pre-share-9b02"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000814",
+          "lane_id": "a0000000-0000-4000-8000-0000000008b3",
+          "step_id": "a0000000-0000-4000-8000-000000009b02"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "pre-share-9f03"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000816",
+          "lane_id": "a0000000-0000-4000-8000-0000000008e3",
+          "step_id": "a0000000-0000-4000-8000-000000009f03"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000b00403"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00503"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001f0303"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000a00303"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000b00303"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000c00403"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00403"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "stop-share-9a08"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000811",
+          "lane_id": "a0000000-0000-4000-8000-0000000008a3",
+          "step_id": "a0000000-0000-4000-8000-000000009a08"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "stop-share-9b05"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000814",
+          "lane_id": "a0000000-0000-4000-8000-0000000008b3",
+          "step_id": "a0000000-0000-4000-8000-000000009b05"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "stop-share-9d08"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d08"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "stop-share-9f09"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000816",
+          "lane_id": "a0000000-0000-4000-8000-0000000008e3",
+          "step_id": "a0000000-0000-4000-8000-000000009f09"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "stop-share-9e09"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000817",
+          "lane_id": "a0000000-0000-4000-8000-0000000008f3",
+          "step_id": "a0000000-0000-4000-8000-000000009e09"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "undo-9b05"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000814",
+          "lane_id": "a0000000-0000-4000-8000-0000000008b3",
+          "step_id": "a0000000-0000-4000-8000-000000009b05"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "reward-9d04"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000815",
+          "lane_id": "a0000000-0000-4000-8000-0000000008d3",
+          "step_id": "a0000000-0000-4000-8000-000000009d04"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000204"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000204"
+        }
+      },
+      "beforeCount": 60,
+      "afterCount": 60
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000811"
+        }
+      },
+      "beforeCount": 11,
+      "afterCount": 11
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000811"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 9
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000811"
+        }
+      },
+      "beforeCount": 70,
+      "afterCount": 72
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000814"
+        }
+      },
+      "beforeCount": 8,
+      "afterCount": 8
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000814"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 9
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000814"
+        }
+      },
+      "beforeCount": 50,
+      "afterCount": 53
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000815"
+        }
+      },
+      "beforeCount": 11,
+      "afterCount": 11
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000815"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 9
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000815"
+        }
+      },
+      "beforeCount": 70,
+      "afterCount": 72
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000816"
+        }
+      },
+      "beforeCount": 12,
+      "afterCount": 12
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000816"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 9
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000816"
+        }
+      },
+      "beforeCount": 72,
+      "afterCount": 74
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000817"
+        }
+      },
+      "beforeCount": 12,
+      "afterCount": 12
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000817"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 9
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000817"
+        }
+      },
+      "beforeCount": 74,
+      "afterCount": 75
+    }
+  ]
+}
