@@ -121,12 +121,11 @@ slices and slides stay readable signed-out, and the database types are
 unchanged.
 
 The application gates the Evidence tab on sign-in. Nothing under
-`deployment/` or `scripts/` reads those tables without a session. The
-blueprint contract does: `publicReadTables` names `audit_findings` and
-`evidence_counts`, and uno-bot reads `audit_findings` with the anon key, so
-once this is applied the bot's findings read and `check:contract:live` need a
-decision. Apply it with
-`npm run apply:pending -- --from=20261101130000 --apply` once approved.
+`deployment/` or `scripts/` reads those tables without a session. uno-bot
+holds the anon key, so it no longer reads `audit_findings` directly: open
+findings reach it through `search_blueprint`'s findings branch, and the
+contract lists the seven as `signedInReadTables`. Applied November 1, 2026;
+`check:contract:live` now fails if the anon key can read any of them.
 
 ## Prepared upgrade to v2.9.0
 
