@@ -68,8 +68,46 @@ nine evidence rows on these cells stay: evidence has no foreign key to cells.
 The runner gained `delete_cell`, `remove_step` and `remove_lane` for this batch,
 with tests in `scripts/tests/content-changeset-database.test.mjs`.
 
+## Partial apply and its recovery
+
+The first batch stopped after its tenth operation. All nine cell deletes and
+the membership removal had landed, each with one trash row (ledger 858→868),
+and the rows read back as intended. The failed check was the runner's own
+projection. `remove_step` renumbers the memberships left on the path, and its
+UPDATE rewrites `updated_at` on each one. The projection kept the old value,
+so the post-write check on the path's five memberships failed, and the batch
+stopped before the lane. The projection now drops generated columns from
+renumbered rows, like any other write's, and a fixture test covers it.
+
+`0737-owner-deletes-recovery.json` is the lane delete alone. Its checks also
+assert the first batch's whole end state: the nine cells gone, with their
+edges, placements and resources; their evidence kept; the step on Under 12
+hours only, with its 3 cells; and the five memberships on 12+ hours ahead at
+0–4. The first batch's receipt stays in place. Its separate verify reports
+three things, as expected: the lane, which is in the recovery receipt; the
+stale `updated_at` it captured for those five memberships; and that the
+receipt is incomplete. Every other check passes, and so does every trash
+record.
+
+## Trash rows
+
+| Operation | `authoring_changes` id |
+|---|---|
+| G13-clear-1f0701 | `1e41d7de-72de-4ac2-8c08-eab56af0e498` |
+| G13-clear-a00701 | `f0e791bf-5019-4284-b994-48c093e873bb` |
+| G13-clear-b00701 | `e8c63371-7bc6-4e2a-af97-fe95327dbb39` |
+| G13-clear-c00701 | `5969aefd-38c9-4f43-b466-66756b1839fb` |
+| G13-clear-d00701 | `89aedfe0-44dc-4406-a844-c0424f4c5708` |
+| row29-delete-170303 | `b331d6e2-dcf4-486e-9f54-af7824231257` |
+| row29-delete-170304 | `57b55612-f3af-4a67-a27d-18b467476ca6` |
+| row29-delete-170306 | `9df155c6-8029-4a8e-853a-cc666728b2f0` |
+| row29-delete-170310 | `2585e938-dc88-43b8-8371-ac56df7e3cff` |
+| row29-remove-12plus-membership | `357edda7-7db5-4c08-9e93-cc52d58401b3` |
+| fill-in-remove-empty-lead-tutor-lane (`remove_lanes`) | `546e4ec2-e826-4d80-90c7-b075b6d64990` |
+
 ## Dry-run, apply and verify (November 1, 2026)
 
-| Mode | Result |
-|---|---|
-| Dry-run | `ok`, no failures, 11 entries, ledger 858→858 |
+| Batch | SHA-256 | Result |
+|---|---|---|
+| Deletes | `d411cff6ed47c859b9edca3da64d87138c9c732ba5d633f7a816e774805a0b21` | Dry-run `ok` twice, ledger 858→858. Apply stopped after 10 of 11 operations (above). Its separate verify reports only the three expected failures |
+| Recovery | `fbcc6139efff6cb3370cfaef658adf7e295553c48906dd4ec6b9747bebb65a07` | Dry-run `ok`, ledger 868→868. Apply 1/1, ledger 868→869. Separate verify `ok: true`, no failures |
