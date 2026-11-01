@@ -112,3 +112,22 @@ this batch.
 - **Not checked live.** `add_lane` and `set_path_steps` are sanctioned app
   RPCs, but this runner has not called either on the hosted database before.
   Their success is established only by this apply.
+
+## Applied (November 1, 2026)
+
+- `0744-pre-session-live-behaviour.json` (sha256 `a85c3be8…8b59`). All 37
+  operations applied, each with its durable inverse, and `add_lane` and
+  `set_path_steps` worked on the hosted database. Verify left one failure:
+  the new FST cell (`r27-touchpoints`) had no PLUS App or Slack placements.
+  `upsert_cell_at_status` doesn't sync placements; only the content mutation
+  does, and this cell was created without a summary, so that mutation never
+  ran.
+- `0744-b-touchpoint-placements.json` (sha256 `92422bc6…da44`) is the
+  follow-up. It adds a summary to that cell through the sanctioned content
+  mutation, which places both touchpoints, and adds one evidence row.
+  Dry-run, apply and verify all passed.
+- Re-running the first batch's verify now passes every check but one: its
+  evidence count on `r27-touchpoints` expects 1 and finds 2. That second row
+  is the follow-up's own evidence row.
+- Lesson: a new touchpoint-lane cell needs a summary in its creation
+  operation, or its placements are never synced.
