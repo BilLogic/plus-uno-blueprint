@@ -97,6 +97,10 @@ creates as side effects, including copied lanes and a scenario's initial path.
 | Operation | Target / fields | Additional input |
 |---|---|---|
 | `update_cell_content` | `cells`; content, summary, status, owner, perceived_owner | Actual `cellContentMutations.updateCellContent`; captures all prior text fields and synced placements |
+| `update_cell_status` | Existing `cells`; status alone | Actual `updateCellStatus`; preserves blank text, all other fields and placements, and awaits its durable ID. A same-status batch is refused during preflight because it would produce no write/record |
+| `rename_step` | Existing `steps`; name | Actual optional host `renameStep`; required `input.expected_path_steps` lists every `{ path_id, position }` membership at review time |
+| `move_cell` | Existing `cells` by id/key; all four coordinates in both expected and value | Actual optional host `moveCell`; path_id/lane_id/step_id/position, same scenario, valid source/destination memberships, vacant destination, no conflicting incident edges |
+| `insert_cell_at_position` | New `cells`; scope path_id/lane_id/step_id/position; content/status | Actual optional host `insertCellAtPosition`; insert-only, explicit nonnegative position and status, server-minted ID/key, preserves existing conversations |
 | `upsert_cell_at_status` | New `cells`; scope path_id/lane_id/step_id/position=0; content/status, optional summary | RPC records creation; optional summary uses the cell mutation and captures a second inverse |
 | `create_path_at_status` | New `paths`; scope scenario_id/name; kind/status, optional summary/note | Optional input.lane_source_path_id; optional prose uses updatePathSpec |
 | `set_path_status` | Existing `paths`; status | RPC records itself |
@@ -112,16 +116,53 @@ creates as side effects, including copied lanes and a scenario's initial path.
 | `update_step_spec` | `steps`; summary | Actual stepSpecMutations |
 
 An unknown operation is a preflight error. `set_cell_status` is deliberately
-unsupported: the hosted database has no such function. Edit a cell's status
-with `update_cell_content`. A missing sanctioned operation is a ticket blocker,
+unsupported: the hosted database has no such function. Edit status alone with
+`update_cell_status`, or use `update_cell_content` for a combined text edit.
+A missing sanctioned operation is a ticket blocker,
 not permission to write a table or change grants.
 
 `create_scenario` cannot create a path with zero initial steps. Its RPC clamps
 the requested count to at least one and names the generated columns Step 1,
 Step 2 and so on. Adding named steps afterward does not replace these rows.
-The current surface has no step rename, and deleting a placeholder is
-human-only. Resolve that scope before applying a scenario with specified
+A placeholder can now be renamed with the guarded shared-step rename;
+deleting one is still human-only. Resolve that scope before applying a scenario with specified
 column names; dry-run does not simulate every RPC side effect.
+
+### Guarded host capabilities
+
+The optional host wrappers arrive in template v2.8.10; this deployment pins v2.8.12 and has the reviewed rename, move and insertion RPCs installed. The deployment must
+separately install their reviewed RPC contracts before they are usable; a
+successful pin/install or read-only dry-run does not establish hosted RPC
+availability. Never probe availability by attempting an unapproved write.
+The release's canvas database upgrade is a separate prerequisite before
+deploying that app release. Preparation and fixture proofs authorize neither
+upgrade nor content application.
+
+A shared-step rename guards its exact prior name and its complete membership
+list. Dry-run reports every affected path, its name and step position. A
+membership added, removed or reordered since the reviewed changeset fails
+preflight. A move requires complete expected source and destination coordinates;
+position 0 is never assumed vacant. An insertion requires an exact vacant slot
+and never upserts. These operations preserve identities and existing prose.
+
+The adapter captures parent/step/lane/membership and per-path cell rows, plus
+evidence, placements, resources and incident dependencies for affected cells
+and the destination square. Postconditions change only the approved fields;
+all other captured fields remain exact. Only an approved edited row's write
+timestamp may change. Scoped row counts also catch extra placeholders.
+New insertion keys must resolve to
+exactly the returned identity. Subsequent approved edits/additions advance
+those expectations; separate verification checks the final captured state.
+Implicit structural side effects outside these contracts remain a failure,
+not permission to relax preservation checks.
+
+Each capability must produce exactly one durable row. The adapter consumes
+the host RPC's receipt without another append; status-only edits use the
+mutation's required record. It independently constructs the expected durable
+args/inverse from the pre-state and compares them with the returned log row.
+A duplicate append, missing inverse or concurrent ledger growth stops the batch
+for inspection. Creation's captured delete is audit data for human recovery;
+this runner has no inverse-execution path.
 
 Statuses follow #737: Triage → proposed; Ready for Dev → planned; Code Review,
 Testing, Ready for QA and Ready for Prod → built. Deployed becomes live only
@@ -149,6 +190,12 @@ If a run fails, inspect both the rows and `authoring_changes`, post what
 landed and what remains unverified, and reconcile before a separately reviewed
 follow-up batch. An existing receipt blocks repeating apply. Do not delete it
 to get past the guard.
+
+For a typed partial status failure, the attempt marker also retains the
+session-captured operation, args and recovery inverse as audit data. It never
+rehydrates a session entry or executes that JSON. A malformed host receipt may
+also mean the server committed; its attempt marker and pre-state remain, and
+the runner stops without retrying or claiming a verified apply.
 
 ## Tests
 

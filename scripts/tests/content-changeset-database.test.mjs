@@ -19,10 +19,10 @@ const changeset = {
 }
 
 /** A disposable PostgREST boundary, never a mock of the mutation modules. */
-function databaseFixture({ zeroRows = false, failAppend = false } = {}) {
+function databaseFixture({ zeroRows = false, failAppend = false, corruptCell = false, wrongInverse = false, duplicateLog = false, missingRpc = false, nilReceipt = false, raceMove = false } = {}) {
   const tables = {
-    cells: [{ ...seed }], authoring_changes: [], evidence: [], services: [{ id }],
-    paths: [{ id, scenario_id: id }], lanes: [{ id, path_id: id }], steps: [{ id, scenario_id: id }],
+    cells: [{ ...seed }], authoring_changes: [], evidence: [], cell_touchpoints: [], resources: [], cell_dependencies: [], services: [{ id }],
+    paths: [{ id, scenario_id: id }], lanes: [{ id, path_id: id }], steps: [{ id, scenario_id: id, name: 'Old step' }], path_steps: [],
   }
   const requests = []
   let counter = 1
@@ -35,6 +35,40 @@ function databaseFixture({ zeroRows = false, failAppend = false } = {}) {
       status, headers: { 'Content-Type': 'application/json', ...headers },
     })
     if (url.pathname.endsWith('/rpc/sync_cell_touchpoints')) return answer({ removed: [] })
+    if (missingRpc && /\/rpc\/(rename_step|move_cell|insert_cell_at_position)$/.test(url.pathname)) return answer({ code: 'PGRST202', message: 'Missing host operation' }, 404)
+    if (url.pathname.endsWith('/rpc/insert_cell_at_position')) {
+      const cellId = `40000000-0000-4000-8000-${String(counter++).padStart(12, '0')}`
+      const changeId = `50000000-0000-4000-8000-${String(counter++).padStart(12, '0')}`
+      const row = { id: cellId, cell_key: `fixture/new--${cellId}`, path_id: body.path_id, lane_id: body.lane_id, step_id: body.step_id, position: body.at_position, content: body.content, status: body.status }
+      tables.cells.push(row)
+      tables.authoring_changes.push({ id: changeId, fn: 'insert_cell_at_position', author: 'human',
+        args: { path_id: body.path_id, lane_id: body.lane_id, step_id: body.step_id, position: body.at_position, content: body.content, status: body.status, cell_id: cellId },
+        revert: { fn: 'delete_cell', args: { cell_id: cellId } },
+      })
+      return answer({ id: cellId, cell_key: row.cell_key, change_id: changeId })
+    }
+    if (url.pathname.endsWith('/rpc/move_cell')) {
+      const row = tables.cells.find((cell) => cell.id === body.cell_id)
+      if (raceMove) row.position = 2
+      if (!row || Object.entries(body.expected_source).some(([field, value]) => row[field] !== value)) return answer({ message: 'Cell moved', code: '40001' }, 409)
+      const changeId = `50000000-0000-4000-8000-${String(counter++).padStart(12, '0')}`
+      const revert = { fn: 'move_cell', args: { cell_id: row.id, expected_source: body.destination, destination: body.expected_source } }
+      Object.assign(row, body.destination)
+      tables.authoring_changes.push({ id: changeId, fn: 'move_cell', args: body, revert, author: 'human' })
+      return answer({ id: row.id, change_id: changeId })
+    }
+    if (url.pathname.endsWith('/rpc/rename_step')) {
+      const row = tables.steps.find((step) => step.id === body.step_id)
+      if (!row || row.name !== body.expected_name) return answer({ message: 'Step name changed', code: '40001' }, 409)
+      const changeId = `50000000-0000-4000-8000-${String(counter++).padStart(12, '0')}`
+      const revert = { fn: 'rename_step', args: { step_id: row.id, expected_name: body.new_name, new_name: row.name } }
+      row.name = body.new_name
+      tables.authoring_changes.push({ id: changeId, fn: 'rename_step', args: body, revert, author: 'human' })
+      if (wrongInverse) revert.args.new_name = 'Not the prior name'
+      if (duplicateLog) tables.authoring_changes.push({ id: '60000000-0000-4000-8000-000000000001', fn: 'rename_step', args: body, revert, author: 'human' })
+      if (corruptCell) tables.cells[0].content = 'Unexpected rewrite'
+      return answer({ id: row.id, change_id: nilReceipt ? '00000000-0000-0000-0000-000000000000' : changeId })
+    }
     if (url.pathname.endsWith('/rpc/upsert_cell_at_status')) {
       const cellId = `40000000-0000-4000-8000-${String(counter++).padStart(12, '0')}`
       const changeId = `50000000-0000-4000-8000-${String(counter++).padStart(12, '0')}`
@@ -117,6 +151,244 @@ test('the command awaits the mutation module’s append and refuses success when
     expect(result.failures.join('\n')).toContain('Durable append failed after write')
     expect(fixture.tables.cells[0].content).toBe('Creates sessions.')
     expect(fixture.tables.authoring_changes).toEqual([])
+  } finally { fixture.database.close() }
+})
+
+test('status-only changes preserve a blank cell, wait for its one durable inverse and verify separately', async () => {
+  const fixture = databaseFixture()
+  fixture.tables.cells[0].content = ''
+  const batch = { version: 1, issue: 766, operations: [{
+    key: 'blank-status', operation: 'update_cell_status', target: { table: 'cells', id },
+    expected: { status: 'built' }, value: { status: 'planned' }, evidence: ['Fixture source'],
+  }] }
+  try {
+    expect((await runChangeset(batch, 'verify', fixture.database)).ok).toBe(false)
+    expect((await runChangeset(batch, 'dry-run', fixture.database)).ok).toBe(true)
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+    const applied = await runChangeset(batch, 'apply', fixture.database)
+    expect(applied.failures).toEqual([])
+    expect(fixture.tables.cells[0]).toMatchObject({ content: '', summary: seed.summary, status: 'planned' })
+    expect(fixture.tables.authoring_changes).toHaveLength(1)
+    expect(fixture.tables.authoring_changes[0]).toMatchObject({
+      fn: 'update_cell_status', args: { cell_id: id, status: 'planned', expected_status: 'built' },
+      revert: { fn: 'update_cell_status', args: { cell_id: id, status: 'built', expected_status: 'planned' } },
+    })
+    expect(fixture.requests.some(({ path }) => path.endsWith('sync_cell_touchpoints'))).toBe(false)
+    expect((await runChangeset(batch, 'verify', fixture.database, { receipt: applied.applied })).ok).toBe(true)
+    fixture.tables.cells[0].content = 'Unexpected rewrite'
+    expect((await runChangeset(batch, 'verify', fixture.database, { receipt: applied.applied })).ok).toBe(false)
+  } finally { fixture.database.close() }
+})
+
+const secondPath = '10000000-0000-4000-8000-000000000002'
+function sharedStepFixture(options) {
+  const fixture = databaseFixture(options)
+  fixture.tables.paths.push({ id: secondPath, scenario_id: id })
+  fixture.tables.path_steps.push({ path_id: id, step_id: id, position: 0 }, { path_id: secondPath, step_id: id, position: 2 })
+  Object.assign(fixture.tables.cells[0], { path_id: id, lane_id: id, step_id: id, position: 0, cell_key: 'fixture/stable-cell' })
+  fixture.tables.cell_touchpoints.push({ id, cell_id: id, name: 'Keep placement', position: 0, updated_at: '2026-10-20T00:00:00Z' })
+  fixture.tables.resources.push({ id, cell_id: id, cell_touchpoint_id: id, name: 'Keep source' })
+  fixture.tables.evidence.push({ id, cell_id: id, title: 'Keep evidence' })
+  return fixture
+}
+const renameBatch = { version: 1, issue: 766, operations: [{
+  key: 'rename', operation: 'rename_step', target: { table: 'steps', id },
+  input: { expected_path_steps: [{ path_id: id, position: 0 }, { path_id: secondPath, position: 2 }] },
+  expected: { name: 'Old step' }, value: { name: 'New step' }, evidence: ['Fixture source'],
+}] }
+
+test('a placement changed after preflight is refused before a status write', async () => {
+  const fixture = sharedStepFixture()
+  const batch = { version: 1, issue: 766, operations: [{
+    key: 'status', operation: 'update_cell_status', target: { table: 'cells', id },
+    expected: { status: 'built' }, value: { status: 'planned' }, evidence: ['Fixture source'],
+  }] }
+  const prepare = fixture.database.prepare
+  let calls = 0
+  fixture.database.prepare = async (...args) => {
+    if (++calls === 2) fixture.tables.cell_touchpoints[0].name = 'Concurrent placement edit'
+    return prepare(...args)
+  }
+  try {
+    const result = await runChangeset(batch, 'apply', fixture.database)
+    expect(result.ok).toBe(false)
+    expect(result.failures.join('\n')).toContain('preservation')
+    expect(fixture.tables.cells[0].status).toBe('built')
+    expect(fixture.tables.authoring_changes).toEqual([])
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+  } finally { fixture.database.close() }
+})
+
+test('a shared-step membership changed since the posted changeset aborts before writing', async () => {
+  const fixture = sharedStepFixture()
+  fixture.tables.path_steps[1].position = 3
+  try {
+    const result = await runChangeset(renameBatch, 'apply', fixture.database)
+    expect(result.ok).toBe(false)
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+  } finally { fixture.database.close() }
+})
+
+test('shared-step dry-run enumerates every affected path; rename preserves cells and logs once', async () => {
+  const fixture = sharedStepFixture()
+  try {
+    const dry = await runChangeset(renameBatch, 'dry-run', fixture.database)
+    expect(dry.failures).toEqual([])
+    expect(dry.diff[0].affectedPaths.map((path) => path.path_id)).toEqual([id, secondPath])
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+    const applied = await runChangeset(renameBatch, 'apply', fixture.database)
+    expect(applied.failures).toEqual([])
+    expect(fixture.tables.authoring_changes).toHaveLength(1)
+    expect(fixture.tables.steps[0].name).toBe('New step')
+    expect((await runChangeset(renameBatch, 'verify', fixture.database, { receipt: applied.applied })).ok).toBe(true)
+    fixture.tables.cell_touchpoints[0].updated_at = '2026-10-30T00:00:00Z'
+    expect((await runChangeset(renameBatch, 'verify', fixture.database, { receipt: applied.applied })).ok).toBe(false)
+    fixture.tables.cell_touchpoints[0].updated_at = '2026-10-20T00:00:00Z'
+    fixture.tables.cell_touchpoints[0].name = 'Lost placement'
+    expect((await runChangeset(renameBatch, 'verify', fixture.database, { receipt: applied.applied })).ok).toBe(false)
+  } finally { fixture.database.close() }
+})
+
+test('read-back refuses a rename that also rewrites a cell', async () => {
+  const fixture = sharedStepFixture({ corruptCell: true })
+  try {
+    const result = await runChangeset(renameBatch, 'apply', fixture.database)
+    expect(result.ok).toBe(false)
+    expect(result.failures.join('\n')).toContain('preservation')
+  } finally { fixture.database.close() }
+})
+
+function moveFixture(options) {
+  const fixture = sharedStepFixture(options)
+  fixture.tables.lanes.push({ id: secondPath, path_id: secondPath })
+  return fixture
+}
+const moveBatch = { version: 1, issue: 766, operations: [{
+  key: 'move', operation: 'move_cell', target: { table: 'cells', id },
+  expected: { path_id: id, lane_id: id, step_id: id, position: 0 },
+  value: { path_id: secondPath, lane_id: secondPath, step_id: id, position: 1 }, evidence: ['Fixture source'],
+}] }
+
+test('a cross-path move keeps identity, text, evidence, placements and resources with one inverse', async () => {
+  const fixture = moveFixture()
+  fixture.tables.cells.push({ id: secondPath, path_id: secondPath, lane_id: secondPath, step_id: id, position: 0, content: 'Keep the existing conversation' })
+  try {
+    expect((await runChangeset(moveBatch, 'dry-run', fixture.database)).ok).toBe(true)
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+    const applied = await runChangeset(moveBatch, 'apply', fixture.database)
+    expect(applied.failures).toEqual([])
+    expect(fixture.tables.cells[0]).toMatchObject({ ...moveBatch.operations[0].value, cell_key: 'fixture/stable-cell', content: seed.content, status: seed.status })
+    expect(fixture.tables.cells[1].content).toBe('Keep the existing conversation')
+    expect(fixture.tables.authoring_changes).toHaveLength(1)
+    expect((await runChangeset(moveBatch, 'verify', fixture.database, { receipt: applied.applied })).ok).toBe(true)
+    fixture.tables.resources.length = 0
+    expect((await runChangeset(moveBatch, 'verify', fixture.database, { receipt: applied.applied })).ok).toBe(false)
+  } finally { fixture.database.close() }
+})
+
+const insertBatch = { version: 1, issue: 766, operations: [{
+  key: 'insert', operation: 'insert_cell_at_position', target: { table: 'cells', where: { path_id: id, lane_id: id, step_id: id, position: 1 } },
+  expected: null, value: { content: 'A separate action', status: 'planned' }, evidence: ['Fixture source'],
+}] }
+test('explicit-position insertion keeps position zero, verifies its identity/key and rejects extra placeholders', async () => {
+  const fixture = sharedStepFixture()
+  try {
+    expect((await runChangeset(insertBatch, 'dry-run', fixture.database)).ok).toBe(true)
+    const applied = await runChangeset(insertBatch, 'apply', fixture.database)
+    expect(applied.failures).toEqual([])
+    expect(fixture.tables.cells[0]).toMatchObject({ id, position: 0, content: seed.content })
+    expect(fixture.tables.cells[1]).toMatchObject({ position: 1, content: 'A separate action', status: 'planned' })
+    expect(fixture.tables.authoring_changes).toHaveLength(1)
+    expect(applied.applied[0].expectedChanges[0].revert).toEqual({ fn: 'delete_cell', args: { cell_id: fixture.tables.cells[1].id } })
+    expect((await runChangeset(insertBatch, 'verify', fixture.database, { receipt: applied.applied })).ok).toBe(true)
+    fixture.tables.cells.push({ ...fixture.tables.cells[1], id: secondPath, position: 2 })
+    expect((await runChangeset(insertBatch, 'verify', fixture.database, { receipt: applied.applied })).ok).toBe(false)
+    expect(fixture.requests.some(({ method }) => method === 'DELETE')).toBe(false)
+  } finally { fixture.database.close() }
+})
+
+test.each(['wrongInverse', 'duplicateLog'])('a %s cannot pass apply or separate read-back verification', async (failure) => {
+  const fixture = sharedStepFixture({ [failure]: true })
+  try {
+    const applied = await runChangeset(renameBatch, 'apply', fixture.database)
+    expect(applied.ok).toBe(false)
+    expect((await runChangeset(renameBatch, 'verify', fixture.database, { receipt: applied.applied })).ok).toBe(false)
+  } finally { fixture.database.close() }
+})
+
+test.each(['missingRpc', 'nilReceipt'])('a %s stops the batch without claiming success or retrying', async (failure) => {
+  const fixture = sharedStepFixture({ [failure]: true })
+  try {
+    const applied = await runChangeset(renameBatch, 'apply', fixture.database)
+    expect(applied.ok).toBe(false)
+    expect(applied.applied).toHaveLength(0)
+    expect(fixture.requests.filter(({ path }) => path.endsWith('/rpc/rename_step'))).toHaveLength(1)
+    if (failure === 'nilReceipt') expect(fixture.tables.steps[0].name).toBe('New step')
+    else expect(fixture.tables.steps[0].name).toBe('Old step')
+  } finally { fixture.database.close() }
+})
+
+test('a concurrent move is refused by the guarded RPC and is never overwritten or retried', async () => {
+  const fixture = moveFixture({ raceMove: true })
+  try {
+    const result = await runChangeset(moveBatch, 'apply', fixture.database)
+    expect(result.ok).toBe(false)
+    expect(fixture.tables.cells[0].position).toBe(2)
+    expect(fixture.tables.authoring_changes).toEqual([])
+    expect(fixture.requests.filter(({ path }) => path.endsWith('/rpc/move_cell'))).toHaveLength(1)
+  } finally { fixture.database.close() }
+})
+
+test.each(['occupied', 'wrong-lane', 'wrong-source-lane', 'wrong-scenario', 'missing-membership', 'incident-edge', 'stale-source'])('preflight %s aborts the whole batch before the first write', async (failure) => {
+  const fixture = moveFixture()
+  if (failure === 'occupied') fixture.tables.cells.push({ id: secondPath, ...moveBatch.operations[0].value })
+  if (failure === 'wrong-lane') fixture.tables.lanes[1].path_id = id
+  if (failure === 'wrong-source-lane') fixture.tables.lanes[0].path_id = secondPath
+  if (failure === 'wrong-scenario') fixture.tables.paths[1].scenario_id = secondPath
+  if (failure === 'missing-membership') fixture.tables.path_steps.pop()
+  if (failure === 'incident-edge') {
+    fixture.tables.cells.push({ id: secondPath, path_id: id })
+    fixture.tables.cell_dependencies.push({ id, source_cell_id: id, target_cell_id: secondPath, kind: 'leads_to' })
+  }
+  if (failure === 'stale-source') fixture.tables.cells[0].position = 2
+  const batch = { version: 1, issue: 766, operations: [...renameBatch.operations, ...moveBatch.operations] }
+  try {
+    const result = await runChangeset(batch, 'apply', fixture.database)
+    expect(result.ok).toBe(false)
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+    expect(fixture.tables.steps[0].name).toBe('Old step')
+  } finally { fixture.database.close() }
+})
+
+test('a partial status write retains its typed recovery inverse in the attempt receipt', async () => {
+  const fixture = databaseFixture({ failAppend: true })
+  const progress = []
+  const batch = { version: 1, issue: 766, operations: [{
+    key: 'status', operation: 'update_cell_status', target: { table: 'cells', id },
+    expected: { status: 'built' }, value: { status: 'planned' }, evidence: ['Fixture source'],
+  }] }
+  try {
+    const result = await runChangeset(batch, 'apply', fixture.database, { onProgress: async (_applied, attempt) => progress.push(structuredClone(attempt)) })
+    expect(result.ok).toBe(false)
+    expect(fixture.tables.cells[0].status).toBe('planned')
+    expect(result.failedAttempt.partial.revert).toEqual({ fn: 'update_cell_status', args: { cell_id: id, status: 'built', expected_status: 'planned' } })
+    expect(progress.at(-1).partial.revert).toEqual(result.failedAttempt.partial.revert)
+    expect(fixture.tables.authoring_changes).toEqual([])
+  } finally { fixture.database.close() }
+})
+
+test('separate verification composes rename, move, insertion and its subsequent evidence without relaxing preservation', async () => {
+  const fixture = moveFixture()
+  const batch = { version: 1, issue: 766, operations: [
+    ...renameBatch.operations, ...moveBatch.operations, ...insertBatch.operations,
+    { key: 'source', operation: 'add_evidence', target: { table: 'evidence', where: { service_id: id, cell_id: { ref: 'insert' }, cell_key: { ref: 'insert', field: 'cell_key' }, title: 'New source' } }, expected: null, value: { kind: 'doc', title: 'New source', note: 'Fixture citation' }, evidence: ['Fixture source'] },
+  ] }
+  try {
+    const result = await runChangeset(batch, 'apply', fixture.database)
+    expect(result.failures).toEqual([])
+    expect(result.applied).toHaveLength(4)
+    expect(fixture.tables.authoring_changes).toHaveLength(4)
+    expect((await runChangeset(batch, 'verify', fixture.database, { receipt: result.applied })).failures).toEqual([])
   } finally { fixture.database.close() }
 })
 
