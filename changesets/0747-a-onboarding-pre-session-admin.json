@@ -763,6 +763,108 @@
       ]
     },
     {
+      "key": "F11-at-channel",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "ac4715c4-dbf7-4056-8c42-9bb67ecfc116",
+          "lane_id": "540ada3d-7b9d-4fea-9b63-d5fa43e5d6ca",
+          "step_id": "a0000000-0000-4000-8000-000000000897",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Tags @channel on the #sessions-in-need post.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3d6b7cca4982805a92dcf25c0825ec26",
+        "https://www.notion.so/3edb7cca498281a2a6abee8be14bab34",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F11-at-channel-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F11-at-channel"
+          },
+          "title": "KB audit #747 F11 — @channel on the request",
+          "cell_key": {
+            "ref": "F11-at-channel",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F11 — @channel on the request",
+        "note": "Card 2626 \"Add @channel to mid session fill in request message\" is Deployed, release 12.1 (https://www.notion.so/3d6b7cca4982805a92dcf25c0825ec26): the \"Need N tutors\" Slack message from Request tutors now tags @channel. The card does not name the channel; #sessions-in-need comes from card 2664 (https://www.notion.so/3edb7cca498281a2a6abee8be14bab34) and the path's own posting cell. The ticket assumed built; it is live."
+      },
+      "evidence": [
+        "https://www.notion.so/3d6b7cca4982805a92dcf25c0825ec26",
+        "https://www.notion.so/3edb7cca498281a2a6abee8be14bab34",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F12-reason-preview",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "ac4715c4-dbf7-4056-8c42-9bb67ecfc116",
+          "lane_id": "02363ff7-81b2-4d86-9a4e-59fa112bcc95",
+          "step_id": "a0000000-0000-4000-8000-000000000897",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Picks a reason such as \"Fewer tutors than expected\" and sends the templated Slack message as previewed, without edits.",
+        "status": "proposed"
+      },
+      "evidence": [
+        "https://www.notion.so/3edb7cca498281a2a6abee8be14bab34",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F12-reason-preview-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F12-reason-preview"
+          },
+          "title": "KB audit #747 F12 — reason and read-only message",
+          "cell_key": {
+            "ref": "F12-reason-preview",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F12 — reason and read-only message",
+        "note": "Card 2664 \"Fill-In Request: reason copy and read-only Slack message\" is Triage (https://www.notion.so/3edb7cca498281a2a6abee8be14bab34): the preset reads \"Fewer tutors than expected\", the requester can read the message but cannot edit it, and the posted message matches the preview exactly. Text typed under Other is saved but not posted."
+      },
+      "evidence": [
+        "https://www.notion.so/3edb7cca498281a2a6abee8be14bab34",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
       "key": "F14-email-12plus",
       "operation": "insert_cell_at_position",
       "target": {
@@ -1209,6 +1311,54 @@
         "table": "evidence",
         "where": {
           "cell_id": {
+            "ref": "F11-at-channel"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F11-at-channel"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F12-reason-preview"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F12-reason-preview"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
             "ref": "F14-email-12plus"
           }
         }
@@ -1306,11 +1456,21 @@
       "target": {
         "table": "cells",
         "where": {
+          "path_id": "ac4715c4-dbf7-4056-8c42-9bb67ecfc116"
+        }
+      },
+      "beforeCount": 5,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
           "path_id": "a0000000-0000-4000-8000-000000000808"
         }
       },
-      "beforeCount": 25,
-      "afterCount": 26
+      "beforeCount": 26,
+      "afterCount": 27
     },
     {
       "target": {
@@ -1319,8 +1479,8 @@
           "path_id": "b0000000-0000-4000-8000-000000000809"
         }
       },
-      "beforeCount": 13,
-      "afterCount": 14
+      "beforeCount": 14,
+      "afterCount": 15
     }
   ]
 }

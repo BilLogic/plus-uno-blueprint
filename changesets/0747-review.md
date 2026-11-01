@@ -2,10 +2,10 @@
 
 Two batches, split by phase so neither goes over about 60 operations:
 
-- `0747-a-onboarding-pre-session-admin.json`: 33 operations covering F1–F10 and F14.
+- `0747-a-onboarding-pre-session-admin.json`: 37 operations covering F1–F12 and F14.
 - `0747-b-in-session-post-session.json`: 46 operations covering F15–F17, F20–F28.
 
-F18 and F19 belong to #748, and F11, F12 and F13 are left out (see below).
+F18 and F19 belong to #748, and F13 is left out (see below).
 
 Every expected value was read from production on November 1, 2026, as the dev authoring user, reads only. The generated files were re-read just before each dry-run. A short id resolves to exactly one live row:
 
@@ -25,6 +25,7 @@ Rows whose status changed from the ticket:
 | F4 | built | live | 2612 and 2685 (supervisor flag) are Deployed, 12.1. 2606 is the later UI update (Ready for Dev) |
 | F6 | built | live | 2570 (TE3, the Sunday email) is Deployed, 12.1 |
 | F8 | built | live | 2640 (Sign-Ups count) is Deployed, 12.1; the ticket had Code Review |
+| F11 | built | live | 2626 (@channel on the request) is Deployed, 12.1; the ticket had Ready for Prod |
 | F14 | built | live | 2568 (TE2b, the call-off decision email) is Deployed, 12.1 |
 | F15 | built | live | 2243 (attendance search) is Deployed, 12.1 |
 | F25 | built | live | 2637 (chunked upload) is Deployed, 12.1 |
@@ -36,6 +37,7 @@ Rows that keep the ticket's status:
 - F5 stays `planned` (1956 is Ready for Dev).
 - F7 stays `planned` (2638 is Ready for Dev).
 - F9 stays `proposed`. It rests on decisions only.
+- F12 stays `proposed` (2664 is Triage).
 - F10 stays `built`. 2635 reads Open Tasks; the digest command exists with a testing section, but nothing shows it scheduled on prod.
 - F16 stays `proposed` (2587 is Triage).
 - F17 stays `proposed` (1778 is Dev Backlog, design WIP).
@@ -71,9 +73,8 @@ Because these 12.1 cards are already Deployed, this batch writes `live` directly
 
 ## Rows skipped
 
-- **F11 and F12** go on #744's new variant path *Fill-in › Requested mid-session*, which does not exist yet. They are prepared as a follow-up for after #744 applies:
-  - F11 is `live`: card 2626 is Deployed, 12.1, and tags @channel.
-  - F12 is `proposed`: card 2664 is Triage.
+F11 and F12 are not skipped. They sit on #744's *Requested mid-session* path, which #744 applied before this dry-run. They go in at position 1 of its Session enters fill-in pool step.
+
 - **F13** is not supported by its source. Figma 4173:145289 is a "For future iterations — All Sessions fill-in states" section whose states read from the tutor's side ("Unfilled session I did not sign up for"). Nothing shows a supervisor filling sessions.
 
 ## For the owner (no deletes in this batch)
