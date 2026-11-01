@@ -28,30 +28,27 @@ at Reconfirm availability (`b0000000-0000-4000-8000-000000000901`), position
 
 The destination square is vacant, and both paths carry the step at position
 3. The cell has no placements, resources or incident dependencies. Its two
-evidence rows are guarded unchanged. Content, summary and status `built` are
-unchanged by this stage.
+evidence rows are guarded unchanged. Content, summary and status are unchanged
+by this stage.
 
 ## Stage B: `0754-b-unavailable-response-content.json`
 
 Content changes from “Unavailable answer releases the tutor from the roster —
 no call-off record, by design” to “Drops a tutor who answers Unavailable from
-the roster, with no call-off record.” Status stays `built`, and the summary
-stays as it is.
+the roster, with no call-off record.” Status changes from `built` to `live`,
+and the summary loses its stale PLANNED opening.
 
-## Status is the owner's decision
+## Status and summary
 
-#740's edit table proposed `live`, citing RM-2452 QA §10–11. The Notion
-connection was down during this preparation, so RM-2452's current deployment
-state could not be re-read, and status is kept at `built`. For reference, the
-approved #740 review recorded RM-2452 as Deployed in Release 12.0, corroborated
-by Figma node 11272:161737 (“Unavailable removes a tutor without a call-off
-record”, shipped August 2026). Rows 21 and 22 went live on that evidence. If
-Bill accepts it for this cell, stage B can carry `status: live` instead.
+RM-2452 (Session Functionality v3: Update Sessions) was re-read through the
+PLUS Notion connection on October 31, 2026: Dev Status Deployed, Release
+Version 12.0 (live), Design Status Shipped. Its QA checklist §10 says a tutor
+who answers Unavailable "drops off roster". Stage B therefore sets status
+`live`, matching rows 21 and 22 in #740.
 
-The existing summary opens “PLANNED (not shipped as of Aug 2026)”, which
-conflicts with both `built` and `live`. #740 removed the same PLANNED wording
-from its row 21 and 22 summaries. Clearing it here is outside this ticket's
-stated scope and is flagged for the owner.
+Stage B also replaces the summary's "PLANNED (not shipped as of Aug 2026)"
+opening, which contradicted the deployed card, the same way #740 cleared it
+from rows 21 and 22. The rest of the summary's meaning is unchanged.
 
 The two existing evidence rows keep `cell_key` text naming the old path
 (`…/created-in-the-app/…`). That is evidence-row metadata, which the move
@@ -62,3 +59,7 @@ preserves rather than rewrites.
 Stage A dry-run passes with no failures, both affected paths enumerated,
 ledger 341→341. Stage B dry-run fails only on the expected post-move
 coordinates and count, ledger 341→341.
+
+Stage A runner SHA-256: `6a1d3b1099842bad34647331ffd617358a82dcc34c07d3711a6bbca509fcd03c`.
+Stage B runner SHA-256: `76ba8c09facb969e99f8b61ef93bef648fbad7150f0efde3459fde4038810e72`
+(re-dry-run after stage A is applied and verified).
