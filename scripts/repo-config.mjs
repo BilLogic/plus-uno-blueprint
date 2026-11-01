@@ -85,6 +85,15 @@ export const repoConfig = {
   agentAccount: {
     document: 'docs/agents/blueprint.md',
     baseline: 'docs/reference/agent-account-baseline.json',
+    /**
+     * The relations the anon key is refused and a signed-in session reads,
+     * with their columns — `signedInReadTables`, resolved against the
+     * migration series (`signed-in-relations.mjs`), so a signed-in agent's
+     * account keeps them without a service key. Imported on call, not at
+     * load: every meta-check reads this file, and only the generator needs a
+     * replay.
+     */
+    signedIn: async (input) => (await import('./signed-in-relations.mjs')).signedIn(input),
   },
 
   /**

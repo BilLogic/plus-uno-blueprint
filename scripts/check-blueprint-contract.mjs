@@ -392,6 +392,17 @@ export function refusesAnon(result) {
  * the first `select` and the first `from`, comments stripped. A column the view
  * only filters or groups on is not one of its columns.
  */
+/** A view's select list, comments stripped: the span a column claim is read against. */
+export const viewSelectList = (definition) =>
+  definition
+    .replace(/--[^\n]*/g, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .match(/\bselect\b([\s\S]*?)\bfrom\b/i)?.[1] ?? ''
+
+/** A column name as a whole word, case-insensitive. */
+export const columnPattern = (column) =>
+  new RegExp(`\\b${column.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i')
+
 export function staticClaimProblem(claim, schema) {
   const table = schema.tables.get(claim.table)
   // The replay keys tables bare and views schema-qualified.
@@ -403,10 +414,7 @@ export function staticClaimProblem(claim, schema) {
       ? null
       : `a column no migration gives the signed-in-only table \`${claim.table}\``
   }
-  const sql = view.definition.replace(/--[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '')
-  const selectList = sql.match(/\bselect\b([\s\S]*?)\bfrom\b/i)?.[1] ?? ''
-  const column = claim.column.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  return new RegExp(`\\b${column}\\b`, 'i').test(selectList)
+  return columnPattern(claim.column).test(viewSelectList(view.definition))
     ? null
     : `a column the signed-in-only view \`${claim.table}\` does not name`
 }

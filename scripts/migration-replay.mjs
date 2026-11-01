@@ -362,8 +362,12 @@ function applyAlterTable(schema, statement) {
       const from = bare(match[1])
       const to = bare(match[2])
       remember(schema, from, to)
-      entry.columns.delete(from)
-      entry.columns.set(to, { name: to })
+      // In place: Postgres keeps a renamed column where it was, and the agent
+      // account prints columns in the order this map holds them.
+      entry.columns = new Map(
+        [...entry.columns].map(([name, column]) => (name === from ? [to, { name: to }] : [name, column])),
+      )
+      if (!entry.columns.has(to)) entry.columns.set(to, { name: to })
       const commentKey = `column:${table}.${from}`
       const comment = schema.comments.get(commentKey)
       if (comment) {
