@@ -1,6 +1,6 @@
 # #746 Post-session and Program Administration live behaviour
 
-Two files, applied in order. `0746-a-post-session-and-admin.json` has 27
+Three files, applied in order (see Apply record below for why there are three). `0746-a-post-session-and-admin.json` has 27
 operations: eight `update_cell_content` edits, four `insert_cell_at_position`
 cells, one `create_path_at_status` and fourteen `add_evidence` rows.
 `0746-b-edit-reflection-path.json` has nine operations: one `set_path_steps`,
@@ -105,3 +105,24 @@ ticket's quoted current text. The Weekly Class Report scenario is untouched.
 ## Deletes for the owner
 
 None.
+
+## Apply record (November 1, 2026)
+
+| File | SHA-256 | Apply | Verify |
+|---|---|---|---|
+| `0746-a-post-session-and-admin.json` | `c20493a8d9c415cc05f7e9371a9ebc1ae7ebe20ea8239fba773c4d740c2dda3d` | stopped after 18 of 27 ops | the 18 applied ops verify; fails only on the 9 unapplied ops and the incomplete receipt |
+| `0746-a2-insertions-and-path.json` | `c59337638897e2a4b4160675d5426d04a98cd1ff733719e8e0401f4f45152f46` | ok, 9 of 9 | ok |
+| `0746-b-edit-reflection-path.json` | `eb197ed259540bae30a9968dc230e113c08c606cd281c3712fa5d46042b5a140` | ok, 9 of 9 | ok |
+
+A applied every edit and evidence row. Its first insertion, `row73-cancel-email`,
+then stopped before writing. The insertion's preflight capture held the
+Supervisor Program Administration cells as dry-run read them, and projecting
+the earlier content edits did not advance their generated `search_tsv` column.
+That is the bug #784 fixed on main. Nothing was written for the stopped operation.
+The nine remaining operations moved unchanged into `0746-a2`, which re-read the
+expected values live and passed a fresh dry-run. Its insertions come before any
+edit in the batch. B ran with #784 merged in.
+
+The read-back confirms that the new path `cf7432cb…` has exactly Open the form
+(0) and Submit (1), and four cells. Reflection form and Session reflection are
+linked to their existing registry rows.
