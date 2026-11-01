@@ -406,7 +406,7 @@ Canvas mode: view`,
     ],
     judgeLines: [
       { id: 'kind-reasoned', text: 'The agent chooses trigger vs needs per the adapter definitions ("only makes sense after X exists" reads as needs/depends — an arrow only if it genuinely informs) and states which it chose and why. (CA-inv, EP-Q8)' },
-      { id: 'same-path', text: 'Both endpoints are cells on the same path (verifiable from the trace reads).' },
+      { id: 'same-service', text: 'Both endpoints are cells of the same service, on any path or scenario of it (verifiable from the trace reads).' },
     ],
   },
   {

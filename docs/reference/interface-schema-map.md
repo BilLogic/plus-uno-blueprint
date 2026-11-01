@@ -136,7 +136,7 @@ and the sentence behind it are read from one place and cannot drift into two.
 | `lanes.tools` | String array: systems/tools this lane's actors use. |
 | `phases.business_impact` | Commercial impact notes: opex, NPS, brand, retention, growth. |
 | `phases.operational_requirements` | Process / system / people / legal requirements for this phase. |
-| `paths` | One route through a scenario: happy, variant or exception (kind), and how far along it is (status). Nothing connects across paths; a path is a detour, not a stage. |
+| `paths` | One route through a scenario: happy, variant or exception (kind), and how far along it is (status). A link may join cells on any path or scenario of the same service; a path is a detour, not a stage. |
 | `paths.note` | Optional path note shown alongside path metadata (e.g. parallel scenario context) |
 | `business_models.funding` | — |
 | `business_models.pricing` | — |
