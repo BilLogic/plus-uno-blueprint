@@ -106,13 +106,32 @@ see below.
 The bump is the only way application code changes here. There is no second copy
 to edit, which is the point.
 
+## Prepared upgrade to v2.8.12
+
+The pin and the lockfile target the released `v2.8.12` tag. Its one migration,
+upstream 323, is adopted as
+`20261031150000_undo_of_an_add_keeps_the_numbering_it_found.sql`. It replaces
+`undo_structure_add` so that Undo of an Add accepts a `before` order numbered
+from 1 or with gaps: positions are non-negative and strictly increase in array
+order. Every other guard, the signature and the database types are unchanged,
+and no data moves.
+
+The adoption keeps the upstream body byte for byte. As with the 311 adoption,
+it revokes execute from `public` and `anon` explicitly, and its grant proof
+checks both, so execute stays with `authenticated` alone. The in-migration
+proof round-trips a path numbered 1, 2, 3 and one with gaps through Add and
+Undo, and still refuses a numbering that disagrees with the path order. It
+applies after the v2.8.11 set and the 20261031 capabilities; apply it with
+`npm run apply:pending -- --from=20261031150000 --apply` once approved.
+
 ## Prepared upgrade to v2.8.11
 
-The pin and the lockfile target the released `v2.8.11` tag. The five migrations
-under `20261030120000` through `20261030160000` adopt upstream 309–313 together;
-they are prepared for a coordinated database and app upgrade, not evidence of
-an apply to the hosted project. Keep the deployed application and database on
-their matching versions until that upgrade is approved.
+The v2.8.11 bump moved the pin and the lockfile to that released tag. The five
+migrations under `20261030120000` through `20261030160000` adopt upstream
+309–313 together; they are prepared for a coordinated database and app
+upgrade, not evidence of an apply to the hosted project. Keep the deployed
+application and database on their matching versions until that upgrade is
+approved.
 
 Before applying the set, run this read-only preflight on the target database:
 
