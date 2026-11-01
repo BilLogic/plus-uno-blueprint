@@ -1,0 +1,1650 @@
+{
+  "version": 1,
+  "issue": 756,
+  "operations": [
+    {
+      "key": "G13-c00301",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000c00301"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e1",
+        "step_id": "a0000000-0000-4000-8000-000000009f03",
+        "position": 0,
+        "content": "Checks if all students are in the correct breakout room.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": "plus-application/goal-setting/set-goals-edge-case/partner-action-teacher/click-on-set-goals-cta-in-the-action-column",
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040301/0c96ea1a-4331-9912-e78a-3cca3a3f8c53.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e1",
+        "step_id": "a0000000-0000-4000-8000-000000009f01",
+        "position": 1
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-c00301-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000c00301",
+          "cell_key": "plus-application/goal-setting/set-goals-edge-case/partner-action-teacher/click-on-set-goals-cta-in-the-action-column",
+          "title": "KB audit #756 G13 — Missed last session, no goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, no goals placement",
+        "note": "Moved from \"Click on 'Set goals' CTA in the action column\" to \"Join breakout session\" (position 1) under the owner-approved #756 G13 placement table, rule R2: Room checks happen as students and tutors enter breakout rooms, before any goal work. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-c00201",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000c00201"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e1",
+        "step_id": "a0000000-0000-4000-8000-000000009f02",
+        "position": 0,
+        "content": "Reminds students to keep working while waiting.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": "plus-application/goal-setting/set-goals-edge-case/partner-action-teacher/sees-action-color-in-dashboard-is-warning-and-cta-copy-is-set-goals-within-a-mid-cycle-goal-check-in-session",
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040201/45a51cb4-1ae3-d2c2-5f15-49fd1b4c00f2.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e1",
+        "step_id": "a0000000-0000-4000-8000-000000009f01",
+        "position": 2
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-c00201-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000c00201",
+          "cell_key": "plus-application/goal-setting/set-goals-edge-case/partner-action-teacher/sees-action-color-in-dashboard-is-warning-and-cta-copy-is-set-goals-within-a-mid-cycle-goal-check-in-session",
+          "title": "KB audit #756 G13 — Missed last session, no goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, no goals placement",
+        "note": "Moved from \"Sees action color in dashboard is warning and CTA copy is 'Set goals' within a mid-cycle goal check-in session.\" to \"Join breakout session\" (position 2) under the owner-approved #756 G13 placement table, rule R3: Students wait until their tutor joins; once the tutor is in the room, waiting is over. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-c00401",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000c00401"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e1",
+        "step_id": "a0000000-0000-4000-8000-000000009f04",
+        "position": 0,
+        "content": "Receives information that a student is absent from the session.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": "plus-application/goal-setting/set-goals-edge-case/partner-action-teacher/share-screen",
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0401/df4eeba7-5747-4aa2-1d62-dde366548029.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e1",
+        "step_id": "a0000000-0000-4000-8000-000000009f01",
+        "position": 3
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-c00401-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000c00401",
+          "cell_key": "plus-application/goal-setting/set-goals-edge-case/partner-action-teacher/share-screen",
+          "title": "KB audit #756 G13 — Missed last session, no goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, no goals placement",
+        "note": "Moved from \"Share screen\" to \"Join breakout session\" (position 3) under the owner-approved #756 G13 placement table, rule R4: Absence surfaces at pairing and join, not during the goal conversation it sat beside. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-c00501",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000c00501"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e1",
+        "step_id": "a0000000-0000-4000-8000-000000009f05",
+        "position": 0,
+        "content": "Alerts lead tutor about unassigned or miss-assigned students using the \"ask for help\" alert.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0501/610fd0d7-ee32-6f6e-8d3c-7d56c796381e.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e1",
+        "step_id": "a0000000-0000-4000-8000-000000009f01",
+        "position": 4
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-c00501-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000c00501",
+          "cell_key": "a0000000-0000-4000-8000-000000c00501",
+          "title": "KB audit #756 G13 — Missed last session, no goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, no goals placement",
+        "note": "Moved from \"Explain to student what goal setting is\" to \"Join breakout session\" (position 4) under the owner-approved #756 G13 placement table, rule R5: Unassigned or mis-assigned students are discovered at join; it pairs with the Lead Tutor response. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-c00601",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000c00601"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e1",
+        "step_id": "a0000000-0000-4000-8000-000000009f06",
+        "position": 0,
+        "content": "Handles student tech problems as they arise.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": "plus-application/goal-setting/set-goals-edge-case/partner-action-teacher/once-student-understands-starts-setting-first-goal-while-sharing-screen",
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0601/70caf55e-72b8-3f2e-73e3-c419a60a501c.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e1",
+        "step_id": "a0000000-0000-4000-8000-000000009f04",
+        "position": 1
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-c00601-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000c00601",
+          "cell_key": "plus-application/goal-setting/set-goals-edge-case/partner-action-teacher/once-student-understands-starts-setting-first-goal-while-sharing-screen",
+          "title": "KB audit #756 G13 — Missed last session, no goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, no goals placement",
+        "note": "Moved from \"Once student understands, starts setting first goal while sharing screen\" to \"Share screen\" (position 1) under the owner-approved #756 G13 placement table, rule R6: Screen share is the first moment the goal flow depends on the student's device. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-c00202",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000c00202"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e2",
+        "step_id": "a0000000-0000-4000-8000-000000009f02",
+        "position": 0,
+        "content": "Adds any un-rostered students to the attendance list.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": "plus-application/goal-setting/set-goals-edge-case/lead-tutor/sees-action-color-in-dashboard-is-warning-and-cta-copy-is-set-goals-within-a-mid-cycle-goal-check-in-session",
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0202/0911e936-fd5a-3171-9338-9e57d694b158.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e2",
+        "step_id": "a0000000-0000-4000-8000-000000009f01",
+        "position": 1
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-c00202-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000c00202",
+          "cell_key": "plus-application/goal-setting/set-goals-edge-case/lead-tutor/sees-action-color-in-dashboard-is-warning-and-cta-copy-is-set-goals-within-a-mid-cycle-goal-check-in-session",
+          "title": "KB audit #756 G13 — Missed last session, no goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, no goals placement",
+        "note": "Moved from \"Sees action color in dashboard is warning and CTA copy is 'Set goals' within a mid-cycle goal check-in session.\" to \"Join breakout session\" (position 1) under the owner-approved #756 G13 placement table, rule R9: Attendance fixes happen at session start, alongside renaming. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-c00302",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000c00302"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e2",
+        "step_id": "a0000000-0000-4000-8000-000000009f03",
+        "position": 0,
+        "content": "Manually assigns unpaired students to available tutors.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": "plus-application/goal-setting/set-goals-edge-case/lead-tutor/click-on-set-goals-cta-in-the-action-column",
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0302/d451bb96-0858-37e8-9e3c-588df38cfb2b.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e2",
+        "step_id": "a0000000-0000-4000-8000-000000009f01",
+        "position": 2
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-c00302-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000c00302",
+          "cell_key": "plus-application/goal-setting/set-goals-edge-case/lead-tutor/click-on-set-goals-cta-in-the-action-column",
+          "title": "KB audit #756 G13 — Missed last session, no goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, no goals placement",
+        "note": "Moved from \"Click on 'Set goals' CTA in the action column\" to \"Join breakout session\" (position 2) under the owner-approved #756 G13 placement table, rule R10: Pairing precedes the tutor joining the student's breakout room. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-c00402",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000c00402"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e2",
+        "step_id": "a0000000-0000-4000-8000-000000009f04",
+        "position": 0,
+        "content": "Inform classroom teacher about students that are absent.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0402/db5f36b0-90a1-dbfe-92eb-07af60fb4bc0.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e2",
+        "step_id": "a0000000-0000-4000-8000-000000009f01",
+        "position": 3
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-c00402-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000c00402",
+          "cell_key": "a0000000-0000-4000-8000-000000c00402",
+          "title": "KB audit #756 G13 — Missed last session, no goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, no goals placement",
+        "note": "Moved from \"Share screen\" to \"Join breakout session\" (position 3) under the owner-approved #756 G13 placement table, rule R11: Pairs with the Teacher absence cell; absence is known at join. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-c00502",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000c00502"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e2",
+        "step_id": "a0000000-0000-4000-8000-000000009f05",
+        "position": 0,
+        "content": "Respond to classroom teachers \"ask for help\" request.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0502/63b222f0-1142-8cd8-0979-aa8e4ba2bcc2.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000816",
+        "lane_id": "a0000000-0000-4000-8000-0000000008e2",
+        "step_id": "a0000000-0000-4000-8000-000000009f01",
+        "position": 4
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-c00502-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000c00502",
+          "cell_key": "a0000000-0000-4000-8000-000000c00502",
+          "title": "KB audit #756 G13 — Missed last session, no goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, no goals placement",
+        "note": "Moved from \"Explain to student what goal setting is\" to \"Join breakout session\" (position 4) under the owner-approved #756 G13 placement table, rule R12: Answers the Teacher \"ask for help\" alert, which belongs at join. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00301",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000d00301"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f1",
+        "step_id": "a0000000-0000-4000-8000-000000009e03",
+        "position": 0,
+        "content": "Checks if all students are in the correct breakout room.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": "plus-application/goal-setting/update-goals-edge-case/partner-action-teacher/click-on-update-goals-cta-in-the-action-column",
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040301/0c96ea1a-4331-9912-e78a-3cca3a3f8c53.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f1",
+        "step_id": "a0000000-0000-4000-8000-000000009e01",
+        "position": 1
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00301-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000d00301",
+          "cell_key": "plus-application/goal-setting/update-goals-edge-case/partner-action-teacher/click-on-update-goals-cta-in-the-action-column",
+          "title": "KB audit #756 G13 — Missed last session, has goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, has goals placement",
+        "note": "Moved from \"Click on 'Update goals' CTA in the action column\" to \"Join breakout session\" (position 1) under the owner-approved #756 G13 placement table, rule R2: Room checks happen as students and tutors enter breakout rooms, before any goal work. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00201",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000d00201"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f1",
+        "step_id": "a0000000-0000-4000-8000-000000009e02",
+        "position": 0,
+        "content": "Reminds students to keep working while waiting.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": "plus-application/goal-setting/update-goals-edge-case/partner-action-teacher/sees-action-color-in-dashboard-is-warning-and-cta-copy-is-update-goals-within-a-mid-cycle-goal-check-in-session",
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040201/45a51cb4-1ae3-d2c2-5f15-49fd1b4c00f2.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f1",
+        "step_id": "a0000000-0000-4000-8000-000000009e01",
+        "position": 2
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00201-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000d00201",
+          "cell_key": "plus-application/goal-setting/update-goals-edge-case/partner-action-teacher/sees-action-color-in-dashboard-is-warning-and-cta-copy-is-update-goals-within-a-mid-cycle-goal-check-in-session",
+          "title": "KB audit #756 G13 — Missed last session, has goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, has goals placement",
+        "note": "Moved from \"Sees action color in dashboard is warning and CTA copy is 'Update goals' within a mid-cycle goal check-in session.\" to \"Join breakout session\" (position 2) under the owner-approved #756 G13 placement table, rule R3: Students wait until their tutor joins; once the tutor is in the room, waiting is over. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00401",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000d00401"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f1",
+        "step_id": "a0000000-0000-4000-8000-000000009e04",
+        "position": 0,
+        "content": "Receives information that a student is absent from the session.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": "plus-application/goal-setting/update-goals-edge-case/partner-action-teacher/share-screen",
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0401/df4eeba7-5747-4aa2-1d62-dde366548029.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f1",
+        "step_id": "a0000000-0000-4000-8000-000000009e01",
+        "position": 3
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00401-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000d00401",
+          "cell_key": "plus-application/goal-setting/update-goals-edge-case/partner-action-teacher/share-screen",
+          "title": "KB audit #756 G13 — Missed last session, has goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, has goals placement",
+        "note": "Moved from \"Share screen\" to \"Join breakout session\" (position 3) under the owner-approved #756 G13 placement table, rule R4: Absence surfaces at pairing and join, not during the goal conversation it sat beside. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00501",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000d00501"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f1",
+        "step_id": "a0000000-0000-4000-8000-000000009e05",
+        "position": 0,
+        "content": "Alerts lead tutor about unassigned or miss-assigned students using the \"ask for help\" alert.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0501/610fd0d7-ee32-6f6e-8d3c-7d56c796381e.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f1",
+        "step_id": "a0000000-0000-4000-8000-000000009e01",
+        "position": 4
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00501-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000d00501",
+          "cell_key": "a0000000-0000-4000-8000-000000d00501",
+          "title": "KB audit #756 G13 — Missed last session, has goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, has goals placement",
+        "note": "Moved from \"Review last goal cycle overview and system suggestion\" to \"Join breakout session\" (position 4) under the owner-approved #756 G13 placement table, rule R5: Unassigned or mis-assigned students are discovered at join; it pairs with the Lead Tutor response. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00601",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000d00601"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f1",
+        "step_id": "a0000000-0000-4000-8000-000000009e06",
+        "position": 0,
+        "content": "Handles student tech problems as they arise.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": "plus-application/goal-setting/update-goals-edge-case/partner-action-teacher/once-student-understands-starts-updating-goal-for-the-next-goal-cycle-while-sharing-screen",
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0601/70caf55e-72b8-3f2e-73e3-c419a60a501c.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f1",
+        "step_id": "a0000000-0000-4000-8000-000000009e04",
+        "position": 1
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00601-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000d00601",
+          "cell_key": "plus-application/goal-setting/update-goals-edge-case/partner-action-teacher/once-student-understands-starts-updating-goal-for-the-next-goal-cycle-while-sharing-screen",
+          "title": "KB audit #756 G13 — Missed last session, has goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, has goals placement",
+        "note": "Moved from \"Once student understands, starts updating goal for the next goal cycle while sharing screen\" to \"Share screen\" (position 1) under the owner-approved #756 G13 placement table, rule R6: Screen share is the first moment the goal flow depends on the student's device. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00202",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000d00202"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f2",
+        "step_id": "a0000000-0000-4000-8000-000000009e02",
+        "position": 0,
+        "content": "Adds any un-rostered students to the attendance list.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": "plus-application/goal-setting/update-goals-edge-case/lead-tutor/sees-action-color-in-dashboard-is-warning-and-cta-copy-is-update-goals-within-a-mid-cycle-goal-check-in-session",
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0202/0911e936-fd5a-3171-9338-9e57d694b158.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f2",
+        "step_id": "a0000000-0000-4000-8000-000000009e01",
+        "position": 1
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00202-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000d00202",
+          "cell_key": "plus-application/goal-setting/update-goals-edge-case/lead-tutor/sees-action-color-in-dashboard-is-warning-and-cta-copy-is-update-goals-within-a-mid-cycle-goal-check-in-session",
+          "title": "KB audit #756 G13 — Missed last session, has goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, has goals placement",
+        "note": "Moved from \"Sees action color in dashboard is warning and CTA copy is 'Update goals' within a mid-cycle goal check-in session.\" to \"Join breakout session\" (position 1) under the owner-approved #756 G13 placement table, rule R9: Attendance fixes happen at session start, alongside renaming. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00302",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000d00302"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f2",
+        "step_id": "a0000000-0000-4000-8000-000000009e03",
+        "position": 0,
+        "content": "Manually assigns unpaired students to available tutors.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": "plus-application/goal-setting/update-goals-edge-case/lead-tutor/click-on-update-goals-cta-in-the-action-column",
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0302/d451bb96-0858-37e8-9e3c-588df38cfb2b.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f2",
+        "step_id": "a0000000-0000-4000-8000-000000009e01",
+        "position": 2
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00302-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000d00302",
+          "cell_key": "plus-application/goal-setting/update-goals-edge-case/lead-tutor/click-on-update-goals-cta-in-the-action-column",
+          "title": "KB audit #756 G13 — Missed last session, has goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, has goals placement",
+        "note": "Moved from \"Click on 'Update goals' CTA in the action column\" to \"Join breakout session\" (position 2) under the owner-approved #756 G13 placement table, rule R10: Pairing precedes the tutor joining the student's breakout room. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00402",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000d00402"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f2",
+        "step_id": "a0000000-0000-4000-8000-000000009e04",
+        "position": 0,
+        "content": "Inform classroom teacher about students that are absent.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0402/db5f36b0-90a1-dbfe-92eb-07af60fb4bc0.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f2",
+        "step_id": "a0000000-0000-4000-8000-000000009e01",
+        "position": 3
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00402-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000d00402",
+          "cell_key": "a0000000-0000-4000-8000-000000d00402",
+          "title": "KB audit #756 G13 — Missed last session, has goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, has goals placement",
+        "note": "Moved from \"Share screen\" to \"Join breakout session\" (position 3) under the owner-approved #756 G13 placement table, rule R11: Pairs with the Teacher absence cell; absence is known at join. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00502",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000d00502"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f2",
+        "step_id": "a0000000-0000-4000-8000-000000009e05",
+        "position": 0,
+        "content": "Respond to classroom teachers \"ask for help\" request.",
+        "status": "live",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": null,
+        "frame": "https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0502/63b222f0-1142-8cd8-0979-aa8e4ba2bcc2.png"
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000817",
+        "lane_id": "a0000000-0000-4000-8000-0000000008f2",
+        "step_id": "a0000000-0000-4000-8000-000000009e01",
+        "position": 4
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    },
+    {
+      "key": "G13-d00502-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000d00502",
+          "cell_key": "a0000000-0000-4000-8000-000000d00502",
+          "title": "KB audit #756 G13 — Missed last session, has goals placement"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #756 G13 — Missed last session, has goals placement",
+        "note": "Moved from \"Review last goal cycle overview and system suggestion\" to \"Join breakout session\" (position 4) under the owner-approved #756 G13 placement table, rule R12: Answers the Teacher \"ask for help\" alert, which belongs at join. Identity, content and status are unchanged. Table: changesets/0756-review.md; approval: https://github.com/BilLogic/plus-uno-blueprint/issues/756 ."
+      },
+      "evidence": [
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/756 (G13 placement table, owner-approved)",
+        "changesets/0756-review.md § G13 Teacher / Lead Tutor placement",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/741 (G13 audit row)"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000204"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000204"
+        }
+      },
+      "beforeCount": 60,
+      "afterCount": 60
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000c00301"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000c00201"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000c00401"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000c00501"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000c00601"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000c00202"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000c00302"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000c00402"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000c00502"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000816"
+        }
+      },
+      "beforeCount": 12,
+      "afterCount": 12
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000816"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 9
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000816"
+        }
+      },
+      "beforeCount": 72,
+      "afterCount": 72
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "lane_id": "a0000000-0000-4000-8000-0000000008e1"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7,
+      "beforeRows": [
+        {
+          "id": "a0000000-0000-4000-8000-000000c00701",
+          "step_id": "a0000000-0000-4000-8000-000000009f07",
+          "position": 0,
+          "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00501",
+          "step_id": "a0000000-0000-4000-8000-000000009f05",
+          "position": 0,
+          "content": "Alerts lead tutor about unassigned or miss-assigned students using the \"ask for help\" alert.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00201",
+          "step_id": "a0000000-0000-4000-8000-000000009f02",
+          "position": 0,
+          "content": "Reminds students to keep working while waiting.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00101",
+          "step_id": "a0000000-0000-4000-8000-000000009f01",
+          "position": 0,
+          "content": "Circulates and quietly observes the students.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00601",
+          "step_id": "a0000000-0000-4000-8000-000000009f06",
+          "position": 0,
+          "content": "Handles student tech problems as they arise.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00401",
+          "step_id": "a0000000-0000-4000-8000-000000009f04",
+          "position": 0,
+          "content": "Receives information that a student is absent from the session.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00301",
+          "step_id": "a0000000-0000-4000-8000-000000009f03",
+          "position": 0,
+          "content": "Checks if all students are in the correct breakout room.",
+          "status": "live"
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "a0000000-0000-4000-8000-000000c00701",
+          "step_id": "a0000000-0000-4000-8000-000000009f07",
+          "position": 0,
+          "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00501",
+          "step_id": "a0000000-0000-4000-8000-000000009f01",
+          "position": 4,
+          "content": "Alerts lead tutor about unassigned or miss-assigned students using the \"ask for help\" alert.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00201",
+          "step_id": "a0000000-0000-4000-8000-000000009f01",
+          "position": 2,
+          "content": "Reminds students to keep working while waiting.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00101",
+          "step_id": "a0000000-0000-4000-8000-000000009f01",
+          "position": 0,
+          "content": "Circulates and quietly observes the students.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00601",
+          "step_id": "a0000000-0000-4000-8000-000000009f04",
+          "position": 1,
+          "content": "Handles student tech problems as they arise.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00401",
+          "step_id": "a0000000-0000-4000-8000-000000009f01",
+          "position": 3,
+          "content": "Receives information that a student is absent from the session.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00301",
+          "step_id": "a0000000-0000-4000-8000-000000009f01",
+          "position": 1,
+          "content": "Checks if all students are in the correct breakout room.",
+          "status": "live"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "lane_id": "a0000000-0000-4000-8000-0000000008e2"
+        }
+      },
+      "beforeCount": 5,
+      "afterCount": 5,
+      "beforeRows": [
+        {
+          "id": "a0000000-0000-4000-8000-000000c00202",
+          "step_id": "a0000000-0000-4000-8000-000000009f02",
+          "position": 0,
+          "content": "Adds any un-rostered students to the attendance list.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00402",
+          "step_id": "a0000000-0000-4000-8000-000000009f04",
+          "position": 0,
+          "content": "Inform classroom teacher about students that are absent.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00502",
+          "step_id": "a0000000-0000-4000-8000-000000009f05",
+          "position": 0,
+          "content": "Respond to classroom teachers \"ask for help\" request.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00302",
+          "step_id": "a0000000-0000-4000-8000-000000009f03",
+          "position": 0,
+          "content": "Manually assigns unpaired students to available tutors.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00102",
+          "step_id": "a0000000-0000-4000-8000-000000009f01",
+          "position": 0,
+          "content": "Renames students to match roster names.",
+          "status": "live"
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "a0000000-0000-4000-8000-000000c00202",
+          "step_id": "a0000000-0000-4000-8000-000000009f01",
+          "position": 1,
+          "content": "Adds any un-rostered students to the attendance list.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00402",
+          "step_id": "a0000000-0000-4000-8000-000000009f01",
+          "position": 3,
+          "content": "Inform classroom teacher about students that are absent.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00502",
+          "step_id": "a0000000-0000-4000-8000-000000009f01",
+          "position": 4,
+          "content": "Respond to classroom teachers \"ask for help\" request.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00302",
+          "step_id": "a0000000-0000-4000-8000-000000009f01",
+          "position": 2,
+          "content": "Manually assigns unpaired students to available tutors.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000c00102",
+          "step_id": "a0000000-0000-4000-8000-000000009f01",
+          "position": 0,
+          "content": "Renames students to match roster names.",
+          "status": "live"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00301"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00201"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00401"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00501"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00601"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00202"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00302"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00402"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00502"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000817"
+        }
+      },
+      "beforeCount": 12,
+      "afterCount": 12
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000817"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 9
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000817"
+        }
+      },
+      "beforeCount": 74,
+      "afterCount": 74
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "lane_id": "a0000000-0000-4000-8000-0000000008f1"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7,
+      "beforeRows": [
+        {
+          "id": "a0000000-0000-4000-8000-000000d00501",
+          "step_id": "a0000000-0000-4000-8000-000000009e05",
+          "position": 0,
+          "content": "Alerts lead tutor about unassigned or miss-assigned students using the \"ask for help\" alert.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00101",
+          "step_id": "a0000000-0000-4000-8000-000000009e01",
+          "position": 0,
+          "content": "Circulates and quietly observes the students.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00201",
+          "step_id": "a0000000-0000-4000-8000-000000009e02",
+          "position": 0,
+          "content": "Reminds students to keep working while waiting.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00601",
+          "step_id": "a0000000-0000-4000-8000-000000009e06",
+          "position": 0,
+          "content": "Handles student tech problems as they arise.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00701",
+          "step_id": "a0000000-0000-4000-8000-000000009e07",
+          "position": 0,
+          "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00401",
+          "step_id": "a0000000-0000-4000-8000-000000009e04",
+          "position": 0,
+          "content": "Receives information that a student is absent from the session.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00301",
+          "step_id": "a0000000-0000-4000-8000-000000009e03",
+          "position": 0,
+          "content": "Checks if all students are in the correct breakout room.",
+          "status": "live"
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "a0000000-0000-4000-8000-000000d00501",
+          "step_id": "a0000000-0000-4000-8000-000000009e01",
+          "position": 4,
+          "content": "Alerts lead tutor about unassigned or miss-assigned students using the \"ask for help\" alert.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00101",
+          "step_id": "a0000000-0000-4000-8000-000000009e01",
+          "position": 0,
+          "content": "Circulates and quietly observes the students.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00201",
+          "step_id": "a0000000-0000-4000-8000-000000009e01",
+          "position": 2,
+          "content": "Reminds students to keep working while waiting.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00601",
+          "step_id": "a0000000-0000-4000-8000-000000009e04",
+          "position": 1,
+          "content": "Handles student tech problems as they arise.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00701",
+          "step_id": "a0000000-0000-4000-8000-000000009e07",
+          "position": 0,
+          "content": "Escalates unresolved issues to support@tutors.plus promptly.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00401",
+          "step_id": "a0000000-0000-4000-8000-000000009e01",
+          "position": 3,
+          "content": "Receives information that a student is absent from the session.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00301",
+          "step_id": "a0000000-0000-4000-8000-000000009e01",
+          "position": 1,
+          "content": "Checks if all students are in the correct breakout room.",
+          "status": "live"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "lane_id": "a0000000-0000-4000-8000-0000000008f2"
+        }
+      },
+      "beforeCount": 5,
+      "afterCount": 5,
+      "beforeRows": [
+        {
+          "id": "a0000000-0000-4000-8000-000000d00402",
+          "step_id": "a0000000-0000-4000-8000-000000009e04",
+          "position": 0,
+          "content": "Inform classroom teacher about students that are absent.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00502",
+          "step_id": "a0000000-0000-4000-8000-000000009e05",
+          "position": 0,
+          "content": "Respond to classroom teachers \"ask for help\" request.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00202",
+          "step_id": "a0000000-0000-4000-8000-000000009e02",
+          "position": 0,
+          "content": "Adds any un-rostered students to the attendance list.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00102",
+          "step_id": "a0000000-0000-4000-8000-000000009e01",
+          "position": 0,
+          "content": "Renames students to match roster names.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00302",
+          "step_id": "a0000000-0000-4000-8000-000000009e03",
+          "position": 0,
+          "content": "Manually assigns unpaired students to available tutors.",
+          "status": "live"
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "a0000000-0000-4000-8000-000000d00402",
+          "step_id": "a0000000-0000-4000-8000-000000009e01",
+          "position": 3,
+          "content": "Inform classroom teacher about students that are absent.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00502",
+          "step_id": "a0000000-0000-4000-8000-000000009e01",
+          "position": 4,
+          "content": "Respond to classroom teachers \"ask for help\" request.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00202",
+          "step_id": "a0000000-0000-4000-8000-000000009e01",
+          "position": 1,
+          "content": "Adds any un-rostered students to the attendance list.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00102",
+          "step_id": "a0000000-0000-4000-8000-000000009e01",
+          "position": 0,
+          "content": "Renames students to match roster names.",
+          "status": "live"
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000d00302",
+          "step_id": "a0000000-0000-4000-8000-000000009e01",
+          "position": 2,
+          "content": "Manually assigns unpaired students to available tutors.",
+          "status": "live"
+        }
+      ]
+    }
+  ]
+}
