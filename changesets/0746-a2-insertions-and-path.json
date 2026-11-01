@@ -1,0 +1,607 @@
+{
+  "version": 1,
+  "issue": 746,
+  "operations": [
+    {
+      "key": "row73-cancel-email",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "f1000000-0000-4000-8000-000000000003",
+          "lane_id": "f1000000-0000-4000-8000-000000000008",
+          "step_id": "f1000000-0000-4000-8000-000000000012",
+          "position": 2
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Cancellation emails",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151",
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    },
+    {
+      "key": "row73-cancel-email-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "row73-cancel-email"
+          },
+          "cell_key": {
+            "ref": "row73-cancel-email",
+            "field": "cell_key"
+          },
+          "title": "KB audit #746 row73 — Manage sessions, Back Stage Touchpoints"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #746 row73 — Manage sessions, Back Stage Touchpoints",
+        "note": "Note: sent to affected tutors for the chosen cancel scope; the old all-future template is unused. Figma 11272:431151 lists session-cancellation scoped variants (single / date / dateRange / shiftRange) and marks the all-future template unused. Card 2452 (Deployed, 12.0 live) moved session cancellation and tutor alerts for cancelled sessions into scope and defines the scopes. No registry placement is attached by this insertion. https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151 ; card 2452: https://www.notion.so/d11b7cca498283dba80881e9217de2a8"
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151",
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    },
+    {
+      "key": "row75-broadcast-email",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "f1000000-0000-4000-8000-000000000003",
+          "lane_id": "f1000000-0000-4000-8000-000000000008",
+          "step_id": "f1000000-0000-4000-8000-000000000015",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Tutor broadcast email",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    },
+    {
+      "key": "row75-broadcast-email-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "row75-broadcast-email"
+          },
+          "cell_key": {
+            "ref": "row75-broadcast-email",
+            "field": "cell_key"
+          },
+          "title": "KB audit #746 row75 — Broadcast & export, Back Stage Touchpoints"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #746 row75 — Broadcast & export, Back Stage Touchpoints",
+        "note": "Figma 11272:431151 lists the tutor broadcast email among the shipped email types. No registry placement is attached by this insertion. https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151"
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    },
+    {
+      "key": "row76-students-email",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "f1000000-0000-4000-8000-000000000003",
+          "lane_id": "f1000000-0000-4000-8000-000000000008",
+          "step_id": "f1000000-0000-4000-8000-000000000013",
+          "position": 2
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Students-added email",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    },
+    {
+      "key": "row76-students-email-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "row76-students-email"
+          },
+          "cell_key": {
+            "ref": "row76-students-email",
+            "field": "cell_key"
+          },
+          "title": "KB audit #746 row76 — Manage students, Back Stage Touchpoints"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #746 row76 — Manage students, Back Stage Touchpoints",
+        "note": "Figma 11272:431151 lists the students-added email among the shipped email types. No registry placement is attached by this insertion. https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151"
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-431151",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    },
+    {
+      "key": "row68-insight-load",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "c2000000-0000-4000-8000-000000000002",
+          "lane_id": "c2000000-0000-4000-8000-000000000014",
+          "step_id": "c2000000-0000-4000-8000-000000000022",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "The dev team loads the research team's insights from a sheet: one per new skill for every active tutor, quoting one of their own sessions where a recording exists and the same example excerpt otherwise.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3dfb7cca498280239f2ff9c4c5b56a6a",
+        "https://www.notion.so/3fbb7cca4982816ca6bcc0def6a220bc",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    },
+    {
+      "key": "row68-insight-load-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "row68-insight-load"
+          },
+          "cell_key": {
+            "ref": "row68-insight-load",
+            "field": "cell_key"
+          },
+          "title": "KB audit #746 row68 — Read AI growth insights, Back Stage Actions"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #746 row68 — Read AI growth insights, Back Stage Actions",
+        "note": "Card 2639 AI Coach: Load insights from TACT spring data for all tutors is Deployed (12.0 live): the research team fills a sheet, 66 selected tutors get transcript-based feedback on 2 new constructs and every other active tutor gets general feedback, loaded into tutor_ai_insight. Card 2686 (Dev Backlog, interviews) describes the fall round: one insight each on two new skills; 66 tutors got an excerpt from one of their own sessions, the other 109 the same example excerpt. #746 reports 175 tutors, 66 with their own excerpt (Metabase), consistent with those cards; not re-queried. Read through the PLUS Notion connection on November 1, 2026. card 2639: https://www.notion.so/3dfb7cca498280239f2ff9c4c5b56a6a ; card 2686: https://www.notion.so/3fbb7cca4982816ca6bcc0def6a220bc"
+      },
+      "evidence": [
+        "https://www.notion.so/3dfb7cca498280239f2ff9c4c5b56a6a",
+        "https://www.notion.so/3fbb7cca4982816ca6bcc0def6a220bc",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    },
+    {
+      "key": "row60-path",
+      "operation": "create_path_at_status",
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "c3000000-0000-4000-8000-000000000001",
+          "name": "Edits a submitted reflection"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "variant",
+        "status": "live",
+        "summary": "The tutor reopens a reflection they already submitted, changes it, and saves it again. Only their own reflection can be edited."
+      },
+      "input": {
+        "lane_source_path_id": "17d54a45-65ab-4670-8035-fb7bc0a0b256"
+      },
+      "evidence": [
+        "https://www.notion.so/2f1b7cca4982808bac30eb2fd862ac62",
+        "https://www.notion.so/392b7cca4982804cb6bdf4a0c7f9c435",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-251700",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/746"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "row73-cancel-email"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "row73-cancel-email"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "row75-broadcast-email"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "row75-broadcast-email"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "row76-students-email"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "row76-students-email"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "row68-insight-load"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "row68-insight-load"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "f1000000-0000-4000-8000-000000000003"
+        }
+      },
+      "beforeCount": 14,
+      "afterCount": 17
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "c2000000-0000-4000-8000-000000000002"
+        }
+      },
+      "beforeCount": 19,
+      "afterCount": 20
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "c3000000-0000-4000-8000-000000000002"
+        }
+      },
+      "beforeCount": 21,
+      "afterCount": 21
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "17d54a45-65ab-4670-8035-fb7bc0a0b256"
+        }
+      },
+      "beforeCount": 9,
+      "afterCount": 9
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-00000000080f"
+        }
+      },
+      "beforeCount": 19,
+      "afterCount": 19
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "c3000000-0000-4000-8000-000000000001"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 3,
+      "beforeRows": [
+        {
+          "name": "Filed in one sitting",
+          "kind": "happy",
+          "status": "live"
+        },
+        {
+          "name": "Session did not happen",
+          "kind": "exception",
+          "status": "live"
+        }
+      ],
+      "afterRows": [
+        {
+          "name": "Filed in one sitting",
+          "kind": "happy",
+          "status": "live"
+        },
+        {
+          "name": "Session did not happen",
+          "kind": "exception",
+          "status": "live"
+        },
+        {
+          "name": "Edits a submitted reflection",
+          "kind": "variant",
+          "status": "live"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "c3000000-0000-4000-8000-000000000001"
+        }
+      },
+      "beforeCount": 8,
+      "afterCount": 8
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": {
+            "ref": "row60-path"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 8,
+      "afterRows": [
+        {
+          "name": "Storyboard",
+          "lane_role": "storyboard",
+          "position": 0
+        },
+        {
+          "name": "Regular Tutor",
+          "lane_role": "customer_actions",
+          "position": 1
+        },
+        {
+          "name": "Lead Tutor",
+          "lane_role": "customer_actions",
+          "position": 2
+        },
+        {
+          "name": "Front Stage Touchpoints",
+          "lane_role": "frontstage_touchpoints",
+          "position": 3
+        },
+        {
+          "name": "Front Stage Actions",
+          "lane_role": "frontstage_actions",
+          "position": 4
+        },
+        {
+          "name": "Back Stage Touchpoints",
+          "lane_role": "backstage_touchpoints",
+          "position": 5
+        },
+        {
+          "name": "Back Stage Actions",
+          "lane_role": "backstage_actions",
+          "position": 6
+        },
+        {
+          "name": "Support Actions",
+          "lane_role": "support_actions",
+          "position": 7
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": {
+            "ref": "row60-path"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 4,
+      "afterRows": [
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000020",
+          "position": 1
+        },
+        {
+          "step_id": "bd082e7e-1c27-48a2-ad77-356b84875bf7",
+          "position": 2
+        },
+        {
+          "step_id": "f664dc46-0a5a-40ec-b450-c610778aebd1",
+          "position": 3
+        },
+        {
+          "step_id": "c3000000-0000-4000-8000-000000000025",
+          "position": 4
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "aabdb0ed-f69c-447b-a420-9dbb07eb4fae"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "69fdaa24-d2f4-4b3c-812f-1ef30e530878"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b4556df8-9f49-4dbf-990a-8a7a88b13a02"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "8b687314-3285-4eb0-803a-c7dfa20d6dbe"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "f44303f7-cb07-4bc0-9100-166afdf5539e"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "eac5de64-65df-4e45-9ca3-36eb930af18d"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "bfaa2a4e-fe92-4506-8cfd-ef1c1f3d0c88"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "3b975e06-c4a9-4161-85ca-eebddd81246a"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "ca2fae47-02de-4782-8721-3dc76fd90db8"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    }
+  ]
+}
