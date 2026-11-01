@@ -1,0 +1,1924 @@
+{
+  "version": 1,
+  "issue": 747,
+  "operations": [
+    {
+      "key": "F15-attendance-search",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-00000000080b",
+          "lane_id": "a0000000-0000-4000-8000-000000002022",
+          "step_id": "a0000000-0000-4000-8000-000000000960",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Searches the attendance list to check whether a student is already on the roster.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/2fdb7cca498280f4acfcf39db5e2c599",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F15-attendance-search-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F15-attendance-search"
+          },
+          "title": "KB audit #747 F15 — attendance search",
+          "cell_key": {
+            "ref": "F15-attendance-search",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F15 — attendance search",
+        "note": "Card 2243 \"Student Search under attendee list\" is Deployed, release 12.1 (https://www.notion.so/2fdb7cca498280f4acfcf39db5e2c599): inline live filtering of the Attendance list, lead tutors as primary users. The ticket assumed built; it is live."
+      },
+      "evidence": [
+        "https://www.notion.so/2fdb7cca498280f4acfcf39db5e2c599",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F16-room-number",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-00000000080b",
+          "lane_id": "a0000000-0000-4000-8000-000000002023",
+          "step_id": "a0000000-0000-4000-8000-000000000962",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Sees each student's auto-assigned breakout room number on their row.",
+        "status": "proposed"
+      },
+      "evidence": [
+        "https://www.notion.so/df1b7cca498283f091fc010281da1fdb",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=149-110334",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F16-room-number-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F16-room-number"
+          },
+          "title": "KB audit #747 F16 — room number on the student row",
+          "cell_key": {
+            "ref": "F16-room-number",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F16 — room number on the student row",
+        "note": "Card 2587 \"Student-row room indicators\" is Triage (https://www.notion.so/df1b7cca498283f091fc010281da1fdb): every tutor sees auto-assigned breakout-room numbers in assignment views. Figma \"Student-row room number\" (https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=149-110334)."
+      },
+      "evidence": [
+        "https://www.notion.so/df1b7cca498283f091fc010281da1fdb",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=149-110334",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F17-path",
+      "operation": "create_path_at_status",
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000201",
+          "name": "Student AI insights"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "variant",
+        "status": "proposed",
+        "summary": "Proposed: before the room-order run, a tutor opens a student's AI insights from the student list. The card is in the dev backlog with design in progress.",
+        "note": "The Figma frame documents the older Insights and Prompts model. A newer direction (Try, Watch, Avoid, on demand in session) is pending updated Figma."
+      },
+      "input": {
+        "lane_source_path_id": "a0000000-0000-4000-8000-000000000809"
+      },
+      "evidence": [
+        "https://www.notion.so/237b7cca49828061bff4f4631d69f7e9",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=9998-385063",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F17-tutor",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "F17-path"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "F17-path"
+                },
+                "name": "Regular Tutor"
+              }
+            }
+          },
+          "step_id": "a0000000-0000-4000-8000-000000000954",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Opens a student's AI insights from the student list.",
+        "status": "proposed",
+        "summary": "Proposed: the pre-session student roster gains an insights button on each row."
+      },
+      "evidence": [
+        "https://www.notion.so/237b7cca49828061bff4f4631d69f7e9",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=9998-385063",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F17-tutor-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F17-tutor"
+          },
+          "title": "KB audit #747 F17 — AI insights from the student list",
+          "cell_key": {
+            "ref": "F17-tutor",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F17 — AI insights from the student list",
+        "note": "Card 1778 \"AI Student Insights\" is Dev Backlog, design WIP (https://www.notion.so/237b7cca49828061bff4f4631d69f7e9): entry points include the pre-session student roster with an insights button per row. Figma annotation (https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=9998-385063) says the newer Try / Watch / Avoid direction is pending updated Figma."
+      },
+      "evidence": [
+        "https://www.notion.so/237b7cca49828061bff4f4631d69f7e9",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=9998-385063",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F17-insights-tp",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "F17-path"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "F17-path"
+                },
+                "name": "Back Stage Touchpoints"
+              }
+            }
+          },
+          "step_id": "a0000000-0000-4000-8000-000000000954",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Student AI insights",
+        "status": "proposed",
+        "summary": "Proposed: AI-generated insights about a student, shown to tutors on demand."
+      },
+      "evidence": [
+        "https://www.notion.so/237b7cca49828061bff4f4631d69f7e9",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F17-insights-tp-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F17-insights-tp"
+          },
+          "title": "KB audit #747 F17 — student AI insights",
+          "cell_key": {
+            "ref": "F17-insights-tp",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F17 — student AI insights",
+        "note": "Card 1778 (https://www.notion.so/237b7cca49828061bff4f4631d69f7e9) is Dev Backlog with design WIP."
+      },
+      "evidence": [
+        "https://www.notion.so/237b7cca49828061bff4f4631d69f7e9",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F20-path-spec",
+      "operation": "update_path_spec",
+      "target": {
+        "table": "paths",
+        "id": "f0000000-0000-4000-8000-00000000080e"
+      },
+      "expected": {
+        "summary": "Captures planned / unshipped behavior for Wrap-Up as of 2026-08-08. Diverges from the current happy path at \"Complete wrap-up\": the reflection redesign — escalation chips, an AI follow-up question per section, cadence-triggered Self Reflection (every 10th session) and Form Feedback (every 3 weeks), and recording upload with a No Recording Reason. Design iteration as of Jul 2026; nothing here is in production.",
+        "note": null,
+        "status": "proposed",
+        "name": "Redesigned reflection"
+      },
+      "value": {
+        "summary": "Planned reflection redesign, handoff-ready since Jul 30, 2026 and waiting for development. Diverges from the current happy path at Complete wrap-up: a roster pre-filled from live attendance, effort, progress and engagement selections, an escalation question last in each section, an optional AI follow-up per section, cadence-triggered Self Reflection and Form Feedback, and a required No Recording Reason when no recording is attached.",
+        "note": null
+      },
+      "evidence": [
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F20-path-status",
+      "operation": "set_path_status",
+      "target": {
+        "table": "paths",
+        "id": "f0000000-0000-4000-8000-00000000080e"
+      },
+      "expected": {
+        "status": "proposed",
+        "name": "Redesigned reflection",
+        "scenario_id": "a0000000-0000-4000-8000-000000000206"
+      },
+      "value": {
+        "status": "planned"
+      },
+      "evidence": [
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F20-c3c2c48a",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "c3c2c48a-69c9-4e19-b49e-df557039de0f"
+      },
+      "expected": {
+        "content": "Reminds tutors to complete the reflection and upload the recording or give a No Recording Reason.",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the lead's scripted wrap-up reminder changes from \"upload the recording\" to \"upload the recording or record why there isn't one\".",
+        "status": "proposed",
+        "path_id": "f0000000-0000-4000-8000-00000000080e",
+        "lane_id": "caf68a1a-dda9-4aea-93e6-046b102e5c75",
+        "step_id": "a0000000-0000-4000-8000-000000000983",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Reminds tutors to complete the reflection and upload the recording or give a No Recording Reason.",
+        "summary": "Planned: the lead's wrap-up reminder changes from \"upload the recording\" to \"upload the recording or record why there isn't one\".",
+        "status": "planned"
+      },
+      "evidence": [
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F20-c3c2c48a-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "c3c2c48a-69c9-4e19-b49e-df557039de0f",
+          "title": "KB audit #747 F20 — lead reminder",
+          "cell_key": "c3c2c48a-69c9-4e19-b49e-df557039de0f"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F20 — lead reminder",
+        "note": "Card 1733 \"Tutor Reflection Form Enhancement\" is Ready for Dev (https://www.notion.so/218b7cca49828089864bf8779755c42a), handoff-ready since Jul 30, 2026. Status moves from proposed to planned."
+      },
+      "evidence": [
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F22-f25c75e0",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "f25c75e0-4f2f-4ff9-baa5-4eab3168ca05"
+      },
+      "expected": {
+        "content": "Completes the redesigned reflection with escalation chips and an AI follow-up per section.",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the redesigned form adds escalation chips for flagging concerns and one AI-generated follow-up question per completed section, aimed at the ~80% of reflections whose free-text notes are empty today.",
+        "status": "proposed",
+        "path_id": "f0000000-0000-4000-8000-00000000080e",
+        "lane_id": "4ea015cf-0e96-474f-879d-c132cd5bca75",
+        "step_id": "a0000000-0000-4000-8000-000000000983",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Confirms the roster pre-filled from live attendance, selects each student's effort, progress and engagement, rates the session, flags any escalation, and answers an optional AI follow-up per section.",
+        "summary": "Planned: every structured answer is a rating or a chip selection. Roster edits are logged as a data signal; escalation comes last in each section with a \"No\" default, and any other choice asks for a short description.",
+        "status": "planned"
+      },
+      "evidence": [
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://www.notion.so/3adb7cca498281f793a2f6e6fabfb3df",
+        "https://www.notion.so/3adb7cca49828150be91c52d46c7e15f",
+        "https://www.notion.so/3abb7cca498281c2ab36d4477e54fe1f",
+        "https://www.notion.so/3abb7cca498281399145ddd7a76ab715",
+        "https://www.notion.so/3abb7cca498281f4ad8bd5aa8a79a6b1",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F22-f25c75e0-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "f25c75e0-4f2f-4ff9-baa5-4eab3168ca05",
+          "title": "KB audit #747 F22 — redesigned reflection",
+          "cell_key": "f25c75e0-4f2f-4ff9-baa5-4eab3168ca05"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F22 — redesigned reflection",
+        "note": "Card 1733 \"Tutor Reflection Form Enhancement\" is Ready for Dev (https://www.notion.so/218b7cca49828089864bf8779755c42a). Decisions: roster from live attendance, pre-selected and editable (https://www.notion.so/3adb7cca498281f793a2f6e6fabfb3df); escalation last in every section, never sent to the AI (https://www.notion.so/3adb7cca49828150be91c52d46c7e15f); no per-student rating, AI prompts keyed to effort, progress and engagement (https://www.notion.so/3abb7cca498281c2ab36d4477e54fe1f); AI follow-up question cards replace free-text notes (https://www.notion.so/3abb7cca498281399145ddd7a76ab715); keep the 5-point session rating (https://www.notion.so/3abb7cca498281f4ad8bd5aa8a79a6b1)."
+      },
+      "evidence": [
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://www.notion.so/3adb7cca498281f793a2f6e6fabfb3df",
+        "https://www.notion.so/3adb7cca49828150be91c52d46c7e15f",
+        "https://www.notion.so/3abb7cca498281c2ab36d4477e54fe1f",
+        "https://www.notion.so/3abb7cca498281399145ddd7a76ab715",
+        "https://www.notion.so/3abb7cca498281f4ad8bd5aa8a79a6b1",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F20-3dc093bc",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "3dc093bc-6c58-4071-b3e3-09b2d200f7ba"
+      },
+      "expected": {
+        "content": "Reflection form",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the form gains chips and AI follow-ups, and the recording-upload widget adds a required No Recording Reason when no file is attached - closing the silent-missing-recording gap.",
+        "status": "proposed",
+        "path_id": "f0000000-0000-4000-8000-00000000080e",
+        "lane_id": "70c7e1da-d2a1-4290-95a5-efe348a404c3",
+        "step_id": "a0000000-0000-4000-8000-000000000983",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Reflection form",
+        "summary": "Planned: the form pre-fills the roster from attendance, adds effort, progress and engagement chips, an escalation question and AI follow-ups, and the upload widget requires a No Recording Reason when no file is attached.",
+        "status": "planned"
+      },
+      "evidence": [
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://www.notion.so/3adb7cca498281f793a2f6e6fabfb3df",
+        "https://www.notion.so/3adb7cca49828150be91c52d46c7e15f",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F20-3dc093bc-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "3dc093bc-6c58-4071-b3e3-09b2d200f7ba",
+          "title": "KB audit #747 F20 — reflection form",
+          "cell_key": "3dc093bc-6c58-4071-b3e3-09b2d200f7ba"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F20 — reflection form",
+        "note": "Card 1733 \"Tutor Reflection Form Enhancement\" is Ready for Dev (https://www.notion.so/218b7cca49828089864bf8779755c42a). Status moves from proposed to planned."
+      },
+      "evidence": [
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://www.notion.so/3adb7cca498281f793a2f6e6fabfb3df",
+        "https://www.notion.so/3adb7cca49828150be91c52d46c7e15f",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F20-a29930ad",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a29930ad-c72a-458a-a029-dc0575480007"
+      },
+      "expected": {
+        "content": "Follow-up question LLM",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): an LLM reads each section's ratings/notes and asks a single targeted follow-up. The AI questions were challenged by Cindy in review and remain unresolved - this is the least settled piece of the redesign.",
+        "status": "proposed",
+        "path_id": "f0000000-0000-4000-8000-00000000080e",
+        "lane_id": "b690e429-5590-4f2c-bc1b-8f05c35d68f7",
+        "step_id": "a0000000-0000-4000-8000-000000000983",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Follow-up question LLM",
+        "summary": "Planned: an LLM reads each section's answers and asks one optional follow-up question. A trial round on real data passed 95% of 21 cases; escalation answers are never sent to it.",
+        "status": "planned"
+      },
+      "evidence": [
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://www.notion.so/3abb7cca498281399145ddd7a76ab715",
+        "https://www.notion.so/3adb7cca49828150be91c52d46c7e15f",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F20-a29930ad-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a29930ad-c72a-458a-a029-dc0575480007",
+          "title": "KB audit #747 F20 — follow-up question LLM",
+          "cell_key": "a29930ad-c72a-458a-a029-dc0575480007"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F20 — follow-up question LLM",
+        "note": "Card 1733 \"Tutor Reflection Form Enhancement\" is Ready for Dev (https://www.notion.so/218b7cca49828089864bf8779755c42a): \"AI question trial round on real data (21 cases, 95% pass)\". Decision https://www.notion.so/3adb7cca49828150be91c52d46c7e15f: escalation is never fed to the AI. Replaces a stale summary that named a reviewer."
+      },
+      "evidence": [
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://www.notion.so/3abb7cca498281399145ddd7a76ab715",
+        "https://www.notion.so/3adb7cca49828150be91c52d46c7e15f",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F20-e863dca6",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "e863dca6-f0c3-4c55-9e85-f7ffc60e6cf0"
+      },
+      "expected": {
+        "content": "Escalation chips route flagged concerns to supervisors.",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): a chip selected in the reflection routes the concern to the supervisor queue rather than sitting in free text. Chips were endorsed by Emme in design review.",
+        "status": "proposed",
+        "path_id": "f0000000-0000-4000-8000-00000000080e",
+        "lane_id": "c4c33991-2b2c-4f45-b493-37e13595a8e1",
+        "step_id": "a0000000-0000-4000-8000-000000000983",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Routes flagged escalations to supervisors.",
+        "summary": "Planned: an escalation chosen in the reflection reaches the supervisors rather than sitting in free text.",
+        "status": "planned"
+      },
+      "evidence": [
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://www.notion.so/3adb7cca49828150be91c52d46c7e15f",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F20-e863dca6-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "e863dca6-f0c3-4c55-9e85-f7ffc60e6cf0",
+          "title": "KB audit #747 F20 — escalations",
+          "cell_key": "e863dca6-f0c3-4c55-9e85-f7ffc60e6cf0"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F20 — escalations",
+        "note": "Card 1733 \"Tutor Reflection Form Enhancement\" is Ready for Dev (https://www.notion.so/218b7cca49828089864bf8779755c42a); decision https://www.notion.so/3adb7cca49828150be91c52d46c7e15f. Replaces a stale summary that named a reviewer."
+      },
+      "evidence": [
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://www.notion.so/3adb7cca49828150be91c52d46c7e15f",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F21-e8a64bc5",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "e8a64bc5-4d0f-47c5-956d-e4a3521315b3"
+      },
+      "expected": {
+        "content": "Design iteration in flight (Jul 2026)",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): active design work — Loom walkthrough by Cassie 2026-07-15; AI questions challenged (Cindy), chips endorsed (Emme), cadence unresolved.",
+        "status": "proposed",
+        "path_id": "f0000000-0000-4000-8000-00000000080e",
+        "lane_id": "eaba1e90-bbaf-4121-8b4a-f9d71cb558e1",
+        "step_id": "a0000000-0000-4000-8000-000000000983",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Ready for dev; split into AI module, UI and note-taking cards.",
+        "summary": "Cadence locked Jul 27, 2026; an AI question trial on real data passed 95% of 21 cases; supervisor sign-off on the decisions is still open. The note-taking widget card shipped in 12.0; the AI module and UI cards are in triage.",
+        "status": "planned"
+      },
+      "evidence": [
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F21-e8a64bc5-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "e8a64bc5-4d0f-47c5-956d-e4a3521315b3",
+          "title": "KB audit #747 F21 — redesign status",
+          "cell_key": "e8a64bc5-4d0f-47c5-956d-e4a3521315b3"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F21 — redesign status",
+        "note": "Card 1733 \"Tutor Reflection Form Enhancement\" is Ready for Dev (https://www.notion.so/218b7cca49828089864bf8779755c42a): handoff-ready Jul 30, 2026; Self Reflection cadence locked Jul 27, 2026; 21-case AI trial at 95%; next is supervisor sign-off on the Decisions DB. Its child cards: Reflection Form — Student Note-Taking Widget Integration (Deployed 12.0), UI Update (Triage), AI Module (Triage). The split date is not stated on the card, so the cell gives none."
+      },
+      "evidence": [
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F23-7d919b87",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "7d919b87-04ee-42a6-b914-f5bb2335faef"
+      },
+      "expected": {
+        "content": "Completes a Self Reflection every 10th session and a Form Feedback survey every 3 weeks.",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): two cadence-triggered instruments replace one-size-fits-all prompts - a Self Reflection on every 10th completed session and a Form Feedback survey every 3 weeks. The exact cadence was still unresolved in the Jul 2026 review.",
+        "status": "proposed",
+        "path_id": "f0000000-0000-4000-8000-00000000080e",
+        "lane_id": "4ea015cf-0e96-474f-879d-c132cd5bca75",
+        "step_id": "f0000000-0000-4000-8000-0000000008e1",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Completes a Self Reflection at session 5 and every 10th session after, and a Form Feedback survey every 3 weeks.",
+        "summary": "Planned: Self Reflection appears when the session count is 5, 15, 25 and so on; Form Feedback appears at most once per tutor every 3 weeks. The cadence was locked Jul 27, 2026.",
+        "status": "planned"
+      },
+      "evidence": [
+        "https://www.notion.so/3abb7cca4982812e8ff8c311032dc693",
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F23-7d919b87-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "7d919b87-04ee-42a6-b914-f5bb2335faef",
+          "title": "KB audit #747 F23 — cadence check-ins",
+          "cell_key": "7d919b87-04ee-42a6-b914-f5bb2335faef"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F23 — cadence check-ins",
+        "note": "Decision https://www.notion.so/3abb7cca4982812e8ff8c311032dc693: Self Reflection every 10th session starting at session 5. Card 1733 \"Tutor Reflection Form Enhancement\" is Ready for Dev (https://www.notion.so/218b7cca49828089864bf8779755c42a): \"Form Feedback at most once per tutor every 3 weeks\"; cadence locked Jul 27, 2026."
+      },
+      "evidence": [
+        "https://www.notion.so/3abb7cca4982812e8ff8c311032dc693",
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F20-b84e24b6",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b84e24b6-5a0c-4dc8-8ebc-a275e3ab520d"
+      },
+      "expected": {
+        "content": "Cadence forms",
+        "summary": "PROTOTYPE (exploratory, not shipped as of Aug 2026): the app tracks session counts and calendar intervals per tutor and surfaces the right instrument at the right moment.",
+        "status": "proposed",
+        "path_id": "f0000000-0000-4000-8000-00000000080e",
+        "lane_id": "70c7e1da-d2a1-4290-95a5-efe348a404c3",
+        "step_id": "f0000000-0000-4000-8000-0000000008e1",
+        "position": 0,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": null
+      },
+      "value": {
+        "content": "Cadence forms",
+        "summary": "Planned: the app counts each tutor's sessions and the weeks since their last Form Feedback, and shows the right form at the right moment.",
+        "status": "planned"
+      },
+      "evidence": [
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://www.notion.so/3abb7cca4982812e8ff8c311032dc693",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F20-b84e24b6-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b84e24b6-5a0c-4dc8-8ebc-a275e3ab520d",
+          "title": "KB audit #747 F20 — cadence forms",
+          "cell_key": "b84e24b6-5a0c-4dc8-8ebc-a275e3ab520d"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F20 — cadence forms",
+        "note": "Card 1733 \"Tutor Reflection Form Enhancement\" is Ready for Dev (https://www.notion.so/218b7cca49828089864bf8779755c42a); decision https://www.notion.so/3abb7cca4982812e8ff8c311032dc693."
+      },
+      "evidence": [
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://www.notion.so/3abb7cca4982812e8ff8c311032dc693",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F20-cadence-step",
+      "operation": "update_step_spec",
+      "target": {
+        "table": "steps",
+        "id": "f0000000-0000-4000-8000-0000000008e1"
+      },
+      "expected": {
+        "summary": "Planned: cadence-triggered forms surface a Self Reflection every tenth session and a Form Feedback survey every three weeks.",
+        "name": "Cadence check-ins",
+        "scenario_id": "a0000000-0000-4000-8000-000000000206"
+      },
+      "value": {
+        "summary": "Planned: cadence-triggered forms surface a Self Reflection at session 5 and every tenth session after, and a Form Feedback survey at most once every three weeks."
+      },
+      "evidence": [
+        "https://www.notion.so/3abb7cca4982812e8ff8c311032dc693",
+        "https://www.notion.so/218b7cca49828089864bf8779755c42a",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F24-zoom-matching",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-00000000080e",
+          "lane_id": "a0000000-0000-4000-8000-000000000876",
+          "step_id": "a0000000-0000-4000-8000-000000000983",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "A script re-links sessions to their Zoom calls (with a backfill of past sessions), accepts more meeting-name formats, and matches attendees only against students in the session's own group.",
+        "status": "built"
+      },
+      "evidence": [
+        "https://www.notion.so/3abb7cca4982802db108fb2b73f563fa",
+        "https://www.notion.so/3f0b7cca498280cda4daedafea927817",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F24-zoom-matching-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F24-zoom-matching"
+          },
+          "title": "KB audit #747 F24 — Zoom matching",
+          "cell_key": {
+            "ref": "F24-zoom-matching",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F24 — Zoom matching",
+        "note": "Card 2551 \"Improve Zoom matching for both students and sessions\" is Testing, release 12.1, QA on prod (https://www.notion.so/3abb7cca4982802db108fb2b73f563fa): rerun and backfill of session matches, student matches restricted to the session's group. Card 2668 \"Accommodate new naming format for zoom calls\" is Deployed, release 12.1 (https://www.notion.so/3f0b7cca498280cda4daedafea927817), so the naming-format part is live; the cell stays built until 2551 deploys."
+      },
+      "evidence": [
+        "https://www.notion.so/3abb7cca4982802db108fb2b73f563fa",
+        "https://www.notion.so/3f0b7cca498280cda4daedafea927817",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F25-chunked-upload",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "c3000000-0000-4000-8000-000000000002",
+          "lane_id": "c3000000-0000-4000-8000-000000000015",
+          "step_id": "c3000000-0000-4000-8000-000000000021",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "The app uploads the recording in small pieces, so files over 100 MB get through and files over 1 GB are refused on pick.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3ddb7cca498280389264f3aa8dca9e37",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F25-chunked-upload-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F25-chunked-upload"
+          },
+          "title": "KB audit #747 F25 — chunked recording upload",
+          "cell_key": {
+            "ref": "F25-chunked-upload",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F25 — chunked recording upload",
+        "note": "Card 2637 \"Tutors reporting reflections >100 MB are failing\" is Deployed, release 12.1 (https://www.notion.so/3ddb7cca498280389264f3aa8dca9e37): uploads are chunked so videos over 100MB work; a file over 1 GB is rejected as soon as it is picked. The ticket assumed built; it is live."
+      },
+      "evidence": [
+        "https://www.notion.so/3ddb7cca498280389264f3aa8dca9e37",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F26-path",
+      "operation": "create_path_at_status",
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "c2000000-0000-4000-8000-000000000001",
+          "name": "Monthly Reviews list"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "variant",
+        "status": "proposed",
+        "summary": "Proposed: AI Coach opens on a Monthly Reviews list. The tutor picks a month, rates its growth insights, must comment on a Not Helpful rating, and sees a limited-data notice when the month has too little to go on.",
+        "note": null
+      },
+      "input": {
+        "lane_source_path_id": "c2000000-0000-4000-8000-000000000002"
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12386-527109",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12386-527118",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F26-pick-month",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "F26-path"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "F26-path"
+                },
+                "name": "Regular Tutor"
+              }
+            }
+          },
+          "step_id": "c2000000-0000-4000-8000-0000000000a1",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Picks a month from the Monthly Reviews list in AI Coach.",
+        "status": "proposed",
+        "summary": "Proposed: the list replaces the single period dropdown on the AI Coach page."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12386-527109",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12386-527118",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F26-pick-month-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F26-pick-month"
+          },
+          "title": "KB audit #747 F26 — Monthly Reviews list",
+          "cell_key": {
+            "ref": "F26-pick-month",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F26 — Monthly Reviews list",
+        "note": "Figma \"Flow 3 — Monthly Reviews List\" (https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12386-527109): one AI Coach list screen. The Toolkit › Reviews breadcrumb in the ticket could not be confirmed, so the cell names AI Coach."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12386-527109",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12386-527118",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F26-list-tp",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "F26-path"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "F26-path"
+                },
+                "name": "Front Stage Touchpoints"
+              }
+            }
+          },
+          "step_id": "c2000000-0000-4000-8000-0000000000a1",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Monthly Reviews list",
+        "status": "proposed",
+        "summary": "Proposed: a list of the months that have an AI Coach review."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12386-527109",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F26-list-tp-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F26-list-tp"
+          },
+          "title": "KB audit #747 F26 — Monthly Reviews list touchpoint",
+          "cell_key": {
+            "ref": "F26-list-tp",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F26 — Monthly Reviews list touchpoint",
+        "note": "Figma https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12386-527109."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12386-527109",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F26-not-helpful",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "F26-path"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "F26-path"
+                },
+                "name": "Regular Tutor"
+              }
+            }
+          },
+          "step_id": "c2000000-0000-4000-8000-000000000022",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Adds a required comment when rating an insight Not Helpful, and sees a limited-data notice instead of insights when the month has too few recorded sessions.",
+        "status": "proposed",
+        "summary": "Proposed: rating the first insight unlocks the next one."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12386-527118",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F26-not-helpful-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F26-not-helpful"
+          },
+          "title": "KB audit #747 F26 — Not Helpful comment and limited-data notice",
+          "cell_key": {
+            "ref": "F26-not-helpful",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F26 — Not Helpful comment and limited-data notice",
+        "note": "Figma \"Flow 2 — AI Growth Insights + Feedback\" (https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12386-527118): screens \"Not Helpful → required text\", \"Feedback submitted — next unlocked (1/5)\" and \"Low data — no insights (Dec 2025)\". The ticket's under-5-sessions threshold is not visible in the frame names, so the cell gives no number. The ticket's two tutor cells share one cell because a second cell cannot be inserted on a path this batch creates."
+      },
+      "evidence": [
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=12386-527118",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F27-model-upgrade",
+      "operation": "insert_cell_at_position",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000802",
+          "lane_id": "a0000000-0000-4000-8000-000000001244",
+          "step_id": "a0000000-0000-4000-8000-000000000862",
+          "position": 1
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Research picks and tests a replacement for the gpt-4o-2024-11-20 model behind Q1 and Q3 lesson feedback, which may be retired in the coming months; Dev then verifies it in QA and production.",
+        "status": "proposed"
+      },
+      "evidence": [
+        "https://www.notion.so/3f4b7cca49828010b522e71142af0d9c",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F27-model-upgrade-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F27-model-upgrade"
+          },
+          "title": "KB audit #747 F27 — lesson feedback model upgrade",
+          "cell_key": {
+            "ref": "F27-model-upgrade",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F27 — lesson feedback model upgrade",
+        "note": "Card 2670 \"Plan Q1/Q3 AI feedback model upgrade\" is Triage (https://www.notion.so/3f4b7cca49828010b522e71142af0d9c): Q1/Q3 feedback runs on gpt-4o-2024-11-20 on QA and prod, which \"might be deprecated in a few months\" and is unaffected by the October 23 shutdowns."
+      },
+      "evidence": [
+        "https://www.notion.so/3f4b7cca49828010b522e71142af0d9c",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F28-path",
+      "operation": "create_path_at_status",
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "2ab2c208-8baf-47c7-8396-b8ae098c0a4b",
+          "name": "Insights Part 2"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "variant",
+        "status": "planned",
+        "summary": "Planned: the report compares Zoom Attendance and Fully Engaged with the school's Ideal, shows Reward Eligible as a count, and counts students with no goal cycle separately.",
+        "note": "Open questions: which goal cycle counts, the first-week state (the first report goes out after the first cycle completes), and whether a reward needs one goal or both."
+      },
+      "input": {
+        "lane_source_path_id": "611a7139-ba98-4ded-8d85-e3df58511585"
+      },
+      "evidence": [
+        "https://www.notion.so/3c8b7cca498280be86d0c94f93660403",
+        "https://www.figma.com/design/fKCZ3WnJfHk835Z59BRwji?node-id=2659-28",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F28-ideal",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "F28-path"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "F28-path"
+                },
+                "name": "Teacher"
+              }
+            }
+          },
+          "step_id": "096ae3f5-1adb-425e-8f3b-6e4e0750448d",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Sees Zoom Attendance and Fully Engaged against the school's Ideal, Reward Eligible as a count, and students with no goal cycle counted separately.",
+        "status": "planned",
+        "summary": "Planned: the Zoom Attendance Ideal is the school's value from the ratios sheet and the Fully Engaged Ideal is 90%. Reward Eligible reads as n of m students with a goal cycle, with no percentage."
+      },
+      "evidence": [
+        "https://www.notion.so/3c8b7cca498280be86d0c94f93660403",
+        "https://www.figma.com/design/fKCZ3WnJfHk835Z59BRwji?node-id=2659-28",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F28-ideal-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F28-ideal"
+          },
+          "title": "KB audit #747 F28 — Ideal comparison",
+          "cell_key": {
+            "ref": "F28-ideal",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F28 — Ideal comparison",
+        "note": "Card 2609 \"Teacher Insights Report — Part 2\" is Ready for Dev (https://www.notion.so/3c8b7cca498280be86d0c94f93660403); Figma https://www.figma.com/design/fKCZ3WnJfHk835Z59BRwji?node-id=2659-28. The ticket assumed Triage (proposed); the card has moved to Ready for Dev, so the status is planned. The ticket's two teacher cells share one cell because a second cell cannot be inserted on a path this batch creates."
+      },
+      "evidence": [
+        "https://www.notion.so/3c8b7cca498280be86d0c94f93660403",
+        "https://www.figma.com/design/fKCZ3WnJfHk835Z59BRwji?node-id=2659-28",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F28-ratios-sheet",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "F28-path"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "F28-path"
+                },
+                "name": "Back Stage Touchpoints"
+              }
+            }
+          },
+          "step_id": "641b5e22-7e7f-490c-8466-2f471520e5df",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Tutor to Student Ratios sheet",
+        "status": "planned",
+        "summary": "Planned: the 2026-27 tutor-to-student ratios sheet supplies each school's Ideal attendance value."
+      },
+      "evidence": [
+        "https://www.notion.so/3c8b7cca498280be86d0c94f93660403",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "F28-ratios-sheet-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "F28-ratios-sheet"
+          },
+          "title": "KB audit #747 F28 — ratios sheet",
+          "cell_key": {
+            "ref": "F28-ratios-sheet",
+            "field": "cell_key"
+          }
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #747 F28 — ratios sheet",
+        "note": "Card 2609 \"Teacher Insights Report — Part 2\" is Ready for Dev (https://www.notion.so/3c8b7cca498280be86d0c94f93660403); Figma https://www.figma.com/design/fKCZ3WnJfHk835Z59BRwji?node-id=2659-28. The ticket assumed Triage (proposed); the card has moved to Ready for Dev, so the status is planned. The card's \"Ideal values (static reference)\" table comes from the \"Tutor to Student Ratios by School 2026-27\" sheet; the ticket's \"Ideal benchmarks sheet\" name does not appear, so the touchpoint uses the sheet's own name."
+      },
+      "evidence": [
+        "https://www.notion.so/3c8b7cca498280be86d0c94f93660403",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F15-attendance-search"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F15-attendance-search"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F16-room-number"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F16-room-number"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F17-tutor"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F17-tutor"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F17-insights-tp"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F17-insights-tp"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000201"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": {
+            "ref": "F17-path"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 6
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": {
+            "ref": "F17-path"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 9
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "c3c2c48a-69c9-4e19-b49e-df557039de0f"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "c3c2c48a-69c9-4e19-b49e-df557039de0f"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "f25c75e0-4f2f-4ff9-baa5-4eab3168ca05"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "f25c75e0-4f2f-4ff9-baa5-4eab3168ca05"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "3dc093bc-6c58-4071-b3e3-09b2d200f7ba"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "3dc093bc-6c58-4071-b3e3-09b2d200f7ba"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a29930ad-c72a-458a-a029-dc0575480007"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "a29930ad-c72a-458a-a029-dc0575480007"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "e863dca6-f0c3-4c55-9e85-f7ffc60e6cf0"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "e863dca6-f0c3-4c55-9e85-f7ffc60e6cf0"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "e8a64bc5-4d0f-47c5-956d-e4a3521315b3"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "e8a64bc5-4d0f-47c5-956d-e4a3521315b3"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "7d919b87-04ee-42a6-b914-f5bb2335faef"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "7d919b87-04ee-42a6-b914-f5bb2335faef"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b84e24b6-5a0c-4dc8-8ebc-a275e3ab520d"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "b84e24b6-5a0c-4dc8-8ebc-a275e3ab520d"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F24-zoom-matching"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F24-zoom-matching"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F25-chunked-upload"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F25-chunked-upload"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F26-pick-month"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F26-pick-month"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F26-list-tp"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F26-list-tp"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F26-not-helpful"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F26-not-helpful"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "c2000000-0000-4000-8000-000000000001"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": {
+            "ref": "F26-path"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 8
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": {
+            "ref": "F26-path"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F27-model-upgrade"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F27-model-upgrade"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F28-ideal"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F28-ideal"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "F28-ratios-sheet"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "F28-ratios-sheet"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "2ab2c208-8baf-47c7-8396-b8ae098c0a4b"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": {
+            "ref": "F28-path"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 5
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": {
+            "ref": "F28-path"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 9
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-00000000080b"
+        }
+      },
+      "beforeCount": 18,
+      "afterCount": 20
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "F17-path"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-00000000080e"
+        }
+      },
+      "beforeCount": 24,
+      "afterCount": 25
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "c3000000-0000-4000-8000-000000000002"
+        }
+      },
+      "beforeCount": 21,
+      "afterCount": 22
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "F26-path"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000802"
+        }
+      },
+      "beforeCount": 20,
+      "afterCount": 21
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "F28-path"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 2
+    }
+  ]
+}
