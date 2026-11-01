@@ -79,8 +79,9 @@ the cell's lane id, for example:
 { "lookup": { "table": "lanes", "where": { "path_id": { "ref": "new-path" }, "name": "Regular Tutor" } } }
 ```
 
-A lookup resolves exactly one row's id; missing, ambiguous or id-less results
-fail. During preflight a lookup under a pending new parent stays pending.
+A lookup resolves exactly one row's id, or the identity column `field`
+names on a row without its own id, such as a `path_steps` membership's
+`step_id`; missing, ambiguous or empty results fail. During preflight a lookup under a pending new parent stays pending.
 Apply resolves it after that parent is created, and separate verify resolves
 it again from the database. This adds reads, not a new write operation. Keep
 parent ids in the scope; a name alone does not identify a lane across paths.
@@ -125,8 +126,24 @@ not permission to write a table or change grants.
 the requested count to at least one and names the generated columns Step 1,
 Step 2 and so on. Adding named steps afterward does not replace these rows.
 A placeholder can now be renamed with the guarded shared-step rename;
-deleting one is still human-only. Resolve that scope before applying a scenario with specified
-column names; dry-run does not simulate every RPC side effect.
+deleting one is still human-only. Address the placeholder by its membership,
+not its name, so separate verification still finds it after the rename:
+
+```json
+{ "lookup": { "table": "path_steps", "where": { "path_id": { "lookup": { "table": "paths", "where": { "scenario_id": { "ref": "new-scenario" }, "name": "Main path" } } }, "position": 0 } }, "field": "step_id" }
+```
+
+Dry-run cannot read a row the batch has not created, so a `rename_step` or
+`update_step_spec` whose target is still pending is deferred rather than
+failed: its diff entry shows the declared `expected` and a `deferred` note.
+Apply reads the generated row after its parent exists, refuses any expected
+field that differs (the placeholder's name, its scenario) and runs the
+capability's membership and preservation capture before writing. Any other
+edit to a pending row still fails preflight. Place the rename after the
+batch's `add_step` operations: its scenario-wide capture holds every later
+write to account for itself, and `add_step`'s membership row is a side effect
+the projection does not advance. Dry-run does not simulate RPC side effects;
+prove the whole batch with the database fixture test instead.
 
 ### Guarded host capabilities
 

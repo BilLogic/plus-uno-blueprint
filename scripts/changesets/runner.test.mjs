@@ -311,3 +311,29 @@ test('a missing or ambiguous lookup stops an existing-parent batch before writes
     }), /lookup.*(exactly one|missing id)/)
   }
 })
+
+test('only a generated step’s rename or summary is deferred; other edits on a pending row still fail preflight', async () => {
+  const database = { read: async () => [] }
+  const scenario = { key: 'scenario', operation: 'create_scenario', target: { table: 'scenarios', where: { phase_id: 'p', name: 'New' } },
+    expected: null, value: { name: 'New', layout: 'stacked' }, evidence: ['Source'] }
+  const placeholder = { lookup: { table: 'path_steps', where: { path_id: { lookup: { table: 'paths', where: { scenario_id: { ref: 'scenario' } } } }, position: 0 } }, field: 'step_id' }
+  const rename = { key: 'rename', operation: 'rename_step', target: { table: 'steps', id: placeholder },
+    input: { expected_path_steps: [{ path_id: 'x', position: 0 }] }, expected: { name: 'Step 1' }, value: { name: 'Build' }, evidence: ['Source'] }
+  const dry = await runChangeset({ version: 1, issue: 1, operations: [scenario, rename] }, 'dry-run', database)
+  assert.deepEqual(dry.failures, [])
+  assert.equal(dry.diff[1].before.name, 'Step 1')
+  assert.ok(dry.diff[1].deferred)
+  const status = { key: 'status', operation: 'update_cell_status', target: { table: 'cells', id: { ref: 'scenario' } }, expected: { status: 'built' }, value: { status: 'live' }, evidence: ['Source'] }
+  const refused = await runChangeset({ version: 1, issue: 1, operations: [scenario, status] }, 'dry-run', database)
+  assert.match(refused.failures.join('\n'), /status: expected exactly one row, found 0/)
+})
+
+test('a lookup field resolves exactly one membership’s step id', async () => {
+  const step = { id: 's1', name: 'Build', scenario_id: 'c' }
+  const database = { read: async (target) => target.table === 'path_steps' ? [{ path_id: 'p', step_id: 's1', position: 0 }] : target.id === 's1' ? [step] : [] }
+  const op = { key: 'rename', operation: 'rename_step', target: { table: 'steps', id: { lookup: { table: 'path_steps', where: { path_id: 'p', position: 0 } }, field: 'step_id' } },
+    input: { expected_path_steps: [{ path_id: 'p', position: 0 }] }, expected: { name: 'Step 1' }, value: { name: 'Build' }, evidence: ['Source'] }
+  const verified = await runChangeset({ version: 1, issue: 1, operations: [op] }, 'verify', database)
+  assert.deepEqual(verified.diff[0].target, { table: 'steps', id: 's1' })
+  assert.equal(verified.failures.some((failure) => failure.includes('rename.name')), false)
+})

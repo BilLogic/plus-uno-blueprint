@@ -2,6 +2,7 @@ import { test, expect } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
 import { modules } from '../../deployment/lib/contentChangesetModules.ts'
 import { createDatabase } from '../changesets/database.mjs'
+import { readFileSync } from 'node:fs'
 import { runChangeset } from '../content-changeset.mjs'
 
 const id = '10000000-0000-4000-8000-000000000001'
@@ -23,6 +24,13 @@ function databaseFixture({ zeroRows = false, failAppend = false, corruptCell = f
   const tables = {
     cells: [{ ...seed }], authoring_changes: [], evidence: [], cell_touchpoints: [], resources: [], cell_dependencies: [], services: [{ id }],
     paths: [{ id, scenario_id: id }], lanes: [{ id, path_id: id }], steps: [{ id, scenario_id: id, name: 'Old step' }], path_steps: [],
+    phases: [], scenarios: [],
+  }
+  const uuid = (prefix) => `${prefix}-0000-4000-8000-${String(counter++).padStart(12, '0')}`
+  // Shift then insert, as add_step does under its deferred position constraint.
+  const addPathStep = (pathId, stepId, position) => {
+    for (const link of tables.path_steps) if (link.path_id === pathId && link.position >= position) link.position += 1
+    tables.path_steps.push({ path_id: pathId, step_id: stepId, position })
   }
   const requests = []
   let counter = 1
@@ -34,7 +42,44 @@ function databaseFixture({ zeroRows = false, failAppend = false, corruptCell = f
     const answer = (data, status = 200, headers = {}) => new Response(JSON.stringify(data), {
       status, headers: { 'Content-Type': 'application/json', ...headers },
     })
-    if (url.pathname.endsWith('/rpc/sync_cell_touchpoints')) return answer({ removed: [] })
+    if (url.pathname.endsWith('/rpc/sync_cell_touchpoints')) {
+      // Touchpoint lanes place each named line; actor lanes are skipped.
+      const cell = tables.cells.find((row) => row.id === body.p_cell_id)
+      const lane = tables.lanes.find((row) => row.id === cell?.lane_id)
+      if (['frontstage_touchpoints', 'backstage_touchpoints'].includes(lane?.lane_role)) {
+        for (const [position, name] of body.p_names.entries()) {
+          if (!tables.cell_touchpoints.some((row) => row.cell_id === cell.id && row.touchpoint_name === name))
+            tables.cell_touchpoints.push({ id: uuid('70000000'), cell_id: cell.id, touchpoint_name: name, position, name: null, summary: null, role: null })
+        }
+      }
+      return answer({ removed: [] })
+    }
+    if (url.pathname.endsWith('/rpc/create_scenario')) {
+      // The hosted RPC: one happy path, copied lanes, and at least one
+      // placeholder column named Step 1 at position 0 even for step_count 0.
+      const scenarioId = uuid('80000000')
+      const pathId = uuid('80000000')
+      const siblings = tables.scenarios.filter((row) => row.phase_id === body.phase_id)
+      tables.scenarios.push({ id: scenarioId, phase_id: body.phase_id, name: body.name, layout: body.layout, summary: null,
+        position: Math.max(-1, ...siblings.map((row) => row.position)) + 1 })
+      tables.paths.push({ id: pathId, scenario_id: scenarioId, name: body.path_name, kind: 'happy', status: 'live', summary: null, note: null })
+      for (const lane of tables.lanes.filter((row) => row.path_id === body.lane_source_path_id))
+        tables.lanes.push({ id: uuid('80000000'), path_id: pathId, name: lane.name, lane_role: lane.lane_role, position: lane.position })
+      for (let index = 0; index < Math.max(body.step_count, 1); index++) {
+        const stepId = uuid('80000000')
+        tables.steps.push({ id: stepId, scenario_id: scenarioId, name: `Step ${index + 1}`, summary: null })
+        tables.path_steps.push({ path_id: pathId, step_id: stepId, position: index })
+      }
+      return answer({ scenario_id: scenarioId, path_id: pathId })
+    }
+    if (url.pathname.endsWith('/rpc/add_step')) {
+      const path = tables.paths.find((row) => row.id === body.path_id)
+      const stepId = uuid('80000000')
+      const end = Math.max(-1, ...tables.path_steps.filter((row) => row.path_id === path.id).map((row) => row.position)) + 1
+      tables.steps.push({ id: stepId, scenario_id: path.scenario_id, name: body.name, summary: null })
+      addPathStep(path.id, stepId, body.at_position ?? end)
+      return answer(stepId)
+    }
     if (missingRpc && /\/rpc\/(rename_step|move_cell|insert_cell_at_position)$/.test(url.pathname)) return answer({ code: 'PGRST202', message: 'Missing host operation' }, 404)
     if (url.pathname.endsWith('/rpc/insert_cell_at_position')) {
       const cellId = `40000000-0000-4000-8000-${String(counter++).padStart(12, '0')}`
@@ -72,7 +117,7 @@ function databaseFixture({ zeroRows = false, failAppend = false, corruptCell = f
     if (url.pathname.endsWith('/rpc/upsert_cell_at_status')) {
       const cellId = `40000000-0000-4000-8000-${String(counter++).padStart(12, '0')}`
       const changeId = `50000000-0000-4000-8000-${String(counter++).padStart(12, '0')}`
-      tables.cells.push({ id: cellId, ...body, position: 0, summary: null, owner: null, perceived_owner: null })
+      tables.cells.push({ id: cellId, ...body, position: 0, summary: null, owner: null, perceived_owner: null, cell_key: `fixture/minted--${cellId}` })
       tables.authoring_changes.push({
         id: changeId, fn: 'upsert_cell_at_status', args: body, author: 'human',
         revert: { fn: 'delete_cell', args: { cell_id: cellId } },
@@ -428,5 +473,72 @@ test('new cells use the status RPC, then the sanctioned summary mutation, retain
     expect(fixture.tables.authoring_changes[0].revert.fn).toBe('delete_cell')
     expect(fixture.tables.authoring_changes[1].revert.args.update).toMatchObject({ summary: '', content: 'Checks goals.', status: 'live' })
     expect(result.applied[0].changeIds).toHaveLength(2)
+  } finally { fixture.database.close() }
+})
+
+const weeklyReport = JSON.parse(readFileSync(new URL('../../changesets/0759-weekly-class-report.json', import.meta.url), 'utf8'))
+const PHASE = 'f1000000-0000-4000-8000-000000000001'
+const LANE_SOURCE = 'a0000000-0000-4000-8000-000000000811'
+function weeklyReportFixture(options) {
+  const fixture = databaseFixture(options)
+  const { tables } = fixture
+  tables.services.push({ id: 'a0000000-0000-4000-8000-000000000001' })
+  tables.phases.push({ id: PHASE })
+  tables.scenarios.push({ id: 'f1000000-0000-4000-8000-000000000002', phase_id: PHASE, name: 'Supervisor Program Administration', position: 1, layout: 'stacked' })
+  tables.paths.push({ id: 'f1000000-0000-4000-8000-000000000003', scenario_id: 'f1000000-0000-4000-8000-000000000002' }, { id: LANE_SOURCE, scenario_id: 'a0000000-0000-4000-8000-000000000204' })
+  const lanes = ['Storyboard:storyboard', 'Teacher:partner_actions', 'Lead Tutor:customer_actions', 'Regular Tutor:customer_actions',
+    'Front Stage Touchpoints:frontstage_touchpoints', 'Front Stage Actions:frontstage_actions', 'Back Stage Touchpoints:backstage_touchpoints',
+    'Back Stage Actions:backstage_actions', 'Support Actions:support_actions']
+  lanes.forEach((lane, position) => {
+    const [name, lane_role] = lane.split(':')
+    tables.lanes.push({ id: `a0000000-0000-4000-8000-0000000008${String(position).padStart(2, '0')}`, path_id: LANE_SOURCE, name, lane_role, position })
+  })
+  return fixture
+}
+const scenarioSteps = (tables) => {
+  const scenario = tables.scenarios.find((row) => row.name === 'Weekly Class Report')
+  const path = tables.paths.find((row) => row.scenario_id === scenario?.id)
+  return tables.path_steps.filter((link) => link.path_id === path?.id).sort((a, b) => a.position - b.position)
+    .map((link) => tables.steps.find((row) => row.id === link.step_id).name)
+}
+
+test('the Weekly Class Report changeset renames create_scenario’s generated placeholder and ends with exactly five named steps', async () => {
+  const fixture = weeklyReportFixture()
+  try {
+    const dry = await runChangeset(weeklyReport, 'dry-run', fixture.database)
+    expect(dry.failures).toEqual([])
+    expect(dry.diff.find((entry) => entry.key === 'build-step')).toMatchObject({ before: { name: 'Step 1' }, after: { name: 'Build report' }, deferred: expect.any(String) })
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+    expect((await runChangeset(weeklyReport, 'verify', fixture.database)).ok).toBe(false)
+
+    const applied = await runChangeset(weeklyReport, 'apply', fixture.database)
+    expect(applied.failures).toEqual([])
+    expect(applied.applied.map((entry) => entry.key)).toEqual(weeklyReport.operations.map((op) => op.key))
+    expect(scenarioSteps(fixture.tables)).toEqual(['Build report', 'Receive email', 'Read report', 'Distribute rewards', 'Contact support'])
+    expect(fixture.tables.steps.some((row) => row.name === 'Step 1')).toBe(false)
+    expect(fixture.tables.paths.filter((row) => row.name === 'Report sent')).toHaveLength(1)
+    const rename = fixture.tables.authoring_changes.filter((row) => row.fn === 'rename_step')
+    expect(rename).toHaveLength(1)
+    expect(rename[0].revert).toMatchObject({ fn: 'rename_step', args: { expected_name: 'Build report', new_name: 'Step 1' } })
+    expect(fixture.tables.evidence).toHaveLength(9)
+    expect(fixture.requests.some(({ method }) => method === 'DELETE')).toBe(false)
+    expect((await runChangeset(weeklyReport, 'verify', fixture.database, { receipt: applied.applied })).failures).toEqual([])
+  } finally { fixture.database.close() }
+})
+
+test('a generated step that is not the reviewed placeholder stops the batch before the rename', async () => {
+  const fixture = weeklyReportFixture()
+  const write = fixture.database.write
+  fixture.database.write = async (op, ...rest) => {
+    const result = await write(op, ...rest)
+    if (op.key === 'support-step') fixture.tables.steps.find((row) => row.name === 'Step 1').name = 'Column 1'
+    return result
+  }
+  try {
+    const applied = await runChangeset(weeklyReport, 'apply', fixture.database)
+    expect(applied.ok).toBe(false)
+    expect(applied.failures.join('\n')).toContain('build-step')
+    expect(fixture.requests.some(({ path }) => path.endsWith('/rpc/rename_step'))).toBe(false)
+    expect(applied.applied.map((entry) => entry.key)).not.toContain('build-step')
   } finally { fixture.database.close() }
 })
