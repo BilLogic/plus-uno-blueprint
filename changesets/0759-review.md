@@ -88,3 +88,16 @@ were not re-read for this preparation.
 - Confirm status live for all nine cells.
 - Confirm that the two new registry touchpoints the sync creates are wanted:
   plus_etl send-student-reports and Goal setting sheet.
+
+## Sources re-read (October 31, 2026)
+
+Re-read through the PLUS Notion connection; the batch is unchanged.
+
+- Card 2106 (Weekly Class Report) is Dev Status Deployed, Release 12.0 (live).
+- Card 2625 (fall-semester preparation) is still Testing for 12.1, so the
+  school-specific timing wording stands.
+- The Teacher Help Center pages agree with the cells: one weekly email with a
+  PDF per class, the Eligible for Rewards list, rewards in the first tutoring
+  session of the week, and support@tutors.plus for data or snack issues.
+- The "against the ideal and the school average" detail comes from Figma
+  12666:58 as #742 recorded it; Figma was not re-read.
