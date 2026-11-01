@@ -1,0 +1,310 @@
+{
+  "version": 1,
+  "issue": 747,
+  "operations": [
+    {
+      "key": "C-F2",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "168f40d9-24d5-4cc0-8b02-8c0f6b2def49"
+      },
+      "expected": {
+        "content": "Opens a tutor's detail modal to see profile, clearance, training status and sessions.",
+        "summary": null,
+        "status": "live",
+        "path_id": "f1000000-0000-4000-8000-000000000003",
+        "lane_id": "f1000000-0000-4000-8000-000000000005",
+        "step_id": "f1000000-0000-4000-8000-000000000011",
+        "position": 1,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": "plus-tutoring/supervisor-program-administration/standard/supervisor/monitor-tutors--168f40d9-24d5-4cc0-8b02-8c0f6b2def49"
+      },
+      "value": {
+        "content": "Opens a tutor's detail modal to see profile, clearance, training status and sessions.",
+        "summary": "Live in 12.1: it opens from a Performance Details row. A name search on Performance Details is built and in code review, not yet live.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://www.notion.so/304b7cca4982804f808fdddbc2e8bc93",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "C-F3",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "c4fd541b-32df-4a07-8bd2-6254d90e4c1c"
+      },
+      "expected": {
+        "content": "Reassigns a tutor's supervisor or removes the tutor from the detail modal.",
+        "summary": null,
+        "status": "built",
+        "path_id": "f1000000-0000-4000-8000-000000000003",
+        "lane_id": "f1000000-0000-4000-8000-000000000005",
+        "step_id": "f1000000-0000-4000-8000-000000000011",
+        "position": 2,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": "plus-tutoring/supervisor-program-administration/standard/supervisor/monitor-tutors--c4fd541b-32df-4a07-8bd2-6254d90e4c1c"
+      },
+      "value": {
+        "content": "Reassigns a tutor's supervisor or removes the tutor from the detail modal.",
+        "summary": "Removing deactivates the account and keeps its data; it is in code review. Reassigning the supervisor already shipped in 12.1.",
+        "status": "built"
+      },
+      "evidence": [
+        "https://www.notion.so/304b7cca4982804f808fdddbc2e8bc93",
+        "https://www.notion.so/3c9b7cca4982802d9715c6ba92e019a2",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "C-F6",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "adabac56-ae16-471b-bc09-3d1cbc2cda2e"
+      },
+      "expected": {
+        "content": "Weekly schedule email",
+        "summary": null,
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000806",
+        "lane_id": "a0000000-0000-4000-8000-000000000890",
+        "step_id": "a0000000-0000-4000-8000-000000000896",
+        "position": 2,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": "plus-tutoring/standard-scheduling/schedule-as-issued/back-stage-touchpoints/views-schedule-syncs-calendar--adabac56-ae16-471b-bc09-3d1cbc2cda2e"
+      },
+      "value": {
+        "content": "Weekly schedule email",
+        "summary": "Live in 12.1: sent every Sunday at 3 pm with the tutor's upcoming sessions and up to three of the least-filled sessions that fit.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281c5a062c1b7c23d17a8",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "C-F7",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "38504b39-e7ed-4439-8447-de9ba38ececd"
+      },
+      "expected": {
+        "content": "Help Center button",
+        "summary": null,
+        "status": "planned",
+        "path_id": "c1000000-0000-4000-8000-000000000002",
+        "lane_id": "c1000000-0000-4000-8000-000000000013",
+        "step_id": "c1000000-0000-4000-8000-000000000020",
+        "position": 1,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": "plus-tutoring/session-prep-resources/standard/front-stage-touchpoints/browse-resource-library--38504b39-e7ed-4439-8447-de9ba38ececd"
+      },
+      "value": {
+        "content": "Help Center button",
+        "summary": "Planned: a button in the app top bar on every page that opens the Tutor Help Center in a new tab, for every role.",
+        "status": "planned"
+      },
+      "evidence": [
+        "https://www.notion.so/3deb7cca498281509540d2f4360ddde3",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "C-F14-12plus",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "d707ac09-e4b5-46ad-a0ec-b78868e06747"
+      },
+      "expected": {
+        "content": "Email",
+        "summary": null,
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000808",
+        "lane_id": "a0000000-0000-4000-8000-000000000974",
+        "step_id": "a0000000-0000-4000-8000-000000000945",
+        "position": 1,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": "plus-tutoring/call-off-request/12-hours-ahead/front-stage-touchpoints/final-notification--d707ac09-e4b5-46ad-a0ec-b78868e06747"
+      },
+      "value": {
+        "content": "Email",
+        "summary": "Live in 12.1: emailed when a reviewed call-off is approved or rejected. A separate email covers a session cancelled while the request is pending.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281dc9630e09567c75ee7",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    },
+    {
+      "key": "C-F14-under12",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "063ecaac-1997-475a-87df-7474fb2a8b00"
+      },
+      "expected": {
+        "content": "Email",
+        "summary": null,
+        "status": "live",
+        "path_id": "b0000000-0000-4000-8000-000000000809",
+        "lane_id": "b0000000-0000-4000-8000-000000001074",
+        "step_id": "a0000000-0000-4000-8000-000000000945",
+        "position": 1,
+        "owner": null,
+        "perceived_owner": null,
+        "frame": null,
+        "cell_key": "plus-tutoring/call-off-request/under-12-hours/front-stage-touchpoints/final-notification--063ecaac-1997-475a-87df-7474fb2a8b00"
+      },
+      "value": {
+        "content": "Email",
+        "summary": "Live in 12.1: emailed when the reviewed late call-off is marked excused or unexcused.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281dc9630e09567c75ee7",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/747"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "168f40d9-24d5-4cc0-8b02-8c0f6b2def49"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "168f40d9-24d5-4cc0-8b02-8c0f6b2def49"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "c4fd541b-32df-4a07-8bd2-6254d90e4c1c"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "c4fd541b-32df-4a07-8bd2-6254d90e4c1c"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "adabac56-ae16-471b-bc09-3d1cbc2cda2e"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "adabac56-ae16-471b-bc09-3d1cbc2cda2e"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "38504b39-e7ed-4439-8447-de9ba38ececd"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "38504b39-e7ed-4439-8447-de9ba38ececd"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "d707ac09-e4b5-46ad-a0ec-b78868e06747"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "d707ac09-e4b5-46ad-a0ec-b78868e06747"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": "063ecaac-1997-475a-87df-7474fb2a8b00"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "063ecaac-1997-475a-87df-7474fb2a8b00"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 1
+    }
+  ]
+}
