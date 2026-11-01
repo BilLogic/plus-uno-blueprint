@@ -120,6 +120,7 @@ creates as side effects, including copied lanes and a scenario's initial path.
 | `delete_cell` | Existing `cells` by full id; value `{ "deleted": true }`; expected guards status and all four coordinates | Owner-approved only. Actual `deleteCell`. Dry-run lists the edges, placements and resources the delete cascades and the evidence rows it leaves behind; apply refuses if that set changed |
 | `remove_step` | One `path_steps` membership, `where: { path_id, step_id }`; expected position | Owner-approved only. Actual `removeStep`, which takes the step off that path and renumbers what is left there. Requires input.expected_path_steps (every membership) with at least one other path, so the shared step survives, and input.cells_deleted_earlier naming the column's cells, each deleted by a preceding `delete_cell`. Refused at write time unless the column is empty |
 | `remove_lane` | Existing `lanes` by full id; expected name and path_id | Owner-approved only. Calls `remove_lanes` with that one id: `remove_lane` deletes by name across the whole scenario. Refuses a lane holding any cell, and guards every same-named lane on the scenario's other paths, with its cells |
+| `delete_evidence` | Existing `evidence` by full id; expected guards title and cell_id | Owner-approved only. Actual `evidenceMutations.deleteEvidence`, refused while the cell still exists, so it removes only evidence a deleted cell left behind. Recorded as an ordinary change, not archived to the trash: its inverse `restore_evidence_row` carries the full row |
 
 ### Deletes
 
@@ -134,7 +135,8 @@ restore RPC exists, so recovery is a reviewed manual re-insert from the
 payload. `delete_cell`'s payload holds the cell row alone; the dependencies,
 placements and resources it cascades are in the receipt's captured checks,
 not in the trash. Evidence has no foreign key to cells, so its rows stay,
-keyed to the gone cell.
+keyed to the gone cell; `delete_evidence` removes such rows once the owner
+approves.
 
 An unknown operation is a preflight error. `set_cell_status` is deliberately
 unsupported: the hosted database has no such function. Edit status alone with

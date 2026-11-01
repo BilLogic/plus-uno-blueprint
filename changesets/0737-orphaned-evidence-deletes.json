@@ -1,0 +1,351 @@
+{
+  "version": 1,
+  "issue": 737,
+  "title": "Owner-approved deletes: the nine evidence rows left on the cells #794 deleted",
+  "operations": [
+    {
+      "key": "evidence-170303",
+      "operation": "delete_evidence",
+      "target": {
+        "table": "evidence",
+        "id": "29c56946-9222-4ec8-84a6-a228f0763f48"
+      },
+      "expected": {
+        "id": "29c56946-9222-4ec8-84a6-a228f0763f48",
+        "title": "KB audit #752 row 29 — …00170303",
+        "cell_id": "a0000000-0000-4000-8000-000000170303"
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: delete the evidence rows left on the cells #794 deleted",
+        "changesets/0737-owner-deletes-review.md: the nine evidence rows on these cells stay"
+      ]
+    },
+    {
+      "key": "evidence-170304",
+      "operation": "delete_evidence",
+      "target": {
+        "table": "evidence",
+        "id": "240ea128-ab97-4b8a-8011-5a2e7adf9c94"
+      },
+      "expected": {
+        "id": "240ea128-ab97-4b8a-8011-5a2e7adf9c94",
+        "title": "KB audit #752 row 29 — …00170304",
+        "cell_id": "a0000000-0000-4000-8000-000000170304"
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: delete the evidence rows left on the cells #794 deleted",
+        "changesets/0737-owner-deletes-review.md: the nine evidence rows on these cells stay"
+      ]
+    },
+    {
+      "key": "evidence-170306",
+      "operation": "delete_evidence",
+      "target": {
+        "table": "evidence",
+        "id": "526a287b-0dc6-41ac-a7ec-a79ceb3b6b59"
+      },
+      "expected": {
+        "id": "526a287b-0dc6-41ac-a7ec-a79ceb3b6b59",
+        "title": "KB audit #752 row 29 — …00170306",
+        "cell_id": "a0000000-0000-4000-8000-000000170306"
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: delete the evidence rows left on the cells #794 deleted",
+        "changesets/0737-owner-deletes-review.md: the nine evidence rows on these cells stay"
+      ]
+    },
+    {
+      "key": "evidence-170310",
+      "operation": "delete_evidence",
+      "target": {
+        "table": "evidence",
+        "id": "579a2185-1439-44cf-b341-80af6bd263df"
+      },
+      "expected": {
+        "id": "579a2185-1439-44cf-b341-80af6bd263df",
+        "title": "KB audit #752 row 29 — …00170310",
+        "cell_id": "a0000000-0000-4000-8000-000000170310"
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: delete the evidence rows left on the cells #794 deleted",
+        "changesets/0737-owner-deletes-review.md: the nine evidence rows on these cells stay"
+      ]
+    },
+    {
+      "key": "evidence-1f0701",
+      "operation": "delete_evidence",
+      "target": {
+        "table": "evidence",
+        "id": "55ef1bc8-79a5-4814-9d3e-3733a9e9bd7c"
+      },
+      "expected": {
+        "id": "55ef1bc8-79a5-4814-9d3e-3733a9e9bd7c",
+        "title": "KB audit #739 row 56 — email",
+        "cell_id": "a0000000-0000-4000-8000-0000001f0701"
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: delete the evidence rows left on the cells #794 deleted",
+        "changesets/0737-owner-deletes-review.md: the nine evidence rows on these cells stay"
+      ]
+    },
+    {
+      "key": "evidence-a00701",
+      "operation": "delete_evidence",
+      "target": {
+        "table": "evidence",
+        "id": "2b9e5599-7db2-4f0c-8aa2-47413fbacb1b"
+      },
+      "expected": {
+        "id": "2b9e5599-7db2-4f0c-8aa2-47413fbacb1b",
+        "title": "KB audit #739 row 56 — email",
+        "cell_id": "a0000000-0000-4000-8000-000000a00701"
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: delete the evidence rows left on the cells #794 deleted",
+        "changesets/0737-owner-deletes-review.md: the nine evidence rows on these cells stay"
+      ]
+    },
+    {
+      "key": "evidence-b00701",
+      "operation": "delete_evidence",
+      "target": {
+        "table": "evidence",
+        "id": "6e7895e7-03c5-4be6-87c3-485221fa50ce"
+      },
+      "expected": {
+        "id": "6e7895e7-03c5-4be6-87c3-485221fa50ce",
+        "title": "KB audit #739 row 56 — email",
+        "cell_id": "a0000000-0000-4000-8000-000000b00701"
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: delete the evidence rows left on the cells #794 deleted",
+        "changesets/0737-owner-deletes-review.md: the nine evidence rows on these cells stay"
+      ]
+    },
+    {
+      "key": "evidence-c00701",
+      "operation": "delete_evidence",
+      "target": {
+        "table": "evidence",
+        "id": "da37a6e6-060a-4000-b3dd-2135fab75bb6"
+      },
+      "expected": {
+        "id": "da37a6e6-060a-4000-b3dd-2135fab75bb6",
+        "title": "KB audit #739 row 56 — email",
+        "cell_id": "a0000000-0000-4000-8000-000000c00701"
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: delete the evidence rows left on the cells #794 deleted",
+        "changesets/0737-owner-deletes-review.md: the nine evidence rows on these cells stay"
+      ]
+    },
+    {
+      "key": "evidence-d00701",
+      "operation": "delete_evidence",
+      "target": {
+        "table": "evidence",
+        "id": "61870c32-59f5-4c31-aa78-52966aee7ab2"
+      },
+      "expected": {
+        "id": "61870c32-59f5-4c31-aa78-52966aee7ab2",
+        "title": "KB audit #739 row 56 — email",
+        "cell_id": "a0000000-0000-4000-8000-000000d00701"
+      },
+      "value": {
+        "deleted": true
+      },
+      "evidence": [
+        "Owner request, November 1, 2026: delete the evidence rows left on the cells #794 deleted",
+        "changesets/0737-owner-deletes-review.md: the nine evidence rows on these cells stay"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170303"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170303"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170304"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170304"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170306"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170306"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170310"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170310"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-0000001f0701"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-0000001f0701"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000a00701"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000a00701"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000b00701"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000b00701"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000c00701"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000c00701"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000d00701"
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000d00701"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 0
+    }
+  ]
+}

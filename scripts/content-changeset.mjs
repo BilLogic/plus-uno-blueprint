@@ -26,6 +26,7 @@ const OPERATIONS = {
   delete_cell: { table: 'cells', remove: true },
   remove_step: { table: 'path_steps', remove: true },
   remove_lane: { table: 'lanes', remove: true },
+  delete_evidence: { table: 'evidence', remove: true },
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -57,6 +58,8 @@ function validateRemoval(op, earlier) {
     throw new Error(`${op.key}: delete_cell guards status and all four coordinates`)
   if (op.operation === 'remove_lane' && !['name', 'path_id'].every((field) => Object.hasOwn(op.expected, field)))
     throw new Error(`${op.key}: remove_lane guards name and path_id`)
+  if (op.operation === 'delete_evidence' && (!['title', 'cell_id'].every((field) => Object.hasOwn(op.expected, field)) || !UUID.test(op.expected.cell_id ?? '')))
+    throw new Error(`${op.key}: delete_evidence guards title and the cell_id it was left on`)
 }
 
 /**
