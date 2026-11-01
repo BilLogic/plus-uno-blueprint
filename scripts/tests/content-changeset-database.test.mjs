@@ -76,6 +76,27 @@ function databaseFixture({ zeroRows = false, failAppend = false, corruptCell = f
       }
       return answer({ scenario_id: scenarioId, path_id: pathId })
     }
+    if (url.pathname.endsWith('/rpc/create_path_at_status')) {
+      // The hosted RPC: copies the source path's lanes and step memberships
+      // with their positions, and records itself with a delete_path inverse.
+      const pathId = uuid('81000000')
+      tables.paths.push({ id: pathId, scenario_id: body.scenario_id, name: body.name, kind: body.kind ?? 'variant', status: body.status, summary: null, note: null })
+      for (const lane of tables.lanes.filter((row) => row.path_id === body.lane_source_path_id))
+        tables.lanes.push({ id: uuid('81000000'), path_id: pathId, name: lane.name, lane_role: lane.lane_role, position: lane.position })
+      for (const link of tables.path_steps.filter((row) => row.path_id === body.lane_source_path_id).sort((a, b) => a.position - b.position))
+        tables.path_steps.push({ path_id: pathId, step_id: link.step_id, position: link.position })
+      tables.authoring_changes.push({ id: uuid('51000000'), fn: 'create_path_at_status', author: 'human',
+        args: { ...body, path_id: pathId }, revert: { fn: 'delete_path', args: { path_id: pathId } } })
+      return answer(pathId)
+    }
+    if (url.pathname.endsWith('/rpc/set_path_steps')) {
+      // Deletes memberships not in the list, then upserts each at its index.
+      tables.path_steps = [
+        ...tables.path_steps.filter((row) => row.path_id !== body.path_id),
+        ...body.step_ids.map((step_id, position) => ({ path_id: body.path_id, step_id, position })),
+      ]
+      return answer(null)
+    }
     if (url.pathname.endsWith('/rpc/add_step')) {
       const path = tables.paths.find((row) => row.id === body.path_id)
       const stepId = uuid('80000000')
@@ -952,5 +973,35 @@ test('a retype whose durable append fails stops with the append error', async ()
     const applied = await runChangeset(retypeBatch(), 'apply', fixture.database)
     expect(applied.ok).toBe(false)
     expect(applied.failures.join('\n')).toMatch(/Durable append failed after write: Audit append refused/)
+  } finally { fixture.database.close() }
+})
+
+test('a new path’s copied step list is trimmed in place by a deferred set_path_steps and verified with its inverse', async () => {
+  const fixture = databaseFixture()
+  const { tables } = fixture
+  const scenario = '82000000-0000-4000-8000-000000000001'
+  const source = '82000000-0000-4000-8000-000000000002'
+  const [need, file, cover, review, late] = [3, 4, 5, 6, 7].map((n) => `82000000-0000-4000-8000-00000000000${n}`)
+  tables.scenarios.push({ id: scenario, name: 'Call-off Request' })
+  tables.paths.push({ id: source, scenario_id: scenario, name: '12+ hours ahead', kind: 'happy', status: 'live' })
+  tables.lanes.push({ id: '82000000-0000-4000-8000-000000000010', path_id: source, name: 'Regular Tutor', lane_role: 'customer_actions', position: 1 })
+  ;[need, file, cover, review, late].forEach((step_id, index) => tables.path_steps.push({ path_id: source, step_id, position: index + 1 }))
+  const batch = { version: 1, issue: 744, operations: [{
+    key: 'path', operation: 'create_path_at_status', target: { table: 'paths', where: { scenario_id: scenario, name: 'Recurring withdrawal' } },
+    expected: null, value: { kind: 'variant', status: 'live' }, input: { lane_source_path_id: source }, evidence: ['TE2a'],
+  }, {
+    key: 'trim', operation: 'set_path_steps', target: { table: 'paths', id: { ref: 'path' }, withSteps: true },
+    expected: { scenario_id: scenario, step_ids: [need, file, cover, review, late] }, value: { step_ids: [need, file, review, cover] }, evidence: ['TE2a'],
+  }], checks: [{ target: { table: 'path_steps', where: { path_id: source } }, beforeCount: 5, afterCount: 5 }] }
+  try {
+    expect((await runChangeset(batch, 'dry-run', fixture.database)).failures).toEqual([])
+    const applied = await runChangeset(batch, 'apply', fixture.database)
+    expect(applied.failures).toEqual([])
+    const created = tables.paths.find((row) => row.name === 'Recurring withdrawal')
+    expect(tables.path_steps.filter((row) => row.path_id === created.id).map((row) => row.step_id)).toEqual([need, file, review, cover])
+    expect(tables.path_steps.filter((row) => row.path_id === source)).toHaveLength(5)
+    const trimLog = tables.authoring_changes.find((row) => row.fn === 'set_path_steps')
+    expect(trimLog.revert).toEqual({ fn: 'set_path_steps', args: { path_id: created.id, step_ids: [need, file, cover, review, late] } })
+    expect((await runChangeset(batch, 'verify', fixture.database, { receipt: applied.applied })).failures).toEqual([])
   } finally { fixture.database.close() }
 })

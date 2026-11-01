@@ -1,0 +1,1897 @@
+{
+  "version": 1,
+  "issue": 744,
+  "operations": [
+    {
+      "key": "r26-roster-email",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000150304"
+      },
+      "expected": {
+        "content": "Updates the roster immediately when a tutor takes a fill-in slot; supervisors see it in Admin › Sessions.",
+        "summary": "The update is immediate and automatic — no supervisor action is needed to record who's covering — which is what lets Admin › Sessions serve as the source of truth for who's actually signed up, even though the change only appears there after the fact.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000807",
+        "lane_id": "a0000000-0000-4000-8000-000000000905",
+        "step_id": "a0000000-0000-4000-8000-000000000899",
+        "position": 0,
+        "cell_key": "plus-application/fill-in-request/happy-path/front-stage-actions/tutor-response"
+      },
+      "value": {
+        "content": "Updates the roster immediately when a tutor takes a fill-in slot and emails the tutor a confirmation; supervisors see it in Admin › Sessions."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca4982811898fcc0449d742569",
+        "https://www.notion.so/392b7cca498280458590fc3e3f526ccc",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r26-roster-email-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000150304",
+          "cell_key": "plus-application/fill-in-request/happy-path/front-stage-actions/tutor-response",
+          "title": "KB audit #744 — r26-roster-email"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #744 — r26-roster-email",
+        "note": "Sources: https://www.notion.so/3b2b7cca4982811898fcc0449d742569 ; https://www.notion.so/392b7cca498280458590fc3e3f526ccc ; https://github.com/BilLogic/plus-uno-blueprint/issues/744 . Card 2566 (Transactional emails 1, session assignments) is Deployed in 12.0 (live): one fill-in confirmation email per sign-up. Manage Your Tutoring Schedule says PLUS emails a confirmation after a fill-in. Row 26."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca4982811898fcc0449d742569",
+        "https://www.notion.so/392b7cca498280458590fc3e3f526ccc",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r27-lead-lane",
+      "operation": "add_lane",
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000807",
+          "name": "Lead Tutor"
+        }
+      },
+      "expected": null,
+      "value": {
+        "name": "Lead Tutor",
+        "lane_role": "customer_actions"
+      },
+      "input": {
+        "scenario_id": "a0000000-0000-4000-8000-000000000127",
+        "at_position": 1
+      },
+      "evidence": [
+        "https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec",
+        "https://www.notion.so/32cb7cca498280db9c2ded976950655c",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r27-path",
+      "operation": "create_path_at_status",
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000127",
+          "name": "Requested mid-session"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "variant",
+        "status": "live",
+        "summary": "Variant path: after a session starts, the lead tutor requests more tutors in the app. The request posts to #sessions-in-need and opens fill-in spots in the Fill-In tab; a tutor fills in from the Slack link and the lead assigns them students."
+      },
+      "input": {
+        "lane_source_path_id": "a0000000-0000-4000-8000-000000000807"
+      },
+      "evidence": [
+        "https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec",
+        "https://www.notion.so/32cb7cca498280db9c2ded976950655c",
+        "https://www.notion.so/392b7cca498280458590fc3e3f526ccc",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r27-lead-request",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "r27-path"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "r27-path"
+                },
+                "name": "Lead Tutor"
+              }
+            }
+          },
+          "step_id": "a0000000-0000-4000-8000-000000000897",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Requests more tutors from … › Request tutors with a count, closing time and reason.",
+        "summary": "Only once the session has started. The count starts at the number of tutors marked absent and is capped at the session’s tutor capacity; the request closes at the chosen time, no later than 10 minutes before the session ends.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec",
+        "https://www.notion.so/32cb7cca498280db9c2ded976950655c",
+        "https://www.notion.so/392b7cca498280458590fc3e3f526ccc",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r27-lead-request-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "r27-lead-request"
+          },
+          "cell_key": {
+            "ref": "r27-lead-request",
+            "field": "cell_key"
+          },
+          "title": "KB audit #744 — r27-lead-request"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #744 — r27-lead-request",
+        "note": "Sources: https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec ; https://www.notion.so/32cb7cca498280db9c2ded976950655c ; https://www.notion.so/392b7cca498280458590fc3e3f526ccc ; https://github.com/BilLogic/plus-uno-blueprint/issues/744 . Card 2136 (In-session Fill-In Request) is Deployed in 12.0 (live). When There Are Not Enough Tutors (lead tutors) and Manage Your Tutoring Schedule describe the flow. Row 27."
+      },
+      "evidence": [
+        "https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec",
+        "https://www.notion.so/32cb7cca498280db9c2ded976950655c",
+        "https://www.notion.so/392b7cca498280458590fc3e3f526ccc",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r27-touchpoints",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "r27-path"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "r27-path"
+                },
+                "name": "Front Stage Touchpoints"
+              }
+            }
+          },
+          "step_id": "a0000000-0000-4000-8000-000000000897",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "PLUS App\nSlack",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec",
+        "https://www.notion.so/32cb7cca498280db9c2ded976950655c",
+        "https://www.notion.so/392b7cca498280458590fc3e3f526ccc",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r27-touchpoints-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "r27-touchpoints"
+          },
+          "cell_key": {
+            "ref": "r27-touchpoints",
+            "field": "cell_key"
+          },
+          "title": "KB audit #744 — r27-touchpoints"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #744 — r27-touchpoints",
+        "note": "Sources: https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec ; https://www.notion.so/32cb7cca498280db9c2ded976950655c ; https://www.notion.so/392b7cca498280458590fc3e3f526ccc ; https://github.com/BilLogic/plus-uno-blueprint/issues/744 . Card 2136 (In-session Fill-In Request) is Deployed in 12.0 (live). When There Are Not Enough Tutors (lead tutors) and Manage Your Tutoring Schedule describe the flow. Row 27."
+      },
+      "evidence": [
+        "https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec",
+        "https://www.notion.so/32cb7cca498280db9c2ded976950655c",
+        "https://www.notion.so/392b7cca498280458590fc3e3f526ccc",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r27-post",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "r27-path"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "r27-path"
+                },
+                "name": "Front Stage Actions"
+              }
+            }
+          },
+          "step_id": "a0000000-0000-4000-8000-000000000897",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Posts the request to #sessions-in-need and opens fill-in spots in the Fill-In tab.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec",
+        "https://www.notion.so/32cb7cca498280db9c2ded976950655c",
+        "https://www.notion.so/392b7cca498280458590fc3e3f526ccc",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r27-post-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "r27-post"
+          },
+          "cell_key": {
+            "ref": "r27-post",
+            "field": "cell_key"
+          },
+          "title": "KB audit #744 — r27-post"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #744 — r27-post",
+        "note": "Sources: https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec ; https://www.notion.so/32cb7cca498280db9c2ded976950655c ; https://www.notion.so/392b7cca498280458590fc3e3f526ccc ; https://github.com/BilLogic/plus-uno-blueprint/issues/744 . Card 2136 (In-session Fill-In Request) is Deployed in 12.0 (live). When There Are Not Enough Tutors (lead tutors) and Manage Your Tutoring Schedule describe the flow. Row 27."
+      },
+      "evidence": [
+        "https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec",
+        "https://www.notion.so/32cb7cca498280db9c2ded976950655c",
+        "https://www.notion.so/392b7cca498280458590fc3e3f526ccc",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r27-tutor-fills",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "r27-path"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "r27-path"
+                },
+                "name": "Regular Tutor"
+              }
+            }
+          },
+          "step_id": "a0000000-0000-4000-8000-000000000899",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Opens the Slack link, confirms Fill in for this session, and joins right away.",
+        "summary": "When the request has closed or its slots are filled, the button is disabled with “This fill-in request is no longer available.” and the session details stay visible.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec",
+        "https://www.notion.so/32cb7cca498280db9c2ded976950655c",
+        "https://www.notion.so/392b7cca498280458590fc3e3f526ccc",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r27-tutor-fills-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "r27-tutor-fills"
+          },
+          "cell_key": {
+            "ref": "r27-tutor-fills",
+            "field": "cell_key"
+          },
+          "title": "KB audit #744 — r27-tutor-fills"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #744 — r27-tutor-fills",
+        "note": "Sources: https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec ; https://www.notion.so/32cb7cca498280db9c2ded976950655c ; https://www.notion.so/392b7cca498280458590fc3e3f526ccc ; https://github.com/BilLogic/plus-uno-blueprint/issues/744 . Card 2136 (In-session Fill-In Request) is Deployed in 12.0 (live). When There Are Not Enough Tutors (lead tutors) and Manage Your Tutoring Schedule describe the flow. Row 27."
+      },
+      "evidence": [
+        "https://www.notion.so/2c5b7cca49828030ab2be37c6db27eec",
+        "https://www.notion.so/32cb7cca498280db9c2ded976950655c",
+        "https://www.notion.so/392b7cca498280458590fc3e3f526ccc",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r27-lead-assigns",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "r27-path"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "r27-path"
+                },
+                "name": "Lead Tutor"
+              }
+            }
+          },
+          "step_id": "a0000000-0000-4000-8000-000000000900",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Assigns students to the fill-in tutor; nobody else’s students move.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3cfb7cca49828027a04ceaf1d9c33b7d",
+        "https://www.notion.so/32cb7cca498280db9c2ded976950655c",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r27-lead-assigns-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "r27-lead-assigns"
+          },
+          "cell_key": {
+            "ref": "r27-lead-assigns",
+            "field": "cell_key"
+          },
+          "title": "KB audit #744 — r27-lead-assigns"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #744 — r27-lead-assigns",
+        "note": "Sources: https://www.notion.so/3cfb7cca49828027a04ceaf1d9c33b7d ; https://www.notion.so/32cb7cca498280db9c2ded976950655c ; https://github.com/BilLogic/plus-uno-blueprint/issues/744 . Card 2616 (no automatic reassignment when a tutor is added) is Deployed in 12.0. When There Are Not Enough Tutors: students are not moved automatically and other tutors’ assignments do not change. Row 27."
+      },
+      "evidence": [
+        "https://www.notion.so/3cfb7cca49828027a04ceaf1d9c33b7d",
+        "https://www.notion.so/32cb7cca498280db9c2ded976950655c",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r30-received-12plus",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000808",
+          "lane_id": "a0000000-0000-4000-8000-000000000973",
+          "step_id": "a0000000-0000-4000-8000-000000000941",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Emails the tutor that the call-off was received, with its status: pending review or auto-approved.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.notion.so/392b7cca498280458590fc3e3f526ccc",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r30-received-12plus-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "r30-received-12plus"
+          },
+          "cell_key": {
+            "ref": "r30-received-12plus",
+            "field": "cell_key"
+          },
+          "title": "KB audit #744 — r30-received-12plus"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #744 — r30-received-12plus",
+        "note": "Sources: https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403 ; https://www.notion.so/392b7cca498280458590fc3e3f526ccc ; https://github.com/BilLogic/plus-uno-blueprint/issues/744 . Card 2567 (Transactional email 2a, call-off submitted) is Deployed in 12.0 (live): one received email with the derived status. Manage Your Tutoring Schedule says the email states pending review or automatically approved or excused. Row 30."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.notion.so/392b7cca498280458590fc3e3f526ccc",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r30-received-under12",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "b0000000-0000-4000-8000-000000000809",
+          "lane_id": "b0000000-0000-4000-8000-000000001073",
+          "step_id": "a0000000-0000-4000-8000-000000000942",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Emails the tutor that the call-off was received, with its status: pending review or auto-approved.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.notion.so/392b7cca498280458590fc3e3f526ccc",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r30-received-under12-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "r30-received-under12"
+          },
+          "cell_key": {
+            "ref": "r30-received-under12",
+            "field": "cell_key"
+          },
+          "title": "KB audit #744 — r30-received-under12"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #744 — r30-received-under12",
+        "note": "Sources: https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403 ; https://www.notion.so/392b7cca498280458590fc3e3f526ccc ; https://github.com/BilLogic/plus-uno-blueprint/issues/744 . Card 2567 (Transactional email 2a, call-off submitted) is Deployed in 12.0 (live): one received email with the derived status. Manage Your Tutoring Schedule says the email states pending review or automatically approved or excused. Row 30."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.notion.so/392b7cca498280458590fc3e3f526ccc",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-path",
+      "operation": "create_path_at_status",
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000128",
+          "name": "Recurring withdrawal"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "variant",
+        "status": "live",
+        "summary": "Variant path: the tutor withdraws from a recurring session series. They stay on the roster until a supervisor approves, except a Signed Up By Mistake withdrawal that auto-approves."
+      },
+      "input": {
+        "lane_source_path_id": "a0000000-0000-4000-8000-000000000808"
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-steps",
+      "operation": "set_path_steps",
+      "target": {
+        "table": "paths",
+        "id": {
+          "ref": "r32-path"
+        },
+        "withSteps": true
+      },
+      "expected": {
+        "scenario_id": "a0000000-0000-4000-8000-000000000128",
+        "step_ids": [
+          "a0000000-0000-4000-8000-000000000940",
+          "a0000000-0000-4000-8000-000000000941",
+          "a0000000-0000-4000-8000-000000000943",
+          "a0000000-0000-4000-8000-000000000944",
+          "a0000000-0000-4000-8000-000000000945",
+          "a0000000-0000-4000-8000-000000000942"
+        ]
+      },
+      "value": {
+        "step_ids": [
+          "a0000000-0000-4000-8000-000000000940",
+          "a0000000-0000-4000-8000-000000000941",
+          "a0000000-0000-4000-8000-000000000944",
+          "a0000000-0000-4000-8000-000000000943",
+          "a0000000-0000-4000-8000-000000000945"
+        ]
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-tutor-withdraws",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "r32-path"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "r32-path"
+                },
+                "name": "Regular Tutor"
+              }
+            }
+          },
+          "step_id": "a0000000-0000-4000-8000-000000000941",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Withdraws from a recurring session and stays on the roster until a supervisor approves.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-tutor-withdraws-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "r32-tutor-withdraws"
+          },
+          "cell_key": {
+            "ref": "r32-tutor-withdraws",
+            "field": "cell_key"
+          },
+          "title": "KB audit #744 — r32-tutor-withdraws"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #744 — r32-tutor-withdraws",
+        "note": "Sources: https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737 ; https://github.com/BilLogic/plus-uno-blueprint/issues/744 . Card 2567 (Transactional email 2a) is Deployed in 12.0: a recurring withdrawal stays assigned until approved, and only Signed Up By Mistake within 24 hours of sign-up with the next session 12+ hours away auto-approves. Figma 11272:161737 (5.3/5.4) was not re-read for this batch. Row 32."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-approval",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "r32-path"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "r32-path"
+                },
+                "name": "Back Stage Actions"
+              }
+            }
+          },
+          "step_id": "a0000000-0000-4000-8000-000000000944",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Approves recurring withdrawals by hand; a Signed Up By Mistake withdrawal auto-approves when the sign-up is under 24 hours old and the next session is 12+ hours away.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-approval-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "r32-approval"
+          },
+          "cell_key": {
+            "ref": "r32-approval",
+            "field": "cell_key"
+          },
+          "title": "KB audit #744 — r32-approval"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #744 — r32-approval",
+        "note": "Sources: https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737 ; https://github.com/BilLogic/plus-uno-blueprint/issues/744 . Card 2567 (Transactional email 2a) is Deployed in 12.0: a recurring withdrawal stays assigned until approved, and only Signed Up By Mistake within 24 hours of sign-up with the next session 12+ hours away auto-approves. Figma 11272:161737 (5.3/5.4) was not re-read for this batch. Row 32."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-tutor-cancels",
+      "operation": "upsert_cell_at_status",
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "r32-path"
+          },
+          "lane_id": {
+            "lookup": {
+              "table": "lanes",
+              "where": {
+                "path_id": {
+                  "ref": "r32-path"
+                },
+                "name": "Regular Tutor"
+              }
+            }
+          },
+          "step_id": "a0000000-0000-4000-8000-000000000944",
+          "position": 0
+        }
+      },
+      "expected": null,
+      "value": {
+        "content": "Withdraws a pending call-off request from the Call-Offs tab while its slots are still open.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-tutor-cancels-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": {
+            "ref": "r32-tutor-cancels"
+          },
+          "cell_key": {
+            "ref": "r32-tutor-cancels",
+            "field": "cell_key"
+          },
+          "title": "KB audit #744 — r32-tutor-cancels"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #744 — r32-tutor-cancels",
+        "note": "Sources: https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737 ; https://github.com/BilLogic/plus-uno-blueprint/issues/744 . Card 2567 (Transactional email 2a) is Deployed in 12.0: a recurring withdrawal stays assigned until approved, and only Signed Up By Mistake within 24 hours of sign-up with the next session 12+ hours away auto-approves. Figma 11272:161737 (5.3/5.4) was not re-read for this batch. Row 32."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-trim-170203",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170203"
+      },
+      "expected": {
+        "content": "Files a one-time call-off 12 or more hours before the session.",
+        "summary": "For a one-time session 12 or more hours away, the call-off is approved instantly — no supervisor in the loop. Withdrawing from a recurring series instead creates a pending request for supervisor review, except the mistake case: reason 'Signed Up By Mistake' auto-approves if the sign-up was under 24 hours old and the next session is 12+ hours away. Illness call-offs arrive with ~30 hours notice on average.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000808",
+        "lane_id": "a0000000-0000-4000-8000-000000000972",
+        "step_id": "a0000000-0000-4000-8000-000000000941",
+        "position": 0,
+        "cell_key": "plus-application/call-off-request/happy-path/regular-tutor/early-call-off"
+      },
+      "value": {
+        "summary": "For a one-time session 12 or more hours away, the call-off is approved instantly — no supervisor in the loop. Illness call-offs arrive with ~30 hours notice on average."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-trim-170203-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000170203",
+          "cell_key": "plus-application/call-off-request/happy-path/regular-tutor/early-call-off",
+          "title": "KB audit #744 — r32-trim-170203"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #744 — r32-trim-170203",
+        "note": "Sources: https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737 ; https://github.com/BilLogic/plus-uno-blueprint/issues/744 . The recurring-withdrawal facts now live on the Recurring withdrawal path; this summary keeps only the one-time call-off facts. Row 32."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-trim-170207",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170207"
+      },
+      "expected": {
+        "content": "Takes no action on auto-approved call-offs.",
+        "summary": "Pending (recurring) requests queue for supervisor review with the tutor's reason and notice window.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000808",
+        "lane_id": "a0000000-0000-4000-8000-000000000975",
+        "step_id": "a0000000-0000-4000-8000-000000000941",
+        "position": 0,
+        "cell_key": "plus-application/call-off-request/happy-path/back-stage-actions/early-call-off"
+      },
+      "value": {
+        "summary": null
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-trim-170207-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000170207",
+          "cell_key": "plus-application/call-off-request/happy-path/back-stage-actions/early-call-off",
+          "title": "KB audit #744 — r32-trim-170207"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #744 — r32-trim-170207",
+        "note": "Sources: https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737 ; https://github.com/BilLogic/plus-uno-blueprint/issues/744 . The recurring-withdrawal facts now live on the Recurring withdrawal path; this summary keeps only the one-time call-off facts. Row 32."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-trim-170208",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b0000000-0000-4000-8000-000000170208"
+      },
+      "expected": {
+        "content": "Auto-approval rules",
+        "summary": "requiresApproval = hours-before-session < 12 for one-time; recurring always pends except the signed-up-by-mistake fast path (<24h since sign-up ∧ 12h+ before next session). 64% of 2026 production requests were auto-approved.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000808",
+        "lane_id": "a0000000-0000-4000-8000-000000000976",
+        "step_id": "a0000000-0000-4000-8000-000000000941",
+        "position": 0,
+        "cell_key": null
+      },
+      "value": {
+        "summary": "requiresApproval = hours-before-session < 12 for one-time call-offs. 64% of 2026 production requests were auto-approved."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-trim-170208-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b0000000-0000-4000-8000-000000170208",
+          "cell_key": "b0000000-0000-4000-8000-000000170208",
+          "title": "KB audit #744 — r32-trim-170208"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #744 — r32-trim-170208",
+        "note": "Sources: https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737 ; https://github.com/BilLogic/plus-uno-blueprint/issues/744 . The recurring-withdrawal facts now live on the Recurring withdrawal path; this summary keeps only the one-time call-off facts. Row 32."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-trim-170603",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "a0000000-0000-4000-8000-000000170603"
+      },
+      "expected": {
+        "content": "Receives the excused or unexcused decision.",
+        "summary": "The tutor sees the decision (and any reviewer notes) in the Call-Offs tab, flagged as unread until viewed. While a recurring request is still pending, the tutor can withdraw it if slots remain open.",
+        "status": "live",
+        "path_id": "a0000000-0000-4000-8000-000000000808",
+        "lane_id": "a0000000-0000-4000-8000-000000000972",
+        "step_id": "a0000000-0000-4000-8000-000000000945",
+        "position": 0,
+        "cell_key": "plus-application/call-off-request/happy-path/regular-tutor/final-notification"
+      },
+      "value": {
+        "summary": "The tutor sees the decision (and any reviewer notes) in the Call-Offs tab, flagged as unread until viewed."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-trim-170603-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "a0000000-0000-4000-8000-000000170603",
+          "cell_key": "plus-application/call-off-request/happy-path/regular-tutor/final-notification",
+          "title": "KB audit #744 — r32-trim-170603"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #744 — r32-trim-170603",
+        "note": "Sources: https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737 ; https://github.com/BilLogic/plus-uno-blueprint/issues/744 . The recurring-withdrawal facts now live on the Recurring withdrawal path; this summary keeps only the one-time call-off facts. Row 32."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-trim-180603",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "b0000000-0000-4000-8000-000000180603"
+      },
+      "expected": {
+        "content": "Receives the excused or unexcused decision.",
+        "summary": "The tutor sees the decision (and any reviewer notes) in the Call-Offs tab, flagged as unread until viewed. While a recurring request is still pending, the tutor can withdraw it if slots remain open.",
+        "status": "live",
+        "path_id": "b0000000-0000-4000-8000-000000000809",
+        "lane_id": "b0000000-0000-4000-8000-000000001072",
+        "step_id": "a0000000-0000-4000-8000-000000000945",
+        "position": 0,
+        "cell_key": null
+      },
+      "value": {
+        "summary": "The tutor sees the decision (and any reviewer notes) in the Call-Offs tab, flagged as unread until viewed."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r32-trim-180603-evidence",
+      "operation": "add_evidence",
+      "target": {
+        "table": "evidence",
+        "where": {
+          "service_id": "a0000000-0000-4000-8000-000000000001",
+          "cell_id": "b0000000-0000-4000-8000-000000180603",
+          "cell_key": "b0000000-0000-4000-8000-000000180603",
+          "title": "KB audit #744 — r32-trim-180603"
+        }
+      },
+      "expected": null,
+      "value": {
+        "kind": "doc",
+        "title": "KB audit #744 — r32-trim-180603",
+        "note": "Sources: https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403 ; https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737 ; https://github.com/BilLogic/plus-uno-blueprint/issues/744 . The recurring-withdrawal facts now live on the Recurring withdrawal path; this summary keeps only the one-time call-off facts. Row 32."
+      },
+      "evidence": [
+        "https://www.notion.so/3b2b7cca498281d1b54bde940b6fc403",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11272-161737",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    },
+    {
+      "key": "r33-swap-note",
+      "operation": "update_path_spec",
+      "target": {
+        "table": "paths",
+        "id": "f0000000-0000-4000-8000-000000000808"
+      },
+      "expected": {
+        "summary": "Captures planned / unshipped behavior for Call-off Request as of 2026-08-08. Diverges at the initial need: the swap flow (Figma section 5.5, explicitly marked TBD) — the tutor swaps into another session instead of filing a pure call-off, so coverage moves instead of disappearing. No shipped code; design placeholder only.",
+        "note": null,
+        "status": "proposed",
+        "scenario_id": "a0000000-0000-4000-8000-000000000128",
+        "name": "Swap offered instead"
+      },
+      "value": {
+        "summary": "Captures planned / unshipped behavior for Call-off Request as of 2026-08-08. Diverges at the initial need: the swap flow (Figma section 5.5, explicitly marked TBD) — the tutor swaps into another session instead of filing a pure call-off, so coverage moves instead of disappearing. No shipped code; design placeholder only.",
+        "note": "Swap-in card 2204 archived Aug 2026; spec 5.5 still TBD."
+      },
+      "evidence": [
+        "https://www.notion.so/2eeb7cca498280d592e5d5c06b3b09f9",
+        "https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11227-394462",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/744"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000150304"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "r27-lead-request"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "r27-touchpoints"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "r27-post"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "r27-tutor-fills"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "r27-lead-assigns"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "r30-received-12plus"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "r30-received-under12"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "r32-tutor-withdraws"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "r32-approval"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": {
+            "ref": "r32-tutor-cancels"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170203"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170207"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-000000170208"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "a0000000-0000-4000-8000-000000170603"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "b0000000-0000-4000-8000-000000180603"
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 1
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000127"
+        }
+      },
+      "beforeCount": 1,
+      "afterCount": 2,
+      "beforeRows": [
+        {
+          "id": "a0000000-0000-4000-8000-000000000807",
+          "name": "Slot gets covered",
+          "kind": "happy",
+          "status": "live"
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "a0000000-0000-4000-8000-000000000807",
+          "name": "Slot gets covered",
+          "kind": "happy",
+          "status": "live"
+        },
+        {
+          "id": {
+            "ref": "r27-path"
+          },
+          "name": "Requested mid-session",
+          "kind": "variant",
+          "status": "live"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "paths",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000128"
+        }
+      },
+      "beforeCount": 3,
+      "afterCount": 4,
+      "beforeRows": [
+        {
+          "id": "a0000000-0000-4000-8000-000000000808",
+          "name": "12+ hours ahead",
+          "kind": "happy",
+          "status": "live"
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000809",
+          "name": "Under 12 hours",
+          "kind": "exception",
+          "status": "live"
+        },
+        {
+          "id": "f0000000-0000-4000-8000-000000000808",
+          "name": "Swap offered instead",
+          "kind": "variant",
+          "status": "proposed"
+        }
+      ],
+      "afterRows": [
+        {
+          "id": "a0000000-0000-4000-8000-000000000808",
+          "name": "12+ hours ahead",
+          "kind": "happy",
+          "status": "live"
+        },
+        {
+          "id": "b0000000-0000-4000-8000-000000000809",
+          "name": "Under 12 hours",
+          "kind": "exception",
+          "status": "live"
+        },
+        {
+          "id": "f0000000-0000-4000-8000-000000000808",
+          "name": "Swap offered instead",
+          "kind": "variant",
+          "status": "proposed"
+        },
+        {
+          "id": {
+            "ref": "r32-path"
+          },
+          "name": "Recurring withdrawal",
+          "kind": "variant",
+          "status": "live"
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000807"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 8,
+      "beforeRows": [
+        {
+          "id": "a0000000-0000-4000-8000-000000000903",
+          "name": "Storyboard",
+          "position": 0
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000000904",
+          "name": "Regular Tutor",
+          "position": 1
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000000906",
+          "name": "Front Stage Touchpoints",
+          "position": 2
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000000905",
+          "name": "Front Stage Actions",
+          "position": 3
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000000908",
+          "name": "Back Stage Touchpoints",
+          "position": 4
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000000907",
+          "name": "Back Stage Actions",
+          "position": 5
+        },
+        {
+          "id": "a0000000-0000-4000-8000-000000000909",
+          "name": "Support Actions",
+          "position": 6
+        }
+      ],
+      "afterRows": [
+        {
+          "name": "Storyboard",
+          "lane_role": "storyboard",
+          "position": 0
+        },
+        {
+          "name": "Lead Tutor",
+          "lane_role": "customer_actions",
+          "position": 1
+        },
+        {
+          "name": "Regular Tutor",
+          "lane_role": "customer_actions",
+          "position": 2
+        },
+        {
+          "name": "Front Stage Touchpoints",
+          "lane_role": "frontstage_touchpoints",
+          "position": 3
+        },
+        {
+          "name": "Front Stage Actions",
+          "lane_role": "frontstage_actions",
+          "position": 4
+        },
+        {
+          "name": "Back Stage Touchpoints",
+          "lane_role": "backstage_touchpoints",
+          "position": 5
+        },
+        {
+          "name": "Back Stage Actions",
+          "lane_role": "backstage_actions",
+          "position": 6
+        },
+        {
+          "name": "Support Actions",
+          "lane_role": "support_actions",
+          "position": 7
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": {
+            "ref": "r27-path"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 8,
+      "afterRows": [
+        {
+          "name": "Storyboard",
+          "lane_role": "storyboard",
+          "position": 0
+        },
+        {
+          "name": "Lead Tutor",
+          "lane_role": "customer_actions",
+          "position": 1
+        },
+        {
+          "name": "Regular Tutor",
+          "lane_role": "customer_actions",
+          "position": 2
+        },
+        {
+          "name": "Front Stage Touchpoints",
+          "lane_role": "frontstage_touchpoints",
+          "position": 3
+        },
+        {
+          "name": "Front Stage Actions",
+          "lane_role": "frontstage_actions",
+          "position": 4
+        },
+        {
+          "name": "Back Stage Touchpoints",
+          "lane_role": "backstage_touchpoints",
+          "position": 5
+        },
+        {
+          "name": "Back Stage Actions",
+          "lane_role": "backstage_actions",
+          "position": 6
+        },
+        {
+          "name": "Support Actions",
+          "lane_role": "support_actions",
+          "position": 7
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000807"
+        }
+      },
+      "beforeCount": 4,
+      "afterCount": 4,
+      "beforeRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000897",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000898",
+          "position": 2
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000899",
+          "position": 3
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000900",
+          "position": 4
+        }
+      ],
+      "afterRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000897",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000898",
+          "position": 2
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000899",
+          "position": 3
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000900",
+          "position": 4
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": {
+            "ref": "r27-path"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 4,
+      "afterRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000897",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000898",
+          "position": 2
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000899",
+          "position": 3
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000900",
+          "position": 4
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000127"
+        }
+      },
+      "beforeCount": 4,
+      "afterCount": 4
+    },
+    {
+      "target": {
+        "table": "steps",
+        "where": {
+          "scenario_id": "a0000000-0000-4000-8000-000000000128"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000808"
+        }
+      },
+      "beforeCount": 6,
+      "afterCount": 6,
+      "beforeRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000940",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000941",
+          "position": 2
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000943",
+          "position": 3
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000944",
+          "position": 4
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000945",
+          "position": 5
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000942",
+          "position": 6
+        }
+      ],
+      "afterRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000940",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000941",
+          "position": 2
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000943",
+          "position": 3
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000944",
+          "position": 4
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000945",
+          "position": 5
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000942",
+          "position": 6
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "path_steps",
+        "where": {
+          "path_id": {
+            "ref": "r32-path"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 5,
+      "afterRows": [
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000940",
+          "position": 0
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000941",
+          "position": 1
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000944",
+          "position": 2
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000943",
+          "position": 3
+        },
+        {
+          "step_id": "a0000000-0000-4000-8000-000000000945",
+          "position": 4
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000808"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7,
+      "afterRows": [
+        {
+          "name": "Storyboard",
+          "lane_role": "storyboard",
+          "position": 0
+        },
+        {
+          "name": "Regular Tutor",
+          "lane_role": "customer_actions",
+          "position": 1
+        },
+        {
+          "name": "Front Stage Touchpoints",
+          "lane_role": "frontstage_touchpoints",
+          "position": 2
+        },
+        {
+          "name": "Front Stage Actions",
+          "lane_role": "frontstage_actions",
+          "position": 3
+        },
+        {
+          "name": "Back Stage Touchpoints",
+          "lane_role": "backstage_touchpoints",
+          "position": 4
+        },
+        {
+          "name": "Back Stage Actions",
+          "lane_role": "backstage_actions",
+          "position": 5
+        },
+        {
+          "name": "Support Actions",
+          "lane_role": "support_actions",
+          "position": 6
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "lanes",
+        "where": {
+          "path_id": {
+            "ref": "r32-path"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 7,
+      "afterRows": [
+        {
+          "name": "Storyboard",
+          "lane_role": "storyboard",
+          "position": 0
+        },
+        {
+          "name": "Regular Tutor",
+          "lane_role": "customer_actions",
+          "position": 1
+        },
+        {
+          "name": "Front Stage Touchpoints",
+          "lane_role": "frontstage_touchpoints",
+          "position": 2
+        },
+        {
+          "name": "Front Stage Actions",
+          "lane_role": "frontstage_actions",
+          "position": 3
+        },
+        {
+          "name": "Back Stage Touchpoints",
+          "lane_role": "backstage_touchpoints",
+          "position": 4
+        },
+        {
+          "name": "Back Stage Actions",
+          "lane_role": "backstage_actions",
+          "position": 5
+        },
+        {
+          "name": "Support Actions",
+          "lane_role": "support_actions",
+          "position": 6
+        }
+      ]
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000807"
+        }
+      },
+      "beforeCount": 22,
+      "afterCount": 22
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000808"
+        }
+      },
+      "beforeCount": 25,
+      "afterCount": 26
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "b0000000-0000-4000-8000-000000000809"
+        }
+      },
+      "beforeCount": 13,
+      "afterCount": 14
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "f0000000-0000-4000-8000-000000000808"
+        }
+      },
+      "beforeCount": 7,
+      "afterCount": 7
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "r27-path"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 5
+    },
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": {
+            "ref": "r32-path"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 3
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "r27-touchpoints"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 2
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "r30-received-12plus"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "r30-received-under12"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "r27-post"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": {
+        "table": "cell_touchpoints",
+        "where": {
+          "cell_id": {
+            "ref": "r32-approval"
+          }
+        }
+      },
+      "beforeCount": 0,
+      "afterCount": 0
+    }
+  ]
+}

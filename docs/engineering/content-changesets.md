@@ -152,6 +152,17 @@ whole batch otherwise:
   `add_step`'s membership row is a side effect the projection does not
   advance.
 
+A new path's copied step list is the other deferral. `create_path_at_status`
+copies its source path's lanes and step memberships, so a variant that needs
+fewer or reordered columns follows it with a `set_path_steps` whose
+`target.id` is `{ "ref": … }` to that creation and whose `expected.step_ids`
+is the copied list in position order. Preflight refuses any other target, and
+refuses the trim if an `add_step` on that path comes after it. At apply the
+runner reads the created path, refuses unless it is that path and its
+memberships equal the reviewed list, and only then sends the RPC. Guard the
+source path's `path_steps` with a `beforeRows` check, so a membership change
+since review fails before the path is created.
+
 At apply the deferred re-check is a fresh capture plus the expected guard,
 scenario included: the runner reads the target after its parent exists,
 refuses it unless it resolves to exactly one row in the scenario this batch
