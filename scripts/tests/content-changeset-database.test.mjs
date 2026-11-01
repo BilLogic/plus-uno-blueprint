@@ -277,6 +277,12 @@ function databaseFixture({ zeroRows = false, failAppend = false, corruptCell = f
       rows.forEach((row) => Object.assign(row, body))
       return answer(rows.map((row) => ({ id: row.id })))
     }
+    if (method === 'DELETE') {
+      // As the evidence_delete_auth policy allows; no other table is deleted here.
+      if (table !== 'evidence') throw new Error(`Unexpected delete on ${table}`)
+      tables.evidence = tables.evidence.filter((row) => !rows.includes(row))
+      return new Response(null, { status: 204 })
+    }
     if (method === 'POST' && table === 'evidence') {
       const row = { ...body, id: `30000000-0000-4000-8000-${String(counter++).padStart(12, '0')}` }
       tables.evidence.push(row)
@@ -1177,5 +1183,46 @@ test('a lane that holds a cell is never removed', async () => {
     expect(result.ok).toBe(false)
     expect(result.failures.join('\n')).toMatch(/lane holds/)
     expect(fixture.tables.lanes).toHaveLength(3)
+  } finally { fixture.database.close() }
+})
+
+// An evidence row left behind by a deleted cell: evidence has no foreign key
+// to cells. The actual evidence mutation deletes it and records the full row
+// as its inverse; the runner refuses while the cell still exists.
+const orphanEvidence = { id: neighbour, service_id: id, cell_id: secondPath, cell_key: secondPath, kind: 'doc', title: 'Left by a deleted cell', note: 'Fixture citation', proposition_question_key: null }
+const deleteEvidenceOp = {
+  key: 'evidence', operation: 'delete_evidence', target: { table: 'evidence', id: neighbour },
+  expected: { id: neighbour, title: 'Left by a deleted cell', cell_id: secondPath }, value: { deleted: true }, evidence: ['Owner request'],
+}
+
+test('an orphaned evidence row is deleted with its full row as the inverse and verified separately', async () => {
+  const fixture = databaseFixture()
+  fixture.tables.evidence.push({ ...orphanEvidence }, { id: laterStep, cell_id: id, title: 'Keep evidence' })
+  const batch = { version: 1, issue: 800, operations: [deleteEvidenceOp] }
+  try {
+    const dry = await runChangeset(batch, 'dry-run', fixture.database)
+    expect(dry.failures).toEqual([])
+    expect(fixture.requests.every(({ method }) => ['GET', 'HEAD'].includes(method))).toBe(true)
+    const applied = await runChangeset(batch, 'apply', fixture.database)
+    expect(applied.failures).toEqual([])
+    expect(fixture.tables.evidence.map((row) => row.id)).toEqual([laterStep])
+    expect(fixture.tables.authoring_changes).toHaveLength(1)
+    expect(fixture.tables.authoring_changes[0]).toMatchObject({
+      fn: 'delete_evidence', args: { evidence_id: neighbour, title: orphanEvidence.title, cell_id: secondPath },
+      revert: { fn: 'restore_evidence_row', args: { row: orphanEvidence } },
+    })
+    expect((await runChangeset(batch, 'verify', fixture.database, { receipt: applied.applied })).failures).toEqual([])
+  } finally { fixture.database.close() }
+})
+
+test('evidence whose cell still exists is never deleted', async () => {
+  const fixture = databaseFixture()
+  fixture.tables.evidence.push({ ...orphanEvidence, cell_id: id })
+  const batch = { version: 1, issue: 800, operations: [{ ...deleteEvidenceOp, expected: { ...deleteEvidenceOp.expected, cell_id: id } }] }
+  try {
+    const result = await runChangeset(batch, 'apply', fixture.database)
+    expect(result.ok).toBe(false)
+    expect(result.failures.join('\n')).toMatch(/cell still exists/)
+    expect(fixture.tables.evidence).toHaveLength(1)
   } finally { fixture.database.close() }
 })

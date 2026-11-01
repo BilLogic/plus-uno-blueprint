@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from 'node:util'
 
 /** Owner-approved deletes: each RPC archives what it destroys into the trash. */
-export const DELETIONS = new Set(['delete_cell', 'remove_step', 'remove_lane'])
+export const DELETIONS = new Set(['delete_cell', 'remove_step', 'remove_lane', 'delete_evidence'])
 export const CAPABILITIES = new Set(['update_cell_status', 'rename_step', 'move_cell', 'insert_cell_at_position', ...DELETIONS])
 export const COORDINATES = ['path_id', 'lane_id', 'step_id', 'position']
 export const coordinates = (row) => Object.fromEntries(COORDINATES.map((key) => [key, row[key]]))
@@ -81,6 +81,14 @@ async function prepareDeletion(read, op, before) {
       resources: resources.map((row) => row.id).sort(),
       evidence_kept: evidence.map((row) => row.id).sort(),
     }
+    return { checks, cascades, removes: { ...removes, guarded: removes } }
+  }
+  if (op.operation === 'delete_evidence') {
+    // Only evidence its cell has outlived: evidence has no foreign key to cells.
+    const cell = await capture({ table: 'cells', id: before.cell_id })
+    if (cell.length) throw new Error('Its cell still exists; only evidence left on a deleted cell is removed')
+    const siblings = await capture({ table: 'evidence', where: { cell_id: before.cell_id } })
+    const removes = { evidence: before.id, cell_gone: before.cell_id, same_cell_evidence: siblings.map((row) => row.id).sort() }
     return { checks, cascades, removes: { ...removes, guarded: removes } }
   }
   if (op.operation === 'remove_step') {
@@ -224,6 +232,12 @@ export function expectedChange(op, before, result) {
   // A delete's record is the trash row the RPC archives in its own
   // transaction: no args and no executable inverse. Recovery is from trash.
   const recovery = 'restore from trash: this authoring_changes row\'s payload holds the deleted rows; no restore RPC exists, so recovery is a reviewed manual re-insert'
+  // Not archived into the trash: the evidence mutation records an ordinary
+  // change whose inverse reinserts the full captured row.
+  if (op.operation === 'delete_evidence') return {
+    fn: 'delete_evidence', args: { evidence_id: before.id, title: before.title, cell_id: before.cell_id },
+    revert: { fn: 'restore_evidence_row', args: { row: before } },
+  }
   if (op.operation === 'delete_cell') return {
     archived: true, fn: 'delete_cell', deleted_kind: 'cell', args: {}, revert: null, recovery,
     payload: Object.fromEntries(['id', 'path_id', 'lane_id', 'step_id', 'position', 'status', 'content'].map((field) => [`cell.${field}`, before[field]])),
