@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "issue": 754,
+  "operations": [
+    {
+      "key": "row23-move-unavailable-response",
+      "operation": "move_cell",
+      "target": {
+        "table": "cells",
+        "id": "734293a2-9018-4a80-a355-4999451c6c82"
+      },
+      "expected": {
+        "path_id": "f0000000-0000-4000-8000-000000000806",
+        "lane_id": "0eae4ce7-b974-4dbc-b1c3-49ce19ab12e0",
+        "step_id": "b0000000-0000-4000-8000-000000000901",
+        "position": 0,
+        "content": "Unavailable answer releases the tutor from the roster — no call-off record, by design",
+        "status": "built",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": null,
+        "frame": null
+      },
+      "value": {
+        "path_id": "a0000000-0000-4000-8000-000000000806",
+        "lane_id": "a0000000-0000-4000-8000-000000000889",
+        "step_id": "b0000000-0000-4000-8000-000000000901",
+        "position": 0
+      },
+      "evidence": [
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8 (RM-2452, QA sections 10–11)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/740 (audit row 23)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/754"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": { "table": "cells", "where": { "path_id": "a0000000-0000-4000-8000-000000000806" } },
+      "beforeCount": 14,
+      "afterCount": 15
+    },
+    {
+      "target": { "table": "cells", "where": { "path_id": "f0000000-0000-4000-8000-000000000806" } },
+      "beforeCount": 7,
+      "afterCount": 6
+    },
+    {
+      "target": { "table": "cells", "where": { "lane_id": "a0000000-0000-4000-8000-000000000889", "step_id": "b0000000-0000-4000-8000-000000000901" } },
+      "beforeCount": 0,
+      "afterCount": 1,
+      "beforeRows": [],
+      "afterRows": [
+        { "id": "734293a2-9018-4a80-a355-4999451c6c82", "path_id": "a0000000-0000-4000-8000-000000000806", "position": 0, "status": "built", "cell_key": null, "content": "Unavailable answer releases the tutor from the roster — no call-off record, by design" }
+      ]
+    },
+    {
+      "target": { "table": "cells", "where": { "lane_id": "0eae4ce7-b974-4dbc-b1c3-49ce19ab12e0", "step_id": "b0000000-0000-4000-8000-000000000901" } },
+      "beforeCount": 1,
+      "afterCount": 0,
+      "beforeRows": [ { "id": "734293a2-9018-4a80-a355-4999451c6c82", "position": 0 } ],
+      "afterRows": []
+    },
+    {
+      "target": { "table": "evidence", "where": { "cell_id": "734293a2-9018-4a80-a355-4999451c6c82" } },
+      "beforeCount": 2,
+      "afterCount": 2,
+      "beforeRows": [
+        { "id": "5758a3b8-991f-4c1e-9280-7939337e1c02", "title": "TutorSessionServiceImpl.java:236 (dev branch)" },
+        { "id": "7199e627-a49b-478d-a5c9-d1b47dd03e7f", "title": "decision note, pre-session-call-off-request plan" }
+      ],
+      "afterRows": [
+        { "id": "5758a3b8-991f-4c1e-9280-7939337e1c02", "title": "TutorSessionServiceImpl.java:236 (dev branch)" },
+        { "id": "7199e627-a49b-478d-a5c9-d1b47dd03e7f", "title": "decision note, pre-session-call-off-request plan" }
+      ]
+    },
+    {
+      "target": { "table": "cell_touchpoints", "where": { "cell_id": "734293a2-9018-4a80-a355-4999451c6c82" } },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": { "table": "cell_dependencies", "where": { "source_cell_id": "734293a2-9018-4a80-a355-4999451c6c82" } },
+      "beforeCount": 0,
+      "afterCount": 0
+    },
+    {
+      "target": { "table": "cell_dependencies", "where": { "target_cell_id": "734293a2-9018-4a80-a355-4999451c6c82" } },
+      "beforeCount": 0,
+      "afterCount": 0
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "issue": 754,
+  "operations": [
+    {
+      "key": "row23-unavailable-response-content",
+      "operation": "update_cell_content",
+      "target": {
+        "table": "cells",
+        "id": "734293a2-9018-4a80-a355-4999451c6c82"
+      },
+      "expected": {
+        "path_id": "a0000000-0000-4000-8000-000000000806",
+        "lane_id": "a0000000-0000-4000-8000-000000000889",
+        "step_id": "b0000000-0000-4000-8000-000000000901",
+        "position": 0,
+        "content": "Unavailable answer releases the tutor from the roster — no call-off record, by design",
+        "summary": "PLANNED (not shipped as of Aug 2026): a tutor answering Unavailable is dropped from the session without a call-off record; the freed slot feeds the fill-in pool. This is by design, confirmed 2026-08-08 — reconfirmation only fires on supervisor-initiated changes, so declining is not a call-off.",
+        "status": "built",
+        "owner": null,
+        "perceived_owner": null,
+        "cell_key": null,
+        "frame": null
+      },
+      "value": {
+        "content": "Drops a tutor who answers Unavailable from the roster, with no call-off record.",
+        "summary": "A tutor who answers Unavailable is dropped from the session without a call-off record, and the freed slot feeds the fill-in pool. This is by design, confirmed 2026-08-08: reconfirmation only fires on supervisor-initiated changes, so declining is not a call-off.",
+        "status": "live"
+      },
+      "evidence": [
+        "https://www.notion.so/d11b7cca498283dba80881e9217de2a8 (RM-2452, QA sections 10–11)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/740 (audit row 23)",
+        "https://github.com/BilLogic/plus-uno-blueprint/issues/754"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "target": {
+        "table": "cells",
+        "where": {
+          "path_id": "a0000000-0000-4000-8000-000000000806"
+        }
+      },
+      "beforeCount": 15,
+      "afterCount": 15
+    },
+    {
+      "target": {
+        "table": "evidence",
+        "where": {
+          "cell_id": "734293a2-9018-4a80-a355-4999451c6c82"
+        }
+      },
+      "beforeCount": 2,
+      "afterCount": 2
+    }
+  ]
+}
