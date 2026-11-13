@@ -46,7 +46,7 @@ retriever to a scope. With filters and no `q` it returns the complete matching
 set in structural order — the honest way to say "every exception path" or
 "all of Discovery". `granularity` picks the level: phase, scenario, path,
 step, lane or cell. Every row carries `matched_by` and `total_matched`, so
-answer with the count behind the top-k: "113 cells mention Zoom; here are 15."
+answer with the returned `total_matched` count behind the top-k, and say how many rows are shown.
 Direct selects, embed hints and service-key routes are in
 [`blueprint-direct-access.md`](blueprint-direct-access.md).
 
