@@ -45,6 +45,15 @@ All modes return JSON with `ok`, `failures` and `diff`; failure exits nonzero.
 Verify without an apply receipt reports the content differences but cannot
 pass durable-log verification.
 
+## Clearing a review
+
+A ticket's `changesets/<ticket>-review.md` is a working note. Delete it once
+its own text records every batch applied and separately verified: `ok: true`,
+or a recovery batch that finished the work, or a verifier failure the review
+explains. Before deleting, copy the apply table and any such explanation onto
+the ticket as a comment; the JSON and the ticket then keep the record. A review
+that says "prepared and dry-run only" stays until its apply lands.
+
 ## Shape
 
 The tracer file is a complete example. Its expected values came from a hosted
