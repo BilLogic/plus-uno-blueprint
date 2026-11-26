@@ -47,11 +47,12 @@ pass durable-log verification.
 
 ## Clearing a review
 
-A ticket's `changesets/<ticket>-review.md` is a working note. Once the ticket's
-changeset is applied and verified, with the passing verifier output and the
-apply recorded on the ticket, delete the review in the same PR that records the
-apply. The JSON and the ticket keep the record. Keep a review whose apply the
-repo does not record, or one that still says "prepared and dry-run only".
+A ticket's `changesets/<ticket>-review.md` is a working note. Delete it once
+its own text records every batch applied and separately verified: `ok: true`,
+or a recovery batch that finished the work, or a verifier failure the review
+explains. Before deleting, copy the apply table and any such explanation onto
+the ticket as a comment; the JSON and the ticket then keep the record. A review
+that says "prepared and dry-run only" stays until its apply lands.
 
 ## Shape
 

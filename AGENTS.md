@@ -26,7 +26,7 @@ Where a rule here fights the code, the code is newer; say so and follow the code
 - Never widen RLS or write policies; the deployed site stays read-only.
 - Never widen a column grant; a new panel column is a line in `PANEL_COLUMNS`
   and a migration, never a table grant. Held by `scripts/check-rls-posture.mjs`
-  and `check:new-table-grants`.
+  and `check:new-table-grants`; the why: `docs/engineering/access-and-security.md` § Schema tour.
 - Local writes authenticate as the dev auth user (auto sign-in from
   `.env.local`); **never the service-role key**, which bypasses policy and
   belongs in no browser bundle.
