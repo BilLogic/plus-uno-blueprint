@@ -355,6 +355,12 @@ never a raw table write from a component, a context or a hook:
   `stepSpecMutations`. All share one shape: a write under row grants — direct
   or through one RPC — recorded in the session ledger with a captured inverse.
 
+In a mutation module, three steps in this order: capture the previous value as
+the inverse **before** the write; write with `.select()` so a zero-row update
+fails loudly; then `recordChange`. Undo takes its input from the session ledger
+alone: `public.authoring_changes` accepts any shape and holds more than one, so
+`src/lib/revertBoundaryContract.test.ts` holds the revert path to the ledger.
+
 Two modules write tables and are deliberately *not* in that set. Count them
 when you count writers — there are sixteen write surfaces, not fourteen:
 
