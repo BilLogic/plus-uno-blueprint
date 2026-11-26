@@ -1,12 +1,6 @@
 # Working in plus-uno-blueprint
 
-Short by design. This file is the whole always-loaded tier, and every routing
-item in it is a **pointer** — a trigger word, then the document that carries the
-body — or one of the **rules that hold for every skill**, which stay inline
-by rule because they bind before any pointer could fire. Three checks hold that shape:
-`scripts/check-router-budget.mjs`, `scripts/check-negation-ratchet.mjs`,
-`scripts/check-pointers.mjs`. Where a rule here fights the code, the code is
-newer; say so and follow the code.
+Where a rule here fights the code, the code is newer; say so and follow the code.
 
 ## Boot protocol (read this order, load on demand)
 
@@ -30,26 +24,16 @@ newer; say so and follow the code.
   environment, a literal value written into a doc:
   `docs/engineering/access-and-security.md` § Environments.
 - Never widen RLS or write policies; the deployed site stays read-only.
-- Never widen a column grant. RLS decides *who* writes and is silent on *which
-  columns*, so the grant is the whole of the boundary between what a panel
-  writes and what an RPC records. `authenticated` holds no table-level UPDATE
-  anywhere and no key column outside three named ones (`20260830290000`); a new
-  panel column means a line in `PANEL_COLUMNS`
-  (`scripts/check-rls-posture.mjs`) and a migration, never a table grant.
+- Never widen a column grant; a new panel column is a line in `PANEL_COLUMNS`
+  and a migration, never a table grant. Held by `scripts/check-rls-posture.mjs`
+  and `check:new-table-grants`.
 - Local writes authenticate as the dev auth user (auto sign-in from
   `.env.local`); **never the service-role key**, which bypasses policy and
   belongs in no browser bundle.
 - Every blueprint-content write goes through `src/lib/authoringRpc.ts` or a
   `src/lib/*Mutations.ts` module, so it lands in the session ledger with a
-  captured revert. Nothing else writes to a table, and
-  `src/lib/writeBoundaryContract.test.ts` walks all of `src/` to hold that
-  rather than leaving it to convention. In a mutation module: capture the
-  previous value as the inverse **before** the write, write with `.select()` so
-  a zero-row update fails loudly, then `recordChange`. Deletes are human-only.
-  Undo takes its input from the session ledger alone —
-  `public.authoring_changes` accepts any shape, and holds more than one;
-  `src/lib/revertBoundaryContract.test.ts` holds that.
-  The two exemptions, and why each is deliberate:
+  captured revert; deletes are human-only. Held by `writeBoundaryContract.test.ts`
+  and `revertBoundaryContract.test.ts`; the two exemptions:
   `docs/engineering/access-and-security.md` § Authoring writes.
 
 ## Progressive loading

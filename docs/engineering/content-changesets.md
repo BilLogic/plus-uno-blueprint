@@ -45,6 +45,14 @@ All modes return JSON with `ok`, `failures` and `diff`; failure exits nonzero.
 Verify without an apply receipt reports the content differences but cannot
 pass durable-log verification.
 
+## Clearing a review
+
+A ticket's `changesets/<ticket>-review.md` is a working note. Once the ticket's
+changeset is applied and verified, with the passing verifier output and the
+apply recorded on the ticket, delete the review in the same PR that records the
+apply. The JSON and the ticket keep the record. Keep a review whose apply the
+repo does not record, or one that still says "prepared and dry-run only".
+
 ## Shape
 
 The tracer file is a complete example. Its expected values came from a hosted

@@ -1,7 +1,7 @@
 ---
 audience: developers
 summary: Who can do what and where it is actually enforced, the schema tour, the single write path (wrappers + ledger), migrations workflow, and environments.
-sources: supabase/DATABASE.md (superseded), supabase/migrations/20260805150000_service_account_tier.sql, supabase/migrations/20260805170000_service_tier_rpc_enforcement.sql, supabase/migrations/20260729120000_derived_layer.sql, supabase/migrations/20260730090000_derived_layer_grants_hardening.sql, src/contexts/SupabaseProvider.tsx, src/lib/authoringRpc.ts, src/lib/authoringSession.ts, src/lib/authoringLog.ts, supabase/migrations/20260830200000_every_authoring_write_leaves_a_record.sql, src/lib/findingMutations.ts, src/lib/writeBoundaryContract.test.ts, supabase/migrations/20260805120000_findings_canvas_writes.sql, supabase/migrations/20260830290000_a_panel_writes_its_own_columns.sql, supabase/migrations/20260910030000_a_slide_shows_a_set_of_its_cells_frames.sql, scripts/check-rls-posture.mjs
+sources: supabase/migrations/20260805150000_service_account_tier.sql, supabase/migrations/20260805170000_service_tier_rpc_enforcement.sql, supabase/migrations/20260729120000_derived_layer.sql, supabase/migrations/20260730090000_derived_layer_grants_hardening.sql, src/contexts/SupabaseProvider.tsx, src/lib/authoringRpc.ts, src/lib/authoringSession.ts, src/lib/authoringLog.ts, supabase/migrations/20260830200000_every_authoring_write_leaves_a_record.sql, src/lib/findingMutations.ts, src/lib/writeBoundaryContract.test.ts, supabase/migrations/20260805120000_findings_canvas_writes.sql, supabase/migrations/20260830290000_a_panel_writes_its_own_columns.sql, supabase/migrations/20260910030000_a_slide_shows_a_set_of_its_cells_frames.sql, scripts/check-rls-posture.mjs
 last-reviewed: 2026-08-31
 ---
 
@@ -166,7 +166,7 @@ live session until refresh (the provider refreshes once per boot).
 
 ## Schema tour
 
-This section supersedes `supabase/DATABASE.md`. The ERD is
+The ERD is
 `docs/reference/erd.mmd`; the DDL snapshot is
 `supabase/schema.reference.sql`; generated types are
 `deployment/types/database.ts`.

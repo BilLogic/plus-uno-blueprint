@@ -27,7 +27,7 @@ export const repoConfig = {
      * Set against this router, whose boot protocol, inline rules and routing
      * table are the whole of it. Lower it whenever the tier lands well under.
      */
-    budget: 6000,
+    budget: 5200,
     /** How far under `budget` the tier may sit before the budget is stale. */
     slack: 1200,
   },
